@@ -1,3 +1,9 @@
 # Assistant virtuel SRDT
 
-Plus d'infos à venir
+# srdt-analysis
+
+```sh
+poetry shell
+poetry install
+poetry run start # or poetry run python -m srdt_analysis
+```

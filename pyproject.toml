@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "srdt-analysis"
+version = "0.1.0"
+description = ""
+authors = ["maxgfr <25312957+maxgfr@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+asyncpg = "^0.30.0"
+black = "^24.10.0"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+start = "srdt_analysis.__main__:main"
+
+[tool.black]
+line-length = 90
+include = '\.pyi?$'
