@@ -1,3 +1,3 @@
-## Assistant virtuel SRDT
+# Assistant virtuel SRDT
 
 Plus d'infos à venir
