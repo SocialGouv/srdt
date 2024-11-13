@@ -1,12 +1,11 @@
 from dotenv import load_dotenv
-from .data import get_data
+from .exploit_data import exploit_data
 
 load_dotenv()
 
 
 def main():
-    result = get_data()
-    print(result[1][0]["text"])
+    exploit_data()
 
 
 if __name__ == "__main__":

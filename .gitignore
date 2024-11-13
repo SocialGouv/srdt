@@ -99,3 +99,6 @@ dmypy.json
 
 # Dump of the databse
 local_dump/*
+
+# Data
+data/*.csv
