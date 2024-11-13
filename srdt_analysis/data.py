@@ -1,54 +1,62 @@
 import os
 import asyncpg
 import asyncio
+from typing import List, Tuple
+from .models import Document, DocumentsList
 
 
 async def fetch_articles_code_du_travail(
-    conn,
-):
+    conn: asyncpg.Connection,
+) -> DocumentsList:
     results = await conn.fetch(
         "SELECT * from public.documents WHERE source = 'code_du_travail'"
     )
-    return results
+    return [Document.from_record(r) for r in results]
 
 
 async def fetch_fiches_mt(
-    conn,
-):
+    conn: asyncpg.Connection,
+) -> DocumentsList:
     result = await conn.fetch(
         "SELECT * from public.documents WHERE source = 'page_fiche_ministere_travail'"
     )
-    return result
+    return [Document.from_record(r) for r in result]
 
 
 async def fetch_fiches_sp(
-    conn,
-):
+    conn: asyncpg.Connection,
+) -> DocumentsList:
     result = await conn.fetch(
         "SELECT * from public.documents WHERE source = 'fiches_service_public'"
     )
-    return result
+    return [Document.from_record(r) for r in result]
 
 
 async def fetch_page_infos(
-    conn,
-):
+    conn: asyncpg.Connection,
+) -> DocumentsList:
     result = await conn.fetch(
         "SELECT * from public.documents WHERE source = 'information'"
     )
-    return result
+    return [Document.from_record(r) for r in result]
 
 
 async def fetch_page_contribs(
-    conn,
-):
+    conn: asyncpg.Connection,
+) -> DocumentsList:
     result = await conn.fetch(
         "SELECT * from public.documents WHERE source = 'contributions'"
     )
-    return result
+    return [Document.from_record(r) for r in result]
 
 
-async def run():
+async def run() -> Tuple[
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+]:
     conn = await asyncpg.connect(
         user=os.getenv("POSTGRES_USER"),
         password=os.getenv("POSTGRES_PASSWORD"),
@@ -73,5 +81,11 @@ async def run():
     )
 
 
-def get_data():
+def get_data() -> Tuple[
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+    DocumentsList,
+]:
     return asyncio.run(run())
