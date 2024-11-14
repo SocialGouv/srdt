@@ -2,7 +2,7 @@ import os
 import asyncpg
 import asyncio
 from typing import List, Tuple
-from .models import Document, DocumentsList
+from srdt_analysis.models import Document, DocumentsList
 
 
 async def fetch_articles_code_du_travail(

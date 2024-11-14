@@ -1,7 +1,15 @@
-from FlagEmbedding import BGEM3FlagModel
+import os
+import httpx
 
 
 def generate_vector(text: str) -> dict:
-    model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-    vector = model.encode(text)
+    response = httpx.post(
+        "https://albert.api.etalab.gouv.fr/v1/embeddings",
+        headers={"Authorization": f"Bearer {os.getenv('ALBERT_API_KEY')}"},
+        data={
+            "input": text,
+            "model": "BAAI/bge-m3",
+        },
+    )
+    vector = response.json()["data"]
     return vector
