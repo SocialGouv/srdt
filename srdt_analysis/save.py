@@ -1,28 +1,10 @@
-import csv
+import pandas as pd
 from typing import List, Dict
 
 
 def save_to_csv(data: List[Dict], filename: str) -> None:
-    headers = [
-        "cdtn_id",
-        "initial_id",
-        "title",
-        "content",
-        "idcc",
-        "keywords",
-        "summary",
-        "vector_summary",
-        "vector_keywords",
-    ]
-
-    with open(f"data/{filename}", "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
-        writer.writeheader()
-        writer.writerows(data)
-
-
-def remove_newlines(content: str) -> str:
-    return content.replace("\n", "-")
+    df = pd.DataFrame(data)
+    df.to_csv(f"data/{filename}", index=False)
 
 
 def process_document(
@@ -40,10 +22,10 @@ def process_document(
         "cdtn_id": cdtn_id,
         "initial_id": initial_id,
         "title": title,
-        "content": remove_newlines(content),
-        "keywords": remove_newlines(keywords),
-        "summary": remove_newlines(summary),
-        "vector_summary": remove_newlines(str(vector_summary)),
-        "vector_keywords": remove_newlines(str(vector_keywords)),
+        "content": content,
+        "keywords": keywords,
+        "summary": summary,
+        "vector_summary": vector_summary,
+        "vector_keywords": vector_keywords,
         "idcc": idcc,
     }
