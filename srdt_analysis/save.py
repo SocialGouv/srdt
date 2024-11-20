@@ -20,9 +20,11 @@ class DocumentProcessor:
         keywords: str,
         summary: str,
         questions: str,
+        chunks: list[str],
         vector_summary: dict,
         vector_keywords: dict,
         vector_questions: dict,
+        vector_chunks: list[dict],
         idcc: str = "0000",
     ) -> Dict:
         return {
@@ -37,4 +39,6 @@ class DocumentProcessor:
             "vector_keywords": vector_keywords,
             "vector_questions": vector_questions,
             "idcc": idcc,
+            "chunks": chunks,
+            "vector_chunks": vector_chunks,
         }
