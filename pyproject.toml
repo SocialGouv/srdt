@@ -8,21 +8,29 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "~3.12"
 asyncpg = "^0.30.0"
-black = "^24.10.0"
 python-dotenv = "^1.0.1"
 httpx = "^0.27.2"
 pandas = "^2.2.3"
 langchain = "^0.3.7"
 langchain-text-splitters = "^0.3.2"
-tiktoken = "^0.8.0"
+
+[tool.poetry.dev-dependencies]
+black = "^24.10.0"
+pylint = "^3.3.1"
+isort = "^5.13.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "srdt_analysis.__main__:main"
+start = "srdt_analysis.main:main"
 
 [tool.black]
 line-length = 90
 include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 90
+multi_line_output = 3

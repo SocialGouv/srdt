@@ -1,5 +1,6 @@
+from typing import Dict, List
+
 import pandas as pd
-from typing import List, Dict
 
 
 class DocumentProcessor:
@@ -18,8 +19,10 @@ class DocumentProcessor:
         content: str,
         keywords: str,
         summary: str,
+        questions: str,
         vector_summary: dict,
         vector_keywords: dict,
+        vector_questions: dict,
         idcc: str = "0000",
     ) -> Dict:
         return {
@@ -29,7 +32,9 @@ class DocumentProcessor:
             "content": content,
             "keywords": keywords,
             "summary": summary,
+            "questions": questions,
             "vector_summary": vector_summary,
             "vector_keywords": vector_keywords,
+            "vector_questions": vector_questions,
             "idcc": idcc,
         }

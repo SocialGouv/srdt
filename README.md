@@ -6,6 +6,9 @@
 poetry shell
 poetry install
 poetry run start # or poetry run python -m srdt_analysis
+black srdt_analysis # format
+isort srdt_analysis # sort imports
+pylint srdt_analysis
 ```
 
 ## Statistiques sur les documents

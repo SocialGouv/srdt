@@ -1,6 +1,8 @@
 import os
+
 import httpx
-from .constants import ALBERT_ENDPOINT
+
+from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
 
 
 class Vector:
@@ -17,7 +19,7 @@ class Vector:
             headers={"Authorization": f"Bearer {self.api_key}"},
             data={
                 "input": text,
-                "model": "BAAI/bge-m3",
+                "model": MODEL_VECTORISATION,
             },
         )
         return response.json()["data"]

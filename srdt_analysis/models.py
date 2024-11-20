@@ -1,7 +1,8 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-import json
+from typing import Any, Dict, List, Optional
+
 import asyncpg
 
 

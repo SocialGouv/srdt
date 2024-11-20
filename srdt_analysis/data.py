@@ -1,7 +1,9 @@
-import os
-import asyncpg
 import asyncio
-from typing import List, Tuple
+import os
+from typing import Tuple
+
+import asyncpg
+
 from srdt_analysis.models import Document, DocumentsList
 
 
@@ -51,7 +53,9 @@ class DatabaseManager:
         )
         return [Document.from_record(r) for r in result]
 
-    async def fetch_all(self) -> Tuple[
+    async def fetch_all(
+        self,
+    ) -> Tuple[
         DocumentsList,
         DocumentsList,
         DocumentsList,
