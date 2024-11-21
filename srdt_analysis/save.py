@@ -1,13 +1,13 @@
-from typing import Dict, List
-
 import pandas as pd
+
+from srdt_analysis.models import DocumentData, MarkdownDocument
 
 
 class DocumentProcessor:
     def __init__(self, data_folder: str = "data"):
         self.data_folder = data_folder
 
-    def save_to_csv(self, data: List[Dict], filename: str) -> None:
+    def save_to_csv(self, data: list[DocumentData], filename: str) -> None:
         df = pd.DataFrame(data)
         df.to_csv(f"{self.data_folder}/{filename}", index=False)
 
@@ -20,13 +20,13 @@ class DocumentProcessor:
         keywords: str,
         summary: str,
         questions: str,
-        chunks: list[str],
-        vector_summary: dict,
-        vector_keywords: dict,
-        vector_questions: dict,
-        vector_chunks: list[dict],
+        chunks: list[MarkdownDocument] = [],
+        vector_summary: dict = {},
+        vector_keywords: dict = {},
+        vector_questions: dict = {},
+        vector_chunks: list[dict] = [],
         idcc: str = "0000",
-    ) -> Dict:
+    ) -> DocumentData:
         return {
             "cdtn_id": cdtn_id,
             "initial_id": initial_id,

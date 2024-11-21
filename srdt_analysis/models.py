@@ -1,9 +1,32 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 import asyncpg
+
+
+@dataclass
+class MarkdownDocument:
+    page_content: str
+    metadata: Dict[str, Any]
+
+
+@dataclass
+class DocumentData(TypedDict):
+    cdtn_id: str
+    initial_id: str
+    title: str
+    content: str
+    keywords: str
+    summary: str
+    questions: str
+    vector_summary: dict
+    vector_keywords: dict
+    vector_questions: dict
+    idcc: str
+    chunks: list[MarkdownDocument]
+    vector_chunks: list[dict]
 
 
 @dataclass

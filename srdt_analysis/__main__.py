@@ -9,7 +9,7 @@ load_dotenv()
 def main():
     data = get_data()
     exploiter = PageInfosExploiter()
-    exploiter.process_documents([data[3][0]], "page_infos.csv")
+    exploiter.process_documents([data[3][0]], "page_infos.csv", "cdtn_page_infos")
 
 
 if __name__ == "__main__":

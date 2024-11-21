@@ -16,8 +16,7 @@ langchain-text-splitters = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
 black = "^24.10.0"
-pylint = "^3.3.1"
-isort = "^5.13.2"
+ruff = "^0.7.4"
 
 [build-system]
 requires = ["poetry-core"]
@@ -29,8 +28,3 @@ start = "srdt_analysis.main:main"
 [tool.black]
 line-length = 90
 include = '\.pyi?$'
-
-[tool.isort]
-profile = "black"
-line_length = 90
-multi_line_output = 3
