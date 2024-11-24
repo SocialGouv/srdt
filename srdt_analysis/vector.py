@@ -1,7 +1,17 @@
-from FlagEmbedding import BGEM3FlagModel
+import httpx
+
+from srdt_analysis.albert import AlbertBase
+from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
 
 
-def generate_vector(text: str) -> dict:
-    model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-    vector = model.encode(text)
-    return vector
+class Vector(AlbertBase):
+    def generate(self, text: str) -> dict:
+        response = httpx.post(
+            f"{ALBERT_ENDPOINT}/v1/embeddings",
+            headers=self.headers,
+            json={
+                "input": text,
+                "model": MODEL_VECTORISATION,
+            },
+        )
+        return response.json()["data"]
