@@ -7,7 +7,7 @@ import asyncpg
 
 
 @dataclass
-class MarkdownDocument:
+class SplitDocument:
     page_content: str
     metadata: Dict[str, Any]
 
@@ -25,8 +25,8 @@ class DocumentData(TypedDict):
     vector_keywords: dict
     vector_questions: dict
     idcc: str
-    chunks: list[MarkdownDocument]
-    vector_chunks: list[dict]
+    chunks: List[SplitDocument]
+    vector_chunks: List[dict]
 
 
 @dataclass

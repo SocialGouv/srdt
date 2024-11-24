@@ -1,13 +1,14 @@
+from typing import List
 import pandas as pd
 
-from srdt_analysis.models import DocumentData, MarkdownDocument
+from srdt_analysis.models import DocumentData, SplitDocument
 
 
 class DocumentProcessor:
     def __init__(self, data_folder: str = "data"):
         self.data_folder = data_folder
 
-    def save_to_csv(self, data: list[DocumentData], filename: str) -> None:
+    def save_to_csv(self, data: List[DocumentData], filename: str) -> None:
         df = pd.DataFrame(data)
         df.to_csv(f"{self.data_folder}/{filename}", index=False)
 
@@ -20,11 +21,11 @@ class DocumentProcessor:
         keywords: str,
         summary: str,
         questions: str,
-        chunks: list[MarkdownDocument] = [],
+        chunks: List[SplitDocument] = [],
         vector_summary: dict = {},
         vector_keywords: dict = {},
         vector_questions: dict = {},
-        vector_chunks: list[dict] = [],
+        vector_chunks: List[dict] = [],
         idcc: str = "0000",
     ) -> DocumentData:
         return {

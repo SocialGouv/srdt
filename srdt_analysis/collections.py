@@ -1,46 +1,51 @@
 import json
-import os
 from io import BytesIO
 from typing import Any, Dict, List
 
 import httpx
 
+from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
 from srdt_analysis.models import DocumentData
 
 
-class Collections:
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv("ALBERT_API_KEY")
-        if not self.api_key:
-            raise ValueError(
-                "API key must be provided either in constructor or as environment variable"
-            )
-        self.headers = {"Authorization": f"Bearer {self.api_key}"}
-
-    def create(self, collection_name: str) -> Dict[str, Any]:
+class Collections(AlbertBase):
+    def _create(self, collection_name: str) -> str:
         payload = {"name": collection_name, "model": MODEL_VECTORISATION}
-
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
-        return response.json()
+        return response.json()["id"]
+
+    def create_if_not_exists(self, collection_name: str) -> str:
+        collections = self.list()
+        for collection in collections:
+            if collection["name"] == collection_name:
+                return collection["id"]
+        return self._create(collection_name)
 
     def list(self) -> Dict[str, Any]:
         response = httpx.get(f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers)
-        return response.json()
+        return response.json()["data"]
 
-    def delete(self, collection_name: str) -> None:
+    def delete(self, id_collection: str) -> None:
         response = httpx.delete(
-            f"{ALBERT_ENDPOINT}/v1/collections/{collection_name}", headers=self.headers
+            f"{ALBERT_ENDPOINT}/v1/collections/{id_collection}", headers=self.headers
         )
         response.raise_for_status()
+        return None
+
+    def delete_all(self, collection_name) -> None:
+        collections = self.list()
+        for collection in collections:
+            if collection["name"] == collection_name:
+                self.delete(collection["id"])
         return None
 
     def search(
         self,
         prompt: str,
-        collections: List[str],
+        id_collections: List[str],
         k: int = 5,
         score_threshold: float = 0,
     ) -> Dict[str, Any]:
@@ -49,7 +54,7 @@ class Collections:
             headers=self.headers,
             json={
                 "prompt": prompt,
-                "collections": collections,
+                "collections": id_collections,
                 "k": k,
                 "score_threshold": score_threshold,
             },
@@ -58,32 +63,27 @@ class Collections:
 
     def upload(
         self,
-        data: list[DocumentData],
-        collection_name: str,
+        data: List[DocumentData],
+        id_collection: str,
     ) -> Dict[str, Any]:
         result = []
         for dt in data:
             dt: DocumentData
             chunks = dt["chunks"]
             for chunk in chunks:
-                chunk["cdtn_id"] = dt["cdtn_id"]
-                chunk["initial_id"] = dt["initial_id"]
-                chunk["title"] = dt["title"]
-                chunk["idcc"] = dt["idcc"]
                 result.append(
                     {
-                        "text": chunk["page_content"],
+                        "text": chunk.page_content,
                         "title": dt["title"],
                         "metadata": {
-                            "cdtn_id": chunk["cdtn_id"],
-                            "idcc": chunk["idcc"],
-                            "structure_du_chunk": chunk["metadata"],
+                            "cdtn_id": dt["cdtn_id"],
+                            "idcc": dt["idcc"],
+                            "structure_du_chunk": chunk.metadata,
                         },
                     }
                 )
 
         file_content = json.dumps(result).encode("utf-8")
-
         files = [
             (
                 "file",
@@ -95,11 +95,11 @@ class Collections:
             )
         ]
 
-        data = {
-            "collection": collection_name,
-        }
-
+        data = {"request": {
+            "collection": id_collection,
+        }}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/files", headers=self.headers, files=files, data=data
         )
+        print(response.json())
         return response.json()

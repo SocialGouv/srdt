@@ -1,11 +1,10 @@
-import os
-
 import httpx
 
-from srdt_analysis.constants import ALBERT_ENDPOINT
+from srdt_analysis.albert import AlbertBase
+from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL
 
 
-class LLMProcessor:
+class LLMProcessor(AlbertBase):
     SUMMARY_PROMPT = """
     Tu es un chatbot expert en droit du travail français. Lis le texte donné et rédige un résumé clair, précis et concis, 
     limité à 4096 tokens maximum. Dans ce résumé, fais ressortir les points clés suivants :
@@ -64,22 +63,19 @@ class LLMProcessor:
     Ta réponse doit obligatoirement être en français. 
     """
 
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv("ALBERT_API_KEY")
-        if not self.api_key:
-            raise ValueError("API key for Albert is not set")
-
     def _make_request(self, message: str, system_prompt: str) -> str:
+        # TODO
+        return ""
         try:
             response = httpx.post(
                 f"{ALBERT_ENDPOINT}/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
+                headers=self.headers,
                 json={
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": message},
                     ],
-                    "model": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+                    "model": LLM_MODEL,
                 },
             )
             response.raise_for_status()
