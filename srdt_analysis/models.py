@@ -114,3 +114,33 @@ class Document:
 
 
 DocumentsList = List[Document]
+
+# Chunk
+@dataclass
+class ChunkMetadata:
+    collection_id: str
+    document_id: str
+    document_name: str
+    document_part: int
+    document_created_at: int
+    structure_du_chunk: Dict[str, str]
+    idcc: str
+    cdtn_id: str
+    collection: str
+
+@dataclass
+class Chunk:
+    object: str
+    id: str
+    metadata: ChunkMetadata
+    content: str
+
+@dataclass
+class ChunkDataItem:
+    score: float
+    chunk: Chunk
+
+@dataclass
+class ChunkDataList:
+    object: str
+    data: List[ChunkDataItem]

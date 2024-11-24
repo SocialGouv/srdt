@@ -1,12 +1,14 @@
 import json
-from io import BytesIO
+import os
 from typing import Any, Dict, List
 
 import httpx
 
 from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
-from srdt_analysis.models import DocumentData
+from srdt_analysis.models import ChunkDataList, DocumentData
+
+FILE_PATH = "data/content.json"
 
 
 class Collections(AlbertBase):
@@ -17,11 +19,11 @@ class Collections(AlbertBase):
         )
         return response.json()["id"]
 
-    def create_if_not_exists(self, collection_name: str) -> str:
+    def create(self, collection_name: str) -> str:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
-                return collection["id"]
+                self.delete(collection["id"])
         return self._create(collection_name)
 
     def list(self) -> Dict[str, Any]:
@@ -48,7 +50,7 @@ class Collections(AlbertBase):
         id_collections: List[str],
         k: int = 5,
         score_threshold: float = 0,
-    ) -> Dict[str, Any]:
+    ) -> ChunkDataList:
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/search",
             headers=self.headers,
@@ -84,22 +86,17 @@ class Collections(AlbertBase):
                 )
 
         file_content = json.dumps(result).encode("utf-8")
-        files = [
-            (
-                "file",
-                (
-                    "content.json",
-                    BytesIO(file_content),
-                    "multipart/form-data",
-                ),
-            )
-        ]
+        with open(FILE_PATH, "wb") as f:
+            f.write(file_content)
 
-        data = {"request": {
-            "collection": id_collection,
-        }}
+        files = {
+            "file": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "multipart/form-data")
+        }
+
+        data = {"request": '{"collection": "%s"}' % id_collection}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/files", headers=self.headers, files=files, data=data
         )
-        print(response.json())
-        return response.json()
+
+        response.raise_for_status()
+        return None
