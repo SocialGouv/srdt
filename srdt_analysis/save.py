@@ -1,4 +1,5 @@
 from typing import List
+
 import pandas as pd
 
 from srdt_analysis.models import DocumentData, SplitDocument

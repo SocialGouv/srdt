@@ -8,7 +8,7 @@ poetry install
 poetry run start # or poetry run python -m srdt_analysis
 black srdt_analysis
 ruff check --fix
-# ruff check --select I --fix # to fix import
+ruff check --select I --fix # to fix import
 ruff format
 ```
 
