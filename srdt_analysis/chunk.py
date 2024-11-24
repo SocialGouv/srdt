@@ -1,19 +1,27 @@
 from typing import List
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 
 from srdt_analysis.constants import CHUNK_OVERLAP, CHUNK_SIZE
 from srdt_analysis.models import SplitDocument
 
+
 class Chunker:
     def __init__(self):
-        self._markdown_splitter = MarkdownHeaderTextSplitter([
+        self._markdown_splitter = MarkdownHeaderTextSplitter(
+            [
                 ("#", "Header 1"),
                 ("##", "Header 2"),
                 ("###", "Header 3"),
                 ("####", "Header 4"),
                 ("#####", "Header 5"),
                 ("######", "Header 6"),
-            ], strip_headers=False)
+            ],
+            strip_headers=False,
+        )
         self._character_recursive_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
         )

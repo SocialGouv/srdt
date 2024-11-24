@@ -10,7 +10,9 @@ load_dotenv()
 def main():
     data = get_data()
     exploiter = PageInfosExploiter()
-    result = exploiter.process_documents([data[3][0]], "page_infos.csv", "cdtn_page_infos")
+    result = exploiter.process_documents(
+        [data[3][0]], "page_infos.csv", "cdtn_page_infos"
+    )
     collections = Collections()
     res = collections.search("droit du travail", [result[1]])
     print(res["data"][0])

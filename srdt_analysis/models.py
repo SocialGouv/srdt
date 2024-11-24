@@ -115,6 +115,7 @@ class Document:
 
 DocumentsList = List[Document]
 
+
 # Chunk
 @dataclass
 class ChunkMetadata:
@@ -128,6 +129,7 @@ class ChunkMetadata:
     cdtn_id: str
     collection: str
 
+
 @dataclass
 class Chunk:
     object: str
@@ -135,10 +137,12 @@ class Chunk:
     metadata: ChunkMetadata
     content: str
 
+
 @dataclass
 class ChunkDataItem:
     score: float
     chunk: Chunk
+
 
 @dataclass
 class ChunkDataList:

@@ -90,7 +90,11 @@ class Collections(AlbertBase):
             f.write(file_content)
 
         files = {
-            "file": (os.path.basename(FILE_PATH), open(FILE_PATH, "rb"), "multipart/form-data")
+            "file": (
+                os.path.basename(FILE_PATH),
+                open(FILE_PATH, "rb"),
+                "multipart/form-data",
+            )
         }
 
         data = {"request": '{"collection": "%s"}' % id_collection}
