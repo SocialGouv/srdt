@@ -1,8 +1,32 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-import json
+from typing import Any, Dict, List, Optional, TypedDict
+
 import asyncpg
+
+
+@dataclass
+class SplitDocument:
+    page_content: str
+    metadata: Dict[str, Any]
+
+
+@dataclass
+class DocumentData(TypedDict):
+    cdtn_id: str
+    initial_id: str
+    title: str
+    content: str
+    keywords: str
+    summary: str
+    questions: str
+    vector_summary: dict
+    vector_keywords: dict
+    vector_questions: dict
+    idcc: str
+    chunks: List[SplitDocument]
+    vector_chunks: List[dict]
 
 
 @dataclass
@@ -90,3 +114,33 @@ class Document:
 
 
 DocumentsList = List[Document]
+
+# Chunk
+@dataclass
+class ChunkMetadata:
+    collection_id: str
+    document_id: str
+    document_name: str
+    document_part: int
+    document_created_at: int
+    structure_du_chunk: Dict[str, str]
+    idcc: str
+    cdtn_id: str
+    collection: str
+
+@dataclass
+class Chunk:
+    object: str
+    id: str
+    metadata: ChunkMetadata
+    content: str
+
+@dataclass
+class ChunkDataItem:
+    score: float
+    chunk: Chunk
+
+@dataclass
+class ChunkDataList:
+    object: str
+    data: List[ChunkDataItem]

@@ -101,4 +101,4 @@ dmypy.json
 local_dump/*
 
 # Data
-data/*.csv
+data/*

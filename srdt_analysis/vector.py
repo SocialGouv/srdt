@@ -1,15 +1,17 @@
-import os
 import httpx
 
+from srdt_analysis.albert import AlbertBase
+from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
 
-def generate_vector(text: str) -> dict:
-    response = httpx.post(
-        "https://albert.api.etalab.gouv.fr/v1/embeddings",
-        headers={"Authorization": f"Bearer {os.getenv('ALBERT_API_KEY')}"},
-        data={
-            "input": text,
-            "model": "BAAI/bge-m3",
-        },
-    )
-    vector = response.json()["data"]
-    return vector
+
+class Vector(AlbertBase):
+    def generate(self, text: str) -> dict:
+        response = httpx.post(
+            f"{ALBERT_ENDPOINT}/v1/embeddings",
+            headers=self.headers,
+            json={
+                "input": text,
+                "model": MODEL_VECTORISATION,
+            },
+        )
+        return response.json()["data"]
