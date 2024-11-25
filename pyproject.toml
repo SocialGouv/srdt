@@ -27,3 +27,19 @@ start = "srdt_analysis.__main__:main"
 [tool.black]
 line-length = 90
 include = '\.pyi?$'
+
+[tool.pylint]
+disable = [
+    "line-too-long",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "redefined-outer-name",
+    "protected-access",
+    "invalid-name",
+    "logging-fstring-interpolation",
+    "fixme"
+]
+
+[tool.mypy]
+ignore_missing_imports = true
