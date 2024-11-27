@@ -18,13 +18,13 @@ class Collections(AlbertBase):
         return response.json()["id"]
 
     def create(self, collection_name: str, model: str) -> str:
-        collections = self.list()
+        collections: List[Dict[str, Any]] = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self) -> Dict[str, Any]:
+    def list(self) -> List[Dict[str, Any]]:
         response = httpx.get(f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers)
         return response.json()["data"]
 
@@ -92,9 +92,12 @@ class Collections(AlbertBase):
             )
         }
 
-        data = {"request": '{"collection": "%s"}' % id_collection}
+        request_data = {"request": '{"collection": "%s"}' % id_collection}
         response = httpx.post(
-            f"{ALBERT_ENDPOINT}/v1/files", headers=self.headers, files=files, data=data
+            f"{ALBERT_ENDPOINT}/v1/files",
+            headers=self.headers,
+            files=files,
+            data=request_data,
         )
 
         response.raise_for_status()
