@@ -33,6 +33,12 @@ class DocumentData(TypedDict):
 
 
 @dataclass
+class ResultProcessDocumentType(TypedDict):
+    documents: List[DocumentData]
+    id: int
+
+
+@dataclass
 class Reference:
     id: ID
     cid: ID
