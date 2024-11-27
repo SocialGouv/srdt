@@ -75,12 +75,14 @@ class DatabaseManager:
         return (result1, result2, result3, result4, result5)
 
 
-def get_data() -> Tuple[
-    DocumentsList,
-    DocumentsList,
-    DocumentsList,
-    DocumentsList,
-    DocumentsList,
-]:
+def get_data() -> (
+    Tuple[
+        DocumentsList,
+        DocumentsList,
+        DocumentsList,
+        DocumentsList,
+        DocumentsList,
+    ]
+):
     db = DatabaseManager()
     return asyncio.run(db.fetch_all())

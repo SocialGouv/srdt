@@ -22,12 +22,9 @@ class DocumentProcessor:
         keywords: str,
         summary: str,
         questions: str,
-        chunks: List[SplitDocument] = [],
-        vector_summary: dict = {},
-        vector_keywords: dict = {},
-        vector_questions: dict = {},
-        vector_chunks: List[dict] = [],
-        idcc: str = "0000",
+        content_chunked: List[SplitDocument],
+        idcc: str,
+        url: str,
     ) -> DocumentData:
         return {
             "cdtn_id": cdtn_id,
@@ -37,10 +34,7 @@ class DocumentProcessor:
             "keywords": keywords,
             "summary": summary,
             "questions": questions,
-            "vector_summary": vector_summary,
-            "vector_keywords": vector_keywords,
-            "vector_questions": vector_questions,
             "idcc": idcc,
-            "chunks": chunks,
-            "vector_chunks": vector_chunks,
+            "content_chunked": content_chunked,
+            "url": url,
         }
