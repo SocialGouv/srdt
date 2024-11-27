@@ -1,57 +1,90 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-import json
+from typing import Any, Dict, List, Optional, TypedDict
+
 import asyncpg
+
+ID = str
+HTML = str
+PlainText = str
+JSONDict = Dict[str, Any]
+Timestamp = datetime
+URL = str
+
+
+@dataclass
+class SplitDocument:
+    page_content: str
+    metadata: Dict[str, Any]
+
+
+@dataclass
+class DocumentData(TypedDict):
+    cdtn_id: ID
+    initial_id: ID
+    title: PlainText
+    content: PlainText
+    keywords: PlainText
+    summary: PlainText
+    questions: PlainText
+    url: URL
+    content_chunked: List[SplitDocument]
+
+
+@dataclass
+class ResultProcessDocumentType(TypedDict):
+    documents: List[DocumentData]
+    id: str
 
 
 @dataclass
 class Reference:
-    id: str
-    cid: str
-    url: str
+    id: ID
+    cid: ID
+    url: URL
     slug: str
     type: str
-    title: str
+    title: PlainText
 
 
 @dataclass
 class Section:
-    html: str
-    text: str
-    title: str
+    html: HTML
+    text: PlainText
+    title: PlainText
     anchor: str
     references: List[Reference]
-    description: str
-    htmlWithGlossary: str
+    description: PlainText
+    htmlWithGlossary: HTML
 
 
 @dataclass
 class Content:
     text: str
     html: str
-    intro: str = ""
-    date: str = ""
-    sections: List[Section] = None
-    url: str = ""
-    raw: str = ""
-    referencedTexts: List[Dict] = None
+    sections: Optional[List[Section]]
+    referencedTexts: Optional[List[Dict]]
+    intro: str
+    date: str
+    url: str
+    raw: str
 
 
 @dataclass
 class Document:
-    cdtn_id: str
-    initial_id: str
-    title: str
-    meta_description: str
+    cdtn_id: ID
+    initial_id: ID
+    title: PlainText
+    meta_description: PlainText
     source: str
     slug: str
-    text: str
-    document: Dict[str, Any]
+    text: PlainText
+    document: JSONDict
     is_published: bool
     is_searchable: bool
-    created_at: datetime
-    updated_at: datetime
+    created_at: Timestamp
+    updated_at: Timestamp
     is_available: bool
     content: Optional[Content] = None
 
@@ -90,3 +123,36 @@ class Document:
 
 
 DocumentsList = List[Document]
+
+
+# Chunk
+@dataclass
+class ChunkMetadata:
+    collection_id: ID
+    document_id: ID
+    document_name: PlainText
+    document_part: int
+    document_created_at: int
+    structure_du_chunk: Dict[str, str]
+    cdtn_id: ID
+    collection: str
+
+
+@dataclass
+class Chunk:
+    object: str
+    id: str
+    metadata: ChunkMetadata
+    content: str
+
+
+@dataclass
+class ChunkDataItem:
+    score: float
+    chunk: Chunk
+
+
+@dataclass
+class ChunkDataList:
+    object: str
+    data: List[ChunkDataItem]

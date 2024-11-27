@@ -6,6 +6,9 @@
 poetry shell
 poetry install
 poetry run start # or poetry run python -m srdt_analysis
+ruff check --fix
+ruff format
+pyright # for type checking
 ```
 
 ## Statistiques sur les documents
