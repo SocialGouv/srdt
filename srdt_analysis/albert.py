@@ -7,8 +7,8 @@ from srdt_analysis.constants import ALBERT_ENDPOINT
 
 
 class AlbertBase:
-    def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv("ALBERT_API_KEY")
+    def __init__(self):
+        self.api_key = os.getenv("ALBERT_API_KEY")
         if not self.api_key:
             raise ValueError(
                 "API key must be provided either in constructor or as environment variable"

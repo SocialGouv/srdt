@@ -35,7 +35,7 @@ class DocumentData(TypedDict):
 @dataclass
 class ResultProcessDocumentType(TypedDict):
     documents: List[DocumentData]
-    id: int
+    id: str
 
 
 @dataclass
@@ -63,12 +63,12 @@ class Section:
 class Content:
     text: str
     html: str
-    intro: str = ""
-    date: str = ""
-    sections: List[Section] = None
-    url: str = ""
-    raw: str = ""
-    referencedTexts: List[Dict] = None
+    sections: Optional[List[Section]]
+    referencedTexts: Optional[List[Dict]]
+    intro: str
+    date: str
+    url: str
+    raw: str
 
 
 @dataclass

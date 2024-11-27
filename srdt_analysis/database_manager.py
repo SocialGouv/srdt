@@ -9,7 +9,7 @@ from srdt_analysis.models import Document, DocumentsList
 
 class DatabaseManager:
     def __init__(self):
-        self.conn = None
+        self.conn
 
     async def connect(self):
         self.conn = await asyncpg.connect(

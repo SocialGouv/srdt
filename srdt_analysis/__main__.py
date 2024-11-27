@@ -18,6 +18,7 @@ def main():
         "combien de jour de congé payé par mois de travail effectif",
         [result["id"]],
     )
+
     print(res)
 
 

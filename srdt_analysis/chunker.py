@@ -28,10 +28,12 @@ class Chunker:
 
     def split_markdown(self, markdown: str) -> List[SplitDocument]:
         md_header_splits = self._markdown_splitter.split_text(markdown)
-        return self._character_recursive_splitter.split_documents(md_header_splits)
+        documents = self._character_recursive_splitter.split_documents(md_header_splits)
+        return [SplitDocument(doc.page_content, doc.metadata) for doc in documents]
 
     def split_character_recursive(self, content: str) -> List[SplitDocument]:
-        return self._character_recursive_splitter.split_text(content)
+        text_splits = self._character_recursive_splitter.split_text(content)
+        return [SplitDocument(text, {}) for text in text_splits]
 
     def split(self, content: str, content_type: str = "markdown"):
         if content_type.lower() == "markdown":
