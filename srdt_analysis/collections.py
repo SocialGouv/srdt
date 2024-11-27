@@ -1,41 +1,38 @@
 import json
-import os
+from io import BytesIO
 from typing import Any, Dict, List
 
 import httpx
 
 from srdt_analysis.albert import AlbertBase
-from srdt_analysis.constants import ALBERT_ENDPOINT, MODEL_VECTORISATION
+from srdt_analysis.constants import ALBERT_ENDPOINT
 from srdt_analysis.models import ChunkDataList, DocumentData
-
-FILE_PATH = "data/content.json"
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: str) -> str:
-        payload = {"name": collection_name, "model": MODEL_VECTORISATION}
+    def _create(self, collection_name: str, model: str) -> str:
+        payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: str) -> str:
+    def create(self, collection_name: str, model: str) -> str:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
-        return self._create(collection_name)
+        return self._create(collection_name, model)
 
     def list(self) -> Dict[str, Any]:
         response = httpx.get(f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers)
         return response.json()["data"]
 
-    def delete(self, id_collection: str) -> None:
+    def delete(self, id_collection: str):
         response = httpx.delete(
             f"{ALBERT_ENDPOINT}/v1/collections/{id_collection}", headers=self.headers
         )
         response.raise_for_status()
-        return None
 
     def delete_all(self, collection_name) -> None:
         collections = self.list()
@@ -81,18 +78,19 @@ class Collections(AlbertBase):
                             "cdtn_id": dt["cdtn_id"],
                             "idcc": dt["idcc"],
                             "structure_du_chunk": chunk.metadata,
+                            "url": dt["url"],
                         },
                     }
                 )
 
         file_content = json.dumps(result).encode("utf-8")
-        with open(FILE_PATH, "wb") as f:
-            f.write(file_content)
+
+        file_like_object = BytesIO(file_content)
 
         files = {
             "file": (
-                os.path.basename(FILE_PATH),
-                open(FILE_PATH, "rb"),
+                "content.json",
+                file_like_object,
                 "multipart/form-data",
             )
         }
@@ -103,4 +101,4 @@ class Collections(AlbertBase):
         )
 
         response.raise_for_status()
-        return None
+        return response.json()
