@@ -16,7 +16,7 @@ def main():
     collections = Collections()
     res = collections.search(
         "combien de jour de congé payé par mois de travail effectif",
-        [result["documents"]],
+        [result["id"]],
     )
     print(res)
 

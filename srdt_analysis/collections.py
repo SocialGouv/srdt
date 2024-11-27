@@ -64,11 +64,11 @@ class Collections(AlbertBase):
         self,
         data: List[DocumentData],
         id_collection: str,
-    ) -> Dict[str, Any]:
+    ) -> None:
         result = []
         for dt in data:
             dt: DocumentData
-            chunks = dt["chunks"]
+            chunks = dt["content_chunked"]
             for chunk in chunks:
                 result.append(
                     {
@@ -76,7 +76,6 @@ class Collections(AlbertBase):
                         "title": dt["title"],
                         "metadata": {
                             "cdtn_id": dt["cdtn_id"],
-                            "idcc": dt["idcc"],
                             "structure_du_chunk": chunk.metadata,
                             "url": dt["url"],
                         },
@@ -85,12 +84,10 @@ class Collections(AlbertBase):
 
         file_content = json.dumps(result).encode("utf-8")
 
-        file_like_object = BytesIO(file_content)
-
         files = {
             "file": (
                 "content.json",
-                file_like_object,
+                BytesIO(file_content),
                 "multipart/form-data",
             )
         }
@@ -101,4 +98,4 @@ class Collections(AlbertBase):
         )
 
         response.raise_for_status()
-        return response.json()
+        return

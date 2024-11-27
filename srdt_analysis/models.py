@@ -28,7 +28,6 @@ class DocumentData(TypedDict):
     keywords: PlainText
     summary: PlainText
     questions: PlainText
-    idcc: ID
     url: URL
     content_chunked: List[SplitDocument]
 
@@ -129,7 +128,6 @@ class ChunkMetadata:
     document_part: int
     document_created_at: int
     structure_du_chunk: Dict[str, str]
-    idcc: ID
     cdtn_id: ID
     collection: str
 
