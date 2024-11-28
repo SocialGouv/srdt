@@ -1,19 +1,11 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from typing import Literal, Optional, Sequence
+from typing import Optional, Sequence
 
 import asyncpg
 
-from srdt_analysis.models import Document, DocumentsList
-
-CollectionName = Literal[
-    "code_du_travail",
-    "fiches_service_public",
-    "page_fiche_ministere_travail",
-    "contributions",
-    "information",
-]
+from srdt_analysis.models import CollectionName, Document, DocumentsList
 
 
 class DatabaseManager:
