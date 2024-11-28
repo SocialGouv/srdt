@@ -1,13 +1,13 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from typing import List, Literal, Optional, Sequence
+from typing import Literal, Optional, Sequence
 
 import asyncpg
 
 from srdt_analysis.models import Document, DocumentsList
 
-ListCollections = Literal[
+CollectionName = Literal[
     "code_du_travail",
     "fiches_service_public",
     "page_fiche_ministere_travail",
@@ -49,8 +49,8 @@ class DatabaseManager:
             return [Document.from_record(r) for r in result]
 
     async def fetch_sources(
-        self, sources: Sequence[ListCollections]
-    ) -> dict[ListCollections, DocumentsList]:
+        self, sources: Sequence[CollectionName]
+    ) -> dict[CollectionName, DocumentsList]:
         try:
             tasks = [self.fetch_documents_by_source(source) for source in sources]
             results = await asyncio.gather(*tasks)
@@ -60,7 +60,7 @@ class DatabaseManager:
 
 
 def get_data(
-    sources: Sequence[ListCollections],
-) -> dict[ListCollections, DocumentsList]:
+    sources: Sequence[CollectionName],
+) -> dict[CollectionName, DocumentsList]:
     db = DatabaseManager()
     return asyncio.run(db.fetch_sources(sources))
