@@ -1,11 +1,19 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from typing import Optional, Tuple
+from typing import List, Literal, Optional, Sequence
 
 import asyncpg
 
 from srdt_analysis.models import Document, DocumentsList
+
+ListCollections = Literal[
+    "code_du_travail",
+    "fiches_service_public",
+    "page_fiche_ministere_travail",
+    "contributions",
+    "information",
+]
 
 
 class DatabaseManager:
@@ -40,47 +48,19 @@ class DatabaseManager:
             )
             return [Document.from_record(r) for r in result]
 
-    async def fetch_articles_code_du_travail(self) -> DocumentsList:
-        return await self.fetch_documents_by_source("code_du_travail")
-
-    async def fetch_fiches_mt(self) -> DocumentsList:
-        return await self.fetch_documents_by_source("page_fiche_ministere_travail")
-
-    async def fetch_fiches_sp(self) -> DocumentsList:
-        return await self.fetch_documents_by_source("fiches_service_public")
-
-    async def fetch_page_infos(self) -> DocumentsList:
-        return await self.fetch_documents_by_source("information")
-
-    async def fetch_page_contribs(self) -> DocumentsList:
-        return await self.fetch_documents_by_source("contributions")
-
-    async def fetch_all(
-        self,
-    ) -> Tuple[
-        DocumentsList, DocumentsList, DocumentsList, DocumentsList, DocumentsList
-    ]:
+    async def fetch_sources(
+        self, sources: Sequence[ListCollections]
+    ) -> dict[ListCollections, DocumentsList]:
         try:
-            results = await asyncio.gather(
-                self.fetch_articles_code_du_travail(),
-                self.fetch_fiches_mt(),
-                self.fetch_fiches_sp(),
-                self.fetch_page_infos(),
-                self.fetch_page_contribs(),
-            )
-            return (
-                results[0],
-                results[1],
-                results[2],
-                results[3],
-                results[4],
-            )
+            tasks = [self.fetch_documents_by_source(source) for source in sources]
+            results = await asyncio.gather(*tasks)
+            return {source: result for source, result in zip(sources, results)}
         finally:
             await self.close()
 
 
-def get_data() -> (
-    Tuple[DocumentsList, DocumentsList, DocumentsList, DocumentsList, DocumentsList]
-):
+def get_data(
+    sources: Sequence[ListCollections],
+) -> dict[ListCollections, DocumentsList]:
     db = DatabaseManager()
-    return asyncio.run(db.fetch_all())
+    return asyncio.run(db.fetch_sources(sources))
