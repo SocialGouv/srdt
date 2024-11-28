@@ -1,9 +1,17 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 import asyncpg
+
+CollectionName = Literal[
+    "code_du_travail",
+    "fiches_service_public",
+    "page_fiche_ministere_travail",
+    "contributions",
+    "information",
+]
 
 ID = str
 HTML = str
@@ -77,7 +85,7 @@ class Document:
     initial_id: ID
     title: PlainText
     meta_description: PlainText
-    source: str
+    source: CollectionName
     slug: str
     text: PlainText
     document: JSONDict
@@ -127,7 +135,7 @@ DocumentsList = List[Document]
 
 # Chunk
 @dataclass
-class ChunkMetadata:
+class ChunkMetadata(TypedDict):
     collection_id: ID
     document_id: ID
     document_name: PlainText
@@ -139,7 +147,7 @@ class ChunkMetadata:
 
 
 @dataclass
-class Chunk:
+class Chunk(TypedDict):
     object: str
     id: str
     metadata: ChunkMetadata
@@ -147,12 +155,26 @@ class Chunk:
 
 
 @dataclass
-class ChunkDataItem:
+class ChunkDataItem(TypedDict):
     score: float
     chunk: Chunk
 
 
 @dataclass
-class ChunkDataList:
+class ChunkDataList(TypedDict):
     object: str
     data: List[ChunkDataItem]
+
+
+@dataclass
+class ChunkDataItemWithDocument(TypedDict):
+    score: float
+    chunk: Chunk
+    document: Document
+    content: str
+
+
+@dataclass
+class ChunkDataListWithDocument(TypedDict):
+    object: str
+    data: List[ChunkDataItemWithDocument]
