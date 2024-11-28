@@ -8,10 +8,10 @@ load_dotenv()
 
 
 def main():
-    data = get_data()
+    data = get_data(["information"])
     exploiter = PageInfosExploiter()
     result = exploiter.process_documents(
-        [data[3][0]], "page_infos.csv", "cdtn_page_infos"
+        [data["information"][0]], "page_infos.csv", "cdtn_page_infos"
     )
     collections = Collections()
     res = collections.search(
