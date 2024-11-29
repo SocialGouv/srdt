@@ -121,12 +121,6 @@ class LLMProcessor(AlbertBase):
                 self.logger.error(f"Unexpected error: {str(e)}")
                 raise
 
-    async def _collect_stream_to_string(self, message: str, system_prompt: str) -> str:
-        result = []
-        async for token in self._make_request_stream_async(message, system_prompt):
-            result.append(token)
-        return "".join(result)
-
     async def get_answer_stream_async(
         self,
         message: str,
