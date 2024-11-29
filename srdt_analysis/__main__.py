@@ -20,20 +20,12 @@ def main():
     )
     mapper = Mapper()
     data_to_send_to_llm = mapper.get_original_docs(rag_response, data)
-
     llm_processor = LLMProcessor()
-    # res = llm_processor.get_answer(
-    #     "Combien de jours de congé payé par mois de travail effectif ?",
-    #     data_to_send_to_llm,
-    # )
-
-    # print(res)
-
-    for token in llm_processor.get_answer_stream(
+    res = llm_processor.get_answer_stream(
         "Combien de jours de congé payé par mois de travail effectif ?",
         data_to_send_to_llm,
-    ):
-        print(token, end="", flush=True)
+    )
+    print(res)
 
 
 if __name__ == "__main__":
