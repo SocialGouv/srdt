@@ -22,14 +22,8 @@ class LLMProcessor(AlbertBase):
     def __init__(self):
         super().__init__()
         self.logger = Logger("LLMProcessor")
-        self._client = None
+        self._client = httpx.AsyncClient(timeout=30.0)
         self.rate_limit = asyncio.Semaphore(10)
-
-    @property
-    def client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            self._client = httpx.AsyncClient(timeout=30.0)
-        return self._client
 
     async def __aenter__(self) -> "LLMProcessor":
         return self
@@ -40,10 +34,6 @@ class LLMProcessor(AlbertBase):
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        await self.close()
-
-    async def close(self) -> None:
-        """Close the HTTP client properly"""
         if self._client is not None:
             await self._client.aclose()
             self._client = None
@@ -72,7 +62,7 @@ class LLMProcessor(AlbertBase):
                     messages.extend(conversation_history)
                 messages.append({"role": "user", "content": message})
 
-                async with self.client.stream(
+                async with self._client.stream(
                     "POST",
                     f"{ALBERT_ENDPOINT}/v1/chat/completions",
                     headers=self.headers,
