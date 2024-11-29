@@ -8,24 +8,31 @@ from srdt_analysis.mapper import Mapper
 
 load_dotenv()
 
+QUESTION = "Combien de jours de congé payé par mois de travail effectif ?"
+COLLECTION_ID = "ddf46f4b-d8e6-4261-889b-508ce6b62464"
+
 
 def main():
     data = get_data(["information"])
-    exploiter = PageInfosExploiter()
-    result = exploiter.process_documents([data["information"][0]], "cdtn_page_infos")
+    # exploiter = PageInfosExploiter()
+    # result = exploiter.process_documents(data["information"], "cdtn_page_infos")
     collections = Collections()
+    # rag_response = collections.search(
+    #     QUESTION,
+    #     [result["id"]],
+    # )
     rag_response = collections.search(
-        "combien de jour de congé payé par mois de travail effectif",
-        [result["id"]],
+        QUESTION,
+        [COLLECTION_ID],
     )
     mapper = Mapper()
     data_to_send_to_llm = mapper.get_original_docs(rag_response, data)
     llm_processor = LLMProcessor()
-    res = llm_processor.get_answer_stream(
-        "Combien de jours de congé payé par mois de travail effectif ?",
+    for token in llm_processor.get_answer_stream(
+        QUESTION,
         data_to_send_to_llm,
-    )
-    print(res)
+    ):
+        print(token, end="", flush=True)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 import asyncio
 import json
 import warnings
-from functools import lru_cache
 from types import TracebackType
 from typing import Any, AsyncGenerator, Dict, Iterator, List, Optional, Type
 
@@ -14,78 +13,12 @@ from tenacity import (
 )
 
 from srdt_analysis.albert import AlbertBase
-from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL
+from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL, LLM_PROMPT
 from srdt_analysis.logger import Logger
 from srdt_analysis.models import ChunkDataListWithDocument
 
 
 class LLMProcessor(AlbertBase):
-    SUMMARY_PROMPT = """
-    Tu es un chatbot expert en droit du travail français. Lis le texte donné et rédige un résumé clair, précis et concis, 
-    limité à 4096 tokens maximum. Dans ce résumé, fais ressortir les points clés suivants :
-
-    Sujets principaux : identifie les droits et obligations des employeurs et des salariés, les conditions de travail, 
-    les procédures, etc.
-
-    Langage clair : simplifie le langage juridique tout en restant précis pour éviter toute confusion.
-
-    Organisation logique : commence par les informations principales, puis détaille les exceptions ou points secondaires 
-    s'ils existent.
-
-    Neutralité : garde un ton factuel, sans jugement ou interprétation subjective.
-
-    Longueur : si le texte est long, privilégie les informations essentielles pour respecter la limite de 4096 tokens.
-
-    Ta réponse doit obligatoirement être en français.
-    """
-
-    KEYWORD_PROMPT = """
-    Tu es un chatbot expert en droit du travail français. Ta seule mission est d'extraire une liste de mots-clés 
-    à partir du texte fourni.
-
-    Objectif : Les mots-clés doivent refléter les idées et thèmes principaux pour faciliter la compréhension et 
-    la recherche du contenu du texte.
-
-    Sélection : Extrait uniquement les termes essentiels, comme les droits et devoirs des employeurs et des salariés, 
-    les conditions de travail, les procédures, les sanctions, etc.
-
-    Non-redondance : Évite les répétitions ; chaque mot-clé doit apparaître une seule fois.
-
-    Clarté et simplicité : Assure-toi que chaque mot-clé est compréhensible et pertinent.
-
-    Format attendu pour la liste de mots-clés : une liste simple et directe, sans organisation par thèmes, comme dans 
-    cet exemple : code du travail, article 12, congés payés, heures supplémentaires, licenciement économique.
-
-    Ta réponse doit obligatoirement être en français.
-    """
-
-    QUESTION_PROMPT = """
-    Tu es un chatbot expert en droit du travail français. Lis attentivement le texte fourni et génère une liste de questions pertinentes et variées, limitées à 4096 tokens. Ces questions doivent permettre d'approfondir la compréhension du contenu et de guider une analyse ou une discussion sur le sujet.
-
-    Directives pour la génération des questions :
-
-    Représentation des idées principales : Formule des questions en lien avec les droits et devoirs des employeurs et des salariés, les conditions de travail, les procédures légales, les sanctions, etc.
-    Variété : Génère des questions ouvertes (ex. : "Quels sont les droits d'un salarié en cas de licenciement économique ?") et fermées (ex. : "Un employeur peut-il refuser une demande de congés payés ?").
-    Clarté : Les questions doivent être claires, concises et directement liées au texte fourni, sans ambiguïté.
-    Priorité au contenu essentiel : Donne la priorité aux informations clés du texte, mais inclue également des questions sur des points secondaires si pertinent.
-    Neutralité : Rédige des questions neutres, sans parti pris ou interprétation subjective.
-    Respect de la longueur : Si le texte est très long, concentre-toi sur les parties les plus importantes pour générer des questions dans la limite de 4096 tokens.
-    Format attendu pour les questions : Une liste numérotée ou à puces, claire et ordonnée. Exemple :
-
-    Quels sont les critères de validité d'un contrat de travail ?
-    Quelles sont les obligations légales d'un employeur en cas de licenciement ?
-    Comment sont calculées les heures supplémentaires selon le Code du travail ?
-    Ta réponse doit obligatoirement être en français.
-    """
-
-    LLM_PROMPT = """
-    Voici les documents suivants : [DOCUMENTS]
-    
-    Peux tu reformuler une réponse en se basant sur ces documents ?
-    
-    La réponse doit faire au moins 10 lignes.
-    """
-
     def __init__(self):
         super().__init__()
         self.logger = Logger("LLMProcessor")
@@ -194,21 +127,6 @@ class LLMProcessor(AlbertBase):
             result.append(token)
         return "".join(result)
 
-    @lru_cache(maxsize=100)
-    async def get_summary_async(self, message: str) -> str:
-        self.logger.info("Generating summary for text")
-        return await self._collect_stream_to_string(message, self.SUMMARY_PROMPT)
-
-    @lru_cache(maxsize=100)
-    async def get_keywords_async(self, message: str) -> str:
-        self.logger.info("Extracting keywords from text")
-        return await self._collect_stream_to_string(message, self.KEYWORD_PROMPT)
-
-    @lru_cache(maxsize=100)
-    async def get_questions_async(self, message: str) -> str:
-        self.logger.info("Generating questions from text")
-        return await self._collect_stream_to_string(message, self.QUESTION_PROMPT)
-
     async def get_answer_stream_async(
         self,
         message: str,
@@ -217,34 +135,11 @@ class LLMProcessor(AlbertBase):
     ) -> AsyncGenerator[str, None]:
         self.logger.info("Generating streaming answer based on documents")
         document_contents = [item["content"] for item in documents["data"]]
-        system_prompt = self.LLM_PROMPT.replace(
-            "[DOCUMENTS]", "\n".join(document_contents)
-        )
+        system_prompt = LLM_PROMPT.replace("[DOCUMENTS]", "\n".join(document_contents))
         async for token in self._make_request_stream_async(
             message, system_prompt, conversation_history
         ):
             yield token
-
-    def get_summary(self, message: str) -> str:
-        async def _wrapped():
-            async with self:
-                return await self.get_summary_async(message)
-
-        return asyncio.run(_wrapped())
-
-    def get_keywords(self, message: str) -> str:
-        async def _wrapped():
-            async with self:
-                return await self.get_keywords_async(message)
-
-        return asyncio.run(_wrapped())
-
-    def get_questions(self, message: str) -> str:
-        async def _wrapped():
-            async with self:
-                return await self.get_questions_async(message)
-
-        return asyncio.run(_wrapped())
 
     def get_answer_stream(
         self,
