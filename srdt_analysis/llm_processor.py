@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import warnings
 from functools import lru_cache
 from types import TracebackType
@@ -16,9 +15,8 @@ from tenacity import (
 
 from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL
+from srdt_analysis.logger import Logger
 from srdt_analysis.models import ChunkDataListWithDocument
-
-logger = logging.getLogger(__name__)
 
 
 class LLMProcessor(AlbertBase):
@@ -90,6 +88,7 @@ class LLMProcessor(AlbertBase):
 
     def __init__(self):
         super().__init__()
+        self.logger = Logger("LLMProcessor")
         self._client = None
         self.rate_limit = asyncio.Semaphore(10)
 
@@ -174,19 +173,19 @@ class LLMProcessor(AlbertBase):
                                 ):
                                     yield content
                             except json.JSONDecodeError as e:
-                                logger.error(f"Failed to parse chunk: {e}")
+                                self.logger.error(f"Failed to parse chunk: {e}")
                                 continue
 
             except httpx.HTTPStatusError as e:
-                logger.error(
+                self.logger.error(
                     f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
                 )
                 raise
             except httpx.RequestError as e:
-                logger.error(f"Request error occurred: {str(e)}")
+                self.logger.error(f"Request error occurred: {str(e)}")
                 raise
             except Exception as e:
-                logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+                self.logger.error(f"Unexpected error: {str(e)}")
                 raise
 
     async def _collect_stream_to_string(self, message: str, system_prompt: str) -> str:
@@ -197,17 +196,17 @@ class LLMProcessor(AlbertBase):
 
     @lru_cache(maxsize=100)
     async def get_summary_async(self, message: str) -> str:
-        logger.info("Generating summary for text")
+        self.logger.info("Generating summary for text")
         return await self._collect_stream_to_string(message, self.SUMMARY_PROMPT)
 
     @lru_cache(maxsize=100)
     async def get_keywords_async(self, message: str) -> str:
-        logger.info("Extracting keywords from text")
+        self.logger.info("Extracting keywords from text")
         return await self._collect_stream_to_string(message, self.KEYWORD_PROMPT)
 
     @lru_cache(maxsize=100)
     async def get_questions_async(self, message: str) -> str:
-        logger.info("Generating questions from text")
+        self.logger.info("Generating questions from text")
         return await self._collect_stream_to_string(message, self.QUESTION_PROMPT)
 
     async def get_answer_stream_async(
@@ -216,7 +215,7 @@ class LLMProcessor(AlbertBase):
         documents: ChunkDataListWithDocument,
         conversation_history: Optional[list] = None,
     ) -> AsyncGenerator[str, None]:
-        logger.info("Generating streaming answer based on documents")
+        self.logger.info("Generating streaming answer based on documents")
         document_contents = [item["content"] for item in documents["data"]]
         system_prompt = self.LLM_PROMPT.replace(
             "[DOCUMENTS]", "\n".join(document_contents)
