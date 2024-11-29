@@ -1,10 +1,18 @@
 import asyncio
+import json
 import logging
+import warnings
 from functools import lru_cache
-from typing import Any, Dict, Optional
+from types import TracebackType
+from typing import Any, AsyncGenerator, Dict, Iterator, List, Optional, Type
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL
@@ -73,120 +81,185 @@ class LLMProcessor(AlbertBase):
     """
 
     LLM_PROMPT = """
-    Vous êtes un assistant juridique spécialisé en droit du travail. Votre rôle est de répondre à la question posée par l'utilisateur en vous basant uniquement sur les informations présentes dans les documents suivants : [DOCUMENTS]. Ne faites aucune supposition ni inférence en dehors des contenus de ces documents. Si la réponse ne peut pas être déduite ou trouvée directement dans ces documents, indiquez clairement que l'information n'est pas disponible.
-
-    Consignes spécifiques :
-    Si plusieurs documents contiennent des informations contradictoires, signalez cette contradiction.
-    Mentionnez précisément les passages ou les extraits des documents utilisés pour répondre.
-    Si une explication juridique est nécessaire, elle doit être entièrement fondée sur le contenu des documents fournis.
-    Si l'utilisateur pose une question dont la réponse n'est pas trouvée dans les documents, répondez : "Les documents fournis ne contiennent pas l'information demandée."
+    Voici les documents suivants : [DOCUMENTS]
+    
+    Peux tu reformuler une réponse en se basant sur ces documents ?
+    
+    La réponse doit faire au moins 10 lignes.
     """
 
     def __init__(self):
         super().__init__()
-        self.client = httpx.AsyncClient()
+        self._client = None
         self.rate_limit = asyncio.Semaphore(10)
 
+    @property
+    def client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=30.0)
+        return self._client
+
+    async def __aenter__(self) -> "LLMProcessor":
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        await self.close()
+
+    async def close(self) -> None:
+        """Close the HTTP client properly"""
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
     def __del__(self):
-        asyncio.create_task(self.client.aclose())
+        if self._client is not None:
+            warnings.warn(
+                "LLMProcessor was not properly closed. Please use 'async with' or call 'await close()'"
+            )
 
     def _validate_response(self, response: Dict[str, Any]) -> str:
-        """Validate and extract content from LLM response"""
-        if not response.get("choices"):
-            raise ValueError("Invalid response format: no choices found")
-        content = response["choices"][0]["message"]["content"]
-        if not content:
-            raise ValueError("Empty response content")
-        return content
+        try:
+            if not response.get("choices"):
+                raise ValueError("Invalid response format: no choices found")
+            content = response["choices"][0]["message"]["content"]
+            if not content:
+                raise ValueError("Empty response content")
+            return content
+        except (KeyError, IndexError) as e:
+            raise ValueError(f"Invalid response structure: {str(e)}") from e
 
     @retry(
-        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception_type((httpx.HTTPError, ValueError)),
     )
-    async def _make_request_async(
+    async def _make_request_stream_async(
         self,
         message: str,
         system_prompt: str,
-        conversation_history: Optional[list] = None,
-    ) -> str:
-        """Async version of make request with retry logic"""
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> AsyncGenerator[str, None]:
         async with self.rate_limit:
             try:
                 messages = [{"role": "system", "content": system_prompt}]
-
                 if conversation_history:
                     messages.extend(conversation_history)
-
                 messages.append({"role": "user", "content": message})
 
-                response = await self.client.post(
+                async with self.client.stream(
+                    "POST",
                     f"{ALBERT_ENDPOINT}/v1/chat/completions",
                     headers=self.headers,
                     json={
                         "messages": messages,
                         "model": LLM_MODEL,
+                        "stream": True,
                     },
-                    timeout=30.0,
-                )
-                response.raise_for_status()
-                return self._validate_response(response.json())
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: ") and line.strip() != "data: [DONE]":
+                            try:
+                                chunk = line[6:]
+                                chunk_data = json.loads(chunk)
+                                if (
+                                    content := chunk_data["choices"][0]
+                                    .get("delta", {})
+                                    .get("content")
+                                ):
+                                    yield content
+                            except json.JSONDecodeError as e:
+                                logger.error(f"Failed to parse chunk: {e}")
+                                continue
+
             except httpx.HTTPStatusError as e:
                 logger.error(
                     f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
                 )
                 raise
-            except Exception as e:
-                logger.error(f"Error making request: {str(e)}")
+            except httpx.RequestError as e:
+                logger.error(f"Request error occurred: {str(e)}")
                 raise
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+                raise
+
+    async def _collect_stream_to_string(self, message: str, system_prompt: str) -> str:
+        result = []
+        async for token in self._make_request_stream_async(message, system_prompt):
+            result.append(token)
+        return "".join(result)
 
     @lru_cache(maxsize=100)
     async def get_summary_async(self, message: str) -> str:
-        """Async version of get_summary with caching"""
         logger.info("Generating summary for text")
-        return await self._make_request_async(message, self.SUMMARY_PROMPT)
+        return await self._collect_stream_to_string(message, self.SUMMARY_PROMPT)
 
     @lru_cache(maxsize=100)
     async def get_keywords_async(self, message: str) -> str:
-        """Async version of get_keywords with caching"""
         logger.info("Extracting keywords from text")
-        return await self._make_request_async(message, self.KEYWORD_PROMPT)
+        return await self._collect_stream_to_string(message, self.KEYWORD_PROMPT)
 
     @lru_cache(maxsize=100)
     async def get_questions_async(self, message: str) -> str:
-        """Async version of get_questions with caching"""
         logger.info("Generating questions from text")
-        return await self._make_request_async(message, self.QUESTION_PROMPT)
+        return await self._collect_stream_to_string(message, self.QUESTION_PROMPT)
 
-    async def get_answer_async(
+    async def get_answer_stream_async(
         self,
         message: str,
         documents: ChunkDataListWithDocument,
         conversation_history: Optional[list] = None,
-    ) -> str:
-        """Async version of get_answer"""
-        logger.info("Generating answer based on documents")
+    ) -> AsyncGenerator[str, None]:
+        logger.info("Generating streaming answer based on documents")
         document_contents = [item["content"] for item in documents["data"]]
         system_prompt = self.LLM_PROMPT.replace(
             "[DOCUMENTS]", "\n".join(document_contents)
         )
-        return await self._make_request_async(
+        async for token in self._make_request_stream_async(
             message, system_prompt, conversation_history
-        )
+        ):
+            yield token
 
     def get_summary(self, message: str) -> str:
-        return asyncio.run(self.get_summary_async(message))
+        async def _wrapped():
+            async with self:
+                return await self.get_summary_async(message)
+
+        return asyncio.run(_wrapped())
 
     def get_keywords(self, message: str) -> str:
-        return asyncio.run(self.get_keywords_async(message))
+        async def _wrapped():
+            async with self:
+                return await self.get_keywords_async(message)
+
+        return asyncio.run(_wrapped())
 
     def get_questions(self, message: str) -> str:
-        return asyncio.run(self.get_questions_async(message))
+        async def _wrapped():
+            async with self:
+                return await self.get_questions_async(message)
 
-    def get_answer(
+        return asyncio.run(_wrapped())
+
+    def get_answer_stream(
         self,
         message: str,
         documents: ChunkDataListWithDocument,
         conversation_history: Optional[list] = None,
-    ) -> str:
-        return asyncio.run(
-            self.get_answer_async(message, documents, conversation_history)
-        )
+    ) -> Iterator[str]:
+        async def collect_tokens():
+            tokens = []
+            async with self:
+                async for token in self.get_answer_stream_async(
+                    message, documents, conversation_history
+                ):
+                    tokens.append(token)
+            return tokens
+
+        return iter(asyncio.run(collect_tokens()))
