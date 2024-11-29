@@ -36,9 +36,9 @@ class LLMProcessor(AlbertBase):
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        _exc_type: Optional[Type[BaseException]],
+        _exc_val: Optional[BaseException],
+        _exc_tb: Optional[TracebackType],
     ) -> None:
         if self._client is not None:
             await self._client.aclose()
