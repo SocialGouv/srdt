@@ -2,7 +2,7 @@ import asyncio
 import json
 import warnings
 from types import TracebackType
-from typing import Any, AsyncGenerator, Dict, Iterator, List, Optional, Type
+from typing import AsyncGenerator, Dict, Iterator, List, Optional, Type
 
 import httpx
 from tenacity import (
@@ -54,20 +54,9 @@ class LLMProcessor(AlbertBase):
                 "LLMProcessor was not properly closed. Please use 'async with' or call 'await close()'"
             )
 
-    def _validate_response(self, response: Dict[str, Any]) -> str:
-        try:
-            if not response.get("choices"):
-                raise ValueError("Invalid response format: no choices found")
-            content = response["choices"][0]["message"]["content"]
-            if not content:
-                raise ValueError("Empty response content")
-            return content
-        except (KeyError, IndexError) as e:
-            raise ValueError(f"Invalid response structure: {str(e)}") from e
-
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        wait=wait_exponential(multiplier=1, min=8, max=30),
         retry=retry_if_exception_type((httpx.HTTPError, ValueError)),
     )
     async def _make_request_stream_async(
