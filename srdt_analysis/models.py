@@ -33,9 +33,6 @@ class DocumentData(TypedDict):
     initial_id: ID
     title: PlainText
     content: PlainText
-    keywords: PlainText
-    summary: PlainText
-    questions: PlainText
     url: URL
     content_chunked: List[SplitDocument]
 
