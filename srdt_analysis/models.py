@@ -9,9 +9,9 @@ CollectionName = Literal[
     "code_du_travail",
     "fiches_service_public",
     "page_fiche_ministere_travail",
-    "contributions",
     "information",
 ]
+
 
 ID = str
 HTML = str
@@ -34,6 +34,7 @@ class DocumentData(TypedDict):
     title: PlainText
     content: PlainText
     url: URL
+    source: CollectionName
     content_chunked: List[SplitDocument]
 
 
@@ -138,8 +139,9 @@ class ChunkMetadata(TypedDict):
     document_name: PlainText
     document_part: int
     document_created_at: int
-    structure_du_chunk: Dict[str, str]
-    cdtn_id: ID
+    id: ID
+    source: CollectionName
+    url: str
     collection: str
 
 
@@ -152,19 +154,19 @@ class Chunk(TypedDict):
 
 
 @dataclass
-class ChunkDataItem(TypedDict):
+class RAGChunkData(TypedDict):
     score: float
     chunk: Chunk
 
 
 @dataclass
-class ChunkDataList(TypedDict):
+class RAGChunkSearchResult(TypedDict):
     object: str
-    data: List[ChunkDataItem]
+    data: List[RAGChunkData]
 
 
 @dataclass
-class ChunkDataItemWithDocument(TypedDict):
+class RAGChunkDataEnriched(TypedDict):
     score: float
     chunk: Chunk
     document: Document
@@ -172,6 +174,6 @@ class ChunkDataItemWithDocument(TypedDict):
 
 
 @dataclass
-class ChunkDataListWithDocument(TypedDict):
+class RAGChunkSearchResultEnriched(TypedDict):
     object: str
-    data: List[ChunkDataItemWithDocument]
+    data: List[RAGChunkDataEnriched]
