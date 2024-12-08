@@ -6,18 +6,18 @@ import httpx
 
 from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT
-from srdt_analysis.models import DocumentData, RAGChunkSearchResult
+from srdt_analysis.models import CollectionName, DocumentData, RAGChunkSearchResult
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: str, model: str) -> str:
+    def _create(self, collection_name: CollectionName, model: str) -> str:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: str, model: str) -> str:
+    def create(self, collection_name: CollectionName, model: str) -> str:
         collections: List[Dict[str, Any]] = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
@@ -34,7 +34,7 @@ class Collections(AlbertBase):
         )
         response.raise_for_status()
 
-    def delete_all(self, collection_name) -> None:
+    def delete_all(self, collection_name: CollectionName) -> None:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:

@@ -12,6 +12,8 @@ CollectionName = Literal[
     "information",
 ]
 
+ChunkerContentType = Literal["markdown", "html", "character_recursive"]
+
 
 ID = str
 HTML = str
