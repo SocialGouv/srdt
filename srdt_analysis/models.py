@@ -1,9 +1,17 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 import asyncpg
+
+CollectionName = Literal[
+    "code_du_travail",
+    "fiches_service_public",
+    "page_fiche_ministere_travail",
+    "information",
+]
+
 
 ID = str
 HTML = str
@@ -25,10 +33,8 @@ class DocumentData(TypedDict):
     initial_id: ID
     title: PlainText
     content: PlainText
-    keywords: PlainText
-    summary: PlainText
-    questions: PlainText
     url: URL
+    source: CollectionName
     content_chunked: List[SplitDocument]
 
 
@@ -77,7 +83,7 @@ class Document:
     initial_id: ID
     title: PlainText
     meta_description: PlainText
-    source: str
+    source: CollectionName
     slug: str
     text: PlainText
     document: JSONDict
@@ -127,19 +133,20 @@ DocumentsList = List[Document]
 
 # Chunk
 @dataclass
-class ChunkMetadata:
+class ChunkMetadata(TypedDict):
     collection_id: ID
     document_id: ID
     document_name: PlainText
     document_part: int
     document_created_at: int
-    structure_du_chunk: Dict[str, str]
-    cdtn_id: ID
+    id: ID
+    source: CollectionName
+    url: str
     collection: str
 
 
 @dataclass
-class Chunk:
+class Chunk(TypedDict):
     object: str
     id: str
     metadata: ChunkMetadata
@@ -147,12 +154,26 @@ class Chunk:
 
 
 @dataclass
-class ChunkDataItem:
+class RAGChunkData(TypedDict):
     score: float
     chunk: Chunk
 
 
 @dataclass
-class ChunkDataList:
+class RAGChunkSearchResult(TypedDict):
     object: str
-    data: List[ChunkDataItem]
+    data: List[RAGChunkData]
+
+
+@dataclass
+class RAGChunkDataEnriched(TypedDict):
+    score: float
+    chunk: Chunk
+    document: Document
+    content: str
+
+
+@dataclass
+class RAGChunkSearchResultEnriched(TypedDict):
+    object: str
+    data: List[RAGChunkDataEnriched]
