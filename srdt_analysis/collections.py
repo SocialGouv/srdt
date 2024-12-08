@@ -6,7 +6,7 @@ import httpx
 
 from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import ALBERT_ENDPOINT
-from srdt_analysis.models import ChunkDataList, DocumentData
+from srdt_analysis.models import DocumentData, RAGChunkSearchResult
 
 
 class Collections(AlbertBase):
@@ -47,7 +47,7 @@ class Collections(AlbertBase):
         id_collections: List[str],
         k: int = 5,
         score_threshold: float = 0,
-    ) -> ChunkDataList:
+    ) -> RAGChunkSearchResult:
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/search",
             headers=self.headers,
@@ -75,9 +75,9 @@ class Collections(AlbertBase):
                         "text": chunk.page_content,
                         "title": dt["title"],
                         "metadata": {
-                            "cdtn_id": dt["cdtn_id"],
-                            "structure_du_chunk": chunk.metadata,
+                            "id": dt["cdtn_id"],
                             "url": dt["url"],
+                            "source": dt["source"],
                         },
                     }
                 )

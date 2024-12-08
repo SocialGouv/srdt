@@ -1,8 +1,6 @@
 import asyncio
 import json
-import warnings
-from types import TracebackType
-from typing import AsyncGenerator, Dict, Iterator, List, Optional, Type
+from typing import AsyncGenerator, Iterator
 
 import httpx
 from tenacity import (
@@ -13,64 +11,31 @@ from tenacity import (
 )
 
 from srdt_analysis.albert import AlbertBase
-from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL, LLM_PROMPT
+from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_ANSWER_PROMPT, LLM_MODEL
 from srdt_analysis.logger import Logger
-from srdt_analysis.models import ChunkDataListWithDocument
+from srdt_analysis.models import RAGChunkSearchResultEnriched
 
 
 class LLMProcessor(AlbertBase):
     def __init__(self):
         super().__init__()
         self.logger = Logger("LLMProcessor")
-        self._client = None
+        self.client = httpx.AsyncClient(timeout=30.0)
         self.rate_limit = asyncio.Semaphore(10)
-
-    @property
-    def client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            self._client = httpx.AsyncClient(timeout=30.0)
-        return self._client
-
-    async def __aenter__(self) -> "LLMProcessor":
-        return self
-
-    async def __aexit__(
-        self,
-        _exc_type: Optional[Type[BaseException]],
-        _exc_val: Optional[BaseException],
-        _exc_tb: Optional[TracebackType],
-    ) -> None:
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
-
-    async def close(self) -> None:
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
-
-    def __del__(self):
-        if self._client is not None:
-            warnings.warn(
-                "LLMProcessor was not properly closed. Please use 'async with' or call 'await close()'"
-            )
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=8, max=30),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type((httpx.HTTPError, ValueError)),
     )
     async def _make_request_stream_async(
         self,
         message: str,
         system_prompt: str,
-        conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> AsyncGenerator[str, None]:
         async with self.rate_limit:
             try:
                 messages = [{"role": "system", "content": system_prompt}]
-                if conversation_history:
-                    messages.extend(conversation_history)
                 messages.append({"role": "user", "content": message})
 
                 async with self.client.stream(
@@ -87,7 +52,7 @@ class LLMProcessor(AlbertBase):
                     async for line in response.aiter_lines():
                         if line.startswith("data: ") and line.strip() != "data: [DONE]":
                             try:
-                                chunk = line[6:]
+                                chunk = line[len("data: ") :]
                                 chunk_data = json.loads(chunk)
                                 if (
                                     content := chunk_data["choices"][0]
@@ -114,30 +79,26 @@ class LLMProcessor(AlbertBase):
     async def get_answer_stream_async(
         self,
         message: str,
-        documents: ChunkDataListWithDocument,
-        conversation_history: Optional[list] = None,
+        documents: RAGChunkSearchResultEnriched,
     ) -> AsyncGenerator[str, None]:
         self.logger.info("Generating streaming answer based on documents")
         document_contents = [item["content"] for item in documents["data"]]
-        system_prompt = LLM_PROMPT.replace("[DOCUMENTS]", "\n".join(document_contents))
-        async for token in self._make_request_stream_async(
-            message, system_prompt, conversation_history
-        ):
+        system_prompt = f"{LLM_ANSWER_PROMPT}\n Mes documents sont :\n{'\n'.join(document_contents)}\n"
+        async for token in self._make_request_stream_async(message, system_prompt):
             yield token
 
     def get_answer_stream(
         self,
         message: str,
-        documents: ChunkDataListWithDocument,
-        conversation_history: Optional[list] = None,
+        documents: RAGChunkSearchResultEnriched,
     ) -> Iterator[str]:
         async def collect_tokens():
             tokens = []
-            async with self:
-                async for token in self.get_answer_stream_async(
-                    message, documents, conversation_history
-                ):
-                    tokens.append(token)
+            async for token in self.get_answer_stream_async(
+                message,
+                documents,
+            ):
+                tokens.append(token)
             return tokens
 
         return iter(asyncio.run(collect_tokens()))
