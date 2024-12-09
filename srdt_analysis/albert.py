@@ -13,7 +13,9 @@ class AlbertBase:
             raise ValueError(
                 "API key must be provided either in constructor or as environment variable"
             )
-        self.headers = {"Authorization": f"Bearer {self.api_key}"}
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+        }
 
     def get_models(self) -> Dict[str, Any]:
         response = httpx.get(f"{ALBERT_ENDPOINT}/v1/models", headers=self.headers)
