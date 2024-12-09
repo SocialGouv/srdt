@@ -14,6 +14,12 @@ from srdt_analysis.mapper import Mapper
 load_dotenv()
 
 QUESTION = "Combien de jours de congé payé par mois de travail effectif ?"
+COLLECTION_IDS = [
+    "4462ceb9-6da9-4f76-8a63-b87d4cc5afa0",  # information
+    "fa1d5d19-ec81-493a-843d-b33ce438f630",  # page_fiche_ministere_travail
+    "ba380a00-660b-4b49-8a77-7b8b389c3200",  # code_du_travail
+    "8dfca31c-994b-41cd-b5d5-c12231eee5d9",  # fiches_service_public
+]
 
 
 def main():
@@ -26,32 +32,33 @@ def main():
         ]
     )
     collections = Collections()
-    page_infos_exploiter = PageInfosExploiter()
-    result_page_info = page_infos_exploiter.process_documents(
-        data["information"], "information", "markdown"
-    )
-    fiche_mt_exploiter = FichesMTExploiter()
-    result_fiche_mt = fiche_mt_exploiter.process_documents(
-        data["page_fiche_ministere_travail"], "page_fiche_ministere_travail", "html"
-    )
-    article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    result_article_code_du_travail = (
-        article_code_du_travail_exploiter.process_documents(
-            data["code_du_travail"], "code_du_travail", "character_recursive"
-        )
-    )
-    page_sp_exploiter = FichesSPExploiter()
-    result_page_sp = page_sp_exploiter.process_documents(
-        data["fiches_service_public"], "fiches_service_public", "character_recursive"
-    )
+    # page_infos_exploiter = PageInfosExploiter()
+    # result_page_info = page_infos_exploiter.process_documents(
+    #     data["information"], "information", "markdown"
+    # )
+    # fiche_mt_exploiter = FichesMTExploiter()
+    # result_fiche_mt = fiche_mt_exploiter.process_documents(
+    #     data["page_fiche_ministere_travail"], "page_fiche_ministere_travail", "html"
+    # )
+    # article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
+    # result_article_code_du_travail = (
+    #     article_code_du_travail_exploiter.process_documents(
+    #         data["code_du_travail"], "code_du_travail", "character_recursive"
+    #     )
+    # )
+    # page_sp_exploiter = FichesSPExploiter()
+    # result_page_sp = page_sp_exploiter.process_documents(
+    #     data["fiches_service_public"], "fiches_service_public", "character_recursive"
+    # )
     rag_response = collections.search(
         QUESTION,
-        [
-            result_page_info["id"],
-            result_fiche_mt["id"],
-            result_page_sp["id"],
-            result_article_code_du_travail["id"],
-        ],
+        # [
+        #     result_page_info["id"],
+        #     result_fiche_mt["id"],
+        #     result_page_sp["id"],
+        #     result_article_code_du_travail["id"],
+        # ],
+        COLLECTION_IDS,
     )
     mapper = Mapper(data)
     data_to_send_to_llm = mapper.get_original_docs(rag_response)
