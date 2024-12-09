@@ -129,6 +129,6 @@ def pipeline_test_RAG(instructions, LLM, question_utilisateur):
 
     return {'reponse_assistant' : reponse_assistant,
             'urls' : sources_url,
-            'documents_id' : sources_id
+            'documents_id' : sources_id,
             'question_reformulee' : rephrased_question
             }
