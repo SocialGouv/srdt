@@ -1,12 +1,13 @@
 from typing import List
 
 from langchain_text_splitters import (
+    HTMLHeaderTextSplitter,
     MarkdownHeaderTextSplitter,
     RecursiveCharacterTextSplitter,
 )
 
 from srdt_analysis.constants import CHUNK_OVERLAP, CHUNK_SIZE
-from srdt_analysis.models import SplitDocument
+from srdt_analysis.models import ChunkerContentType, SplitDocument
 
 
 class Chunker:
@@ -22,6 +23,16 @@ class Chunker:
             ],
             strip_headers=False,
         )
+        self._html_splitter = HTMLHeaderTextSplitter(
+            [
+                ("h1", "Header 1"),
+                ("h2", "Header 2"),
+                ("h3", "Header 3"),
+                ("h4", "Header 4"),
+                ("h5", "Header 5"),
+                ("h6", "Header 6"),
+            ]
+        )
         self._character_recursive_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
         )
@@ -31,11 +42,26 @@ class Chunker:
         documents = self._character_recursive_splitter.split_documents(md_header_splits)
         return [SplitDocument(doc.page_content, doc.metadata) for doc in documents]
 
+    def split_html(self, html: str) -> List[SplitDocument]:
+        html_header_splits = self._html_splitter.split_text(html)
+        documents = self._character_recursive_splitter.split_documents(
+            html_header_splits
+        )
+        return [SplitDocument(doc.page_content, doc.metadata) for doc in documents]
+
     def split_character_recursive(self, content: str) -> List[SplitDocument]:
         text_splits = self._character_recursive_splitter.split_text(content)
         return [SplitDocument(text, {}) for text in text_splits]
 
-    def split(self, content: str, content_type: str = "markdown"):
+    def split(
+        self,
+        content: str,
+        content_type: ChunkerContentType,
+    ) -> List[SplitDocument]:
         if content_type.lower() == "markdown":
             return self.split_markdown(content)
+        if content_type.lower() == "html":
+            return self.split_html(content)
+        if content_type.lower() == "character_recursive":
+            return self.split_character_recursive(content)
         raise ValueError(f"Unsupported content type: {content_type}")

@@ -1,23 +1,28 @@
 import json
+import time
 from io import BytesIO
 from typing import Any, Dict, List
 
 import httpx
 
 from srdt_analysis.albert import AlbertBase
-from srdt_analysis.constants import ALBERT_ENDPOINT
-from srdt_analysis.models import DocumentData, RAGChunkSearchResult
+from srdt_analysis.constants import (
+    ALBERT_ENDPOINT,
+    COLLECTIONS_UPLOAD_BATCH_SIZE,
+    COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
+)
+from srdt_analysis.models import CollectionName, DocumentData, RAGChunkSearchResult
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: str, model: str) -> str:
+    def _create(self, collection_name: CollectionName, model: str) -> str:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: str, model: str) -> str:
+    def create(self, collection_name: CollectionName, model: str) -> str:
         collections: List[Dict[str, Any]] = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
@@ -34,7 +39,7 @@ class Collections(AlbertBase):
         )
         response.raise_for_status()
 
-    def delete_all(self, collection_name) -> None:
+    def delete_all(self, collection_name: CollectionName) -> None:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
@@ -82,23 +87,29 @@ class Collections(AlbertBase):
                     }
                 )
 
-        file_content = json.dumps(result).encode("utf-8")
+        for i in range(0, len(result), COLLECTIONS_UPLOAD_BATCH_SIZE):
+            batch = result[i : i + COLLECTIONS_UPLOAD_BATCH_SIZE]
+            file_content = json.dumps(batch).encode("utf-8")
 
-        files = {
-            "file": (
-                "content.json",
-                BytesIO(file_content),
-                "multipart/form-data",
+            files = {
+                "file": (
+                    "content.json",
+                    BytesIO(file_content),
+                    "multipart/form-data",
+                )
+            }
+
+            request_data = {"request": '{"collection": "%s"}' % id_collection}
+            response = httpx.post(
+                f"{ALBERT_ENDPOINT}/v1/files",
+                headers=self.headers,
+                files=files,
+                data=request_data,
             )
-        }
 
-        request_data = {"request": '{"collection": "%s"}' % id_collection}
-        response = httpx.post(
-            f"{ALBERT_ENDPOINT}/v1/files",
-            headers=self.headers,
-            files=files,
-            data=request_data,
-        )
+            response.raise_for_status()
 
-        response.raise_for_status()
+            if i + COLLECTIONS_UPLOAD_DELAY_IN_SECONDS < len(result):
+                time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
+
         return
