@@ -3,8 +3,8 @@
 ## Installation et lancement
 
 ```sh
-poetry shell
-poetry install
+make install
+pre-commit run --all-files
 poetry run start # or poetry run python -m srdt_analysis
 ruff check --fix
 ruff format
