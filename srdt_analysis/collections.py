@@ -1,7 +1,7 @@
 import json
 import time
 from io import BytesIO
-from typing import Any, Dict, List
+from typing import List
 
 import httpx
 
@@ -11,29 +11,42 @@ from srdt_analysis.constants import (
     COLLECTIONS_UPLOAD_BATCH_SIZE,
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
-from srdt_analysis.models import CollectionName, DocumentData, RAGChunkSearchResult
+from srdt_analysis.models import (
+    UUID_V4,
+    CollectionName,
+    DocumentData,
+    RAGChunkSearchResult,
+)
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: CollectionName, model: str) -> str:
+    def _create(self, collection_name: CollectionName, model: str) -> UUID_V4:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: CollectionName, model: str) -> str:
-        collections: List[Dict[str, Any]] = self.list()
+    def create(self, collection_name: CollectionName, model: str) -> UUID_V4:
+        collections = self.list()
+        print(collections)
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self) -> List[Dict[str, Any]]:
-        response = httpx.get(f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers)
-        return response.json()["data"]
+    def list(self):
+        try:
+            response = httpx.get(
+                f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers
+            )
+            response.raise_for_status()
+            response_data = response.json()
+            return response_data.get("data", [])
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
+            raise ValueError(f"Error while listing collections: {str(e)}")
 
-    def delete(self, id_collection: str):
+    def delete(self, id_collection: str) -> None:
         response = httpx.delete(
             f"{ALBERT_ENDPOINT}/v1/collections/{id_collection}", headers=self.headers
         )
@@ -109,7 +122,7 @@ class Collections(AlbertBase):
 
             response.raise_for_status()
 
-            if i + COLLECTIONS_UPLOAD_DELAY_IN_SECONDS < len(result):
+            if i + COLLECTIONS_UPLOAD_BATCH_SIZE < len(result):
                 time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
 
         return

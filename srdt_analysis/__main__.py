@@ -23,6 +23,37 @@ COLLECTION_IDS = [
 
 
 def main():
+    ingest()
+
+
+def ingest():
+    data = get_data(
+        [
+            "information",
+            "code_du_travail",
+            "page_fiche_ministere_travail",
+            "fiches_service_public",
+        ]
+    )
+    page_infos_exploiter = PageInfosExploiter()
+    page_infos_exploiter.process_documents(
+        data["information"], "information", "markdown"
+    )
+    fiche_mt_exploiter = FichesMTExploiter()
+    fiche_mt_exploiter.process_documents(
+        data["page_fiche_ministere_travail"], "page_fiche_ministere_travail", "html"
+    )
+    article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
+    article_code_du_travail_exploiter.process_documents(
+        data["code_du_travail"], "code_du_travail", "character_recursive"
+    )
+    page_sp_exploiter = FichesSPExploiter()
+    page_sp_exploiter.process_documents(
+        data["fiches_service_public"], "fiches_service_public", "character_recursive"
+    )
+
+
+def run_llm():
     data = get_data(
         [
             "information",
@@ -32,32 +63,8 @@ def main():
         ]
     )
     collections = Collections()
-    # page_infos_exploiter = PageInfosExploiter()
-    # result_page_info = page_infos_exploiter.process_documents(
-    #     data["information"], "information", "markdown"
-    # )
-    # fiche_mt_exploiter = FichesMTExploiter()
-    # result_fiche_mt = fiche_mt_exploiter.process_documents(
-    #     data["page_fiche_ministere_travail"], "page_fiche_ministere_travail", "html"
-    # )
-    # article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    # result_article_code_du_travail = (
-    #     article_code_du_travail_exploiter.process_documents(
-    #         data["code_du_travail"], "code_du_travail", "character_recursive"
-    #     )
-    # )
-    # page_sp_exploiter = FichesSPExploiter()
-    # result_page_sp = page_sp_exploiter.process_documents(
-    #     data["fiches_service_public"], "fiches_service_public", "character_recursive"
-    # )
     rag_response = collections.search(
         QUESTION,
-        # [
-        #     result_page_info["id"],
-        #     result_fiche_mt["id"],
-        #     result_page_sp["id"],
-        #     result_article_code_du_travail["id"],
-        # ],
         COLLECTION_IDS,
     )
     mapper = Mapper(data)

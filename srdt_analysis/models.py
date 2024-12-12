@@ -21,6 +21,8 @@ PlainText = str
 JSONDict = Dict[str, Any]
 Timestamp = datetime
 URL = str
+FormattedTextContent = str
+UUID_V4 = str
 
 
 @dataclass

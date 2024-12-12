@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, Dict, List
 
 from langchain_text_splitters import (
     HTMLHeaderTextSplitter,
@@ -58,10 +58,14 @@ class Chunker:
         content: str,
         content_type: ChunkerContentType,
     ) -> List[SplitDocument]:
-        if content_type.lower() == "markdown":
-            return self.split_markdown(content)
-        if content_type.lower() == "html":
-            return self.split_html(content)
-        if content_type.lower() == "character_recursive":
-            return self.split_character_recursive(content)
-        raise ValueError(f"Unsupported content type: {content_type}")
+        content_type_to_splitters: Dict[
+            ChunkerContentType, Callable[[str], List[SplitDocument]]
+        ] = {
+            "markdown": self.split_markdown,
+            "html": self.split_html,
+            "character_recursive": self.split_character_recursive,
+        }
+        splitter_func = content_type_to_splitters.get(content_type)
+        if splitter_func is None:
+            raise ValueError(f"Unsupported content type: {content_type}")
+        return splitter_func(content)
