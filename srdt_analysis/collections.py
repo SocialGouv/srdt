@@ -16,6 +16,7 @@ from srdt_analysis.models import (
     CollectionName,
     DocumentData,
     RAGChunkSearchResult,
+    CollectionsList,  # Add this import
 )
 
 
@@ -29,13 +30,12 @@ class Collections(AlbertBase):
 
     def create(self, collection_name: CollectionName, model: str) -> UUID_V4:
         collections = self.list()
-        print(collections)
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self):
+    def list(self) -> CollectionsList:
         try:
             response = httpx.get(
                 f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers

@@ -181,3 +181,18 @@ class RAGChunkDataEnriched(TypedDict):
 class RAGChunkSearchResultEnriched(TypedDict):
     object: str
     data: List[RAGChunkDataEnriched]
+
+
+@dataclass
+class CollectionData(TypedDict):
+    id: str
+    name: str
+    type: str
+    model: Optional[str]
+    user: Optional[str]
+    description: Optional[str]
+    created_at: Optional[int]
+    documents: Optional[Any]
+
+
+CollectionsList = List[CollectionData]
