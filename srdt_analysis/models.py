@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional, TypedDict
 
 import asyncpg
 
@@ -22,7 +22,8 @@ JSONDict = Dict[str, Any]
 Timestamp = datetime
 URL = str
 FormattedTextContent = str
-UUID_V4 = str
+COLLECTION_ID = str
+COLLECTIONS_ID = list[str]
 
 
 @dataclass
@@ -39,12 +40,15 @@ class DocumentData(TypedDict):
     content: PlainText
     url: URL
     source: CollectionName
-    content_chunked: List[SplitDocument]
+    content_chunked: list[SplitDocument]
+
+
+ListOfDocumentData = list[DocumentData]
 
 
 @dataclass
 class ResultProcessDocumentType(TypedDict):
-    documents: List[DocumentData]
+    documents: list[DocumentData]
     id: str
 
 
@@ -64,7 +68,7 @@ class Section:
     text: PlainText
     title: PlainText
     anchor: str
-    references: List[Reference]
+    references: list[Reference]
     description: PlainText
     htmlWithGlossary: HTML
 
@@ -73,8 +77,8 @@ class Section:
 class Content:
     text: str
     html: str
-    sections: Optional[List[Section]]
-    referencedTexts: Optional[List[Dict]]
+    sections: Optional[list[Section]]
+    referencedTexts: Optional[list[Dict]]
     intro: str
     date: str
     url: str
@@ -132,7 +136,7 @@ class Document:
         )
 
 
-DocumentsList = List[Document]
+DocumentsList = list[Document]
 
 
 # Chunk
@@ -166,7 +170,7 @@ class RAGChunkData(TypedDict):
 @dataclass
 class RAGChunkSearchResult(TypedDict):
     object: str
-    data: List[RAGChunkData]
+    data: list[RAGChunkData]
 
 
 @dataclass
@@ -180,11 +184,12 @@ class RAGChunkDataEnriched(TypedDict):
 @dataclass
 class RAGChunkSearchResultEnriched(TypedDict):
     object: str
-    data: List[RAGChunkDataEnriched]
+    data: list[RAGChunkDataEnriched]
 
 
+# Albert Collection
 @dataclass
-class CollectionData(TypedDict):
+class AlbertCollectionData(TypedDict):
     id: str
     name: str
     type: str
@@ -195,4 +200,4 @@ class CollectionData(TypedDict):
     documents: Optional[Any]
 
 
-CollectionsList = List[CollectionData]
+AlbertCollectionsList = list[AlbertCollectionData]

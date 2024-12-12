@@ -1,7 +1,6 @@
 import json
 import time
 from io import BytesIO
-from typing import List
 
 import httpx
 
@@ -12,30 +11,32 @@ from srdt_analysis.constants import (
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
 from srdt_analysis.models import (
-    UUID_V4,
+    COLLECTION_ID,
+    COLLECTIONS_ID,
+    AlbertCollectionsList,
     CollectionName,
-    CollectionsList,
     DocumentData,
+    ListOfDocumentData,
     RAGChunkSearchResult,
 )
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: CollectionName, model: str) -> UUID_V4:
+    def _create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: CollectionName, model: str) -> UUID_V4:
+    def create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self) -> CollectionsList:
+    def list(self) -> AlbertCollectionsList:
         try:
             response = httpx.get(
                 f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers
@@ -62,7 +63,7 @@ class Collections(AlbertBase):
     def search(
         self,
         prompt: str,
-        id_collections: List[str],
+        id_collections: COLLECTIONS_ID,
         k: int = 5,
         score_threshold: float = 0,
     ) -> RAGChunkSearchResult:
@@ -80,7 +81,7 @@ class Collections(AlbertBase):
 
     def upload(
         self,
-        data: List[DocumentData],
+        data: ListOfDocumentData,
         id_collection: str,
     ) -> None:
         result = []
