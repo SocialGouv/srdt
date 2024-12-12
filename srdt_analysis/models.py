@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional, TypedDict
 
 import asyncpg
 
@@ -12,6 +12,8 @@ CollectionName = Literal[
     "information",
 ]
 
+ChunkerContentType = Literal["markdown", "html", "character_recursive"]
+
 
 ID = str
 HTML = str
@@ -19,6 +21,10 @@ PlainText = str
 JSONDict = Dict[str, Any]
 Timestamp = datetime
 URL = str
+FormattedTextContent = str
+COLLECTION_ID = str
+COLLECTIONS_ID = list[str]
+XML_AS_JSON = dict
 
 
 @dataclass
@@ -35,12 +41,15 @@ class DocumentData(TypedDict):
     content: PlainText
     url: URL
     source: CollectionName
-    content_chunked: List[SplitDocument]
+    content_chunked: list[SplitDocument]
+
+
+ListOfDocumentData = list[DocumentData]
 
 
 @dataclass
 class ResultProcessDocumentType(TypedDict):
-    documents: List[DocumentData]
+    documents: list[DocumentData]
     id: str
 
 
@@ -60,7 +69,7 @@ class Section:
     text: PlainText
     title: PlainText
     anchor: str
-    references: List[Reference]
+    references: list[Reference]
     description: PlainText
     htmlWithGlossary: HTML
 
@@ -69,8 +78,8 @@ class Section:
 class Content:
     text: str
     html: str
-    sections: Optional[List[Section]]
-    referencedTexts: Optional[List[Dict]]
+    sections: Optional[list[Section]]
+    referencedTexts: Optional[list[Dict]]
     intro: str
     date: str
     url: str
@@ -128,7 +137,7 @@ class Document:
         )
 
 
-DocumentsList = List[Document]
+DocumentsList = list[Document]
 
 
 # Chunk
@@ -162,7 +171,7 @@ class RAGChunkData(TypedDict):
 @dataclass
 class RAGChunkSearchResult(TypedDict):
     object: str
-    data: List[RAGChunkData]
+    data: list[RAGChunkData]
 
 
 @dataclass
@@ -176,4 +185,20 @@ class RAGChunkDataEnriched(TypedDict):
 @dataclass
 class RAGChunkSearchResultEnriched(TypedDict):
     object: str
-    data: List[RAGChunkDataEnriched]
+    data: list[RAGChunkDataEnriched]
+
+
+# Albert Collection
+@dataclass
+class AlbertCollectionData(TypedDict):
+    id: str
+    name: str
+    type: str
+    model: Optional[str]
+    user: Optional[str]
+    description: Optional[str]
+    created_at: Optional[int]
+    documents: Optional[Any]
+
+
+AlbertCollectionsList = list[AlbertCollectionData]

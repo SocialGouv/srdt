@@ -1,40 +1,59 @@
 import json
+import time
 from io import BytesIO
-from typing import Any, Dict, List
 
 import httpx
 
 from srdt_analysis.albert import AlbertBase
-from srdt_analysis.constants import ALBERT_ENDPOINT
-from srdt_analysis.models import DocumentData, RAGChunkSearchResult
+from srdt_analysis.constants import (
+    ALBERT_ENDPOINT,
+    COLLECTIONS_UPLOAD_BATCH_SIZE,
+    COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
+)
+from srdt_analysis.models import (
+    COLLECTION_ID,
+    COLLECTIONS_ID,
+    AlbertCollectionsList,
+    CollectionName,
+    DocumentData,
+    ListOfDocumentData,
+    RAGChunkSearchResult,
+)
 
 
 class Collections(AlbertBase):
-    def _create(self, collection_name: str, model: str) -> str:
+    def _create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: str, model: str) -> str:
-        collections: List[Dict[str, Any]] = self.list()
+    def create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
+        collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self) -> List[Dict[str, Any]]:
-        response = httpx.get(f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers)
-        return response.json()["data"]
+    def list(self) -> AlbertCollectionsList:
+        try:
+            response = httpx.get(
+                f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers
+            )
+            response.raise_for_status()
+            response_data = response.json()
+            return response_data.get("data", [])
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
+            raise ValueError(f"Error while listing collections: {str(e)}")
 
-    def delete(self, id_collection: str):
+    def delete(self, id_collection: str) -> None:
         response = httpx.delete(
             f"{ALBERT_ENDPOINT}/v1/collections/{id_collection}", headers=self.headers
         )
         response.raise_for_status()
 
-    def delete_all(self, collection_name) -> None:
+    def delete_all(self, collection_name: CollectionName) -> None:
         collections = self.list()
         for collection in collections:
             if collection["name"] == collection_name:
@@ -44,7 +63,7 @@ class Collections(AlbertBase):
     def search(
         self,
         prompt: str,
-        id_collections: List[str],
+        id_collections: COLLECTIONS_ID,
         k: int = 5,
         score_threshold: float = 0,
     ) -> RAGChunkSearchResult:
@@ -62,7 +81,7 @@ class Collections(AlbertBase):
 
     def upload(
         self,
-        data: List[DocumentData],
+        data: ListOfDocumentData,
         id_collection: str,
     ) -> None:
         result = []
@@ -82,23 +101,29 @@ class Collections(AlbertBase):
                     }
                 )
 
-        file_content = json.dumps(result).encode("utf-8")
+        for i in range(0, len(result), COLLECTIONS_UPLOAD_BATCH_SIZE):
+            batch = result[i : i + COLLECTIONS_UPLOAD_BATCH_SIZE]
+            file_content = json.dumps(batch).encode("utf-8")
 
-        files = {
-            "file": (
-                "content.json",
-                BytesIO(file_content),
-                "multipart/form-data",
+            files = {
+                "file": (
+                    "content.json",
+                    BytesIO(file_content),
+                    "multipart/form-data",
+                )
+            }
+
+            request_data = {"request": '{"collection": "%s"}' % id_collection}
+            response = httpx.post(
+                f"{ALBERT_ENDPOINT}/v1/files",
+                headers=self.headers,
+                files=files,
+                data=request_data,
             )
-        }
 
-        request_data = {"request": '{"collection": "%s"}' % id_collection}
-        response = httpx.post(
-            f"{ALBERT_ENDPOINT}/v1/files",
-            headers=self.headers,
-            files=files,
-            data=request_data,
-        )
+            response.raise_for_status()
 
-        response.raise_for_status()
+            if i + COLLECTIONS_UPLOAD_BATCH_SIZE < len(result):
+                time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
+
         return
