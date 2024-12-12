@@ -24,6 +24,7 @@ URL = str
 FormattedTextContent = str
 COLLECTION_ID = str
 COLLECTIONS_ID = list[str]
+XML_AS_JSON = dict
 
 
 @dataclass
