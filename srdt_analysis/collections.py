@@ -14,9 +14,9 @@ from srdt_analysis.constants import (
 from srdt_analysis.models import (
     UUID_V4,
     CollectionName,
+    CollectionsList,
     DocumentData,
     RAGChunkSearchResult,
-    CollectionsList,  # Add this import
 )
 
 
