@@ -1,8 +1,8 @@
 ALBERT_ENDPOINT = "https://albert.api.etalab.gouv.fr"
 MODEL_VECTORISATION = "BAAI/bge-m3"
 LLM_MODEL = "meta-llama/Meta-Llama-3.1-70B-Instruct"
-CHUNK_SIZE = 5000
-CHUNK_OVERLAP = 500
+CHUNK_SIZE = 4096
+CHUNK_OVERLAP = 0
 COLLECTIONS_UPLOAD_BATCH_SIZE = 50
 COLLECTIONS_UPLOAD_DELAY_IN_SECONDS = 10
 BASE_URL_CDTN = "https://code.travail.gouv.fr"
