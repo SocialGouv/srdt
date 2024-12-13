@@ -20,6 +20,10 @@ repos:
       # Run the formatter.
       - id: ruff-format
         types_or: [python, pyi]
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.389
+    hooks:
+      - id: pyright
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.0
     hooks:

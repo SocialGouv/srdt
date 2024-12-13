@@ -53,3 +53,4 @@ docstring-code-line-length = "dynamic"
 [tool.pyright]
 include = ["srdt_analysis"]
 exclude = ["**/__pycache__"]
+reportMissingImports = "warning"
