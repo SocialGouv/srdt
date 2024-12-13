@@ -6,6 +6,7 @@ from srdt_analysis.data_exploiter import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
+    PagesContributionsExploiter,
 )
 from srdt_analysis.database_manager import get_data
 from srdt_analysis.llm_processor import LLMProcessor
@@ -15,10 +16,11 @@ load_dotenv()
 
 QUESTION = "Combien de jours de congé payé par mois de travail effectif ?"
 COLLECTION_IDS = [
-    "4462ceb9-6da9-4f76-8a63-b87d4cc5afa0",  # information
+    "e43bcfd0-9a21-4831-bfd6-4e8ed7edf7b2",  # information
     "fa1d5d19-ec81-493a-843d-b33ce438f630",  # page_fiche_ministere_travail
     "ba380a00-660b-4b49-8a77-7b8b389c3200",  # code_du_travail
     "8dfca31c-994b-41cd-b5d5-c12231eee5d9",  # fiches_service_public
+    "c1b3b3b3-1b3b-4b3b-8b3b-1b3b3b3b3b3b",  # contributions
 ]
 
 
@@ -33,7 +35,12 @@ def ingest():
             "code_du_travail",
             "page_fiche_ministere_travail",
             "fiches_service_public",
+            "contributions",
         ]
+    )
+    page_contribs_exploiter = PagesContributionsExploiter()
+    page_contribs_exploiter.process_documents(
+        data["contributions"], "contributions", "html"
     )
     page_infos_exploiter = PageInfosExploiter()
     page_infos_exploiter.process_documents(

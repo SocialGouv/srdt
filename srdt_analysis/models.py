@@ -10,6 +10,7 @@ CollectionName = Literal[
     "fiches_service_public",
     "page_fiche_ministere_travail",
     "information",
+    "contributions",
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]

@@ -4,6 +4,7 @@ from srdt_analysis.data_exploiter import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
+    PagesContributionsExploiter,
 )
 from srdt_analysis.models import (
     CollectionName,
@@ -20,6 +21,7 @@ class Mapper:
             "page_fiche_ministere_travail": FichesMTExploiter(),
             "fiches_service_public": FichesSPExploiter(),
             "information": PageInfosExploiter(),
+            "contributions": PagesContributionsExploiter(),
         }
         all_documents = [doc for docs in documents_by_source.values() for doc in docs]
         self.doc_map = {doc.cdtn_id: doc for doc in all_documents}
