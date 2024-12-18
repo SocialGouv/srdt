@@ -97,6 +97,7 @@ class Collections(AlbertBase):
                             "id": dt["cdtn_id"],
                             "url": dt["url"],
                             "source": dt["source"],
+                            "title": dt["title"],
                         },
                     }
                 )
