@@ -113,7 +113,10 @@ class Collections(AlbertBase):
                 )
             }
 
-            request_data = {"request": '{"collection": "%s"}' % id_collection}
+            request_data = {
+                "request": '{"collection": "%s", "chunker": {"name": "NoChunker"}}'
+                % id_collection
+            }
             response = httpx.post(
                 f"{ALBERT_ENDPOINT}/v1/files",
                 headers=self.headers,

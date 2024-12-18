@@ -36,7 +36,8 @@ class DatabaseManager:
     async def fetch_documents_by_source(self, source: str) -> DocumentsList:
         async with self.get_connection() as conn:
             result = await conn.fetch(
-                "SELECT * from public.documents WHERE source = $1", source
+                "SELECT * from public.documents WHERE source = $1 AND is_published = true AND is_available = true",
+                source,
             )
             return [Document.from_record(r) for r in result]
 

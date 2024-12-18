@@ -34,7 +34,9 @@ class Chunker:
             ]
         )
         self._character_recursive_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
+            separators=["\n\n", "\n", ". ", " "],
         )
 
     def split_markdown(self, markdown: str) -> list[SplitDocument]:
