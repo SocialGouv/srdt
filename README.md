@@ -4,6 +4,7 @@
 
 ```sh
 make install
+poetry shell # to activate the virtual environment
 pre-commit run --all-files
 poetry run start # or poetry run python -m srdt_analysis
 ruff check --fix
