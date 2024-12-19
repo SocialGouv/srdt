@@ -33,12 +33,18 @@ class DatabaseManager:
         async with self.pool.acquire() as conn:
             yield conn
 
-    async def fetch_documents_by_source(self, source: str) -> DocumentsList:
+    async def fetch_documents_by_source(self, source: CollectionName) -> DocumentsList:
         async with self.get_connection() as conn:
-            result = await conn.fetch(
-                "SELECT * from public.documents WHERE source = $1 AND is_published = true AND is_available = true",
-                source,
-            )
+            query = """
+                SELECT * from public.documents
+                WHERE source = $1
+                AND is_published = true
+                AND is_available = true
+            """
+            if source == "contributions":
+                query += " AND document->>'content' IS NOT NULL AND document->>'idcc' = '0000'"
+
+            result = await conn.fetch(query, source)
             return [Document.from_record(r) for r in result]
 
     async def fetch_sources(

@@ -97,6 +97,7 @@ class Collections(AlbertBase):
                             "id": dt["cdtn_id"],
                             "url": dt["url"],
                             "source": dt["source"],
+                            "title": dt["title"],
                         },
                     }
                 )
@@ -126,7 +127,6 @@ class Collections(AlbertBase):
 
             response.raise_for_status()
 
-            if i + COLLECTIONS_UPLOAD_BATCH_SIZE < len(result):
-                time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
+            time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
 
         return

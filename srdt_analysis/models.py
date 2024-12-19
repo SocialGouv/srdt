@@ -10,6 +10,7 @@ CollectionName = Literal[
     "fiches_service_public",
     "page_fiche_ministere_travail",
     "information",
+    "contributions",
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
@@ -149,6 +150,7 @@ class ChunkMetadata(TypedDict):
     document_created_at: int
     id: ID
     source: CollectionName
+    title: str
     url: str
     collection: str
 
