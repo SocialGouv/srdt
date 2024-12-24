@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
-    ChunkResult,
     ChunkMetadata,
+    ChunkResult,
     GenerateRequest,
     GenerateResponse,
     RephraseRequest,
@@ -17,7 +17,6 @@ from srdt_analysis.api.schemas import (
 )
 from srdt_analysis.collections import Collections
 from srdt_analysis.constants import BASE_API_URL, COLLECTION_IDS
-from srdt_analysis.llm_processor import LLMProcessor
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
 
