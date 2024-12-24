@@ -72,3 +72,55 @@ async def rephrase(request: RephraseRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
+async def search(request: SearchRequest):
+    start_time = time.time()
+    collections = Collections()
+    try:
+        options = request.options
+
+        top_k = 5 if not options or options.top_K is None else options.top_K
+        threshold = (
+            0.0 if not options or options.threshold is None else options.threshold
+        )
+        collection_ids = (
+            COLLECTION_IDS
+            if not options or not options.collections
+            else options.collections
+        )
+
+        transformed_results = []
+
+        for prompt in request.prompts:
+            search_result = collections.search(
+                prompt=prompt,
+                id_collections=collection_ids,
+                k=top_k,
+                score_threshold=threshold,
+            )
+
+            for item in search_result.get("data", []):
+                chunk_data = item["chunk"]
+                metadata = chunk_data["metadata"]
+
+                transformed_chunk = ChunkResult(
+                    score=item["score"],
+                    content=chunk_data["content"],
+                    id_chunk=chunk_data["id"],
+                    metadata=ChunkMetadata(
+                        document_id=metadata["document_id"],
+                        source=metadata["source"],
+                        title=metadata["document_name"],
+                        url=metadata["url"],
+                    ),
+                )
+                transformed_results.append(transformed_chunk)
+
+        return SearchResponse(
+            time=time.time() - start_time,
+            top_chunks=transformed_results,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
