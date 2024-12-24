@@ -17,3 +17,162 @@ content-type: application/json
 {
   "user_question": "Mon employeur à Nantes, la société TechCorp, refuse de me donner mes congés. Que puis-je faire?"
 }
+
+### Test rephrase - Exemple 1
+POST http://localhost:8000/api/v1/rephrase
+content-type: application/json
+
+{
+  "question": "Je voudrais savoir quels sont mes droits concernant les congés payés",
+  "rephrasing_prompt": "Reformule cette question de manière professionnelle",
+  "queries_splitting_prompt": "Décompose la question en sous-questions spécifiques"
+}
+
+### Test rephrase - Exemple 2
+POST http://localhost:8000/api/v1/rephrase
+content-type: application/json
+
+{
+  "question": "Comment calculer mes heures supplémentaires?",
+  "rephrasing_prompt": "Reformule cette question de manière professionnelle",
+  "queries_splitting_prompt": "Décompose la question en sous-questions spécifiques"
+}
+
+### Test search - Sans options
+POST http://localhost:8000/api/v1/search
+content-type: application/json
+
+{
+  "prompts": ["congés payés calcul durée"]
+}
+
+### Test search - Avec options
+POST http://localhost:8000/api/v1/search
+content-type: application/json
+
+{
+  "prompts": ["droits congé parental durée"],
+  "options": {
+    "top_K": 3,
+    "threshold": 0.6
+  }
+}
+
+### Test search - Avec plusieurs prompts
+POST http://localhost:8000/api/v1/search
+content-type: application/json
+
+{
+  "prompts": [
+    "calcul indemnités licenciement",
+    "préavis licenciement durée",
+    "documents obligatoires fin contrat"
+  ],
+  "options": {
+    "top_K": 2,
+    "threshold": 0.6
+  }
+}
+
+### Test generate - Question simple
+POST http://localhost:8000/api/v1/generate
+content-type: application/json
+
+{
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quels sont mes droits concernant le congé parental ?"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière concise et précise.",
+  "context_insertion_method": "full_document"
+}
+
+### Test generate - Conversation avec historique
+POST http://localhost:8000/api/v1/generate
+content-type: application/json
+
+{
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Comment calculer mes congés payés ?"
+    },
+    {
+      "role": "assistant",
+      "content": "Le calcul se fait sur la base de 2,5 jours ouvrables par mois de travail effectif."
+    },
+    {
+      "role": "user",
+      "content": "Et si je suis à temps partiel ?"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière concise et précise.",
+  "context_insertion_method": "full_document"
+}
+
+### Test generate - Avec chunks spécifiques
+POST http://localhost:8000/api/v1/generate
+content-type: application/json
+
+{
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quelle est la durée du congé maternité ?"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière concise et précise.",
+  "chunks": {
+    "object": "list",
+    "data": [
+      {
+        "score": 0.95,
+        "chunk": {
+          "object": "chunk",
+          "id": "123",
+          "metadata": {
+            "collection_id": "code_du_travail_collection",
+            "document_id": "doc123",
+            "document_name": "Code du travail - Article L1225-17",
+            "document_part": 1,
+            "document_created_at": 1640995200,
+            "id": "chunk_123",
+            "source": "code_du_travail",
+            "title": "Article L1225-17",
+            "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006900896",
+            "collection": "code_du_travail"
+          },
+          "content": "La salariée a le droit de bénéficier d'un congé de maternité pendant une période qui commence six semaines avant la date présumée de l'accouchement et se termine dix semaines après la date de celui-ci."
+        },
+        "document": {
+          "cdtn_id": "doc123",
+          "initial_id": "L1225-17",
+          "title": "Code du travail - Article L1225-17",
+          "meta_description": "Article relatif au congé maternité",
+          "source": "code_du_travail",
+          "slug": "article-l1225-17",
+          "text": "La salariée a le droit de bénéficier d'un congé de maternité...",
+          "document": {
+            "text": "Article complet sur le congé maternité",
+            "html": "<p>Article complet sur le congé maternité</p>",
+            "intro": "Introduction sur le congé maternité",
+            "date": "2023-12-24",
+            "sections": [],
+            "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006900896",
+            "raw": "Texte brut de l'article",
+            "referencedTexts": []
+          },
+          "is_published": true,
+          "is_searchable": true,
+          "created_at": "2023-01-01T00:00:00Z",
+          "updated_at": "2023-12-24T00:00:00Z",
+          "is_available": true
+        },
+        "content": "La salariée a le droit de bénéficier d'un congé de maternité pendant une période qui commence six semaines avant la date présumée de l'accouchement et se termine dix semaines après la date de celui-ci."
+      }
+    ]
+  },
+  "context_insertion_method": "chunk"
+}
