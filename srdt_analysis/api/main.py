@@ -48,3 +48,27 @@ async def anonymize(request: AnonymizeRequest):
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/rephrase", response_model=RephraseResponse)
+async def rephrase(request: RephraseRequest):
+    start_time = time.time()
+    tokenizer = Tokenizer()
+    llm_runner = LLMRunner()
+
+    try:
+        rephrased, queries = await llm_runner.rephrase_and_split(
+            request.question,
+            request.rephrasing_prompt,
+            request.queries_splitting_prompt,
+        )
+
+        return RephraseResponse(
+            time=time.time() - start_time,
+            rephrased_question=rephrased,
+            queries=queries,
+            nb_token_input=tokenizer.get_nb_tokens(request.question),
+            nb_token_output=tokenizer.get_nb_tokens(rephrased),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

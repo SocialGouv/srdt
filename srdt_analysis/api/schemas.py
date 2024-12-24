@@ -15,3 +15,17 @@ class AnonymizeResponse(BaseModel):
     anonymized_question: str
     nb_token_input: int
     nb_token_output: int
+
+
+class RephraseRequest(BaseModel):
+    question: str
+    rephrasing_prompt: str  # TODO : to be removed in the future
+    queries_splitting_prompt: Optional[str] = None  # TODO : to be removed in the future
+
+
+class RephraseResponse(BaseModel):
+    time: float
+    rephrased_question: str
+    queries: Optional[List[str]] = None
+    nb_token_input: int
+    nb_token_output: int
