@@ -9,6 +9,9 @@ from srdt_analysis.llm_processor import LLMProcessor
 from srdt_analysis.mapper import Mapper
 from srdt_analysis.models import (
     CollectionName,
+    LLMMessageSecurized,
+    RAGChunkSearchResult,
+    RAGChunkSearchResultEnriched,
 )
 
 
@@ -62,3 +65,47 @@ class LLMRunner:
         query_list = [q.strip() for q in queries.split("\n") if q.strip()]
 
         return rephrased_question, query_list
+
+    async def chat_with_full_document(
+        self,
+        chat_history: list[LLMMessageSecurized],
+        prompt: str,
+        collection_ids: list[str],
+        sources: list[CollectionName],
+    ) -> tuple[str, RAGChunkSearchResult]:
+        if self.mapper is None:
+            await self.initialize(sources)
+
+        result = ""
+        last_message = chat_history[-1]
+        rag_response = self.collections.search(
+            last_message["content"],
+            collection_ids,
+        )
+        if self.mapper is None:
+            raise ValueError("Mapper not initialized")
+
+        data_to_send_to_llm = self.mapper.get_original_docs(rag_response)
+
+        async for token in self.llm_processor.get_chat_completions_stream_async(
+            chat_history,
+            prompt,
+            data_to_send_to_llm,
+        ):
+            result += token
+        return result, rag_response
+
+    async def chat_with_rag_data(
+        self,
+        chat_history: list[LLMMessageSecurized],
+        prompt: str,
+        data_to_send_to_llm: RAGChunkSearchResultEnriched,
+    ) -> tuple[str, RAGChunkSearchResultEnriched]:
+        result = ""
+        async for token in self.llm_processor.get_chat_completions_stream_async(
+            chat_history,
+            prompt,
+            data_to_send_to_llm,
+        ):
+            result += token
+        return result, data_to_send_to_llm

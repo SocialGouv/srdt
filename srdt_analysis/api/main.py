@@ -6,8 +6,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
+    ChunkResult,
+    ChunkMetadata,
+    GenerateRequest,
+    GenerateResponse,
+    RephraseRequest,
+    RephraseResponse,
+    SearchRequest,
+    SearchResponse,
 )
-from srdt_analysis.constants import BASE_API_URL
+from srdt_analysis.collections import Collections
+from srdt_analysis.constants import BASE_API_URL, COLLECTION_IDS
+from srdt_analysis.llm_processor import LLMProcessor
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
 
@@ -121,6 +131,55 @@ async def search(request: SearchRequest):
         return SearchResponse(
             time=time.time() - start_time,
             top_chunks=transformed_results,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/generate", response_model=GenerateResponse)
+async def generate(request: GenerateRequest):
+    start_time = time.time()
+    llm_runner = LLMRunner()
+    tokenizer = Tokenizer()
+
+    try:
+        if request.context_insertion_method == "chunk" and request.chunks:
+            response, rag_data = await llm_runner.chat_with_rag_data(
+                chat_history=request.chat_history,
+                prompt=request.system_prompt,
+                data_to_send_to_llm=request.chunks,
+            )
+            sources = [
+                item["chunk"]["metadata"]["url"] for item in rag_data.get("data", [])
+            ]
+        else:
+            response, rag_response = await llm_runner.chat_with_full_document(
+                chat_history=request.chat_history,
+                prompt=request.system_prompt,
+                collection_ids=COLLECTION_IDS,
+                sources=[
+                    "code_du_travail",
+                    "fiches_service_public",
+                    "page_fiche_ministere_travail",
+                    "information",
+                    "contributions",
+                ],
+            )
+            sources = [
+                item["chunk"]["metadata"]["url"]
+                for item in rag_response.get("data", [])
+            ]
+
+        chat_history_str = " ".join(
+            [msg.get("content") for msg in request.chat_history]
+        )
+
+        return GenerateResponse(
+            time=time.time() - start_time,
+            text=response,
+            nb_token_input=tokenizer.get_nb_tokens(chat_history_str),
+            nb_token_output=tokenizer.get_nb_tokens(response),
+            sources=list(set(sources)),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
