@@ -1,0 +1,19 @@
+### Test root endpoint
+GET http://localhost:8000/api/v1/
+
+### Test anonymize - Exemple 1
+POST http://localhost:8000/api/v1/anonymize
+content-type: application/json
+
+{
+  "user_question": "Je m'appelle Jean-Bernard, j'habite à Paris et j'ai 25 ans. Je veux savoir quels sont mes droits en terme de congé parental.",
+  "anonymization_prompt": "Anonymise la question en retirant toutes les informations personnelles"
+}
+
+### Test anonymize - Exemple 2
+POST http://localhost:8000/api/v1/anonymize
+content-type: application/json
+
+{
+  "user_question": "Mon employeur à Nantes, la société TechCorp, refuse de me donner mes congés. Que puis-je faire?"
+}
