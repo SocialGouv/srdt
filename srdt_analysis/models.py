@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional, Sequence, TypedDict, Union
 
 import asyncpg
 
@@ -203,3 +203,20 @@ class AlbertCollectionData(TypedDict):
 
 
 AlbertCollectionsList = list[AlbertCollectionData]
+
+
+# LLM Processor
+class LLMMessage(TypedDict):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class LLMMessageSecurized(TypedDict):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class LLMChatPayload(TypedDict):
+    model: str
+    messages: Sequence[Union[LLMMessage, LLMMessageSecurized]]
+    stream: bool
