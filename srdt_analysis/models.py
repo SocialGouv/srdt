@@ -15,7 +15,7 @@ CollectionName = Literal[
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
-
+CHUNK_ID = str
 ID = str
 HTML = str
 PlainText = str
@@ -184,7 +184,7 @@ class RAGChunkDataEnriched(TypedDict):
 
 
 @dataclass
-class RAGChunkSearchResultEnriched(TypedDict):
+class EnrichedRAGSearchResultChunks(TypedDict):
     object: str
     data: list[RAGChunkDataEnriched]
 
@@ -206,17 +206,17 @@ AlbertCollectionsList = list[AlbertCollectionData]
 
 
 # LLM Processor
-class LLMMessage(TypedDict):
+class SystemLLMMessage(TypedDict):
     role: Literal["system", "user", "assistant"]
     content: str
 
 
-class LLMMessageSecurized(TypedDict):
+class UserLLMMessage(TypedDict):
     role: Literal["user", "assistant"]
     content: str
 
 
 class LLMChatPayload(TypedDict):
     model: str
-    messages: Sequence[Union[LLMMessage, LLMMessageSecurized]]
+    messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]]
     stream: bool

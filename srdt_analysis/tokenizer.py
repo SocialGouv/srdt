@@ -13,6 +13,6 @@ class Tokenizer:
 
         self._tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL, token=token)
 
-    def get_nb_tokens(self, text: str) -> int:
+    def compute_nb_tokens(self, text: str) -> int:
         tokens = self._tokenizer.encode(text)
         return len(tokens)

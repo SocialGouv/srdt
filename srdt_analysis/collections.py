@@ -21,7 +21,7 @@ from srdt_analysis.models import (
 )
 
 
-class Collections(AlbertBase):
+class AlbertCollectionHandler(AlbertBase):
     def _create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(

@@ -10,7 +10,7 @@ from srdt_analysis.models import (
     CollectionName,
     DocumentsList,
     RAGChunkSearchResult,
-    RAGChunkSearchResultEnriched,
+    EnrichedRAGSearchResultChunks,
 )
 
 
@@ -35,7 +35,7 @@ class Mapper:
     def get_original_docs(
         self,
         rag_response: RAGChunkSearchResult,
-    ) -> RAGChunkSearchResultEnriched:
+    ) -> EnrichedRAGSearchResultChunks:
         enriched_data = []
         for item in rag_response["data"]:
             id = item["chunk"]["metadata"]["id"]

@@ -15,9 +15,9 @@ from srdt_analysis.constants import ALBERT_ENDPOINT, LLM_MODEL
 from srdt_analysis.logger import Logger
 from srdt_analysis.models import (
     LLMChatPayload,
-    LLMMessage,
-    LLMMessageSecurized,
-    RAGChunkSearchResultEnriched,
+    EnrichedRAGSearchResultChunks,
+    SystemLLMMessage,
+    UserLLMMessage,
 )
 
 
@@ -74,11 +74,11 @@ class LLMProcessor(AlbertBase):
     )
     async def _make_chat_completions_stream_async(
         self,
-        chat_history: list[LLMMessageSecurized],
         system_prompt: str,
+        chat_history: list[UserLLMMessage],
     ) -> AsyncGenerator[str, None]:
-        messages: Sequence[Union[LLMMessage, LLMMessageSecurized]] = [
-            LLMMessage(role="system", content=system_prompt),
+        messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]] = [
+            SystemLLMMessage(role="system", content=system_prompt),
         ] + chat_history
         payload: LLMChatPayload = {
             "messages": messages,
@@ -93,13 +93,16 @@ class LLMProcessor(AlbertBase):
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type((httpx.HTTPError, ValueError)),
     )
-    async def _make_chat_completions_async(self, prompt: str, user_message: str) -> str:
+    async def _make_chat_completions_async(
+        self,
+        system_prompt: str,
+        chat_history: list[UserLLMMessage],
+    ) -> str:
         async with self.rate_limit:
             try:
-                messages: list[LLMMessage] = [
-                    LLMMessage(role="system", content=prompt),
-                    LLMMessage(role="user", content=user_message),
-                ]
+                messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]] = [
+                    SystemLLMMessage(role="system", content=system_prompt),
+                ] + chat_history
 
                 payload: LLMChatPayload = {
                     "messages": messages,
@@ -114,8 +117,8 @@ class LLMProcessor(AlbertBase):
                 )
                 response.raise_for_status()
 
-                response_data = response.json()
-                return response_data["choices"][0]["message"]["content"]
+                response_json = response.json()
+                return response_json["choices"][0]["message"]["content"]
 
             except httpx.HTTPStatusError as e:
                 self.logger.error(
@@ -129,26 +132,28 @@ class LLMProcessor(AlbertBase):
                 self.logger.error(f"Unexpected error: {str(e)}")
                 raise
 
-    async def get_chat_completions_stream_async(
+    async def generate_chat_completions_stream_async(
         self,
-        chat_history: list[LLMMessageSecurized],
         prompt: str,
-        documents: RAGChunkSearchResultEnriched,
+        chat_history: list[UserLLMMessage],
+        enriched_search_result_chunks: EnrichedRAGSearchResultChunks,
     ) -> AsyncGenerator[str, None]:
         self.logger.info("Generating a chat completions answer based on documents")
-        document_contents = [item["content"] for item in documents["data"]]
+        document_contents = [
+            item["content"] for item in enriched_search_result_chunks["data"]
+        ]
         system_prompt = (
             f"{prompt}\n Mes documents sont :\n{'\n'.join(document_contents)}\n"
         )
         async for token in self._make_chat_completions_stream_async(
-            chat_history, system_prompt
+            system_prompt, chat_history
         ):
             yield token
 
-    async def get_completions_async(
+    async def generate_completions_async(
         self,
-        prompt: str,
-        user_message: str,
+        system_prompt: str,
+        chat_history: list[UserLLMMessage],
     ) -> str:
         self.logger.info("Generating a chat completions answer")
-        return await self._make_chat_completions_async(prompt, user_message)
+        return await self._make_chat_completions_async(system_prompt, chat_history)

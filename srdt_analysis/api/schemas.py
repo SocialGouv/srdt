@@ -2,7 +2,13 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from srdt_analysis.models import LLMMessageSecurized, RAGChunkSearchResultEnriched
+from srdt_analysis.models import (
+    CHUNK_ID,
+    ID,
+    CollectionName,
+    EnrichedRAGSearchResultChunks,
+    UserLLMMessage,
+)
 
 
 class AnonymizeRequest(BaseModel):
@@ -32,27 +38,27 @@ class RephraseResponse(BaseModel):
 
 
 class SearchOptions(BaseModel):
-    top_K: Optional[int] = Field(default=5)
-    threshold: Optional[float] = Field(default=0.0, ge=0.0, le=1.0)
+    top_K: Optional[int] = Field(default=20)
+    threshold: Optional[float] = Field(default=0.7, ge=0.0, le=1.0)
     collections: Optional[List[str]] = None
 
 
 class SearchRequest(BaseModel):
-    prompts: List[str]
+    prompts: List[str] = Field(max_length=10)
     options: Optional[SearchOptions] = None
 
 
 class ChunkMetadata(BaseModel):
     title: str
     url: str
-    document_id: str
-    source: str
+    document_id: ID
+    source: CollectionName
 
 
 class ChunkResult(BaseModel):
     score: float
     content: str
-    id_chunk: str
+    id_chunk: CHUNK_ID
     metadata: ChunkMetadata
 
 
@@ -62,10 +68,12 @@ class SearchResponse(BaseModel):
 
 
 class GenerateRequest(BaseModel):
-    chat_history: List[LLMMessageSecurized]
-    system_prompt: str
-    chunks: Optional[RAGChunkSearchResultEnriched] = None
-    context_insertion_method: Literal["chunk", "full_document"] = "full_document"
+    chat_history: List[UserLLMMessage]
+    system_prompt: str  # TODO : to be removed in the future
+    chunks: Optional[EnrichedRAGSearchResultChunks] = None
+    context_insertion_method: Literal["chunk", "full_document"] = (
+        "full_document"  # TODO : to be removed in the future
+    )
 
 
 class GenerateResponse(BaseModel):

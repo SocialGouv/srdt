@@ -1,8 +1,10 @@
 ### Test root endpoint
 GET http://localhost:8000/api/v1/
+Authorization: Bearer abc
 
 ### Test anonymize - Exemple 1
 POST http://localhost:8000/api/v1/anonymize
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -12,6 +14,7 @@ content-type: application/json
 
 ### Test anonymize - Exemple 2
 POST http://localhost:8000/api/v1/anonymize
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -20,6 +23,7 @@ content-type: application/json
 
 ### Test rephrase - Exemple 1
 POST http://localhost:8000/api/v1/rephrase
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -30,6 +34,7 @@ content-type: application/json
 
 ### Test rephrase - Exemple 2
 POST http://localhost:8000/api/v1/rephrase
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -40,6 +45,7 @@ content-type: application/json
 
 ### Test search - Sans options
 POST http://localhost:8000/api/v1/search
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -48,6 +54,7 @@ content-type: application/json
 
 ### Test search - Avec options
 POST http://localhost:8000/api/v1/search
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -60,6 +67,7 @@ content-type: application/json
 
 ### Test search - Avec plusieurs prompts
 POST http://localhost:8000/api/v1/search
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -76,6 +84,7 @@ content-type: application/json
 
 ### Test generate - Question simple
 POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -91,6 +100,7 @@ content-type: application/json
 
 ### Test generate - Conversation avec historique
 POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
 content-type: application/json
 
 {
@@ -114,6 +124,7 @@ content-type: application/json
 
 ### Test generate - Avec chunks spécifiques
 POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
 content-type: application/json
 
 {

@@ -1,31 +1,31 @@
-from srdt_analysis.collections import Collections
+from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import (
     LLM_ANONYMIZATION_PROMPT,
     LLM_REPHRASING_PROMPT,
     LLM_SPLIT_MULTIPLE_QUERIES_PROMPT,
 )
-from srdt_analysis.database_manager import DatabaseManager
+from srdt_analysis.database_manager import PostgreSQLManager
 from srdt_analysis.llm_processor import LLMProcessor
 from srdt_analysis.mapper import Mapper
 from srdt_analysis.models import (
     CollectionName,
-    LLMMessageSecurized,
     RAGChunkSearchResult,
-    RAGChunkSearchResultEnriched,
+    EnrichedRAGSearchResultChunks,
+    UserLLMMessage,
 )
 
 
 class LLMRunner:
     def __init__(self):
-        self.collections = Collections()
+        self.collections = AlbertCollectionHandler()
         self.llm_processor = LLMProcessor()
-        self.db_manager = DatabaseManager()
+        self.db_manager = PostgreSQLManager()
         self.mapper = None
 
     async def initialize(self, sources: list[CollectionName]):
         if self.mapper is None:
-            self.data = await self.db_manager.fetch_sources(sources)
-            self.mapper = Mapper(self.data)
+            self.data_sources = await self.db_manager.fetch_sources(sources)
+            self.mapper = Mapper(self.data_sources)
 
     async def anonymize(
         self,
@@ -35,7 +35,10 @@ class LLMRunner:
         prompt = (
             optional_prompt if optional_prompt is not None else LLM_ANONYMIZATION_PROMPT
         )
-        result = await self.llm_processor.get_completions_async(prompt, user_message)
+        result = await self.llm_processor.generate_completions_async(
+            prompt,
+            [UserLLMMessage(role="user", content=user_message)],
+        )
         return result
 
     async def rephrase_and_split(
@@ -54,12 +57,14 @@ class LLMRunner:
             if optional_queries_splitting_prompt is not None
             else LLM_SPLIT_MULTIPLE_QUERIES_PROMPT
         )
-        rephrased_question = await self.llm_processor.get_completions_async(
-            rephrasing_prompt, question
+        rephrased_question = await self.llm_processor.generate_completions_async(
+            rephrasing_prompt,
+            [UserLLMMessage(role="user", content=question)],
         )
 
-        queries = await self.llm_processor.get_completions_async(
-            queries_splitting_prompt, rephrased_question
+        queries = await self.llm_processor.generate_completions_async(
+            queries_splitting_prompt,
+            [UserLLMMessage(role="user", content=rephrased_question)],
         )
 
         query_list = [q.strip() for q in queries.split("\n") if q.strip()]
@@ -68,7 +73,7 @@ class LLMRunner:
 
     async def chat_with_full_document(
         self,
-        chat_history: list[LLMMessageSecurized],
+        chat_history: list[UserLLMMessage],
         prompt: str,
         collection_ids: list[str],
         sources: list[CollectionName],
@@ -78,34 +83,34 @@ class LLMRunner:
 
         result = ""
         last_message = chat_history[-1]
-        rag_response = self.collections.search(
+        found_chunks = self.collections.search(
             last_message["content"],
             collection_ids,
         )
         if self.mapper is None:
             raise ValueError("Mapper not initialized")
 
-        data_to_send_to_llm = self.mapper.get_original_docs(rag_response)
+        enriched_search_result_chunk = self.mapper.get_original_docs(found_chunks)
 
-        async for token in self.llm_processor.get_chat_completions_stream_async(
-            chat_history,
-            prompt,
-            data_to_send_to_llm,
-        ):
-            result += token
-        return result, rag_response
+        result = await self.chat_using_chunks(
+            chat_history=chat_history,
+            prompt=prompt,
+            enriched_search_result_chunk=enriched_search_result_chunk,
+        )
 
-    async def chat_with_rag_data(
+        return result, found_chunks
+
+    async def chat_using_chunks(
         self,
-        chat_history: list[LLMMessageSecurized],
+        chat_history: list[UserLLMMessage],
         prompt: str,
-        data_to_send_to_llm: RAGChunkSearchResultEnriched,
-    ) -> tuple[str, RAGChunkSearchResultEnriched]:
+        enriched_search_result_chunk: EnrichedRAGSearchResultChunks,
+    ) -> str:
         result = ""
-        async for token in self.llm_processor.get_chat_completions_stream_async(
-            chat_history,
+        async for token in self.llm_processor.generate_chat_completions_stream_async(
             prompt,
-            data_to_send_to_llm,
+            chat_history,
+            enriched_search_result_chunk,
         ):
             result += token
-        return result, data_to_send_to_llm
+        return result
