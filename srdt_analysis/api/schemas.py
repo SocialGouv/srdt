@@ -1,12 +1,12 @@
-from typing import List, Literal, Optional
+from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from srdt_analysis.constants import COLLECTION_IDS
 from srdt_analysis.models import (
     CHUNK_ID,
     ID,
     CollectionName,
-    EnrichedRAGSearchResultChunks,
     UserLLMMessage,
 )
 
@@ -38,14 +38,40 @@ class RephraseResponse(BaseModel):
 
 
 class SearchOptions(BaseModel):
-    top_K: Optional[int] = Field(default=20)
-    threshold: Optional[float] = Field(default=0.7, ge=0.0, le=1.0)
-    collections: Optional[List[str]] = None
+    top_K: int = Field(default=20)
+    threshold: float = Field(default=0.7, ge=0.0, le=1.0)
+    collections: List[str] = Field(default=COLLECTION_IDS)
+
+    @field_validator("collections")
+    @classmethod
+    def validate_collections(cls, collections):
+        if collections is not None:
+            invalid_collections = [c for c in collections if c not in COLLECTION_IDS]
+            if invalid_collections:
+                raise ValueError(
+                    f"Invalid collection IDs: {invalid_collections}. Must be one of {COLLECTION_IDS}"
+                )
+        return collections
 
 
 class SearchRequest(BaseModel):
     prompts: List[str] = Field(max_length=10)
-    options: Optional[SearchOptions] = None
+    options: SearchOptions = Field(default_factory=SearchOptions)
+
+    @classmethod
+    def model_validate(
+        cls,
+        obj,
+        *,
+        strict: Optional[bool] = None,
+        from_attributes: Optional[bool] = None,
+        context: Optional[dict] = None,
+    ):
+        if isinstance(obj, dict) and obj.get("options") is None:
+            obj["options"] = {}
+        return super().model_validate(
+            obj, strict=strict, from_attributes=from_attributes, context=context
+        )
 
 
 class ChunkMetadata(BaseModel):
@@ -70,10 +96,6 @@ class SearchResponse(BaseModel):
 class GenerateRequest(BaseModel):
     chat_history: List[UserLLMMessage]
     system_prompt: str  # TODO : to be removed in the future
-    chunks: Optional[EnrichedRAGSearchResultChunks] = None
-    context_insertion_method: Literal["chunk", "full_document"] = (
-        "full_document"  # TODO : to be removed in the future
-    )
 
 
 class GenerateResponse(BaseModel):
@@ -81,4 +103,3 @@ class GenerateResponse(BaseModel):
     text: str
     nb_token_input: int
     nb_token_output: int
-    sources: List[str]

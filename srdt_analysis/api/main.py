@@ -1,6 +1,7 @@
 import os
 import time
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
@@ -18,9 +19,11 @@ from srdt_analysis.api.schemas import (
     SearchResponse,
 )
 from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import BASE_API_URL, COLLECTION_IDS
+from srdt_analysis.constants import ALBERT_ENDPOINT, ALBERT_MODEL, BASE_API_URL
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
+
+load_dotenv()
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
@@ -40,11 +43,9 @@ async def get_api_key(api_key: str = Security(api_key_header)):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost",
-        "http://localhost:3000",
-        "https://*.social.gouv.fr",
-    ],
+    allow_origins=os.getenv("SRDT_ALLOW_ORIGINS", "").split(",")
+    if os.getenv("SRDT_ALLOW_ORIGINS")
+    else [],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
@@ -60,8 +61,12 @@ async def root(api_key: str = Depends(get_api_key)):
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
 async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer()
-    llm_runner = LLMRunner()
+    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    llm_runner = LLMRunner(
+        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
+        llm_model=ALBERT_MODEL,
+        llm_url=ALBERT_ENDPOINT,
+    )
     try:
         anonymized_question = await llm_runner.anonymize(
             request.user_question, request.anonymization_prompt
@@ -81,8 +86,12 @@ async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_k
 @app.post(f"{BASE_API_URL}/rephrase", response_model=RephraseResponse)
 async def rephrase(request: RephraseRequest, api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer()
-    llm_runner = LLMRunner()
+    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    llm_runner = LLMRunner(
+        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
+        llm_model=ALBERT_MODEL,
+        llm_url=ALBERT_ENDPOINT,
+    )
 
     try:
         rephrased, queries = await llm_runner.rephrase_and_split(
@@ -107,25 +116,17 @@ async def search(request: SearchRequest, api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
     try:
-        options = request.options
-
-        collection_ids = (
-            COLLECTION_IDS
-            if not options or not options.collections
-            else options.collections
-        )
-
         transformed_results = []
 
         for prompt in request.prompts:
             search_result = collections.search(
                 prompt=prompt,
-                id_collections=collection_ids,
-                k=options.top_k,
-                score_threshold=options.threshold,
+                id_collections=request.options.collections,
+                k=request.options.top_K,
+                score_threshold=request.options.threshold,
             )
 
-            for item in search_result.get("data", []):
+            for item in search_result:
                 chunk_data = item["chunk"]
                 metadata = chunk_data["metadata"]
 
@@ -153,37 +154,18 @@ async def search(request: SearchRequest, api_key: str = Depends(get_api_key)):
 @app.post(f"{BASE_API_URL}/generate", response_model=GenerateResponse)
 async def generate(request: GenerateRequest, api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    llm_runner = LLMRunner()
-    tokenizer = Tokenizer()
+    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    llm_runner = LLMRunner(
+        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
+        llm_model=ALBERT_MODEL,
+        llm_url=ALBERT_ENDPOINT,
+    )
 
     try:
-        if request.context_insertion_method == "chunk" and request.chunks:
-            response = await llm_runner.chat_using_chunks(
-                chat_history=request.chat_history,
-                prompt=request.system_prompt,
-                enriched_search_result_chunk=request.chunks,
-            )
-            sources = [
-                item["chunk"]["metadata"]["url"]
-                for item in request.chunks.get("data", [])
-            ]
-        else:
-            response, rag_response = await llm_runner.chat_with_full_document(
-                chat_history=request.chat_history,
-                prompt=request.system_prompt,
-                collection_ids=COLLECTION_IDS,
-                sources=[
-                    "code_du_travail",
-                    "fiches_service_public",
-                    "page_fiche_ministere_travail",
-                    "information",
-                    "contributions",
-                ],
-            )
-            sources = [
-                item["chunk"]["metadata"]["url"]
-                for item in rag_response.get("data", [])
-            ]
+        response = await llm_runner.chat_with_full_document(
+            chat_history=request.chat_history,
+            prompt=request.system_prompt,
+        )
 
         chat_history_str = " ".join(
             [msg.get("content", "") for msg in request.chat_history]
@@ -194,7 +176,6 @@ async def generate(request: GenerateRequest, api_key: str = Depends(get_api_key)
             text=response,
             nb_token_input=tokenizer.compute_nb_tokens(chat_history_str),
             nb_token_output=tokenizer.compute_nb_tokens(response),
-            sources=list(set(sources)),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

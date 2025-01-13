@@ -1,10 +1,10 @@
 import json
+import os
 import time
 from io import BytesIO
 
 import httpx
 
-from srdt_analysis.albert import AlbertBase
 from srdt_analysis.constants import (
     ALBERT_ENDPOINT,
     COLLECTIONS_UPLOAD_BATCH_SIZE,
@@ -17,11 +17,21 @@ from srdt_analysis.models import (
     CollectionName,
     DocumentData,
     ListOfDocumentData,
-    RAGChunkSearchResult,
+    RankedChunk,
 )
 
 
-class AlbertCollectionHandler(AlbertBase):
+class AlbertCollectionHandler:
+    def __init__(self):
+        self.api_key = os.getenv("ALBERT_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "API key must be provided either in constructor or as environment variable"
+            )
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
     def _create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
         payload = {"name": collection_name, "model": model}
         response = httpx.post(
@@ -30,13 +40,13 @@ class AlbertCollectionHandler(AlbertBase):
         return response.json()["id"]
 
     def create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
-        collections = self.list()
+        collections = self.list_collections()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return self._create(collection_name, model)
 
-    def list(self) -> AlbertCollectionsList:
+    def list_collections(self) -> AlbertCollectionsList:
         try:
             response = httpx.get(
                 f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers
@@ -54,7 +64,7 @@ class AlbertCollectionHandler(AlbertBase):
         response.raise_for_status()
 
     def delete_all(self, collection_name: CollectionName) -> None:
-        collections = self.list()
+        collections = self.list_collections()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
@@ -66,7 +76,7 @@ class AlbertCollectionHandler(AlbertBase):
         id_collections: COLLECTIONS_ID,
         k: int = 5,
         score_threshold: float = 0,
-    ) -> RAGChunkSearchResult:
+    ) -> list[RankedChunk]:
         response = httpx.post(
             f"{ALBERT_ENDPOINT}/v1/search",
             headers=self.headers,
@@ -77,7 +87,8 @@ class AlbertCollectionHandler(AlbertBase):
                 "score_threshold": score_threshold,
             },
         )
-        return response.json()
+        result = response.json()
+        return result.get("data", [])
 
     def upload(
         self,

@@ -7,7 +7,7 @@ from srdt_analysis.data_exploiter import (
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
-from srdt_analysis.database_manager import get_data
+from srdt_analysis.postgresql_manager import get_data
 
 load_dotenv()
 
