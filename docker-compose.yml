@@ -1,14 +1,16 @@
-services:
-  postgres:
-    image: postgres:14
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    env_file:
-      - .env
-    environment:
-      POSTGRES_PASSWORD: postgrespassword
+version: "3.8"
 
-volumes:
-  db_data:
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - API_PORT=8000
+      - API_HOST=0.0.0.0
+      - API_KEY=${API_KEY}
+      - SRDT_ALLOW_ORIGINS=${SRDT_ALLOW_ORIGINS}
+      - TIKTOKEN_TOKENIZER_MODEL=${TIKTOKEN_TOKENIZER_MODEL}
+      - ALBERT_API_KEY=${ALBERT_API_KEY}
+      - ALBERT_ENDPOINT=${ALBERT_ENDPOINT}
+      - ALBERT_VECTORISATION_MODEL=${ALBERT_VECTORISATION_MODEL}
