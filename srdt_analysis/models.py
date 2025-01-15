@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional, Sequence, TypedDict, Union
 
 import asyncpg
 
@@ -16,6 +16,7 @@ CollectionName = Literal[
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
+CHUNK_ID = str
 ID = str
 HTML = str
 PlainText = str
@@ -164,29 +165,17 @@ class Chunk(TypedDict):
 
 
 @dataclass
-class RAGChunkData(TypedDict):
+class RankedChunk(TypedDict):
     score: float
     chunk: Chunk
 
 
 @dataclass
-class RAGChunkSearchResult(TypedDict):
-    object: str
-    data: list[RAGChunkData]
-
-
-@dataclass
-class RAGChunkDataEnriched(TypedDict):
+class EnrichedRankedChunk(TypedDict):
     score: float
     chunk: Chunk
     document: Document
     content: str
-
-
-@dataclass
-class RAGChunkSearchResultEnriched(TypedDict):
-    object: str
-    data: list[RAGChunkDataEnriched]
 
 
 # Albert Collection
@@ -203,3 +192,19 @@ class AlbertCollectionData(TypedDict):
 
 
 AlbertCollectionsList = list[AlbertCollectionData]
+
+
+# LLM
+class SystemLLMMessage(TypedDict):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class UserLLMMessage(TypedDict):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class LLMChatPayload(TypedDict):
+    model: str
+    messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]]

@@ -9,8 +9,8 @@ from srdt_analysis.data_exploiter import (
 from srdt_analysis.models import (
     CollectionName,
     DocumentsList,
-    RAGChunkSearchResult,
-    RAGChunkSearchResultEnriched,
+    EnrichedRankedChunk,
+    RankedChunk,
 )
 
 
@@ -26,32 +26,32 @@ class Mapper:
         all_documents = [doc for docs in documents_by_source.values() for doc in docs]
         self.doc_map = {doc.cdtn_id: doc for doc in all_documents}
 
-    def get_exploiter(self, source: CollectionName) -> BaseDataExploiter:
+    def _get_exploiter(self, source: CollectionName) -> BaseDataExploiter:
         exploiter = self.source_exploiters.get(source)
         if not exploiter:
             raise ValueError(f"No exploiter found for source: {source}")
         return exploiter
 
-    def get_original_docs(
+    def enrich_chunks(
         self,
-        rag_response: RAGChunkSearchResult,
-    ) -> RAGChunkSearchResultEnriched:
-        enriched_data = []
-        for item in rag_response["data"]:
-            id = item["chunk"]["metadata"]["id"]
-            source = item["chunk"]["metadata"]["source"]
+        chunks: list[RankedChunk],
+    ) -> list[EnrichedRankedChunk]:
+        enriched_chunks = []
+        for scored_chunk in chunks:
+            id = scored_chunk["chunk"]["metadata"]["id"]
+            source = scored_chunk["chunk"]["metadata"]["source"]
             if id in self.doc_map:
-                enriched_data.append(
+                enriched_chunks.append(
                     {
-                        "score": item["score"],
-                        "chunk": item["chunk"],
+                        "score": scored_chunk["score"],
+                        "chunk": scored_chunk["chunk"],
                         "document": self.doc_map[id],
-                        "content": self.get_exploiter(source).get_content(
+                        "content": self._get_exploiter(source).get_content(
                             self.doc_map[id]
                         ),
                     }
                 )
 
-        enriched_data.sort(key=lambda x: x["score"], reverse=True)
+        enriched_chunks.sort(key=lambda x: x["score"], reverse=True)
 
-        return {"object": rag_response["object"], "data": enriched_data}
+        return enriched_chunks

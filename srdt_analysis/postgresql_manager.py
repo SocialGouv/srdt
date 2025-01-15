@@ -8,7 +8,7 @@ import asyncpg
 from srdt_analysis.models import CollectionName, Document, DocumentsList
 
 
-class DatabaseManager:
+class PostgreSQLManager:
     def __init__(self):
         self.pool: Optional[asyncpg.Pool] = None
 
@@ -61,5 +61,5 @@ class DatabaseManager:
 def get_data(
     sources: Sequence[CollectionName],
 ) -> dict[CollectionName, DocumentsList]:
-    db = DatabaseManager()
+    db = PostgreSQLManager()
     return asyncio.run(db.fetch_sources(sources))

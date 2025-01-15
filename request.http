@@ -1,0 +1,159 @@
+### Base API Test
+GET http://localhost:8000/api/v1/
+Authorization: Bearer abc
+
+### Anonymize Endpoint Tests
+POST http://localhost:8000/api/v1/anonymize
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "user_question": "Je m'appelle Jean-Bernard, j'habite à Paris et j'ai 25 ans. Je veux savoir quels sont mes droits en terme de congé parental."
+}
+
+### Test anonymize with specific prompt
+POST http://localhost:8000/api/v1/anonymize
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "user_question": "Je travaille chez Microsoft à Lyon et mon manager Paul refuse mes congés",
+  "anonymization_prompt": "Anonymise en gardant le contexte professionnel"
+}
+
+### Rephrase Endpoint Tests
+POST http://localhost:8000/api/v1/rephrase
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "question": "Je voudrais savoir quels sont mes droits concernant les congés payés",
+  "rephrasing_prompt": "Reformule cette question de manière professionnelle"
+}
+
+### Test rephrase with query splitting
+POST http://localhost:8000/api/v1/rephrase
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "question": "Comment calculer mes heures supplémentaires et les récupérer ?",
+  "rephrasing_prompt": "Reformule cette question de manière professionnelle",
+  "queries_splitting_prompt": "Décompose la question en sous-questions spécifiques"
+}
+
+### Search Endpoint Tests
+POST http://localhost:8000/api/v1/search
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "prompts": ["congés payés calcul durée"]
+}
+
+### Test search with custom options
+POST http://localhost:8000/api/v1/search
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "prompts": ["droits congé parental durée"],
+  "options": {
+    "top_K": 5,
+    "threshold": 0.65,
+    "collections": ["d03df69b-9387-4359-80db-7d73f2b6f04a", "f8d66426-5c54-4503-aa30-a3abc19453d5"]
+  }
+}
+
+### Generate Endpoint Tests
+POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quels sont mes droits concernant le congé parental ?"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière concise et précise."
+}
+
+### Test generate with conversation history
+POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quel est le délai de préavis pour une démission ?"
+    },
+    {
+      "role": "assistant",
+      "content": "Le délai de préavis dépend de votre convention collective et de votre statut."
+    },
+    {
+      "role": "user",
+      "content": "Je suis cadre dans le secteur informatique."
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière précise."
+}
+
+
+### Test generate with conversation history + search response
+POST http://localhost:8000/api/v1/generate
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quel est la durée des congés payés ?"
+    },
+    {
+      "role": "user",
+      "content": "Voici les données qui te permettent de répondre à la question : Content 1 : Oui, certaines périodes d'absence permettent tout de même au salarié d'acquérir des congés payés si ces absences sont assimilées à du temps de travail effectif . Dès lors, ces périodes d'absence sont prises en compte dans le calcul du nombre de jours de congés payés. À l'inverse, si les périodes d'absence ne sont pas considérées comme du temps de travail effectif, le nombre de jours de congés acquis peut être diminué en fonction du nombre de jours d'absence. Périodes assimilées ou non à du temps de travail effectif   Périodes assimilées Périodes non assimilées Congés payés Contrepartie obligatoire en repos des heures supplémentaires Jours de repos acquis dans le cadre de la réduction du temps de travail (RTT) Congés de maternité , de paternité et d'accueil de l'enfant et d'adoption Congés pour événements familiaux ( mariage ou Pacs , naissance , décès d'un membre de la famille ) Arrêt de travail pour cause de maladie non professionnelle , de maladie professionnelle , d'accident du travail ou d'accident de trajet Congés de formation ( congé de bilan de compétences , projet de transition professionnelle (PTP) ex-Cif , congé de formation économique, sociale et syndicale , congé de formation d'un élu local qui continue de travailler , congé d'un conseiller prud'hommes ) Congé de solidarité internationale Rappel ou maintien au service national (quel qu'en soit le motif) Sauf dispositions conventionnelles plus favorables, les périodes non prises en compte sont notamment les suivantes : Grève Congé parental à temps plein Congé de présence parentale Congé de solidarité familiale Mise à pied Congé sabbatique Congé sans solde Le salarié a droit à un congé de 2,5 jours ouvrables  par mois de travail effectif (soit 30 jours ouvrables de congés annuels) Attention En cas d'arrêt de travail en raison de maladie non professionnelle , le salarié bénéficie des droits à congés payés, dans la limite de 2 jours ouvrables par mois (soit 24 jours ouvrables par an ). Le salarié peut bénéficier, selon sa situation personnelle, de jours supplémentaires de congés payés . Toute période équivalente à 4 semaines ou 24 jours est assimilée à un mois de travail effectif. Pour acquérir l'ensemble des jours de congés annuels, il n'est pas nécessaire de justifier d'une année complète de travail. Le salarié doit cependant justifier de 48 semaines de travail effectif (absences assimilées incluses) durant la période dite de  référence pour bénéficier des 30 jours ouvrables. Si le salarié est absent durant la période de référence, le décompte de ses congés payés s'effectue de la manière suivante et selon la règle qui lui est la plus favorable : Soit en décompte mensuel : 2,5 jours ouvrables par mois de travail effectif Soit en décompte hebdomadaire : 2,5 jours ouvrables toutes les 4 semaines de travail effectif Soit en décompte journalier : 2,5 jours ouvrables pour une période de 24 jours de travail effectif ou 20 jours ouvrables si les horaires de travail sont répartis sur 5 jours par semaine ou 22 jours ouvrables si les horaires de travail sont répartis sur 5,5 jours par semaine ou 24 jours si les horaires de travail sont répartis sur 6 jours par semaine L'employeur doit alors calculer le décompte des congés payés selon la période qui est la plus favorable au salarié, soit mensuelle, soit hebdomadaire, soit journalière. Lorsque le nombre de jours ouvrables acquis n'est pas un nombre entier, la durée du congé est portée au nombre entier immédiatement supérieur. Exemple Un salarié a acquis 26,5 jours de congés payés. Ses jours de congés sont arrondis à 27 jours. À noter La période d'absence non assimilée à du temps de travail effectif ne peut pas entraîner une réduction des droits à congés plus importante que la durée de la période d'absence. URL 1 : https://code.travail.gouv.fr/fiche-service-public/labsence-du-salarie-est-elle-prise-en-compte-pour-le-calcul-de-ses-conges"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière précise."
+}
