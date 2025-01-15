@@ -1,13 +1,10 @@
-ALBERT_ENDPOINT = "https://albert.api.etalab.gouv.fr"
-MODEL_VECTORISATION = "BAAI/bge-m3"
-ALBERT_MODEL = "meta-llama/Meta-Llama-3.1-70B-Instruct"
 CHUNK_SIZE = 4096
 CHUNK_OVERLAP = 0
 COLLECTIONS_UPLOAD_BATCH_SIZE = 50
 COLLECTIONS_UPLOAD_DELAY_IN_SECONDS = 5
 BASE_URL_CDTN = "https://code.travail.gouv.fr"
 BASE_API_URL = "/api/v1"
-COLLECTION_IDS = [
+ALBERT_COLLECTION_IDS = [
     "5755cf5f-1cb5-4ec6-a076-21047d069578",  # information
     "0576c752-f097-403e-b2be-d6d806c3848a",  # page_fiche_ministere_travail
     "0be5059b-762f-48ba-a8f0-fe10e81455c8",  # code_du_travail

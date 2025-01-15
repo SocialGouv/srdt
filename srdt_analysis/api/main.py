@@ -19,7 +19,7 @@ from srdt_analysis.api.schemas import (
     SearchResponse,
 )
 from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import ALBERT_ENDPOINT, ALBERT_MODEL, BASE_API_URL
+from srdt_analysis.constants import BASE_API_URL
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
 
@@ -54,18 +54,18 @@ app.add_middleware(
 
 @app.get("/")
 @app.get(f"{BASE_API_URL}/")
-async def root(api_key: str = Depends(get_api_key)):
+async def root(_api_key: str = Depends(get_api_key)):
     return {"status": "ok", "path": BASE_API_URL}
 
 
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
 async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    tokenizer = Tokenizer()
     llm_runner = LLMRunner(
-        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
-        llm_model=ALBERT_MODEL,
-        llm_url=ALBERT_ENDPOINT,
+        llm_api_token=request.model.api_key,
+        llm_model=request.model.name,
+        llm_url=request.model.base_url,
     )
     try:
         anonymized_question = await llm_runner.anonymize(
@@ -84,13 +84,13 @@ async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_k
 
 
 @app.post(f"{BASE_API_URL}/rephrase", response_model=RephraseResponse)
-async def rephrase(request: RephraseRequest, api_key: str = Depends(get_api_key)):
+async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    tokenizer = Tokenizer()
     llm_runner = LLMRunner(
-        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
-        llm_model=ALBERT_MODEL,
-        llm_url=ALBERT_ENDPOINT,
+        llm_api_token=request.model.api_key,
+        llm_model=request.model.name,
+        llm_url=request.model.base_url,
     )
 
     try:
@@ -112,7 +112,7 @@ async def rephrase(request: RephraseRequest, api_key: str = Depends(get_api_key)
 
 
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
-async def search(request: SearchRequest, api_key: str = Depends(get_api_key)):
+async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
     try:
@@ -152,13 +152,13 @@ async def search(request: SearchRequest, api_key: str = Depends(get_api_key)):
 
 
 @app.post(f"{BASE_API_URL}/generate", response_model=GenerateResponse)
-async def generate(request: GenerateRequest, api_key: str = Depends(get_api_key)):
+async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer(model=ALBERT_MODEL)
+    tokenizer = Tokenizer()
     llm_runner = LLMRunner(
-        llm_api_token=os.getenv("ALBERT_API_KEY", ""),
-        llm_model=ALBERT_MODEL,
-        llm_url=ALBERT_ENDPOINT,
+        llm_api_token=request.model.api_key,
+        llm_model=request.model.name,
+        llm_url=request.model.base_url,
     )
 
     try:

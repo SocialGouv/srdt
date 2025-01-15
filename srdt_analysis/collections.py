@@ -6,7 +6,6 @@ from io import BytesIO
 import httpx
 
 from srdt_analysis.constants import (
-    ALBERT_ENDPOINT,
     COLLECTIONS_UPLOAD_BATCH_SIZE,
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
@@ -28,28 +27,38 @@ class AlbertCollectionHandler:
             raise ValueError(
                 "API key must be provided either in constructor or as environment variable"
             )
+        self.base_url = os.getenv("ALBERT_ENDPOINT")
+        if not self.base_url:
+            raise ValueError(
+                "Albert endpoint must be provided either in constructor or as environment variable"
+            )
+        self.model = os.getenv("ALBERT_VECTORISATION_MODEL")
+        if not self.model:
+            raise ValueError(
+                "Albert model must be provided either in constructor or as environment variable"
+            )
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    def _create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
-        payload = {"name": collection_name, "model": model}
+    def _create(self, collection_name: CollectionName) -> COLLECTION_ID:
+        payload = {"name": collection_name, "model": self.model}
         response = httpx.post(
-            f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers, json=payload
+            f"{self.base_url}/v1/collections", headers=self.headers, json=payload
         )
         return response.json()["id"]
 
-    def create(self, collection_name: CollectionName, model: str) -> COLLECTION_ID:
+    def create(self, collection_name: CollectionName) -> COLLECTION_ID:
         collections = self.list_collections()
         for collection in collections:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
-        return self._create(collection_name, model)
+        return self._create(collection_name)
 
     def list_collections(self) -> AlbertCollectionsList:
         try:
             response = httpx.get(
-                f"{ALBERT_ENDPOINT}/v1/collections", headers=self.headers
+                f"{self.base_url}/v1/collections", headers=self.headers
             )
             response.raise_for_status()
             response_data = response.json()
@@ -59,7 +68,7 @@ class AlbertCollectionHandler:
 
     def delete(self, id_collection: str) -> None:
         response = httpx.delete(
-            f"{ALBERT_ENDPOINT}/v1/collections/{id_collection}", headers=self.headers
+            f"{self.base_url}/v1/collections/{id_collection}", headers=self.headers
         )
         response.raise_for_status()
 
@@ -78,7 +87,7 @@ class AlbertCollectionHandler:
         score_threshold: float = 0,
     ) -> list[RankedChunk]:
         response = httpx.post(
-            f"{ALBERT_ENDPOINT}/v1/search",
+            f"{self.base_url}/v1/search",
             headers=self.headers,
             json={
                 "prompt": prompt,
@@ -130,7 +139,7 @@ class AlbertCollectionHandler:
                 % id_collection
             }
             response = httpx.post(
-                f"{ALBERT_ENDPOINT}/v1/files",
+                f"{self.base_url}/v1/files",
                 headers=self.headers,
                 files=files,
                 data=request_data,

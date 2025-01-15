@@ -1,15 +1,14 @@
 import os
 
-from transformers import AutoTokenizer
+import tiktoken
 
 
 class Tokenizer:
-    def __init__(self, model: str):
-        if not os.getenv("HF_API_TOKEN"):
-            raise ValueError("HF_API_TOKEN not provided or found in environment")
-        self._tokenizer = AutoTokenizer.from_pretrained(
-            model, token=os.getenv("HF_API_TOKEN")
-        )
+    def __init__(self):
+        model = os.getenv("TIKTOKEN_TOKENIZER_MODEL")
+        if model is None:
+            raise ValueError("TIKTOKEN_TOKENIZER_MODEL environment variable is not set")
+        self._tokenizer = tiktoken.get_encoding(model)
 
     def compute_nb_tokens(self, text: str) -> int:
         tokens = self._tokenizer.encode(text)
