@@ -47,6 +47,9 @@ jobs:
           path: ./*
           key: ${{ github.sha }}
           
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
       - name: Lint
         run: poetry run ruff check
 
@@ -61,6 +64,9 @@ jobs:
           path: ./*
           key: ${{ github.sha }}
           
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
       - name: Code formatter checker
         run: poetry run ruff format --check
 
@@ -75,6 +81,9 @@ jobs:
           path: ./*
           key: ${{ github.sha }}
           
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
       - name: Type-check
         run: poetry run pyright
 
