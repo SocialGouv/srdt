@@ -18,29 +18,33 @@ ENV TMP=/app/tmp
 # Installation de poetry en tant que root
 RUN pip install poetry==1.7.1
 
+# Configurer poetry pour installer dans un répertoire local
+ENV POETRY_HOME="/app/.poetry"
+ENV PATH="/app/.poetry/bin:$PATH"
+ENV POETRY_VIRTUALENVS_PATH="/app/.virtualenvs"
+ENV PIP_TARGET="/app/lib"
+ENV PYTHONPATH="/app/lib"
+
+# Créer les répertoires nécessaires et donner les permissions
+RUN mkdir -p /app/lib /app/.poetry /app/.virtualenvs && \
+    chown -R 1000:1000 /app
+
 # Copier les fichiers de dépendances
 COPY pyproject.toml poetry.lock ./
-
-# Définir les bonnes permissions pour les fichiers copiés
 RUN chown 1000:1000 pyproject.toml poetry.lock
 
-# Passer à l'utilisateur non-root pour l'installation des dépendances
+# Passer à l'utilisateur non-root
 USER 1000
 
 # Installer les dépendances en tant qu'utilisateur non-root
 RUN poetry config virtualenvs.create false \
     && poetry install --no-dev --no-interaction --no-ansi
 
-# Repasser temporairement en root pour la copie et les permissions
-USER root
-
 # Copier le code source
+USER root
 COPY . .
-
-# Définir les bonnes permissions
 RUN chown -R 1000:1000 /app
 
-# Repasser à l'utilisateur non-root pour l'exécution
 USER 1000
 
 EXPOSE 8000
