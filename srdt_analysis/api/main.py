@@ -58,6 +58,11 @@ async def root(_api_key: str = Depends(get_api_key)):
     return {"status": "ok", "path": BASE_API_URL}
 
 
+@app.get(f"{BASE_API_URL}/health")
+async def health():
+    return {"health": "ok"}
+
+
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
 async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
