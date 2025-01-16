@@ -18,6 +18,8 @@ RUN poetry config virtualenvs.create false \
 # Copier le code source
 COPY . .
 
+ENV PYTHONPATH="/app"
+
 # Donner les permissions à l'utilisateur non-root
 RUN chown -R 1000:1000 /app
 
