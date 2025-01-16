@@ -15,7 +15,6 @@ WORKDIR /app
 
 # Installer Poetry
 RUN pip install poetry
-
 # Copier les fichiers de dépendances
 COPY pyproject.toml poetry.lock ./
 
@@ -34,4 +33,4 @@ USER 1000
 
 EXPOSE 8000
 
-CMD ["poetry", "run", "api"]
+CMD ["uvicorn", "srdt_analysis.api.main:app", "--host", "$API_HOST", "--port", "$API_PORT"]
