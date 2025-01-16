@@ -7,5 +7,5 @@ data:
   API_HOST: "0.0.0.0"
   TIKTOKEN_TOKENIZER_MODEL: o200k_base
   ALBERT_VECTORISATION_MODEL: BAAI/bge-m3
-  SRDT_ALLOW_ORIGINS: https://*.gouv.fr
+  SRDT_ALLOW_ORIGINS: https://.*\.gouv\.fr
   ALBERT_ENDPOINT: https://albert.api.etalab.gouv.fr
