@@ -163,8 +163,8 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
 
     try:
         response = await llm_runner.chat_with_full_document(
-            chat_history=request.chat_history,
-            optional_system_prompt=request.system_prompt,
+            request.chat_history,
+            request.system_prompt,
         )
 
         chat_history_str = " ".join(
