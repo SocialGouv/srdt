@@ -26,8 +26,8 @@ RUN poetry config virtualenvs.create false \
 # Copier le code source
 COPY . .
 
-# Donner les permissions nécessaires à l'utilisateur non-root
-RUN chown -R 1000:1000 /app
+# Vérification des permissions pour l'utilisateur non-root
+RUN chown -R 1000:1000 /app && chmod -R u+rwx /app
 
 # Passer à l'utilisateur non-root
 USER 1000
