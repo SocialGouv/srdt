@@ -36,7 +36,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
             detail="Invalid authorization header format. Must start with 'Bearer '",
         )
     token = api_key.replace("Bearer ", "")
-    if token != os.getenv("API_KEY"):
+    if token != os.getenv("AUTH_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API key")
     return api_key
 
@@ -168,8 +168,8 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
 
     try:
         response = await llm_runner.chat_with_full_document(
-            chat_history=request.chat_history,
-            prompt=request.system_prompt,
+            request.chat_history,
+            request.system_prompt,
         )
 
         chat_history_str = " ".join(
