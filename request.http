@@ -42,8 +42,7 @@ content-type: application/json
     "name": "mixtral",
     "api_key": "not-needed"
   },
-  "question": "Je voudrais savoir quels sont mes droits concernant les congés payés",
-  "rephrasing_prompt": "Reformule cette question de manière professionnelle"
+  "question": "Je voudrais savoir quels sont mes droits concernant les congés payés"
 }
 
 ### Test rephrase with query splitting
@@ -101,8 +100,7 @@ content-type: application/json
       "role": "user",
       "content": "Quels sont mes droits concernant le congé parental ?"
     }
-  ],
-  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière concise et précise."
+  ]
 }
 
 ### Test generate with conversation history
