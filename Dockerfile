@@ -6,7 +6,7 @@ RUN groupadd -g 1000 pythonapp && useradd -u 1000 -g pythonapp -s /bin/bash -m p
 WORKDIR /app
 
 # Installation des dépendances en tant que root
-RUN pip install poetry
+RUN pip install poetry==1.7.1
 
 # Copier les fichiers de dépendances
 COPY pyproject.toml poetry.lock ./
