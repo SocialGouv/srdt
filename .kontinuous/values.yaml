@@ -1,0 +1,42 @@
+jobs:
+  ~chart: jobs
+  runs:
+    build-app:
+      use: build
+      with:
+        imagePackage: app
+
+app:
+  ~chart: app
+  ~needs: [build-app]
+  imagePackage: app
+  probesPath: /api/v1/health
+  livenessProbe:
+    failureThreshold: 15
+    httpGet:
+      path: /api/v1/health
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 30 # Délai avant la première vérification après le démarrage du pod
+    periodSeconds: 10 # Fréquence des vérifications
+    successThreshold: 1
+    timeoutSeconds: 10 # Temps maximum pour que l'endpoint réponde
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+  envFrom:
+    - configMapRef:
+        name: www-configmap
+    - secretRef:
+        name: www-secret
+  resources:
+    limits:
+      cpu: 400m
+      memory: 1024Mi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  annotations:
+    oblik.socialgouv.io/min-request-cpu: 200m
+    oblik.socialgouv.io/min-request-memory: 512Mi
+    oblik.socialgouv.io/min-limit-cpu: 400m
+    oblik.socialgouv.io/min-limit-memory: 1024Mi

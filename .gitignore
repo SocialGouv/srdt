@@ -9,9 +9,6 @@ dist/
 *.egg-info/
 .eggs/
 
-# Poetry specific
-poetry.lock
-
 # Installer logs
 pip-log.txt
 
@@ -66,9 +63,7 @@ celerybeat-schedule.*
 .env.prod
 .env.dev
 .venv
-env/
 venv/
-ENV/
 env.bak/
 venv.bak/
 
