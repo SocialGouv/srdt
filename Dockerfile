@@ -3,6 +3,12 @@ FROM python:3.12-slim
 # Créer un utilisateur non-root avec un UID spécifique
 RUN groupadd -g 1000 pythonapp && useradd -u 1000 -g pythonapp -s /bin/bash -m pythonapp
 
+# Créer un répertoire temporaire avec des permissions pour l'utilisateur non-root
+RUN mkdir -p /app/tmp && chmod 1777 /app/tmp
+
+# Définir ce répertoire comme répertoire temporaire
+ENV TMPDIR=/app/tmp
+
 WORKDIR /app
 
 # Installation des dépendances en tant que root
