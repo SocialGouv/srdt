@@ -10,7 +10,6 @@ app:
   ~chart: app
   ~needs: [build-app]
   imagePackage: app
-  imageProject: srdt-analysis
   probesPath: /api/v1/health
   livenessProbe:
     failureThreshold: 15
