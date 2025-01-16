@@ -36,7 +36,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
             detail="Invalid authorization header format. Must start with 'Bearer '",
         )
     token = api_key.replace("Bearer ", "")
-    if token != os.getenv("API_KEY"):
+    if token != os.getenv("AUTH_API_KEY"):
         raise HTTPException(status_code=401, detail="Invalid API key")
     return api_key
 

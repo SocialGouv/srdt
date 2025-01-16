@@ -6,6 +6,12 @@
 make install
 ```
 
+## Running with Docker
+
+```sh
+docker compose --env-file .env up -d --build
+```
+
 ## Commands
 
 ```sh
