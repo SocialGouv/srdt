@@ -14,7 +14,7 @@ ENV POETRY_CACHE_DIR=/app/cache
 WORKDIR /app
 
 # Installer Poetry
-RUN pip install --no-cache-dir poetry==1.7.1
+RUN pip install --no-cache-dir poetry==2.0.1
 
 # Copier les fichiers de dépendances
 COPY pyproject.toml poetry.lock ./
