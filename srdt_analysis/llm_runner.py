@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import (
     LLM_ANONYMIZATION_PROMPT,
+    LLM_ANSWER_PROMPT,
     LLM_REPHRASING_PROMPT,
     LLM_SPLIT_MULTIPLE_QUERIES_PROMPT,
 )
@@ -67,9 +68,14 @@ class LLMRunner:
     async def chat_with_full_document(
         self,
         chat_history: list[UserLLMMessage],
-        prompt: str,
+        optional_system_prompt: Optional[str] = None,
     ) -> str:
+        system_prompt = (
+            optional_system_prompt
+            if optional_system_prompt is not None
+            else LLM_ANSWER_PROMPT
+        )
         return await self.llm_processor.generate_completions_async(
-            system_prompt=prompt,
-            chat_history=chat_history,
+            system_prompt,
+            chat_history,
         )

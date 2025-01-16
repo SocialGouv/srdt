@@ -33,7 +33,7 @@ class AnonymizeResponse(BaseModel):
 class RephraseRequest(BaseModel):
     model: LLMModel
     question: str
-    rephrasing_prompt: str  # TODO : to be removed in the future
+    rephrasing_prompt: Optional[str] = None  # TODO : to be removed in the future
     queries_splitting_prompt: Optional[str] = None  # TODO : to be removed in the future
 
 
@@ -106,7 +106,7 @@ class SearchResponse(BaseModel):
 class GenerateRequest(BaseModel):
     model: LLMModel
     chat_history: List[UserLLMMessage]
-    system_prompt: str  # TODO : to be removed in the future
+    system_prompt: Optional[str] = None  # TODO : to be removed in the future
 
 
 class GenerateResponse(BaseModel):
