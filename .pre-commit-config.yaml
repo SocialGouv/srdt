@@ -36,4 +36,4 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-        # exclude: some_file.py
+        exclude: ".kontinuous/*|.github/*"
