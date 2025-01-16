@@ -33,4 +33,4 @@ USER 1000
 
 EXPOSE 8000
 
-CMD ["uvicorn", "srdt_analysis.api.main:app", "--host", "$API_HOST", "--port", "$API_PORT"]
+CMD ["sh", "-c", "uvicorn srdt_analysis.api.main:app --host $API_HOST --port $API_PORT"]
