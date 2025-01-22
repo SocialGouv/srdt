@@ -5,10 +5,12 @@ jobs:
       use: build
       with:
         imagePackage: api
+        dockerfile: api/Dockerfile
     build-web:
       use: build
       with:
         imagePackage: web
+        dockerfile: web/Dockerfile
 
 api:
   ~chart: app

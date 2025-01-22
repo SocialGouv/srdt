@@ -27,9 +27,11 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        working-directory: ./web
 
       - name: Build
         run: yarn build
+        working-directory: ./web
 
   web-lint:
     name: Web - Lint
@@ -46,9 +48,11 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        working-directory: ./web
 
       - name: Lint
         run: yarn lint
+        working-directory: ./web
 
   web-type-check:
     name: Web - Type check
@@ -65,9 +69,11 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        working-directory: ./web
 
       - name: Type-check
         run: yarn type-check
+        working-directory: ./web
 
   # Python/Backend jobs
   python-lint:
@@ -109,6 +115,7 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
+        working-directory: ./api
 
       - name: Install dependencies
         run: poetry install

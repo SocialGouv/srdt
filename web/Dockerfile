@@ -1,18 +1,20 @@
-ARG NODE_VERSION=22.3.1-alpine
+ARG NODE_VERSION=22.12.0-alpine
 
 # dist
 FROM node:$NODE_VERSION AS dist
 
 WORKDIR /dep
 
-# Copy lockfile
-COPY ./yarn.lock ./
+# Copy package files first
+COPY package.json yarn.lock ./
 
 # Install packages
 RUN yarn --frozen-lockfile
 
-COPY . ./
+# Copy rest of the application
+COPY . .
 
+# Build the application
 RUN yarn build && \
   yarn cache clean
 
