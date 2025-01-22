@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: pyright
         name: pyright
-        entry: poetry run pyright
+        entry: cd api && poetry run pyright
         language: system
         types: [python]
         pass_filenames: false
@@ -35,4 +35,5 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        args: ["--baseline", ".secrets.baseline"]
+        args: ["--baseline", "./api/.secrets.baseline"]
+        exclude: ".kontinuous/*|.github/*|.env.sample|request.http"
