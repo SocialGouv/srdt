@@ -11,8 +11,67 @@ concurrency:
   group: quality-${{ github.ref }}
 
 jobs:
-  lint:
-    name: Lint
+  # Web/Frontend jobs
+  web-build:
+    name: Web - Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+  web-lint:
+    name: Web - Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+  web-type-check:
+    name: Web - Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Type-check
+        run: yarn type-check
+
+  # Python/Backend jobs
+  python-lint:
+    name: Python - Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -35,8 +94,8 @@ jobs:
         run: poetry run ruff check
         working-directory: ./api
 
-  format:
-    name: Code formatter checker
+  python-format:
+    name: Python - Format check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -50,7 +109,6 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-        working-directory: ./api
 
       - name: Install dependencies
         run: poetry install
@@ -58,9 +116,10 @@ jobs:
 
       - name: Code formatter checker
         run: poetry run ruff format --check
+        working-directory: ./api
 
-  type-check:
-    name: Check types
+  python-type-check:
+    name: Python - Type check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -74,7 +133,6 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-        working-directory: ./api
 
       - name: Install dependencies
         run: poetry install
@@ -84,8 +142,8 @@ jobs:
         run: poetry run pyright
         working-directory: ./api
 
-  hook:
-    name: Precommit hook
+  python-hook:
+    name: Python - Pre-commit hook
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -99,7 +157,6 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-        working-directory: ./api
 
       - name: Install dependencies
         run: poetry install
@@ -109,6 +166,7 @@ jobs:
         run: poetry run pre-commit run --all-files
         working-directory: ./api
 
+  # Common jobs
   docker:
     name: Lint Dockerfile
     runs-on: ubuntu-latest
