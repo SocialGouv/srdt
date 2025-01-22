@@ -18,14 +18,10 @@ repos:
         args: [--fix]
       - id: ruff-format
         types_or: [python, pyi]
-  - repo: local
+  - repo: https://github.com/ComPWA/pyright-pre-commit
+    rev: ""
     hooks:
       - id: pyright
-        name: pyright
-        entry: poetry run pyright
-        language: system
-        types: [python]
-        pass_filenames: false
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.0
     hooks:
