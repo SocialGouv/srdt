@@ -22,11 +22,10 @@ repos:
     hooks:
       - id: pyright
         name: pyright
-        entry: poetry run pyright
+        entry: cd api && poetry run pyright
         language: system
         types: [python]
         pass_filenames: false
-        working_dir: api
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.0
     hooks:
