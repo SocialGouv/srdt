@@ -174,8 +174,7 @@ jobs:
         working-directory: ./api
 
       - name: Pre-commit
-        run: poetry run pre-commit run --all-files
-        working-directory: ./api
+        run: poetry run --directory api pre-commit run --all-files
 
   # Common jobs
   docker:
