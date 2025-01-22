@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
-  - package-ecosystem: "npm"
+  - package-ecosystem: "pip"
     labels:
       - bot
       - dependencies
@@ -20,10 +20,7 @@ updates:
       - dependency-name: "*"
         dependency-type: direct
     ignore:
-      - dependency-name: "@types/*"
+      - dependency-name: "mypy"
         update-types:
           - "version-update:semver-patch"
           - "version-update:semver-minor"
-      - dependency-name: "@types/node"
-        versions:
-          - ">=18"

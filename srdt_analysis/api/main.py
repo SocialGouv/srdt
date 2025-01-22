@@ -43,10 +43,8 @@ async def get_api_key(api_key: str = Security(api_key_header)):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("SRDT_ALLOW_ORIGINS", "").split(",")
-    if os.getenv("SRDT_ALLOW_ORIGINS")
-    else [],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
 )

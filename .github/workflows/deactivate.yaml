@@ -6,7 +6,6 @@ on:
     branches:
       - "**"
       - "!v*"
-      - "!master"
       - "!main"
       - "!dev"
       - "!develop"
