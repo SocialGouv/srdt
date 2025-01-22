@@ -17,21 +17,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Lint
         run: poetry run ruff check
+        working-directory: ./api
 
   format:
     name: Code formatter checker
@@ -39,18 +41,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+        working-directory: ./api
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Code formatter checker
         run: poetry run ruff format --check
@@ -61,21 +65,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+        working-directory: ./api
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Type-check
         run: poetry run pyright
+        working-directory: ./api
 
   hook:
     name: Precommit hook
@@ -83,28 +90,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+        working-directory: ./api
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Pre-commit
         run: poetry run pre-commit run --all-files
-      
+        working-directory: ./api
+
   docker:
     name: Lint Dockerfile
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
