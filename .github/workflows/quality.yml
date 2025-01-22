@@ -174,7 +174,8 @@ jobs:
         working-directory: ./api
 
       - name: Pre-commit
-        run: poetry run --directory api pre-commit run --all-files
+        run: poetry config pyproject.toml ./api/pyproject.toml && poetry run pre-commit run --all-files
+        working-directory: ./api
 
   # Common jobs
   docker:
