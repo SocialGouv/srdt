@@ -10,8 +10,7 @@ concurrency:
   cancel-in-progress: true
   group: quality-${{ github.ref }}
 
-jobs:        
-
+jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -77,8 +76,6 @@ jobs:
 
       - name: Type-check
         run: poetry run pyright
-
-
 
   hook:
     name: Precommit hook
