@@ -1,21 +1,17 @@
 FROM python:3.12-slim
 
-# Create non-root user
+# Créer un utilisateur non-root avec un UID spécifique
 RUN groupadd -g 1000 pythonapp && useradd -u 1000 -g pythonapp -s /bin/bash -m pythonapp
 
-# Create directories with proper permissions
-RUN mkdir -p /tmp/app/cache && \
-    mkdir -p /tmp/app/home && \
-    chown -R pythonapp:pythonapp /tmp/app && \
-    chmod -R 777 /tmp/app
+# Créer les répertoires nécessaires sous /app
+RUN mkdir -p /app/tmp /app/home /app/cache && chmod 1777 /app/tmp
+
+# Rediriger TMPDIR, HOME, et POETRY_CACHE_DIR vers /app
+ENV TMPDIR=/app/tmp
+ENV HOME=/app/home
+ENV POETRY_CACHE_DIR=/app/cache
 
 WORKDIR /app
-
-# Set environment variables
-ENV HOME=/tmp/app/home \
-    POETRY_CACHE_DIR=/tmp/app/cache \
-    PYTHONPATH=/app \
-    TIKTOKEN_CACHE_DIR=/tmp/app/cache
 
 # Installer Poetry
 RUN pip install --no-cache-dir poetry==2.0.1
@@ -30,11 +26,8 @@ RUN poetry config virtualenvs.create false \
 # Copier le code source
 COPY . .
 
-# Final permission check and directory verification
-RUN chown -R pythonapp:pythonapp /app && \
-    chmod -R u+rwx /app && \
-    test -w $HOME || exit 1 && \
-    test -w $POETRY_CACHE_DIR || exit 1
+# Vérification des permissions pour l'utilisateur non-root
+RUN chown -R 1000:1000 /app && chmod -R u+rwx /app
 
 # Passer à l'utilisateur non-root
 USER 1000

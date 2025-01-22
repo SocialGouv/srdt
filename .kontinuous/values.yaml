@@ -40,3 +40,17 @@ app:
     oblik.socialgouv.io/min-request-memory: 512Mi
     oblik.socialgouv.io/min-limit-cpu: 400m
     oblik.socialgouv.io/min-limit-memory: 1024Mi
+  volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: cache
+      emptyDir: {}
+    - name: home
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /app/tmp
+      name: tmp
+    - mountPath: /app/cache
+      name: cache
+    - mountPath: /app/home
+      name: home
