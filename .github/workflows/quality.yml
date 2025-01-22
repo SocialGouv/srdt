@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "22.12.0"
           cache: "yarn"
-          cache-dependency-path: ./web/node_modules
+          cache-dependency-path: ./web
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
