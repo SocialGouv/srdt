@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/SocialGouv/srdt/compare/v1.0.0...v1.1.0) (2025-01-23)
+
+
+### Features
+
+* **dsfr:** initialisation du theme par défaut ([#82](https://github.com/SocialGouv/srdt/issues/82)) ([400ad87](https://github.com/SocialGouv/srdt/commit/400ad87624f32132577637a08edd1c6688befffe))
+
 # 1.0.0 (2025-01-23)
 
 
