@@ -15,7 +15,7 @@ RUN yarn --frozen-lockfile
 COPY . .
 
 # Build the application
-RUN yarn build && \
+RUN yarn build:standalone && \
   yarn cache clean
 
 # app
@@ -34,8 +34,7 @@ COPY --from=dist --chown=1000:1000 /dep/.next /app/.next
 COPY --from=dist --chown=1000:1000 /dep/package.json /app/package.json
 COPY --from=dist --chown=1000:1000 /dep/public /app/public
 COPY --from=dist --chown=1000:1000 /dep/next.config.ts /app/next.config.ts
-COPY --from=dist --chown=1000:1000 /dep/node_modules /app/node_modules
 
 RUN mkdir -p /app/.next/cache/images && chown -R 1000:1000 /app/.next
 
-CMD [ "yarn", "start"]
+CMD [ "yarn", "start:standalone"]
