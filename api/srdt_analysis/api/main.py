@@ -56,7 +56,7 @@ async def root(_api_key: str = Depends(get_api_key)):
     return {"status": "ok", "path": BASE_API_URL}
 
 
-@app.get(f"{BASE_API_URL}/health")
+@app.get(f"{BASE_API_URL}/healthz")
 async def health():
     return {"health": "ok"}
 

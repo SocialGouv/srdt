@@ -16,11 +16,11 @@ api:
   ~chart: app
   ~needs: [build-api]
   imagePackage: api
-  probesPath: /api/v1/health
+  probesPath: /api/v1/healthz
   livenessProbe:
     failureThreshold: 15
     httpGet:
-      path: /api/v1/health
+      path: /api/v1/healthz
       port: http
       scheme: HTTP
     initialDelaySeconds: 30 # Délai avant la première vérification après le démarrage du pod
