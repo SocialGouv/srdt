@@ -3,26 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "react-dsfr update-icons",
     "dev": "next dev --turbopack",
+    "prebuild": "react-dsfr update-icons",
     "build": "next build",
-    "build:standalone": "next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
+    "build:standalone": "yarn prebuild && next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@codegouvfr/react-dsfr": "^1.16.10",
+    "next": "15.1.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.1.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.4",
-    "@eslint/eslintrc": "^3"
+    "sass": "^1.83.4",
+    "typescript": "^5"
   }
 }
