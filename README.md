@@ -1,11 +1,5 @@
 # Assistant virtuel SRDT
 
-## Installation
-
-```sh
-make install
-```
-
 ## Running with Docker
 
 ```sh
@@ -19,6 +13,7 @@ docker compose up -d --build
 ```sh
 cd api # to go to the api directory
 cp .env.example .env # and set your own env variable
+make install # for installing hooks and the dependencies
 ```
 
 ### Commands
