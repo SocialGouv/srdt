@@ -30,7 +30,8 @@ WORKDIR /app
 
 USER 1000
 
-COPY --from=dist --chown=1000:1000 /dep/.next /app/.next
+COPY --from=dist --chown=1000:1000 /dep/.next/standalone /app/.next/standalone
+COPY --from=dist --chown=1000:1000 /dep/.next/static /app/.next/static
 COPY --from=dist --chown=1000:1000 /dep/package.json /app/package.json
 COPY --from=dist --chown=1000:1000 /dep/next.config.ts /app/next.config.ts
 
