@@ -32,7 +32,6 @@ USER 1000
 
 COPY --from=dist --chown=1000:1000 /dep/.next /app/.next
 COPY --from=dist --chown=1000:1000 /dep/package.json /app/package.json
-COPY --from=dist --chown=1000:1000 /dep/public /app/public
 COPY --from=dist --chown=1000:1000 /dep/next.config.ts /app/next.config.ts
 
 RUN mkdir -p /app/.next/cache/images && chown -R 1000:1000 /app/.next
