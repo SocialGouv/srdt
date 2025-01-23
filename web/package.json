@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "prebuild": "react-dsfr update-icons",
     "build": "next build",
-    "build:standalone": "next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
+    "build:standalone": "yarn prebuild && next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
