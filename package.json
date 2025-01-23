@@ -1,0 +1,11 @@
+{
+  "name": "@socialgouv/srdt",
+  "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": "git@github.com:SocialGouv/srdt.git",
+  "author": "SocialGouv",
+  "license": "MIT",
+  "private": false
+}
