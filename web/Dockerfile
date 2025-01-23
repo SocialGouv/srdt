@@ -36,4 +36,4 @@ COPY --from=dist --chown=1000:1000 /dep/next.config.ts /app/next.config.ts
 
 RUN mkdir -p /app/.next/cache/images && chown -R 1000:1000 /app/.next
 
-CMD [ "yarn", "start:standalone"]
+CMD [ "node", ".next/standalone/server.js"]
