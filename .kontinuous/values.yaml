@@ -65,11 +65,11 @@ web:
   ~chart: app
   ~needs: [build-web]
   imagePackage: web
-  probesPath: /api/health
+  probesPath: /api/healthz
   livenessProbe:
     failureThreshold: 15
     httpGet:
-      path: /api/health/
+      path: /api/healthz
       port: http
       scheme: HTTP
     initialDelaySeconds: 30 # Délai avant la première vérification après le démarrage du pod
