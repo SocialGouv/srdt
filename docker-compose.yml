@@ -1,8 +1,12 @@
 version: "3.8"
 
 services:
-  app:
-    build: .
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+  api:
+    build: ./api
     ports:
       - "8000:8000"
     environment:
@@ -13,3 +17,5 @@ services:
       - ALBERT_API_KEY=${ALBERT_API_KEY}
       - ALBERT_ENDPOINT=${ALBERT_ENDPOINT}
       - ALBERT_VECTORISATION_MODEL=${ALBERT_VECTORISATION_MODEL}
+    env_file:
+      - ./api/.env

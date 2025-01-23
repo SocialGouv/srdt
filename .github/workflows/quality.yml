@@ -11,100 +11,181 @@ concurrency:
   group: quality-${{ github.ref }}
 
 jobs:
-  lint:
-    name: Lint
+  # Web/Frontend jobs
+  web-build:
+    name: Web - Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: "yarn"
+          cache-dependency-path: ./web
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./web
+
+      - name: Build
+        run: yarn build
+        working-directory: ./web
+
+  web-lint:
+    name: Web - Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: "yarn"
+          cache-dependency-path: ./web
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./web
+
+      - name: Lint
+        run: yarn lint
+        working-directory: ./web
+
+  web-type-check:
+    name: Web - Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: "yarn"
+          cache-dependency-path: ./web
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./web
+
+      - name: Type-check
+        run: yarn type-check
+        working-directory: ./web
+
+  # Python/Backend jobs
+  python-lint:
+    name: Python - Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Lint
         run: poetry run ruff check
+        working-directory: ./api
 
-  format:
-    name: Code formatter checker
+  python-format:
+    name: Python - Format check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+        working-directory: ./api
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Code formatter checker
         run: poetry run ruff format --check
+        working-directory: ./api
 
-  type-check:
-    name: Check types
+  python-type-check:
+    name: Python - Type check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Type-check
         run: poetry run pyright
+        working-directory: ./api
 
-  hook:
-    name: Precommit hook
+  python-hook:
+    name: Python - Pre-commit hook
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          
+          python-version: "3.12"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          
+        working-directory: ./api
+
       - name: Install dependencies
         run: poetry install
+        working-directory: ./api
 
       - name: Pre-commit
         run: poetry run pre-commit run --all-files
-      
+        working-directory: ./api
+
+  # Common jobs
   docker:
     name: Lint Dockerfile
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true

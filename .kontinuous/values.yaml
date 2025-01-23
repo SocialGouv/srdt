@@ -1,20 +1,26 @@
 jobs:
   ~chart: jobs
   runs:
-    build-app:
+    build-api:
       use: build
       with:
-        imagePackage: app
+        imagePackage: api
+        context: api
+    build-web:
+      use: build
+      with:
+        imagePackage: web
+        context: web
 
-app:
+api:
   ~chart: app
-  ~needs: [build-app]
-  imagePackage: app
-  probesPath: /api/v1/health
+  ~needs: [build-api]
+  imagePackage: api
+  probesPath: /api/v1/healthz
   livenessProbe:
     failureThreshold: 15
     httpGet:
-      path: /api/v1/health
+      path: /api/v1/healthz
       port: http
       scheme: HTTP
     initialDelaySeconds: 30 # Délai avant la première vérification après le démarrage du pod
@@ -54,3 +60,33 @@ app:
       name: cache
     - mountPath: /app/home
       name: home
+
+web:
+  ~chart: app
+  ~needs: [build-web]
+  imagePackage: web
+  probesPath: /api/healthz
+  livenessProbe:
+    failureThreshold: 15
+    httpGet:
+      path: /api/healthz
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 30 # Délai avant la première vérification après le démarrage du pod
+    periodSeconds: 10 # Fréquence des vérifications
+    successThreshold: 1
+    timeoutSeconds: 10 # Temps maximum pour que l'endpoint réponde
+  containerSecurityContext:
+    readOnlyRootFilesystem: true
+  resources:
+    limits:
+      cpu: 400m
+      memory: 1024Mi
+    requests:
+      cpu: 400m
+      memory: 512Mi
+  annotations:
+    oblik.socialgouv.io/min-request-cpu: 400m
+    oblik.socialgouv.io/min-request-memory: 512Mi
+    oblik.socialgouv.io/min-limit-cpu: 400m
+    oblik.socialgouv.io/min-limit-memory: 1024Mi
