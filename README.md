@@ -46,6 +46,10 @@ cp .env.example .env # and set your own env variable
 ```sh
 yarn install --frozen-lockfile # for installing the dependencies
 yarn build # for building the web app
+yarn build:standalone # scripts used for building app for standalone usage
+yarn dev # for running the web app in development mode
+yarn start # for running the web app in production mode
+yarn start:standalone # scripts used for running app for standalone usage
 ```
 
 ### Lint, format and type checking
