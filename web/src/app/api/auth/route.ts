@@ -13,6 +13,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { message: "Erreur lors de la vérification" },
       { status: 500 }
