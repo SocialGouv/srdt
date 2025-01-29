@@ -78,6 +78,11 @@ web:
     timeoutSeconds: 10 # Temps maximum pour que l'endpoint réponde
   containerSecurityContext:
     readOnlyRootFilesystem: true
+  envFrom:
+    - configMapRef:
+        name: web-configmap
+    - secretRef:
+        name: web-secret
   resources:
     limits:
       cpu: 400m

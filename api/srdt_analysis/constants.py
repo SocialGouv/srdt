@@ -10,6 +10,7 @@ ALBERT_COLLECTION_IDS = [
     "0be5059b-762f-48ba-a8f0-fe10e81455c8",  # code_du_travail
     "f8d66426-5c54-4503-aa30-a3abc19453d5",  # fiches_service_public
     "d03df69b-9387-4359-80db-7d73f2b6f04a",  # contributions
+    "internet",  # internet
 ]
 LLM_ANSWER_PROMPT = """
   # Instructions

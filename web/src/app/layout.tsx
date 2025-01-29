@@ -5,6 +5,7 @@ import { getHtmlAttributes } from "@codegouvfr/react-dsfr/next-appdir/getHtmlAtt
 import Link from "next/link";
 import { defaultColorScheme } from "@/modules/dsfr/defaultColorScheme";
 import { StartDsfr } from "@/modules/dsfr/StartDsfr";
+import { AuthProvider } from "@/hooks/use-auth";
 
 export const metadata: Metadata = {
   title: "SRDT",
@@ -32,7 +33,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <DsfrProvider lang={lang}>{children}</DsfrProvider>
+        <AuthProvider>
+          <DsfrProvider lang={lang}>{children}</DsfrProvider>
+        </AuthProvider>
       </body>
     </html>
   );
