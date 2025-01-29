@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/SocialGouv/srdt/compare/v1.1.0...v1.2.0) (2025-01-29)
+
+
+### Features
+
+* **auth:** ajout de la logique d'authentification ([#84](https://github.com/SocialGouv/srdt/issues/84)) ([f432ab3](https://github.com/SocialGouv/srdt/commit/f432ab3bd9f3de3ac7b30cab64c5dfee3b38c1ae))
+
 # [1.1.0](https://github.com/SocialGouv/srdt/compare/v1.0.0...v1.1.0) (2025-01-23)
 
 
