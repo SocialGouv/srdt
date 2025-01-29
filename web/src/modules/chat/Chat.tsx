@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { Input } from "@codegouvfr/react-dsfr/Input";
 import { fr } from "@codegouvfr/react-dsfr";
 import { UserLLMMessage } from "@/types";
 
 export const Chat = () => {
   const [messages, setMessages] = useState<UserLLMMessage[]>([
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
-    { content: "J'ai une question concernant mes démarches", role: "user" },
   ]);
 
   const [newMessage, setNewMessage] = useState("");
@@ -29,24 +27,54 @@ export const Chat = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  const handleReset = () => {
+    setMessages([
+      { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
+    ]);
+    setNewMessage("");
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      <div className={fr.cx("fr-card", "fr-my-3w")}>
+    <div style={{ display: "flex", flexDirection: "column", height: "70vh" }}>
+      <Button
+        onClick={handleReset}
+        iconId="fr-icon-refresh-fill"
+        priority="secondary"
+        className={fr.cx("fr-mt-2w")}
+      >
+        Nouvelle conversation
+      </Button>
+      <div className={fr.cx("fr-card", "fr-mt-2w")}>
         <div className={fr.cx("fr-card__body")}>
           <h1 className={fr.cx("fr-card__title")}>Assistant conversationnel</h1>
           <p className={fr.cx("fr-card__desc")}>
-            Notre assistant conversationnel en droit du travail vous offre des
-            réponses rapides, fiables et conformes à la législation en vigueur.
+            Je suis un assistant juridique spécialisé en droit du travail. Mon
+            rôle est de proposer une réponse à la question que vous me posez
+            ci-dessous. Je m&apos;appuie principalement sur des sites publics
+            (service-public, code du travail numérique, travail-emploi, ...)
+            pour générer ma réponse, et je détaille à chaque fois les sources
+            que j&apos;utilise. Cependant, je suis encore en formation et mes
+            réponses ne sont pas parfaites. Aussi et pendant cette phase
+            d&apos;expérimentation, je vous demande de prendre le temps de noter
+            ma réponse via le formulaire qui se déroule sous ma réponse. Cela
+            sera précieux pour m&apos;améliorer !
           </p>
         </div>
       </div>
 
       <div
-        className={`${fr.cx("fr-p-3w")} chat-messages`}
+        className={`chat-messages`}
         style={{
           display: "flex",
           flexDirection: "column",
-          height: "calc(100vh - 250px)",
+          height: "calc(70vh - 250px)",
           overflowY: "auto",
           gap: "1rem",
         }}
@@ -72,6 +100,7 @@ export const Chat = () => {
                 color: message.role === "user" ? "white" : "inherit",
                 borderRadius: "8px",
                 padding: "1rem",
+                whiteSpace: "pre-wrap",
               }}
             >
               {message.content}
@@ -89,14 +118,12 @@ export const Chat = () => {
         }}
       >
         <div className={fr.cx("fr-col-11")}>
-          <Input
-            label="Votre message"
-            nativeInputProps={{
-              placeholder: "Saisissez votre message",
-              value: newMessage,
-              onChange: (e) => setNewMessage(e.target.value),
-            }}
-            hideLabel
+          <textarea
+            className={fr.cx("fr-input")}
+            placeholder="Saisissez votre message"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
         <div
@@ -104,7 +131,7 @@ export const Chat = () => {
           style={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "flex-end",
+            justifyContent: "center",
             alignItems: "flex-start",
           }}
         >
