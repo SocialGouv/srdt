@@ -19,7 +19,6 @@ export const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
-  const [sourceList, setSourceList] = useState<string[]>([]);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -64,17 +63,22 @@ export const Chat = () => {
       result.data?.localSearchChunks.map((v) => v.metadata.url) ?? [];
     const internetSources =
       result.data?.internetSearchChunks.map((v) => v.metadata.url) ?? [];
-    setSourceList([...localSources, ...internetSources]);
+    const sourceList = [...localSources, ...internetSources];
 
     setMessages((prev) => [
       ...prev,
       {
         content:
-          result.data?.generated?.text ??
-          "Désolé, je n'ai pas pu générer de réponse.",
+          (result.data?.generated?.text ??
+            "Désolé, je n'ai pas pu générer de réponse.") +
+          (sourceList.length > 0
+            ? "\n\n*Sources utilisées pour générer cette réponse :*\n" +
+              sourceList.map((source) => `- [${source}](${source})`).join("\n")
+            : ""),
         role: "assistant",
       },
     ]);
+    setIsDisabled(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -129,21 +133,6 @@ export const Chat = () => {
                 {isLoading && <div>Génération de la réponse...</div>}
               </div>
             )}
-            {message.role === "assistant" &&
-              !message.isError &&
-              !message.isLoading &&
-              sourceList.length > 0 && (
-                <div className={fr.cx("fr-mt-2w")}>
-                  <p>
-                    <em>Sources utilisées pour générer cette réponse :</em>
-                  </p>
-                  <Markdown>
-                    {sourceList
-                      .map((source) => `- [${source}](${source})`)
-                      .join("\n")}
-                  </Markdown>
-                </div>
-              )}
           </div>
         </div>
       </div>
