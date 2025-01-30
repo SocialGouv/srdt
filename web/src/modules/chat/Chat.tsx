@@ -19,6 +19,7 @@ export const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
+  const [sourceList, setSourceList] = useState<string[]>([]);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -59,6 +60,11 @@ export const Chat = () => {
       ]);
       return;
     }
+    const localSources =
+      result.data?.localSearchChunks.map((v) => v.metadata.url) ?? [];
+    const internetSources =
+      result.data?.internetSearchChunks.map((v) => v.metadata.url) ?? [];
+    setSourceList([...localSources, ...internetSources]);
 
     setMessages((prev) => [
       ...prev,
@@ -123,6 +129,21 @@ export const Chat = () => {
                 {isLoading && <div>Génération de la réponse...</div>}
               </div>
             )}
+            {message.role === "assistant" &&
+              !message.isError &&
+              !message.isLoading &&
+              sourceList.length > 0 && (
+                <div className={fr.cx("fr-mt-2w")}>
+                  <p>
+                    <em>Sources utilisées pour générer cette réponse :</em>
+                  </p>
+                  <Markdown>
+                    {sourceList
+                      .map((source) => `- [${source}](${source})`)
+                      .join("\n")}
+                  </Markdown>
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -130,20 +151,20 @@ export const Chat = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "70vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "80vh" }}>
       <div
         className={`chat-messages`}
         style={{
           display: "flex",
           flexDirection: "column",
-          height: "calc(70vh - 100px)", // Ajusté la hauteur car on n'a plus d'éléments au-dessus
+          height: "calc(80vh - 20px)", // Ajusté la hauteur car on n'a plus d'éléments au-dessus
           overflowY: "auto",
           gap: "1rem",
         }}
       >
         <Button
           onClick={handleReset}
-          iconId="fr-icon-refresh-fill"
+          iconId="fr-icon-refresh-line"
           priority="secondary"
           className={fr.cx("fr-mt-2w")}
         >

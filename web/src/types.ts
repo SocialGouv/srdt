@@ -94,8 +94,8 @@ export interface InstructionPrompts {
 export interface AnalyzeResponse {
   anonymized: AnonymizeResponse;
   rephrased: RephraseResponse;
-  localSearch: SearchResponse;
-  internetSearch: SearchResponse;
+  localSearchChunks: ChunkResult[];
+  internetSearchChunks: ChunkResult[];
   generated: GenerateResponse;
   modelName: string;
 }

@@ -120,9 +120,13 @@ export const analyzeQuestion = async (
       );
     }
 
+    if (!anonymizeResult.data) {
+      throw new Error("Erreur lors de l'anonymisation");
+    }
+
     const rephraseResult = await rephrase({
       model,
-      question: anonymizeResult.data!.anonymized_question,
+      question: anonymizeResult.data.anonymized_question,
       rephrasing_prompt: PROMPT_INSTRUCTIONS_V1.reformulation,
       queries_splitting_prompt: PROMPT_INSTRUCTIONS_V1.split_multiple_queries,
     });
@@ -133,27 +137,40 @@ export const analyzeQuestion = async (
       );
     }
 
+    if (!rephraseResult.data) {
+      throw new Error("Erreur lors de la reformulation");
+    }
+
     const [localSearchResult, internetSearchResult] = await Promise.all([
       search({
-        prompts: rephraseResult.data!.queries || [
-          rephraseResult.data!.rephrased_question,
+        prompts: rephraseResult.data.queries || [
+          rephraseResult.data.rephrased_question,
         ],
         options: SEARCH_OPTIONS_LOCAL,
       }),
       search({
-        prompts: rephraseResult.data!.queries || [
-          rephraseResult.data!.rephrased_question,
+        prompts: rephraseResult.data.queries || [
+          rephraseResult.data.rephrased_question,
         ],
         options: SEARCH_OPTIONS_INTERNET,
       }),
     ]);
 
     if (localSearchResult.error || internetSearchResult.error) {
-      throw new Error(
+      console.error(
         `Erreur lors de la recherche: ${
           localSearchResult.error || internetSearchResult.error
         }`
       );
+    }
+
+    const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
+    const internetSearchChunks = internetSearchResult.data?.top_chunks ?? [];
+
+    const mergeSearchResults = [...localSearchChunks, ...internetSearchChunks];
+
+    if (mergeSearchResults.length === 0) {
+      console.warn("Aucun résultat de recherche trouvé");
     }
 
     const generateResult = await generate({
@@ -161,7 +178,22 @@ export const analyzeQuestion = async (
       chat_history: [
         {
           role: "user",
-          content: rephraseResult.data!.rephrased_question,
+          content: rephraseResult.data.rephrased_question,
+        },
+        {
+          role: "user",
+          content: `Voici les sources pertinentes pour répondre à la question:
+
+              ${mergeSearchResults
+                .sort((a, b) => b.score - a.score)
+                .map(
+                  (
+                    chunk
+                  ) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
+                        Contenu: ${chunk.content}
+                        ---`
+                )
+                .join("\n")}`,
         },
       ],
       system_prompt: PROMPT_INSTRUCTIONS_V1.generate_instruction,
@@ -173,14 +205,8 @@ export const analyzeQuestion = async (
       );
     }
 
-    if (
-      !anonymizeResult.data ||
-      !rephraseResult.data ||
-      !localSearchResult.data ||
-      !internetSearchResult.data ||
-      !generateResult.data
-    ) {
-      throw new Error("Erreur lors de l'analyse de la question");
+    if (!generateResult.data) {
+      throw new Error("Erreur lors de la génération de la réponse");
     }
 
     return {
@@ -188,8 +214,8 @@ export const analyzeQuestion = async (
       data: {
         anonymized: anonymizeResult.data,
         rephrased: rephraseResult.data,
-        localSearch: localSearchResult.data,
-        internetSearch: internetSearchResult.data,
+        localSearchChunks,
+        internetSearchChunks,
         generated: generateResult.data,
         modelName: model.name,
       },

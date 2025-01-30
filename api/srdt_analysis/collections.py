@@ -6,6 +6,7 @@ from io import BytesIO
 import httpx
 
 from srdt_analysis.constants import (
+    ALBERT_SEARCH_TIMEOUT,
     COLLECTIONS_UPLOAD_BATCH_SIZE,
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
@@ -85,6 +86,7 @@ class AlbertCollectionHandler:
         id_collections: COLLECTIONS_ID,
         k: int = 5,
         score_threshold: float = 0,
+        timeout: int = ALBERT_SEARCH_TIMEOUT,
     ) -> list[RankedChunk]:
         response = httpx.post(
             f"{self.base_url}/v1/search",
@@ -95,6 +97,7 @@ class AlbertCollectionHandler:
                 "k": k,
                 "score_threshold": score_threshold,
             },
+            timeout=timeout,
         )
         result = response.json()
         return result.get("data", [])
