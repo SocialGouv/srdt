@@ -41,3 +41,8 @@ export const ALBERT_LLM: LLMModel = {
   name: process.env.ALBERT_MODEL_NAME ?? "",
   base_url: "https://albert.api.etalab.gouv.fr",
 };
+
+export const getRandomModel = (): LLMModel => {
+  const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
+  return models[Math.floor(Math.random() * models.length)];
+};

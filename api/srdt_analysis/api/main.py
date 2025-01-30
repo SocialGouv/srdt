@@ -139,9 +139,11 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                     id_chunk=chunk_data["id"],
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
-                        source=metadata["source"],
+                        source=metadata["source"]
+                        if "source" in metadata
+                        else "internet",
                         title=metadata["document_name"],
-                        url=metadata["url"],
+                        url=metadata["url"] if "url" in metadata else "internet",
                     ),
                 )
                 transformed_results.append(transformed_chunk)

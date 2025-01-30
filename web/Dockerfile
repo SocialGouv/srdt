@@ -14,6 +14,9 @@ RUN yarn --frozen-lockfile
 # Copy rest of the application
 COPY . .
 
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 # Build the application
 RUN yarn build:standalone && \
   yarn cache clean
@@ -23,8 +26,6 @@ FROM node:$NODE_VERSION
 
 # hadolint ignore=DL3018
 RUN apk --update --no-cache add ca-certificates && apk upgrade
-
-ENV NEXT_PUBLIC_APP_ENV=production
 
 WORKDIR /app
 
