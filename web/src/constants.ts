@@ -8,7 +8,7 @@ export const PROMPT_INSTRUCTIONS_V1: InstructionPrompts = {
 };
 
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
-  top_K: 10,
+  top_K: 5,
   threshold: 0.6,
   collections: [
     "5755cf5f-1cb5-4ec6-a076-21047d069578",
@@ -19,7 +19,7 @@ export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
 };
 
 export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
-  top_K: 10,
+  top_K: 5,
   threshold: 0.5,
   collections: ["internet"],
 };
