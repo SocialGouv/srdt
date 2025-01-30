@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/SocialGouv/srdt/compare/v1.2.0...v1.3.0) (2025-01-30)
+
+
+### Features
+
+* **web:** connexion à l'`api` python ([#85](https://github.com/SocialGouv/srdt/issues/85)) ([85d8d14](https://github.com/SocialGouv/srdt/commit/85d8d143b07a6d168c748f85bf4342ec34d994a1))
+
 # [1.2.0](https://github.com/SocialGouv/srdt/compare/v1.1.0...v1.2.0) (2025-01-29)
 
 
