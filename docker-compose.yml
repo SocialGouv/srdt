@@ -2,13 +2,11 @@ version: "3.8"
 
 services:
   web:
-    build:
-      context: ./web
-      args:
-        NEXT_PUBLIC_API_BASE_URL: http://api:8000
+    build: ./web
     ports:
       - "3000:3000"
     environment:
+      - API_BASE_URL=http://api:8000
       - AUTH_API_KEY=${AUTH_API_KEY}
       - APP_ACCESS_KEY=${APP_ACCESS_KEY}
       - ALBERT_LLM_API_KEY=${ALBERT_LLM_API_KEY}
