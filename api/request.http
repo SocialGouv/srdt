@@ -2,6 +2,10 @@
 GET http://localhost:8000/api/v1/
 Authorization: Bearer abc
 
+### List collections Albert
+GET http://localhost:8000/api/v1/list-collections
+Authorization: Bearer abc
+
 ### Anonymize Endpoint Tests
 POST http://localhost:8000/api/v1/anonymize
 Authorization: Bearer abc
@@ -80,7 +84,7 @@ content-type: application/json
   "options": {
     "top_K": 5,
     "threshold": 0.65,
-    "collections": ["d03df69b-9387-4359-80db-7d73f2b6f04a", "f8d66426-5c54-4503-aa30-a3abc19453d5"]
+    "collections": ["d03df69b-9387-4359-80db-7d73f2b6f04a", "f8d66426-5c54-4503-aa30-a3abc19453d5", "internet"]
   }
 }
 

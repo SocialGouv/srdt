@@ -90,3 +90,18 @@ export interface InstructionPrompts {
   split_multiple_queries: string;
   generate_instruction: string;
 }
+
+export interface AnalyzeResponse {
+  anonymized: AnonymizeResponse;
+  rephrased: RephraseResponse;
+  localSearchChunks: ChunkResult[];
+  internetSearchChunks: ChunkResult[];
+  generated: GenerateResponse;
+  modelName: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  error?: string;
+}

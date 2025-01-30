@@ -4,6 +4,8 @@ COLLECTIONS_UPLOAD_BATCH_SIZE = 50
 COLLECTIONS_UPLOAD_DELAY_IN_SECONDS = 5
 BASE_URL_CDTN = "https://code.travail.gouv.fr"
 BASE_API_URL = "/api/v1"
+API_TIMEOUT = 180
+ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_COLLECTION_IDS = [
     "5755cf5f-1cb5-4ec6-a076-21047d069578",  # information
     "0576c752-f097-403e-b2be-d6d806c3848a",  # page_fiche_ministere_travail

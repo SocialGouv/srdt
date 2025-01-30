@@ -24,8 +24,6 @@ FROM node:$NODE_VERSION
 # hadolint ignore=DL3018
 RUN apk --update --no-cache add ca-certificates && apk upgrade
 
-ENV NEXT_PUBLIC_APP_ENV=production
-
 WORKDIR /app
 
 USER 1000
