@@ -2,12 +2,20 @@ version: "3.8"
 
 services:
   web:
-    build: 
+    build:
       context: ./web
       args:
-        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+        NEXT_PUBLIC_API_BASE_URL: http://api:8000
     ports:
       - "3000:3000"
+    environment:
+      - AUTH_API_KEY=${AUTH_API_KEY}
+      - APP_ACCESS_KEY=${APP_ACCESS_KEY}
+      - ALBERT_LLM_API_KEY=${ALBERT_LLM_API_KEY}
+      - CHATGPT_LLM_API_KEY=${CHATGPT_LLM_API_KEY}
+      - MISTRAL_LLM_API_KEY=${MISTRAL_LLM_API_KEY}
+    env_file:
+      - ./web/.env
   api:
     build: ./api
     ports:
