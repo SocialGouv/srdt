@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/SocialGouv/srdt/compare/v1.3.0...v1.4.0) (2025-01-31)
+
+
+### Features
+
+* **tally:** ajout du formulaire de feedback ([#87](https://github.com/SocialGouv/srdt/issues/87)) ([c15ea19](https://github.com/SocialGouv/srdt/commit/c15ea19167d5a81ad03f6744461a83fb0f5fc13d))
+
 # [1.3.0](https://github.com/SocialGouv/srdt/compare/v1.2.0...v1.3.0) (2025-01-30)
 
 
