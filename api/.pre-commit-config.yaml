@@ -11,7 +11,7 @@ repos:
       - id: name-tests-test
         description: Checks that test files are named correctly
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.2
+    rev: v0.9.4
     hooks:
       - id: ruff
         types_or: [python, pyi]
@@ -19,11 +19,11 @@ repos:
       - id: ruff-format
         types_or: [python, pyi]
   - repo: https://github.com/ComPWA/pyright-pre-commit
-    rev: ""
+    rev: "v1.1.393"
     hooks:
       - id: pyright
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.0
+    rev: 1.8.2
     hooks:
       - id: bandit
         description: Checks Python code for security issues
@@ -32,4 +32,4 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", "./api/.secrets.baseline"]
-        exclude: ".kontinuous/*|.github/*|.env.sample|request.http"
+        exclude: "^(.*/)?(\\.kontinuous|\\.github|\\.env\\.sample|request\\.http)$"
