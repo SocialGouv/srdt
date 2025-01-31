@@ -32,4 +32,4 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", "./api/.secrets.baseline"]
-        exclude: "^(.*/)?(\\.kontinuous|\\.github|\\.env\\.sample|request\\.http)$"
+        exclude: ".kontinuous/*|.github/*|.env.example|request.http"
