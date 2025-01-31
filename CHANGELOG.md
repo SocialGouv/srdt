@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/SocialGouv/srdt/compare/v1.4.0...v1.4.1) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** detect-secrets failed due to previous commit ([b726887](https://github.com/SocialGouv/srdt/commit/b7268875d9161774fd9402709b92cfeedb9eca0b))
+
 # [1.4.0](https://github.com/SocialGouv/srdt/compare/v1.3.0...v1.4.0) (2025-01-31)
 
 
