@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
-import { UserLLMMessage } from "@/types";
+import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
+import { Feedback } from "@/modules/feedback/Feedback";
+import { CURRENT_PROMPT_VERSION } from "@/constants";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -16,9 +18,13 @@ export const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
   ]);
+  const [userQuestion, setUserQuestion] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
+  const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
+  const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
+  const [apiError, setApiError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -33,6 +39,8 @@ export const Chat = () => {
 
     setIsDisabled(true);
 
+    setUserQuestion(newMessage);
+
     const userMessage = { content: newMessage, role: "user" as const };
     setMessages((prev) => [...prev, userMessage]);
     setNewMessage("");
@@ -44,11 +52,22 @@ export const Chat = () => {
     };
     setMessages((prev) => [...prev, loadingMessage]);
 
+    const startTime = performance.now();
+
     const result = await generateAnswer(newMessage);
+
+    const endTime = performance.now();
+
+    const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+    setGlobalResponseTime(responseTimeInSeconds);
+
+    setApiResult(result.data);
 
     setMessages((prev) => prev.filter((msg) => !msg.isLoading));
 
     if (result.error || !result.success) {
+      setApiError(result.error?.toString());
       setMessages((prev) => [
         ...prev,
         {
@@ -78,7 +97,6 @@ export const Chat = () => {
         role: "assistant",
       },
     ]);
-    setIsDisabled(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -93,7 +111,11 @@ export const Chat = () => {
       { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
     ]);
     setNewMessage("");
+    setUserQuestion("");
     setIsDisabled(false);
+    setApiResult(null);
+    setGlobalResponseTime(0);
+    setApiError(undefined);
   };
 
   const renderMessage = (message: ChatMessage, index: number) => {
@@ -108,33 +130,59 @@ export const Chat = () => {
       ? "white"
       : "inherit";
 
+    const bubbleMessageStyle = {
+      backgroundColor,
+      color: textColor,
+      borderRadius: "8px",
+      padding: "1rem",
+      whiteSpace: "pre-wrap",
+    };
+
+    const isLastAssistantMessage =
+      message.role === "assistant" &&
+      index === messages.length - 1 &&
+      !message.isLoading &&
+      !message.isError;
+
     return (
-      <div
-        key={index}
-        className={fr.cx(
-          "fr-my-1w",
-          message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
-        )}
-        style={{ maxWidth: "70%", minWidth: "200px" }}
-      >
+      <div key={index}>
         <div
-          style={{
-            backgroundColor,
-            color: textColor,
-            borderRadius: "8px",
-            padding: "1rem",
-            whiteSpace: "pre-wrap",
-          }}
+          className={fr.cx(
+            "fr-my-1w",
+            message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
+          )}
+          style={{ maxWidth: "70%", minWidth: "200px" }}
         >
-          <div>
-            <Markdown>{message.content}</Markdown>
-            {message.isLoading && (
-              <div className={fr.cx("fr-mt-1w")}>
-                {isLoading && <div>Génération de la réponse...</div>}
-              </div>
-            )}
+          <div style={bubbleMessageStyle}>
+            <div>
+              <Markdown>{message.content}</Markdown>
+              {message.isLoading && (
+                <div className={fr.cx("fr-mt-1w")}>
+                  {isLoading && <div>Génération de la réponse...</div>}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {apiResult && isLastAssistantMessage && (
+          <div style={bubbleMessageStyle}>
+            <p className={fr.cx("fr-m-0", "fr-h1")}>
+              Donnez votre avis sur cette réponse
+            </p>
+            <Feedback
+              modelName={apiResult?.modelName}
+              familyModel={apiResult?.modelFamily}
+              scenarioVersion={CURRENT_PROMPT_VERSION}
+              inputNbTokens={apiResult?.anonymized.nb_token_input}
+              outputNbTokens={apiResult?.generated.nb_token_output}
+              globalResponseTime={globalResponseTime}
+              userQuestion={userQuestion}
+              llmResponse={apiResult?.generated.text}
+              errorMessage={apiError}
+            />
+          </div>
+        )}
       </div>
     );
   };

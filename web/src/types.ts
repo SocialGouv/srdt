@@ -4,6 +4,12 @@ export interface LLMModel {
   api_key: string;
 }
 
+export enum LLMFamily {
+  CHATGPT = "chatgpt",
+  MISTRAL = "mistral",
+  ALBERT = "albert",
+}
+
 // Anonymization types
 export interface AnonymizeRequest {
   model: LLMModel;
@@ -98,6 +104,7 @@ export interface AnalyzeResponse {
   internetSearchChunks: ChunkResult[];
   generated: GenerateResponse;
   modelName: string;
+  modelFamily: LLMFamily;
 }
 
 export interface ApiResponse<T> {
