@@ -1,4 +1,17 @@
-import { InstructionPrompts, LLMModel, SearchOptions } from "./types";
+import {
+  InstructionPrompts,
+  LLMFamily,
+  LLMModel,
+  SearchOptions,
+} from "./types";
+
+const CHATGPT_BASE_URL = "https://api.openai.com";
+const MISTRAL_BASE_URL = "https://api.mistral.ai";
+const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
+
+export const MAX_SOURCE_COUNT = 25;
+
+export const CURRENT_PROMPT_VERSION = "V1";
 
 export const PROMPT_INSTRUCTIONS_V1: InstructionPrompts = {
   anonymisation: `# Instructions Anonymise le texte suivant en remplaçant toutes les informations personnelles par des balises standard, sauf le titre de poste et la civilité, qui doivent rester inchangés. Utilise [PERSONNE] pour les noms de personnes, [EMAIL] pour les adresses email, [TELEPHONE] pour les numéros de téléphone, [ADRESSE] pour les adresses physiques, [DATE] pour les dates, et [IDENTIFIANT] pour tout identifiant unique ou sensible. # Exemple - Texte : "Bonjour, je suis employé chez ABC Construction à Lyon en tant que chef de chantier. Mon responsable, M. Dupont, m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est 123456. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci." - Texte anonymisé : Bonjour, je suis employé chez [ENTREPRISE] en tant que chef de chantier. Mon responsable, [PERSONNE], m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est [IDENTIFIANT]. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci.`,
@@ -27,22 +40,35 @@ export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
 export const CHATGPT_LLM: LLMModel = {
   api_key: process.env.CHATGPT_LLM_API_KEY ?? "",
   name: process.env.CHATGPT_MODEL_NAME ?? "",
-  base_url: "https://api.openai.com",
+  base_url: CHATGPT_BASE_URL,
 };
 
 export const MISTRAL_LLM: LLMModel = {
   api_key: process.env.MISTRAL_LLM_API_KEY ?? "",
   name: process.env.MISTRAL_MODEL_NAME ?? "",
-  base_url: "https://api.mistral.ai",
+  base_url: MISTRAL_BASE_URL,
 };
 
 export const ALBERT_LLM: LLMModel = {
   api_key: process.env.ALBERT_LLM_API_KEY ?? "",
   name: process.env.ALBERT_MODEL_NAME ?? "",
-  base_url: "https://albert.api.etalab.gouv.fr",
+  base_url: ALBERT_BASE_URL,
 };
 
 export const getRandomModel = (): LLMModel => {
   const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
   return models[Math.floor(Math.random() * models.length)];
+};
+
+export const getFamilyModel = (llmModel: LLMModel): LLMFamily => {
+  switch (llmModel.base_url) {
+    case ALBERT_BASE_URL:
+      return LLMFamily.ALBERT;
+    case CHATGPT_BASE_URL:
+      return LLMFamily.CHATGPT;
+    case MISTRAL_BASE_URL:
+      return LLMFamily.MISTRAL;
+    default:
+      throw new Error(`Unknown model: ${llmModel}`);
+  }
 };

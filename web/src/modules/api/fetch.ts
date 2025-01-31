@@ -1,5 +1,7 @@
 import {
+  getFamilyModel,
   getRandomModel,
+  MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS_V1,
   SEARCH_OPTIONS_INTERNET,
   SEARCH_OPTIONS_LOCAL,
@@ -168,6 +170,10 @@ export const analyzeQuestion = async (
 
     const mergeSearchResults = [...localSearchChunks, ...internetSearchChunks];
 
+    mergeSearchResults
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_SOURCE_COUNT);
+
     if (mergeSearchResults.length === 0) {
       console.warn("Aucun résultat de recherche trouvé");
     }
@@ -217,6 +223,7 @@ export const analyzeQuestion = async (
         internetSearchChunks,
         generated: generateResult.data,
         modelName: model.name,
+        modelFamily: getFamilyModel(model),
       },
     };
   } catch (error) {
