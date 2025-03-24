@@ -206,12 +206,14 @@ export const analyzeQuestion = async (
 
     if (generateResult.error) {
       throw new Error(
-        `Erreur lors de la génération de la réponse: ${generateResult.error}`
+        `Erreur lors de la génération de la réponse: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${model.name}`
       );
     }
 
     if (!generateResult.data) {
-      throw new Error("Erreur lors de la génération de la réponse");
+      throw new Error(
+        `Erreur lors de la génération de la réponse. Pour information, le model utilisé lors de la génération est ${model.name}`
+      );
     }
 
     return {
