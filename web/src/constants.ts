@@ -9,7 +9,7 @@ const CHATGPT_BASE_URL = "https://api.openai.com";
 const MISTRAL_BASE_URL = "https://api.mistral.ai";
 const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
 
-export const MAX_SOURCE_COUNT = 25;
+export const MAX_SOURCE_COUNT = 15;
 
 export const CURRENT_PROMPT_VERSION = "V1";
 
