@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/SocialGouv/srdt/compare/v1.4.1...v1.4.2) (2025-03-24)
+
+
+### Bug Fixes
+
+* **api-key:** modification des clés + réduction du contexte ([#89](https://github.com/SocialGouv/srdt/issues/89)) ([c23b07f](https://github.com/SocialGouv/srdt/commit/c23b07f187c0ef60c18ca5e2898f42cf2fd999eb))
+
 ## [1.4.1](https://github.com/SocialGouv/srdt/compare/v1.4.0...v1.4.1) (2025-01-31)
 
 
