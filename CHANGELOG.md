@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/SocialGouv/srdt/compare/v1.4.2...v1.4.3) (2025-04-08)
+
+
+### Bug Fixes
+
+* update APP_ACCESS_KEY ([dab9ad1](https://github.com/SocialGouv/srdt/commit/dab9ad17e6df94dfe1b7ac7e5c7488437a415392))
+
 ## [1.4.2](https://github.com/SocialGouv/srdt/compare/v1.4.1...v1.4.2) (2025-03-24)
 
 
