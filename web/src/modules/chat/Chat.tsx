@@ -6,7 +6,7 @@ import { fr } from "@codegouvfr/react-dsfr";
 import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
-import { Feedback } from "@/modules/feedback/Feedback";
+// import { Feedback } from "@/modules/feedback/Feedback";
 import { CURRENT_PROMPT_VERSION } from "@/constants";
 
 interface ChatMessage extends UserLLMMessage {
@@ -165,7 +165,7 @@ export const Chat = () => {
           </div>
         </div>
 
-        {apiResult && isLastAssistantMessage && (
+        {/* {apiResult && isLastAssistantMessage && (
           <div style={bubbleMessageStyle}>
             <p className={fr.cx("fr-m-0", "fr-h1")}>
               Donnez votre avis sur cette réponse
@@ -182,7 +182,7 @@ export const Chat = () => {
               errorMessage={apiError}
             />
           </div>
-        )}
+        )} */}
       </div>
     );
   };
