@@ -7,7 +7,7 @@ import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 // import { Feedback } from "@/modules/feedback/Feedback";
-import { CURRENT_PROMPT_VERSION } from "@/constants";
+// import { CURRENT_PROMPT_VERSION } from "@/constants";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -18,13 +18,20 @@ export const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
   ]);
-  const [userQuestion, setUserQuestion] = useState<string>("");
+  // const [userQuestion, setUserQuestion] = useState<string>("");
+  // const [newMessage, setNewMessage] = useState("");
+  // const [isDisabled, setIsDisabled] = useState(false);
+  // const { generateAnswer, isLoading } = useApi();
+  // const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
+  // const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
+  // const [apiError, setApiError] = useState<string | undefined>(undefined);
+  const [,setUserQuestion] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
-  const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
-  const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
-  const [apiError, setApiError] = useState<string | undefined>(undefined);
+  const [,setApiResult] = useState<AnalyzeResponse | null>(null);
+  const [,setGlobalResponseTime] = useState<number>(0);
+  const [,setApiError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-messages");
@@ -138,11 +145,11 @@ export const Chat = () => {
       whiteSpace: "pre-wrap",
     };
 
-    const isLastAssistantMessage =
-      message.role === "assistant" &&
-      index === messages.length - 1 &&
-      !message.isLoading &&
-      !message.isError;
+    // const isLastAssistantMessage =
+    //   message.role === "assistant" &&
+    //   index === messages.length - 1 &&
+    //   !message.isLoading &&
+    //   !message.isError;
 
     return (
       <div key={index}>
