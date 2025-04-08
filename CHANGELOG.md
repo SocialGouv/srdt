@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/SocialGouv/srdt/compare/v1.4.4...v1.4.5) (2025-04-08)
+
+
+### Bug Fixes
+
+* remove feedback useless variables ([be58e6d](https://github.com/SocialGouv/srdt/commit/be58e6db7926e504c8d5a089a65027c4fd7cd494))
+
 ## [1.4.4](https://github.com/SocialGouv/srdt/compare/v1.4.3...v1.4.4) (2025-04-08)
 
 
