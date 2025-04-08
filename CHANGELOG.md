@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/SocialGouv/srdt/compare/v1.4.3...v1.4.4) (2025-04-08)
+
+
+### Bug Fixes
+
+* remove feedback ([e604473](https://github.com/SocialGouv/srdt/commit/e604473b5d1f14fc0cc73607717c04019a9a9b8c))
+
 ## [1.4.3](https://github.com/SocialGouv/srdt/compare/v1.4.2...v1.4.3) (2025-04-08)
 
 
