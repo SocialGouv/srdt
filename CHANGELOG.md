@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/SocialGouv/srdt/compare/v1.4.5...v1.4.6) (2025-04-16)
+
+
+### Bug Fixes
+
+* nextjs cve ([#91](https://github.com/SocialGouv/srdt/issues/91)) ([e5be488](https://github.com/SocialGouv/srdt/commit/e5be488c23070547c2d4f07956114011de7e5dba))
+
 ## [1.4.5](https://github.com/SocialGouv/srdt/compare/v1.4.4...v1.4.5) (2025-04-08)
 
 
