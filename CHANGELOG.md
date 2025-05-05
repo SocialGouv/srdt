@@ -1,3 +1,10 @@
+## [1.4.7](https://github.com/SocialGouv/srdt/compare/v1.4.6...v1.4.7) (2025-05-05)
+
+
+### Bug Fixes
+
+* activate tally ([#92](https://github.com/SocialGouv/srdt/issues/92)) ([4018937](https://github.com/SocialGouv/srdt/commit/4018937098c065a6ec842bfc5354c1709786eb33))
+
 ## [1.4.6](https://github.com/SocialGouv/srdt/compare/v1.4.5...v1.4.6) (2025-04-16)
 
 
