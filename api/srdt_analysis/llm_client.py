@@ -50,6 +50,8 @@ class LLMClient:
                     "model": self.model,
                 }
 
+                self.logger.debug(payload)
+
                 response = await self.client.post(
                     f"{self.base_url}/v1/chat/completions",
                     headers=self.headers,

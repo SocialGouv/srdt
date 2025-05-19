@@ -4,5 +4,5 @@ metadata:
   name: web-configmap
 data:
   CHATGPT_MODEL_NAME: gpt-4o-2024-11-20
-  MISTRAL_MODEL_NAME: open-mixtral-8x7b
-  ALBERT_MODEL_NAME: meta-llama/Meta-Llama-3.1-70B-Instruct
+  MISTRAL_MODEL_NAME: mistal-large-latest
+  ALBERT_MODEL_NAME: meta-llama/Llama-3.1-8B-Instruct
