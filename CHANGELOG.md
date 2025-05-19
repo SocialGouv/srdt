@@ -1,3 +1,10 @@
+## [1.4.8](https://github.com/SocialGouv/srdt/compare/v1.4.7...v1.4.8) (2025-05-19)
+
+
+### Bug Fixes
+
+* move to mistral-large / llama 3.1-8B + update api keys [#99](https://github.com/SocialGouv/srdt/issues/99) ([2c5f820](https://github.com/SocialGouv/srdt/commit/2c5f82067eb13ff35b0126ada333a517ebe1e4b4))
+
 ## [1.4.7](https://github.com/SocialGouv/srdt/compare/v1.4.6...v1.4.7) (2025-05-05)
 
 
