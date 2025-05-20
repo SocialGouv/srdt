@@ -1,4 +1,5 @@
 import {
+  ALBERT_LLM,
   getFamilyModel,
   getRandomModel,
   MAX_SOURCE_COUNT,
@@ -107,10 +108,8 @@ export const analyzeQuestion = async (
   userQuestion: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
-    const model = getRandomModel();
-
     const anonymizeResult = await anonymize({
-      model,
+      model: ALBERT_LLM,
       user_question: userQuestion,
       anonymization_prompt: PROMPT_INSTRUCTIONS_V1.anonymisation,
     });
@@ -124,6 +123,8 @@ export const analyzeQuestion = async (
     if (!anonymizeResult.data) {
       throw new Error("Erreur lors de l'anonymisation");
     }
+
+    const model = getRandomModel();
 
     const rephraseResult = await rephrase({
       model,
