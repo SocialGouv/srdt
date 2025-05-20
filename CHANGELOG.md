@@ -1,3 +1,10 @@
+## [1.4.9](https://github.com/SocialGouv/srdt/compare/v1.4.8...v1.4.9) (2025-05-20)
+
+
+### Bug Fixes
+
+* update keys / use llama 70B / anonymise with albert/llama exclusively ([cbd1d56](https://github.com/SocialGouv/srdt/commit/cbd1d56808b574586f6b69d1480deba5286712eb))
+
 ## [1.4.8](https://github.com/SocialGouv/srdt/compare/v1.4.7...v1.4.8) (2025-05-19)
 
 
