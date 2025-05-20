@@ -60,6 +60,8 @@ class LLMClient:
                 response.raise_for_status()
 
                 response_json = response.json()
+                # self.logger.debug(response_json)
+
                 return response_json["choices"][0]["message"]["content"]
 
             except httpx.HTTPStatusError as e:
