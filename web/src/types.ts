@@ -44,7 +44,7 @@ export interface RephraseResponse {
 export interface SearchOptions {
   top_K?: number;
   threshold?: number;
-  collections?: string[];
+  collections?: number[];
 }
 
 export interface SearchRequest {
@@ -55,14 +55,14 @@ export interface SearchRequest {
 export interface ChunkMetadata {
   title: string;
   url: string;
-  document_id: string;
+  document_id: number;
   source: string;
 }
 
 export interface ChunkResult {
   score: number;
   content: string;
-  id_chunk: string;
+  id_chunk: number;
   metadata: ChunkMetadata;
 }
 

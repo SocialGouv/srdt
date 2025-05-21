@@ -23,18 +23,13 @@ export const PROMPT_INSTRUCTIONS_V1: InstructionPrompts = {
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
   top_K: 5,
   threshold: 0.6,
-  collections: [
-    "5755cf5f-1cb5-4ec6-a076-21047d069578",
-    "0576c752-f097-403e-b2be-d6d806c3848a",
-    "f8d66426-5c54-4503-aa30-a3abc19453d5",
-    "d03df69b-9387-4359-80db-7d73f2b6f04a",
-  ],
+  collections: [298, 299, 300, 301, 302],
 };
 
 export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
   top_K: 5,
   threshold: 0.5,
-  collections: ["internet"],
+  collections: [],//"internet"],
 };
 
 export const CHATGPT_LLM: LLMModel = {

@@ -158,7 +158,8 @@ export const analyzeQuestion = async (
       }),
     ]);
 
-    if (localSearchResult.error || internetSearchResult.error) {
+    //TODO ignore internet search for now, it's disabled
+    if (localSearchResult.error /*|| internetSearchResult.error*/) {
       console.error(
         `Erreur lors de la recherche: ${
           localSearchResult.error || internetSearchResult.error
