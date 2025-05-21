@@ -1,3 +1,10 @@
+## [1.4.10](https://github.com/SocialGouv/srdt/compare/v1.4.9...v1.4.10) (2025-05-21)
+
+
+### Bug Fixes
+
+* update front end with Albert API changes ([81f2c95](https://github.com/SocialGouv/srdt/commit/81f2c95a54a98af4f0601396668bf92287a74ce8))
+
 ## [1.4.9](https://github.com/SocialGouv/srdt/compare/v1.4.8...v1.4.9) (2025-05-20)
 
 
