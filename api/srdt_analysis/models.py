@@ -17,8 +17,8 @@ CollectionName = Literal[
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
-CHUNK_ID = str
-ID = str
+CHUNK_ID = int
+ID = int
 HTML = str
 PlainText = str
 JSONDict = Dict[str, Any]

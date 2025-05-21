@@ -48,7 +48,7 @@ class RephraseResponse(BaseModel):
 class SearchOptions(BaseModel):
     top_K: int = Field(default=20)
     threshold: float = Field(default=0.7, ge=0.0, le=1.0)
-    collections: List[str] = Field(default=ALBERT_COLLECTION_IDS)
+    collections: List[int] = Field(default=ALBERT_COLLECTION_IDS)
 
     @field_validator("collections")
     @classmethod

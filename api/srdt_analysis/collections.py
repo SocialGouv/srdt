@@ -133,7 +133,7 @@ class AlbertCollectionHandler:
                 "file": (
                     "content.json",
                     BytesIO(file_content),
-                    "multipart/form-data",
+                    "application/json",
                 )
             }
 
@@ -141,6 +141,8 @@ class AlbertCollectionHandler:
                 "request": '{"collection": "%s", "chunker": {"name": "NoChunker"}}'
                 % id_collection
             }
+            print(json.dumps(request_data))
+            print(json.dumps(batch))
             response = httpx.post(
                 f"{self.base_url}/v1/files",
                 headers=self.headers,

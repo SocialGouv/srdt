@@ -6,14 +6,7 @@ BASE_URL_CDTN = "https://code.travail.gouv.fr"
 BASE_API_URL = "/api/v1"
 API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
-ALBERT_COLLECTION_IDS = [
-    "5755cf5f-1cb5-4ec6-a076-21047d069578",  # information
-    "0576c752-f097-403e-b2be-d6d806c3848a",  # page_fiche_ministere_travail
-    "0be5059b-762f-48ba-a8f0-fe10e81455c8",  # code_du_travail
-    "f8d66426-5c54-4503-aa30-a3abc19453d5",  # fiches_service_public
-    "d03df69b-9387-4359-80db-7d73f2b6f04a",  # contributions
-    "internet",  # internet
-]
+ALBERT_COLLECTION_IDS = [298, 299, 300, 301, 302]
 LLM_ANSWER_PROMPT = """
   # Instructions
 	## Rôle et objectif
