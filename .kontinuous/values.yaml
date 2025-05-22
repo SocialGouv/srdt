@@ -13,6 +13,10 @@ jobs:
         context: web
 
 api:
+  ingress:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: 180
+      nginx.ingress.kubernetes.io/proxy-send-timeout: 180
   ~chart: app
   ~needs: [build-api]
   imagePackage: api
@@ -62,6 +66,10 @@ api:
       name: home
 
 web:
+  ingress:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: 180
+      nginx.ingress.kubernetes.io/proxy-send-timeout: 180
   ~chart: app
   ~needs: [build-web]
   imagePackage: web
