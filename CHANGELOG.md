@@ -1,3 +1,10 @@
+## [1.4.11](https://github.com/SocialGouv/srdt/compare/v1.4.10...v1.4.11) (2025-05-28)
+
+
+### Bug Fixes
+
+* **web:** add config / add A/B testing / update instructions / remove search sources [#100](https://github.com/SocialGouv/srdt/issues/100) [#112](https://github.com/SocialGouv/srdt/issues/112) [#107](https://github.com/SocialGouv/srdt/issues/107) ([bd49d84](https://github.com/SocialGouv/srdt/commit/bd49d8403abffa8e65eaa8cf5395324d60491449))
+
 ## [1.4.10](https://github.com/SocialGouv/srdt/compare/v1.4.9...v1.4.10) (2025-05-21)
 
 
