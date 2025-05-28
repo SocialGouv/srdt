@@ -1,10 +1,11 @@
 import {
   ALBERT_LLM,
+  Config,
   getFamilyModel,
+  getRandomABConfig,
   getRandomModel,
   MAX_SOURCE_COUNT,
-  PROMPT_INSTRUCTIONS_V1,
-  SEARCH_OPTIONS_INTERNET,
+  PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
 } from "@/constants";
 import {
@@ -108,10 +109,14 @@ export const analyzeQuestion = async (
   userQuestion: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
+    const config = getRandomABConfig();
+
+    const instructions = PROMPT_INSTRUCTIONS[config];
+
     const anonymizeResult = await anonymize({
       model: ALBERT_LLM,
       user_question: userQuestion,
-      anonymization_prompt: PROMPT_INSTRUCTIONS_V1.anonymisation,
+      anonymization_prompt: instructions.anonymisation,
     });
 
     if (anonymizeResult.error) {
@@ -126,73 +131,63 @@ export const analyzeQuestion = async (
 
     const model = getRandomModel();
 
-    const rephraseResult = await rephrase({
-      model,
-      question: anonymizeResult.data.anonymized_question,
-      rephrasing_prompt: PROMPT_INSTRUCTIONS_V1.reformulation,
-      queries_splitting_prompt: PROMPT_INSTRUCTIONS_V1.split_multiple_queries,
+    let query = anonymizeResult.data.anonymized_question;
+
+    let rephraseResult: UseApiResponse<RephraseResponse> | undefined =
+      undefined;
+
+    // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
+    if (config == Config.v1_0) {
+      rephraseResult = await rephrase({
+        model,
+        question: anonymizeResult.data.anonymized_question,
+        rephrasing_prompt: instructions.reformulation,
+        queries_splitting_prompt: instructions.split_multiple_queries,
+      });
+
+      if (rephraseResult.error) {
+        throw new Error(
+          `Erreur lors de la reformulation: ${rephraseResult.error}`
+        );
+      }
+
+      if (!rephraseResult.data) {
+        throw new Error("Erreur lors de la reformulation");
+      }
+      query = rephraseResult.data.rephrased_question;
+    }
+
+    const localSearchResult = await search({
+      prompts: [query],
+      options: SEARCH_OPTIONS_LOCAL,
     });
 
-    if (rephraseResult.error) {
-      throw new Error(
-        `Erreur lors de la reformulation: ${rephraseResult.error}`
-      );
-    }
-
-    if (!rephraseResult.data) {
-      throw new Error("Erreur lors de la reformulation");
-    }
-
-    const [localSearchResult, internetSearchResult] = await Promise.all([
-      search({
-        prompts: rephraseResult.data.queries || [
-          rephraseResult.data.rephrased_question,
-        ],
-        options: SEARCH_OPTIONS_LOCAL,
-      }),
-      search({
-        prompts: rephraseResult.data.queries || [
-          rephraseResult.data.rephrased_question,
-        ],
-        options: SEARCH_OPTIONS_INTERNET,
-      }),
-    ]);
-
-    //TODO ignore internet search for now, it's disabled
-    if (localSearchResult.error /*|| internetSearchResult.error*/) {
-      console.error(
-        `Erreur lors de la recherche: ${
-          localSearchResult.error || internetSearchResult.error
-        }`
-      );
+    if (localSearchResult.error) {
+      console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
     }
 
     const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-    const internetSearchChunks = internetSearchResult.data?.top_chunks ?? [];
 
-    const mergeSearchResults = [...localSearchChunks, ...internetSearchChunks];
-
-    mergeSearchResults
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_SOURCE_COUNT);
-
-    if (mergeSearchResults.length === 0) {
+    if (localSearchChunks.length === 0) {
       console.warn("Aucun résultat de recherche trouvé");
     }
+
+    localSearchChunks
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_SOURCE_COUNT);
 
     const generateResult = await generate({
       model,
       chat_history: [
         {
           role: "user",
-          content: rephraseResult.data.rephrased_question,
+          content: query,
         },
         {
           role: "user",
           content: `Voici les sources pertinentes pour répondre à la question:
 
-              ${mergeSearchResults
-                .sort((a, b) => b.score - a.score)
+              ${localSearchChunks
                 .map(
                   (
                     chunk
@@ -203,7 +198,7 @@ export const analyzeQuestion = async (
                 .join("\n")}`,
         },
       ],
-      system_prompt: PROMPT_INSTRUCTIONS_V1.generate_instruction,
+      system_prompt: instructions.generate_instruction,
     });
 
     if (generateResult.error) {
@@ -221,10 +216,12 @@ export const analyzeQuestion = async (
     return {
       success: true,
       data: {
+        config: Config[config],
         anonymized: anonymizeResult.data,
-        rephrased: rephraseResult.data,
+        rephrased: rephraseResult?.data || null,
         localSearchChunks,
-        internetSearchChunks,
+        // TODO remove it from interface
+        internetSearchChunks: [],
         generated: generateResult.data,
         modelName: model.name,
         modelFamily: getFamilyModel(model),

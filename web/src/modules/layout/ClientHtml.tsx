@@ -8,6 +8,7 @@ import { defaultColorScheme } from "@/modules/dsfr/defaultColorScheme";
 import { StartDsfr } from "@/modules/dsfr/StartDsfr";
 import { AuthProvider } from "@/hooks/use-auth";
 import Link from "next/link";
+import Head from "next/head";
 
 export function ClientHtml({
   children,
@@ -18,7 +19,7 @@ export function ClientHtml({
 }) {
   return (
     <html {...getHtmlAttributes({ defaultColorScheme, lang })}>
-      <head>
+      <Head>
         <StartDsfr />
         <DsfrHead
           Link={Link}
@@ -28,7 +29,7 @@ export function ClientHtml({
             "Marianne-Bold",
           ]}
         />
-      </head>
+      </Head>
       <body>
         <AuthProvider>
           <DsfrProvider lang={lang}>

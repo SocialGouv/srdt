@@ -7,7 +7,6 @@ import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
-import { CURRENT_PROMPT_VERSION } from "@/constants";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -78,22 +77,13 @@ export const Chat = () => {
       ]);
       return;
     }
-    const localSources =
-      result.data?.localSearchChunks.map((v) => v.metadata.url) ?? [];
-    const internetSources =
-      result.data?.internetSearchChunks.map((v) => v.metadata.url) ?? [];
-    const sourceList = [...localSources, ...internetSources];
 
     setMessages((prev) => [
       ...prev,
       {
         content:
           (result.data?.generated?.text ??
-            "Désolé, je n'ai pas pu générer de réponse.") +
-          (sourceList.length > 0
-            ? "\n\n*Sources utilisées pour générer cette réponse :*\n" +
-              sourceList.map((source) => `- [${source}](${source})`).join("\n")
-            : ""),
+            "Désolé, je n'ai pas pu générer de réponse."),
         role: "assistant",
       },
     ]);
@@ -173,7 +163,7 @@ export const Chat = () => {
             <Feedback
               modelName={apiResult?.modelName}
               familyModel={apiResult?.modelFamily}
-              scenarioVersion={CURRENT_PROMPT_VERSION}
+              scenarioVersion={apiResult?.config}
               inputNbTokens={apiResult?.anonymized.nb_token_input}
               outputNbTokens={apiResult?.generated.nb_token_output}
               globalResponseTime={globalResponseTime}

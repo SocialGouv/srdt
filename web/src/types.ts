@@ -98,10 +98,10 @@ export interface InstructionPrompts {
 }
 
 export interface AnalyzeResponse {
+  config: string;
   anonymized: AnonymizeResponse;
-  rephrased: RephraseResponse;
+  rephrased: RephraseResponse | null;
   localSearchChunks: ChunkResult[];
-  internetSearchChunks: ChunkResult[];
   generated: GenerateResponse;
   modelName: string;
   modelFamily: LLMFamily;
