@@ -110,7 +110,7 @@ export const analyzeQuestion = async (
   requiredConfig?: Config
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
-    const config = requiredConfig || getRandomABConfig();
+    const config = requiredConfig || Config.V1_1;
 
     const instructions = PROMPT_INSTRUCTIONS[config];
 
