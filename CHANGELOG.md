@@ -1,3 +1,10 @@
+## [1.4.14](https://github.com/SocialGouv/srdt/compare/v1.4.13...v1.4.14) (2025-06-02)
+
+
+### Bug Fixes
+
+* **web:** use config 1.1 by default ([2e983a0](https://github.com/SocialGouv/srdt/commit/2e983a0391b4845323d40197e58f89d0ac613451))
+
 ## [1.4.13](https://github.com/SocialGouv/srdt/compare/v1.4.12...v1.4.13) (2025-06-02)
 
 
