@@ -2,7 +2,6 @@ import {
   ALBERT_LLM,
   Config,
   getFamilyModel,
-  getRandomABConfig,
   getRandomModel,
   MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS,
