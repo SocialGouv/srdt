@@ -1,3 +1,10 @@
+## [1.4.13](https://github.com/SocialGouv/srdt/compare/v1.4.12...v1.4.13) (2025-06-02)
+
+
+### Bug Fixes
+
+* **web:** update AB testing to force v1.0 ([aba3b9a](https://github.com/SocialGouv/srdt/commit/aba3b9a78b31d21688cf0bf75a238a608cf81d0a))
+
 ## [1.4.12](https://github.com/SocialGouv/srdt/compare/v1.4.11...v1.4.12) (2025-06-02)
 
 
