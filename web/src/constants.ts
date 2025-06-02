@@ -110,7 +110,7 @@ export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
 
 // randomization factor to select configurations during A/B testing
 // chance to select the latest config
-export const AB_rand = 0.5;
+export const AB_rand = 0;
 
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
   top_K: 5,
