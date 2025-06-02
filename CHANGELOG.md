@@ -1,3 +1,10 @@
+## [1.4.12](https://github.com/SocialGouv/srdt/compare/v1.4.11...v1.4.12) (2025-06-02)
+
+
+### Bug Fixes
+
+* **web:** allow config version to be passed to Web API to simplify testing ([595f71f](https://github.com/SocialGouv/srdt/commit/595f71fcd5e55c09324337e7e25616e35d09d083))
+
 ## [1.4.11](https://github.com/SocialGouv/srdt/compare/v1.4.10...v1.4.11) (2025-05-28)
 
 
