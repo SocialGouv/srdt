@@ -106,10 +106,11 @@ const generate = async (
 };
 
 export const analyzeQuestion = async (
-  userQuestion: string
+  userQuestion: string,
+  requiredConfig?: Config
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
-    const config = getRandomABConfig();
+    const config = requiredConfig || getRandomABConfig();
 
     const instructions = PROMPT_INSTRUCTIONS[config];
 
@@ -137,7 +138,7 @@ export const analyzeQuestion = async (
       undefined;
 
     // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
-    if (config == Config.v1_0) {
+    if (config == Config.V1_0) {
       rephraseResult = await rephrase({
         model,
         question: anonymizeResult.data.anonymized_question,
@@ -216,12 +217,10 @@ export const analyzeQuestion = async (
     return {
       success: true,
       data: {
-        config: Config[config],
+        config: config.toString(),
         anonymized: anonymizeResult.data,
         rephrased: rephraseResult?.data || null,
         localSearchChunks,
-        // TODO remove it from interface
-        internetSearchChunks: [],
         generated: generateResult.data,
         modelName: model.name,
         modelFamily: getFamilyModel(model),

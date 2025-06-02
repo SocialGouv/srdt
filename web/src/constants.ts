@@ -99,13 +99,13 @@ const PROMPT_INSTRUCTIONS_V1_1: InstructionPrompts = {
 };
 
 export enum Config {
-  "v1_0",
-  "v1_1",
+  V1_0 = "v1.0",
+  V1_1 = "v1.1",
 }
 
 export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
-  [Config["v1_0"]]: PROMPT_INSTRUCTIONS_V1_0,
-  [Config["v1_1"]]: PROMPT_INSTRUCTIONS_V1_1,
+  [Config.V1_0]: PROMPT_INSTRUCTIONS_V1_0,
+  [Config.V1_1]: PROMPT_INSTRUCTIONS_V1_1,
 };
 
 // randomization factor to select configurations during A/B testing
@@ -143,7 +143,7 @@ export const ALBERT_LLM: LLMModel = {
 };
 
 export const getRandomABConfig = (): Config =>
-  Math.random() < AB_rand ? Config.v1_1 : Config.v1_0;
+  Math.random() < AB_rand ? Config.V1_1 : Config.V1_0;
 
 export const getRandomModel = (): LLMModel => {
   const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
