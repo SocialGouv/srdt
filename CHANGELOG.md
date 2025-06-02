@@ -1,3 +1,10 @@
+## [1.4.15](https://github.com/SocialGouv/srdt/compare/v1.4.14...v1.4.15) (2025-06-02)
+
+
+### Bug Fixes
+
+* **web:** typo ([95c1a9e](https://github.com/SocialGouv/srdt/commit/95c1a9ed12ba918b72eaed5b8872e799d85b3688))
+
 ## [1.4.14](https://github.com/SocialGouv/srdt/compare/v1.4.13...v1.4.14) (2025-06-02)
 
 
