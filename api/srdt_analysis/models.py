@@ -122,7 +122,6 @@ class Document:
                 url=doc_data.get("url", ""),
                 raw=doc_data.get("raw", ""),
                 referencedTexts=doc_data.get("referencedTexts", []),
-                idcc=doc_data.get("idcc", None),
             )
 
         return cls(
@@ -140,6 +139,7 @@ class Document:
             updated_at=record["updated_at"],
             is_available=record["is_available"],
             content=content,
+            idcc=doc_data.get("idcc", None) if doc_data else None,
         )
 
 

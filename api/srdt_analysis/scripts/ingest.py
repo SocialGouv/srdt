@@ -15,11 +15,11 @@ load_dotenv()
 def start():
     data = get_data(
         [
-            "information",
-            "code_du_travail",
-            "page_fiche_ministere_travail",
-            "fiches_service_public",
-            "contributions",
+            # "information",
+            # "code_du_travail",
+            # "page_fiche_ministere_travail",
+            # "fiches_service_public",
+            # "contributions",
             "contributions_idcc",
         ]
     )
