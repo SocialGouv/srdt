@@ -161,7 +161,7 @@ export const analyzeQuestion = async (
     }
 
     const localSearchResult = await search({
-      prompts: [query],
+      prompts: [query], // Passer l'IDCC
       options: SEARCH_OPTIONS_LOCAL,
     });
 

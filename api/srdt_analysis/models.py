@@ -106,6 +106,7 @@ class Document:
     updated_at: Timestamp
     is_available: bool
     content: Optional[Content] = None
+    idcc: Optional[str] = None
 
     @classmethod
     def from_record(cls, record: asyncpg.Record) -> "Document":
@@ -121,6 +122,7 @@ class Document:
                 url=doc_data.get("url", ""),
                 raw=doc_data.get("raw", ""),
                 referencedTexts=doc_data.get("referencedTexts", []),
+                idcc=doc_data.get("idcc", None),
             )
 
         return cls(
