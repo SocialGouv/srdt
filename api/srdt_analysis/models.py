@@ -12,6 +12,7 @@ CollectionName = Literal[
     "information",
     "contributions",
     "internet",
+    "contributions_idcc", 
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
@@ -44,6 +45,7 @@ class DocumentData(TypedDict):
     url: URL
     source: CollectionName
     content_chunked: list[SplitDocument]
+    idcc: Optional[str]
 
 
 ListOfDocumentData = list[DocumentData]

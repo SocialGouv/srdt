@@ -22,6 +22,7 @@ class Mapper:
             "fiches_service_public": FichesSPExploiter(),
             "information": PageInfosExploiter(),
             "contributions": PagesContributionsExploiter(),
+            "contributions_idcc": PagesContributionsExploiter(),
         }
         all_documents = [doc for docs in documents_by_source.values() for doc in docs]
         self.doc_map = {doc.cdtn_id: doc for doc in all_documents}
