@@ -1,3 +1,10 @@
+## [1.4.16](https://github.com/SocialGouv/srdt/compare/v1.4.15...v1.4.16) (2025-06-03)
+
+
+### Bug Fixes
+
+* **web:** remove anonymiser for v1.1 config ([77b9dc3](https://github.com/SocialGouv/srdt/commit/77b9dc3c084d68dc779ff5fe625f7c9a01d18215))
+
 ## [1.4.15](https://github.com/SocialGouv/srdt/compare/v1.4.14...v1.4.15) (2025-06-02)
 
 
