@@ -99,7 +99,7 @@ export interface InstructionPrompts {
 
 export interface AnalyzeResponse {
   config: string;
-  anonymized: AnonymizeResponse;
+  anonymized: AnonymizeResponse | null;
   rephrased: RephraseResponse | null;
   localSearchChunks: ChunkResult[];
   generated: GenerateResponse;

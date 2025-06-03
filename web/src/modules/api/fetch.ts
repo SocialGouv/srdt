@@ -113,31 +113,34 @@ export const analyzeQuestion = async (
 
     const instructions = PROMPT_INSTRUCTIONS[config];
 
-    const anonymizeResult = await anonymize({
-      model: ALBERT_LLM,
-      user_question: userQuestion,
-      anonymization_prompt: instructions.anonymisation,
-    });
-
-    if (anonymizeResult.error) {
-      throw new Error(
-        `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
-      );
-    }
-
-    if (!anonymizeResult.data) {
-      throw new Error("Erreur lors de l'anonymisation");
-    }
-
     const model = getRandomModel();
 
-    let query = anonymizeResult.data.anonymized_question;
+    let query = userQuestion;
+
+    let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
+      undefined;
 
     let rephraseResult: UseApiResponse<RephraseResponse> | undefined =
       undefined;
 
     // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
     if (config == Config.V1_0) {
+      anonymizeResult = await anonymize({
+        model: ALBERT_LLM,
+        user_question: userQuestion,
+        anonymization_prompt: instructions.anonymisation,
+      });
+
+      if (anonymizeResult.error) {
+        throw new Error(
+          `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
+        );
+      }
+
+      if (!anonymizeResult.data) {
+        throw new Error("Erreur lors de l'anonymisation");
+      }
+
       rephraseResult = await rephrase({
         model,
         question: anonymizeResult.data.anonymized_question,
@@ -217,7 +220,7 @@ export const analyzeQuestion = async (
       success: true,
       data: {
         config: config.toString(),
-        anonymized: anonymizeResult.data,
+        anonymized: anonymizeResult?.data || null,
         rephrased: rephraseResult?.data || null,
         localSearchChunks,
         generated: generateResult.data,

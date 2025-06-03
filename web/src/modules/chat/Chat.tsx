@@ -164,7 +164,7 @@ export const Chat = () => {
               modelName={apiResult?.modelName}
               familyModel={apiResult?.modelFamily}
               scenarioVersion={apiResult?.config}
-              inputNbTokens={apiResult?.anonymized.nb_token_input}
+              inputNbTokens={apiResult?.anonymized?.nb_token_input}
               outputNbTokens={apiResult?.generated.nb_token_output}
               globalResponseTime={globalResponseTime}
               userQuestion={userQuestion}
