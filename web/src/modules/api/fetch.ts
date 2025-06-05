@@ -106,7 +106,8 @@ const generate = async (
 
 export const analyzeQuestion = async (
   userQuestion: string,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
     const config = requiredConfig || Config.V1_1;
@@ -162,6 +163,7 @@ export const analyzeQuestion = async (
 
     const localSearchResult = await search({
       prompts: [query],
+      idcc,
       options: SEARCH_OPTIONS_LOCAL,
     });
 

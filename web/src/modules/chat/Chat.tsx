@@ -7,6 +7,8 @@ import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
+import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
+import { Agreement } from "../convention-collective/search";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -18,6 +20,9 @@ export const Chat = () => {
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
   ]);
   const [userQuestion, setUserQuestion] = useState<string>("");
+  const [selectedAgreement, setSelectedAgreement] = useState<
+    Agreement | undefined
+  >(undefined);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
@@ -53,7 +58,7 @@ export const Chat = () => {
 
     const startTime = performance.now();
 
-    const result = await generateAnswer(newMessage);
+    const result = await generateAnswer(newMessage, selectedAgreement?.id);
 
     const endTime = performance.now();
 
@@ -82,8 +87,8 @@ export const Chat = () => {
       ...prev,
       {
         content:
-          (result.data?.generated?.text ??
-            "Désolé, je n'ai pas pu générer de réponse."),
+          result.data?.generated?.text ??
+          "Désolé, je n'ai pas pu générer de réponse.",
         role: "assistant",
       },
     ]);
@@ -263,6 +268,17 @@ export const Chat = () => {
           />
         </div>
       </form>
+
+      {!isDisabled && (
+        <AgreementSearchInput
+          onAgreementSelect={(agreement) => {
+            console.log("agreement", agreement);
+            setSelectedAgreement(agreement);
+          }}
+          defaultAgreement={undefined}
+          trackingActionName="chat"
+        />
+      )}
     </div>
   );
 };

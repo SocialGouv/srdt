@@ -50,6 +50,7 @@ export interface SearchOptions {
 export interface SearchRequest {
   prompts: string[];
   options?: SearchOptions;
+  idcc?: string;
 }
 
 export interface ChunkMetadata {
