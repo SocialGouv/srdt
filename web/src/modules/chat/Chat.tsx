@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { AnalyzeResponse, UserLLMMessage } from "@/types";
@@ -9,6 +9,7 @@ import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import { Agreement } from "../convention-collective/search";
+import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -29,11 +30,14 @@ export const Chat = () => {
   const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
   const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
   const [apiError, setApiError] = useState<string | undefined>(undefined);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const chatContainer = document.querySelector(".chat-messages");
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [messages]);
 
@@ -130,7 +134,6 @@ export const Chat = () => {
       color: textColor,
       borderRadius: "8px",
       padding: "1rem",
-      whiteSpace: "pre-wrap",
     };
 
     const isLastAssistantMessage =
@@ -139,8 +142,10 @@ export const Chat = () => {
       !message.isLoading &&
       !message.isError;
 
+    const isLastMessage = index === messages.length - 1;
+
     return (
-      <div key={index}>
+      <div key={index} ref={isLastMessage ? lastMessageRef : null}>
         <div
           className={fr.cx(
             "fr-my-1w",
@@ -149,7 +154,7 @@ export const Chat = () => {
           style={{ maxWidth: "70%", minWidth: "200px" }}
         >
           <div style={bubbleMessageStyle}>
-            <div>
+            <div style={!message.isLoading ? { marginBottom: "-1.5rem" } : {}}>
               <Markdown>{message.content}</Markdown>
               {message.isLoading && (
                 <div className={fr.cx("fr-mt-1w")}>
@@ -192,6 +197,7 @@ export const Chat = () => {
           height: "calc(80vh - 20px)", // Ajusté la hauteur car on n'a plus d'éléments au-dessus
           overflowY: "auto",
           gap: "1rem",
+          marginBottom: "1rem",
         }}
       >
         <Button
@@ -233,17 +239,17 @@ export const Chat = () => {
         }}
       >
         <div className={fr.cx("fr-col-11")}>
-          <textarea
-            className={fr.cx("fr-input")}
+          <AutoresizeTextarea
+            value={newMessage}
+            onChange={setNewMessage}
+            onKeyDown={handleKeyDown}
             placeholder={
               isDisabled
                 ? "Veuillez démarrer une nouvelle conversation pour poser une autre question"
                 : "Saisissez votre message"
             }
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
             disabled={isDisabled}
+            maxLines={10}
           />
         </div>
         <div

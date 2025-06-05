@@ -1,3 +1,31 @@
+## [1.5.5](https://github.com/SocialGouv/srdt/compare/v1.5.4...v1.5.5) (2025-06-05)
+
+
+### Bug Fixes
+
+* marge du bas du module de discussion ([#126](https://github.com/SocialGouv/srdt/issues/126)) ([4036e4f](https://github.com/SocialGouv/srdt/commit/4036e4f6e2dcd19f63f13882b1d3b734a0458ff1))
+
+## [1.5.4](https://github.com/SocialGouv/srdt/compare/v1.5.3...v1.5.4) (2025-06-05)
+
+
+### Bug Fixes
+
+* résolution de la plupart des problèmes d'espaces en trop dans la réponse et le problème d'espace en bas de de la bulle de texte ([#125](https://github.com/SocialGouv/srdt/issues/125)) ([7573605](https://github.com/SocialGouv/srdt/commit/7573605bfa8ae911a52da00e0633cce02aeca527))
+
+## [1.5.3](https://github.com/SocialGouv/srdt/compare/v1.5.2...v1.5.3) (2025-06-05)
+
+
+### Bug Fixes
+
+* la zone de texte se redimensionne automatiquement quand on met du texte (max 10 lignes, min 2 lignes) ([#124](https://github.com/SocialGouv/srdt/issues/124)) ([1905e2d](https://github.com/SocialGouv/srdt/commit/1905e2d81160389e8521c434373c18ccfa9bb446))
+
+## [1.5.2](https://github.com/SocialGouv/srdt/compare/v1.5.1...v1.5.2) (2025-06-05)
+
+
+### Bug Fixes
+
+* retient le défilement au début du message plutôt qu'à la fin ([#123](https://github.com/SocialGouv/srdt/issues/123)) ([20ecc72](https://github.com/SocialGouv/srdt/commit/20ecc72abe53b224ce4e4b57c268925ac15c49bb))
+
 ## [1.5.1](https://github.com/SocialGouv/srdt/compare/v1.5.0...v1.5.1) (2025-06-05)
 
 
