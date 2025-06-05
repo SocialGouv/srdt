@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { AnalyzeResponse, UserLLMMessage } from "@/types";
@@ -24,11 +24,14 @@ export const Chat = () => {
   const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
   const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
   const [apiError, setApiError] = useState<string | undefined>(undefined);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const chatContainer = document.querySelector(".chat-messages");
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [messages]);
 
@@ -82,8 +85,8 @@ export const Chat = () => {
       ...prev,
       {
         content:
-          (result.data?.generated?.text ??
-            "Désolé, je n'ai pas pu générer de réponse."),
+          result.data?.generated?.text ??
+          "Désolé, je n'ai pas pu générer de réponse.",
         role: "assistant",
       },
     ]);
@@ -134,8 +137,10 @@ export const Chat = () => {
       !message.isLoading &&
       !message.isError;
 
+    const isLastMessage = index === messages.length - 1;
+
     return (
-      <div key={index}>
+      <div key={index} ref={isLastMessage ? lastMessageRef : null}>
         <div
           className={fr.cx(
             "fr-my-1w",
