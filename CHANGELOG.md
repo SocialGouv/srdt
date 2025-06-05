@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/SocialGouv/srdt/compare/v1.5.2...v1.5.3) (2025-06-05)
+
+
+### Bug Fixes
+
+* la zone de texte se redimensionne automatiquement quand on met du texte (max 10 lignes, min 2 lignes) ([#124](https://github.com/SocialGouv/srdt/issues/124)) ([1905e2d](https://github.com/SocialGouv/srdt/commit/1905e2d81160389e8521c434373c18ccfa9bb446))
+
 ## [1.5.2](https://github.com/SocialGouv/srdt/compare/v1.5.1...v1.5.2) (2025-06-05)
 
 
