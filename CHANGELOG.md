@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/SocialGouv/srdt/compare/v1.5.0...v1.5.1) (2025-06-05)
+
+
+### Bug Fixes
+
+* **api:** update contributions url paths ([ec7689f](https://github.com/SocialGouv/srdt/commit/ec7689f0ddc8a4e06e98f96e05702906186fe1c7))
+
 # [1.5.0](https://github.com/SocialGouv/srdt/compare/v1.4.16...v1.5.0) (2025-06-05)
 
 
