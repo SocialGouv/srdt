@@ -192,6 +192,7 @@ export const Chat = () => {
           height: "calc(80vh - 20px)", // Ajusté la hauteur car on n'a plus d'éléments au-dessus
           overflowY: "auto",
           gap: "1rem",
+          marginBottom: "1rem",
         }}
       >
         <Button
