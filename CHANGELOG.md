@@ -1,3 +1,10 @@
+## [1.5.5](https://github.com/SocialGouv/srdt/compare/v1.5.4...v1.5.5) (2025-06-05)
+
+
+### Bug Fixes
+
+* marge du bas du module de discussion ([#126](https://github.com/SocialGouv/srdt/issues/126)) ([4036e4f](https://github.com/SocialGouv/srdt/commit/4036e4f6e2dcd19f63f13882b1d3b734a0458ff1))
+
 ## [1.5.4](https://github.com/SocialGouv/srdt/compare/v1.5.3...v1.5.4) (2025-06-05)
 
 
