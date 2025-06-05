@@ -124,7 +124,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
         for prompt in request.prompts:
             search_result = collections.search(
                 prompt=prompt,
-                id_collections=request.options.collections,
+                id_collections=[str(cid) for cid in request.options.collections],
                 k=request.options.top_K,
                 score_threshold=request.options.threshold,
             )
@@ -142,7 +142,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 transformed_chunk = ChunkResult(
                     score=item["score"],
                     content=chunk_data["content"],
-                    id_chunk=chunk_data["id"],
+                    id_chunk=int(chunk_data["id"]),
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
                         source=metadata["source"]
