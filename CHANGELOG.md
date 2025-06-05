@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/SocialGouv/srdt/compare/v1.5.3...v1.5.4) (2025-06-05)
+
+
+### Bug Fixes
+
+* résolution de la plupart des problèmes d'espaces en trop dans la réponse et le problème d'espace en bas de de la bulle de texte ([#125](https://github.com/SocialGouv/srdt/issues/125)) ([7573605](https://github.com/SocialGouv/srdt/commit/7573605bfa8ae911a52da00e0633cce02aeca527))
+
 ## [1.5.3](https://github.com/SocialGouv/srdt/compare/v1.5.2...v1.5.3) (2025-06-05)
 
 
