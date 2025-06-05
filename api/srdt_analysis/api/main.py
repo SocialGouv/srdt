@@ -129,7 +129,11 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 score_threshold=request.options.threshold,
             )
 
-            filtered_search_result = (item for item in search_result if item["score"] >= request.options.threshold)
+            filtered_search_result = (
+                item
+                for item in search_result
+                if item["score"] >= request.options.threshold
+            )
 
             for item in filtered_search_result:
                 chunk_data = item["chunk"]
