@@ -12,6 +12,7 @@ CollectionName = Literal[
     "information",
     "contributions",
     "internet",
+    "contributions_idcc", 
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
@@ -44,6 +45,7 @@ class DocumentData(TypedDict):
     url: URL
     source: CollectionName
     content_chunked: list[SplitDocument]
+    idcc: Optional[str]
 
 
 ListOfDocumentData = list[DocumentData]
@@ -104,6 +106,7 @@ class Document:
     updated_at: Timestamp
     is_available: bool
     content: Optional[Content] = None
+    idcc: Optional[str] = None
 
     @classmethod
     def from_record(cls, record: asyncpg.Record) -> "Document":
@@ -136,6 +139,7 @@ class Document:
             updated_at=record["updated_at"],
             is_available=record["is_available"],
             content=content,
+            idcc=doc_data.get("idcc", None) if doc_data else None,
         )
 
 

@@ -112,16 +112,20 @@ class AlbertCollectionHandler:
             dt: DocumentData
             chunks = dt["content_chunked"]
             for chunk in chunks:
+                metadata = {
+                    "id": dt["cdtn_id"],
+                    "url": dt["url"],
+                    "source": dt["source"],
+                    "title": dt["title"],
+                }
+                if dt["idcc"]:
+                    metadata["idcc"] = dt["idcc"]
+                    
                 result.append(
                     {
                         "text": chunk.page_content,
                         "title": dt["title"],
-                        "metadata": {
-                            "id": dt["cdtn_id"],
-                            "url": dt["url"],
-                            "source": dt["source"],
-                            "title": dt["title"],
-                        },
+                        "metadata": metadata,
                     }
                 )
 
@@ -141,8 +145,6 @@ class AlbertCollectionHandler:
                 "request": '{"collection": "%s", "chunker": {"name": "NoChunker"}}'
                 % id_collection
             }
-            print(json.dumps(request_data))
-            print(json.dumps(batch))
             response = httpx.post(
                 f"{self.base_url}/v1/files",
                 headers=self.headers,

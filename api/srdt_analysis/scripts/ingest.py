@@ -20,11 +20,17 @@ def start():
             "page_fiche_ministere_travail",
             "fiches_service_public",
             "contributions",
+            "contributions_idcc",
         ]
     )
     page_contribs_exploiter = PagesContributionsExploiter()
     page_contribs_exploiter.process_documents(
         data["contributions"], "contributions", "html"
+    )
+    
+    page_contribs_idcc_exploiter = PagesContributionsExploiter()
+    page_contribs_idcc_exploiter.process_documents(
+        data["contributions_idcc"], "contributions_idcc", "html"
     )
     page_infos_exploiter = PageInfosExploiter()
     page_infos_exploiter.process_documents(
