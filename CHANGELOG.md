@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/SocialGouv/srdt/compare/v1.4.16...v1.5.0) (2025-06-05)
+
+
+### Features
+
+* **api:** ingestion de contributions_idcc ([#114](https://github.com/SocialGouv/srdt/issues/114)) ([cdac8d9](https://github.com/SocialGouv/srdt/commit/cdac8d9ab0d2b5c8584587a1b5289e8634b359fd))
+
 ## [1.4.16](https://github.com/SocialGouv/srdt/compare/v1.4.15...v1.4.16) (2025-06-03)
 
 
