@@ -129,7 +129,6 @@ export const Chat = () => {
       color: textColor,
       borderRadius: "8px",
       padding: "1rem",
-      whiteSpace: "pre-wrap",
     };
 
     const isLastAssistantMessage =
@@ -150,7 +149,7 @@ export const Chat = () => {
           style={{ maxWidth: "70%", minWidth: "200px" }}
         >
           <div style={bubbleMessageStyle}>
-            <div>
+            <div style={!message.isLoading ? { marginBottom: "-1.5rem" } : {}}>
               <Markdown>{message.content}</Markdown>
               {message.isLoading && (
                 <div className={fr.cx("fr-mt-1w")}>
