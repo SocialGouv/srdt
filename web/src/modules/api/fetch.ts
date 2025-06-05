@@ -5,6 +5,7 @@ import {
   getRandomModel,
   MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS,
+  SEARCH_OPTIONS_IDCC,
   SEARCH_OPTIONS_LOCAL,
 } from "@/constants";
 import {
@@ -16,6 +17,7 @@ import {
   SearchResponse,
   GenerateRequest,
   GenerateResponse,
+  ChunkResult,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -163,7 +165,6 @@ export const analyzeQuestion = async (
 
     const localSearchResult = await search({
       prompts: [query],
-      idcc,
       options: SEARCH_OPTIONS_LOCAL,
     });
 
@@ -172,6 +173,26 @@ export const analyzeQuestion = async (
     }
 
     const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
+
+    if (idcc) {
+      const idccSearchResult = await search({
+        prompts: [query],
+        options: SEARCH_OPTIONS_IDCC,
+      });
+      if (idccSearchResult.error) {
+        console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+      }
+
+      const idccSearchChunks: ChunkResult[] = [];
+      if (idccSearchResult.data) {
+        idccSearchChunks.push(
+          ...idccSearchResult.data.top_chunks.filter((e) => {
+            return e.metadata.idcc === idcc;
+          })
+        );
+      }
+      localSearchChunks.push(...idccSearchChunks);
+    }
 
     if (localSearchChunks.length === 0) {
       console.warn("Aucun résultat de recherche trouvé");
