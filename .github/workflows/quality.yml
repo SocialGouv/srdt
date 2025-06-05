@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "22.12.0"
           cache: "yarn"
-          cache-dependency-path: ./web
+          cache-dependency-path: ./web/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: "22.12.0"
           cache: "yarn"
-          cache-dependency-path: ./web
+          cache-dependency-path: ./web/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -68,7 +68,7 @@ jobs:
         with:
           node-version: "22.12.0"
           cache: "yarn"
-          cache-dependency-path: ./web
+          cache-dependency-path: ./web/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -90,7 +90,7 @@ jobs:
         with:
           node-version: "22.12.0"
           cache: "yarn"
-          cache-dependency-path: ./web
+          cache-dependency-path: ./web/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
