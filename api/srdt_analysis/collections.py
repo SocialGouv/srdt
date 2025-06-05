@@ -120,7 +120,7 @@ class AlbertCollectionHandler:
                 }
                 if dt["idcc"]:
                     metadata["idcc"] = dt["idcc"]
-                    
+
                 result.append(
                     {
                         "text": chunk.page_content,

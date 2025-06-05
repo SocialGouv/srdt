@@ -46,7 +46,9 @@ class PostgreSQLManager:
             if source == "contributions_idcc":
                 query += " AND document->>'content' IS NOT NULL AND document->>'idcc' != '0000'"
 
-            result = await conn.fetch(query, "contributions" if source == "contributions_idcc" else source)
+            result = await conn.fetch(
+                query, "contributions" if source == "contributions_idcc" else source
+            )
             return [Document.from_record(r) for r in result]
 
     async def fetch_sources(
