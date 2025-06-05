@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/SocialGouv/srdt/compare/v1.5.1...v1.5.2) (2025-06-05)
+
+
+### Bug Fixes
+
+* retient le défilement au début du message plutôt qu'à la fin ([#123](https://github.com/SocialGouv/srdt/issues/123)) ([20ecc72](https://github.com/SocialGouv/srdt/commit/20ecc72abe53b224ce4e4b57c268925ac15c49bb))
+
 ## [1.5.1](https://github.com/SocialGouv/srdt/compare/v1.5.0...v1.5.1) (2025-06-05)
 
 
