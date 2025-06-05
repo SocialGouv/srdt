@@ -7,6 +7,7 @@ import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
+import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -233,17 +234,17 @@ export const Chat = () => {
         }}
       >
         <div className={fr.cx("fr-col-11")}>
-          <textarea
-            className={fr.cx("fr-input")}
+          <AutoresizeTextarea
+            value={newMessage}
+            onChange={setNewMessage}
+            onKeyDown={handleKeyDown}
             placeholder={
               isDisabled
                 ? "Veuillez démarrer une nouvelle conversation pour poser une autre question"
                 : "Saisissez votre message"
             }
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
             disabled={isDisabled}
+            maxLines={10}
           />
         </div>
         <div
