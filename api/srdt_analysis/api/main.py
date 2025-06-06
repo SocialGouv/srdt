@@ -1,6 +1,6 @@
+import json
 import os
 import time
-import json
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
@@ -197,7 +197,9 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
 
 
 @app.post(f"{BASE_API_URL}/generate/stream")
-async def generate_stream(request: GenerateRequest, _api_key: str = Depends(get_api_key)):
+async def generate_stream(
+    request: GenerateRequest, _api_key: str = Depends(get_api_key)
+):
     start_time = time.time()
     tokenizer = Tokenizer()
     llm_runner = LLMRunner(
@@ -211,7 +213,7 @@ async def generate_stream(request: GenerateRequest, _api_key: str = Depends(get_
             [msg.get("content", "") for msg in request.chat_history]
         )
         nb_token_input = tokenizer.compute_nb_tokens(chat_history_str)
-        
+
         async def generate_chunks():
             accumulated_response = ""
             try:
@@ -222,7 +224,7 @@ async def generate_stream(request: GenerateRequest, _api_key: str = Depends(get_
                     "nb_token_input": nb_token_input,
                 }
                 yield f"data: {json.dumps(initial_data)}\n\n"
-                
+
                 # Stream the response chunks
                 async for chunk in llm_runner.chat_with_full_document_stream(
                     request.chat_history,
@@ -234,17 +236,19 @@ async def generate_stream(request: GenerateRequest, _api_key: str = Depends(get_
                         "content": chunk,
                     }
                     yield f"data: {json.dumps(chunk_data)}\n\n"
-                
+
                 # Send final metadata
                 final_data = {
                     "type": "end",
                     "time": time.time() - start_time,
                     "text": accumulated_response,
                     "nb_token_input": nb_token_input,
-                    "nb_token_output": tokenizer.compute_nb_tokens(accumulated_response),
+                    "nb_token_output": tokenizer.compute_nb_tokens(
+                        accumulated_response
+                    ),
                 }
                 yield f"data: {json.dumps(final_data)}\n\n"
-                
+
             except Exception as e:
                 error_data = {
                     "type": "error",
@@ -259,7 +263,7 @@ async def generate_stream(request: GenerateRequest, _api_key: str = Depends(get_
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
                 "Content-Type": "text/plain; charset=utf-8",
-            }
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

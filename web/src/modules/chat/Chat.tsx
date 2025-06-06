@@ -29,15 +29,21 @@ export const Chat = () => {
   const [apiError, setApiError] = useState<string | undefined>(undefined);
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
+  const [messagesLength, setMessagesLength] = useState(messages.length);
 
   useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    // Only auto-scroll when a new message is added (array length changes),
+    // not when existing message content is updated during streaming
+    if (messages.length !== messagesLength) {
+      setMessagesLength(messages.length);
+      if (lastMessageRef.current) {
+        lastMessageRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
     }
-  }, [messages]);
+  }, [messages, messagesLength]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

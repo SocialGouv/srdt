@@ -101,7 +101,7 @@ class LLMClient:
                     json=payload,
                 ) as response:
                     response.raise_for_status()
-                    
+
                     async for line in response.aiter_lines():
                         if line.strip():
                             if line.startswith("data: "):
@@ -116,7 +116,9 @@ class LLMClient:
                                         and "delta" in chunk["choices"][0]
                                         and "content" in chunk["choices"][0]["delta"]
                                     ):
-                                        content = chunk["choices"][0]["delta"]["content"]
+                                        content = chunk["choices"][0]["delta"][
+                                            "content"
+                                        ]
                                         if content:
                                             yield content
                                 except json.JSONDecodeError:
@@ -149,5 +151,7 @@ class LLMClient:
         chat_history: list[UserLLMMessage],
     ) -> AsyncIterator[str]:
         self.logger.info("Generating a streaming chat completions answer")
-        async for chunk in self._make_chat_completions_stream_async(system_prompt, chat_history):
+        async for chunk in self._make_chat_completions_stream_async(
+            system_prompt, chat_history
+        ):
             yield chunk
