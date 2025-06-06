@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/SocialGouv/srdt/compare/v1.5.6...v1.6.0) (2025-06-06)
+
+
+### Features
+
+* favicon du cdtn ([#130](https://github.com/SocialGouv/srdt/issues/130)) ([5a75c51](https://github.com/SocialGouv/srdt/commit/5a75c51f0bd4d3e27c2a41edf72fff9c9ba97204))
+
 ## [1.5.6](https://github.com/SocialGouv/srdt/compare/v1.5.5...v1.5.6) (2025-06-06)
 
 
