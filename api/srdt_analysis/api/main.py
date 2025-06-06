@@ -249,7 +249,7 @@ async def generate_stream(
                 }
                 yield f"data: {json.dumps(final_data)}\n\n"
 
-            except Exception as e:
+            except Exception:
                 error_data = {
                     "type": "error",
                     "error": "An internal error occurred.",
