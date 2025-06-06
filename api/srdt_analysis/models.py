@@ -3,6 +3,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Literal, Optional, Sequence, TypedDict, Union
 
+try:
+    from typing import NotRequired
+except ImportError:
+    from typing_extensions import NotRequired
+
 import asyncpg
 
 CollectionName = Literal[
@@ -213,3 +218,4 @@ class UserLLMMessage(TypedDict):
 class LLMChatPayload(TypedDict):
     model: str
     messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]]
+    stream: NotRequired[bool]

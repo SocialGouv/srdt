@@ -135,7 +135,6 @@ content-type: application/json
   "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière précise."
 }
 
-
 ### Test generate with conversation history + search response
 POST http://localhost:8000/api/v1/generate
 Authorization: Bearer abc
@@ -158,4 +157,24 @@ content-type: application/json
     }
   ],
   "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière précise."
+}
+
+### Test streaming generate endpoint
+POST http://localhost:8000/api/v1/generate/stream
+Authorization: Bearer abc
+content-type: application/json
+
+{
+  "model": {
+    "base_url": "http://localhost:11434",
+    "name": "mixtral",
+    "api_key": "not-needed"
+  },
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "Quels sont mes droits concernant le congé parental ?"
+    }
+  ],
+  "system_prompt": "Tu es un assistant juridique spécialisé en droit du travail. Réponds de manière précise et concise."
 }
