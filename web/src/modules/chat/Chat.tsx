@@ -7,6 +7,8 @@ import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
+import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
+import { Agreement } from "../convention-collective/search";
 import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 
 interface ChatMessage extends UserLLMMessage {
@@ -19,6 +21,9 @@ export const Chat = () => {
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
   ]);
   const [userQuestion, setUserQuestion] = useState<string>("");
+  const [selectedAgreement, setSelectedAgreement] = useState<
+    Agreement | undefined
+  >(undefined);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, isLoading } = useApi();
@@ -57,7 +62,7 @@ export const Chat = () => {
 
     const startTime = performance.now();
 
-    const result = await generateAnswer(newMessage);
+    const result = await generateAnswer(newMessage, selectedAgreement?.id);
 
     const endTime = performance.now();
 
@@ -268,6 +273,18 @@ export const Chat = () => {
             disabled={isDisabled}
           />
         </div>
+        {!isDisabled && (
+          <div className={fr.cx("fr-col-11")}>
+            <AgreementSearchInput
+              onAgreementSelect={(agreement) => {
+                console.log("agreement", agreement);
+                setSelectedAgreement(agreement);
+              }}
+              defaultAgreement={undefined}
+              trackingActionName="chat"
+            />
+          </div>
+        )}
       </form>
     </div>
   );

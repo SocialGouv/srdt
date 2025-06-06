@@ -57,6 +57,7 @@ export interface ChunkMetadata {
   url: string;
   document_id: number;
   source: string;
+  idcc?: string;
 }
 
 export interface ChunkResult {

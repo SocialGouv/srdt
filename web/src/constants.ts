@@ -124,6 +124,12 @@ export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
   collections: [], //"internet"],
 };
 
+export const SEARCH_OPTIONS_IDCC: SearchOptions = {
+  top_K: 100,
+  threshold: 0.2,
+  collections: [871],
+};
+
 export const CHATGPT_LLM: LLMModel = {
   api_key: process.env.CHATGPT_LLM_API_KEY ?? "",
   name: process.env.CHATGPT_MODEL_NAME ?? "",

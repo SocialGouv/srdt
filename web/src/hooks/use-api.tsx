@@ -7,7 +7,8 @@ const useApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const generateAnswer = async (
-    userQuestion: string
+    userQuestion: string,
+    agreementId?: string
   ): Promise<ApiResponse<AnalyzeResponse>> => {
     setIsLoading(true);
     try {
@@ -16,7 +17,7 @@ const useApi = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: userQuestion }),
+        body: JSON.stringify({ question: userQuestion, agreementId }),
       });
 
       const result: ApiResponse<AnalyzeResponse> = await response.json();

@@ -6,7 +6,7 @@ BASE_URL_CDTN = "https://code.travail.gouv.fr"
 BASE_API_URL = "/api/v1"
 API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
-ALBERT_COLLECTION_IDS = [733, 734, 735, 736, 738]
+ALBERT_COLLECTION_IDS = [733, 734, 735, 736, 738, 871]
 LLM_ANSWER_PROMPT = """
   # Instructions
 	## Rôle et objectif
