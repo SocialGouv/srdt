@@ -8,6 +8,7 @@ import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
 import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
+import styles from "./Chat.module.css";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -235,7 +236,7 @@ export const Chat = () => {
                         ? "Génération en cours..."
                         : "Génération de la réponse..."}
                       {message.isStreaming && (
-                        <span className="streaming-cursor">▋</span>
+                        <span className={styles.streamingCursor}>▋</span>
                       )}
                     </div>
                   )}
@@ -280,12 +281,14 @@ export const Chat = () => {
           marginBottom: "1rem",
         }}
       >
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div
+          className={fr.cx("fr-mt-2w")}
+          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
+        >
           <Button
             onClick={handleReset}
             iconId="fr-icon-refresh-line"
             priority="secondary"
-            className={fr.cx("fr-mt-2w")}
           >
             Nouvelle conversation
           </Button>
@@ -367,24 +370,6 @@ export const Chat = () => {
           />
         </div>
       </form>
-
-      <style jsx>{`
-        .streaming-cursor {
-          animation: blink 1s infinite;
-          color: var(--text-action-high-blue-france);
-        }
-
-        @keyframes blink {
-          0%,
-          50% {
-            opacity: 1;
-          }
-          51%,
-          100% {
-            opacity: 0;
-          }
-        }
-      `}</style>
     </div>
   );
 };

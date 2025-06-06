@@ -16,6 +16,8 @@ import {
   SearchResponse,
   GenerateRequest,
   GenerateResponse,
+  ChunkResult,
+  LLMModel,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -35,6 +37,21 @@ interface StreamChunk {
   nb_token_input?: number;
   nb_token_output?: number;
   error?: string;
+}
+
+interface PreparedQuestionData {
+  query: string;
+  model: LLMModel;
+  config: Config;
+  instructions: {
+    generate_instruction: string;
+    anonymisation?: string;
+    reformulation?: string;
+    split_multiple_queries?: string;
+  };
+  localSearchChunks: ChunkResult[];
+  anonymizeResult?: UseApiResponse<AnonymizeResponse>;
+  rephraseResult?: UseApiResponse<RephraseResponse>;
 }
 
 const fetchApi = async <T>(
@@ -218,129 +235,157 @@ const generateStream = async (
   }
 };
 
+// Common preprocessing logic for both streaming and non-streaming
+const prepareQuestionData = async (
+  userQuestion: string,
+  requiredConfig?: Config
+): Promise<PreparedQuestionData> => {
+  const config = requiredConfig || Config.V1_1;
+  const instructions = PROMPT_INSTRUCTIONS[config];
+  const model = getRandomModel();
+
+  let query = userQuestion;
+  let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
+    undefined;
+  let rephraseResult: UseApiResponse<RephraseResponse> | undefined = undefined;
+
+  // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
+  if (config == Config.V1_0) {
+    anonymizeResult = await anonymize({
+      model: ALBERT_LLM,
+      user_question: userQuestion,
+      anonymization_prompt: instructions.anonymisation,
+    });
+
+    if (anonymizeResult.error) {
+      throw new Error(
+        `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
+      );
+    }
+
+    if (!anonymizeResult.data) {
+      throw new Error("Erreur lors de l'anonymisation");
+    }
+
+    rephraseResult = await rephrase({
+      model,
+      question: anonymizeResult.data.anonymized_question,
+      rephrasing_prompt: instructions.reformulation,
+      queries_splitting_prompt: instructions.split_multiple_queries,
+    });
+
+    if (rephraseResult.error) {
+      throw new Error(
+        `Erreur lors de la reformulation: ${rephraseResult.error}`
+      );
+    }
+
+    if (!rephraseResult.data) {
+      throw new Error("Erreur lors de la reformulation");
+    }
+    query = rephraseResult.data.rephrased_question;
+  }
+
+  const localSearchResult = await search({
+    prompts: [query],
+    options: SEARCH_OPTIONS_LOCAL,
+  });
+
+  if (localSearchResult.error) {
+    console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
+  }
+
+  const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
+
+  if (localSearchChunks.length === 0) {
+    console.warn("Aucun résultat de recherche trouvé");
+  }
+
+  localSearchChunks
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_SOURCE_COUNT);
+
+  return {
+    query,
+    model,
+    config,
+    instructions,
+    localSearchChunks,
+    anonymizeResult,
+    rephraseResult,
+  };
+};
+
+// Helper to create chat history for generation
+const createChatHistory = (query: string, localSearchChunks: ChunkResult[]) => [
+  {
+    role: "user" as const,
+    content: query,
+  },
+  {
+    role: "user" as const,
+    content: `Voici les sources pertinentes pour répondre à la question:
+
+        ${localSearchChunks
+          .map(
+            (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
+                  Contenu: ${chunk.content}
+                  ---`
+          )
+          .join("\n")}`,
+  },
+];
+
+// Helper to create final response
+const createAnalyzeResponse = (
+  preparedData: PreparedQuestionData,
+  generatedData: GenerateResponse
+): AnalyzeResponse => ({
+  config: preparedData.config.toString(),
+  anonymized: preparedData.anonymizeResult?.data || null,
+  rephrased: preparedData.rephraseResult?.data || null,
+  localSearchChunks: preparedData.localSearchChunks,
+  generated: generatedData,
+  modelName: preparedData.model.name,
+  modelFamily: getFamilyModel(preparedData.model),
+});
+
 export const analyzeQuestion = async (
   userQuestion: string,
   requiredConfig?: Config
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
-    const config = requiredConfig || Config.V1_1;
+    const preparedData = await prepareQuestionData(
+      userQuestion,
+      requiredConfig
+    );
 
-    const instructions = PROMPT_INSTRUCTIONS[config];
-
-    const model = getRandomModel();
-
-    let query = userQuestion;
-
-    let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
-      undefined;
-
-    let rephraseResult: UseApiResponse<RephraseResponse> | undefined =
-      undefined;
-
-    // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
-    if (config == Config.V1_0) {
-      anonymizeResult = await anonymize({
-        model: ALBERT_LLM,
-        user_question: userQuestion,
-        anonymization_prompt: instructions.anonymisation,
-      });
-
-      if (anonymizeResult.error) {
-        throw new Error(
-          `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
-        );
-      }
-
-      if (!anonymizeResult.data) {
-        throw new Error("Erreur lors de l'anonymisation");
-      }
-
-      rephraseResult = await rephrase({
-        model,
-        question: anonymizeResult.data.anonymized_question,
-        rephrasing_prompt: instructions.reformulation,
-        queries_splitting_prompt: instructions.split_multiple_queries,
-      });
-
-      if (rephraseResult.error) {
-        throw new Error(
-          `Erreur lors de la reformulation: ${rephraseResult.error}`
-        );
-      }
-
-      if (!rephraseResult.data) {
-        throw new Error("Erreur lors de la reformulation");
-      }
-      query = rephraseResult.data.rephrased_question;
-    }
-
-    const localSearchResult = await search({
-      prompts: [query],
-      options: SEARCH_OPTIONS_LOCAL,
-    });
-
-    if (localSearchResult.error) {
-      console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
-    }
-
-    const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-
-    if (localSearchChunks.length === 0) {
-      console.warn("Aucun résultat de recherche trouvé");
-    }
-
-    localSearchChunks
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_SOURCE_COUNT);
+    const chatHistory = createChatHistory(
+      preparedData.query,
+      preparedData.localSearchChunks
+    );
 
     const generateResult = await generate({
-      model,
-      chat_history: [
-        {
-          role: "user",
-          content: query,
-        },
-        {
-          role: "user",
-          content: `Voici les sources pertinentes pour répondre à la question:
-
-              ${localSearchChunks
-                .map(
-                  (
-                    chunk
-                  ) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-                        Contenu: ${chunk.content}
-                        ---`
-                )
-                .join("\n")}`,
-        },
-      ],
-      system_prompt: instructions.generate_instruction,
+      model: preparedData.model,
+      chat_history: chatHistory,
+      system_prompt: preparedData.instructions.generate_instruction,
     });
 
     if (generateResult.error) {
       throw new Error(
-        `Erreur lors de la génération de la réponse: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${model.name}`
+        `Erreur lors de la génération de la réponse: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
       );
     }
 
     if (!generateResult.data) {
       throw new Error(
-        `Erreur lors de la génération de la réponse. Pour information, le model utilisé lors de la génération est ${model.name}`
+        `Erreur lors de la génération de la réponse. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
       );
     }
 
     return {
       success: true,
-      data: {
-        config: config.toString(),
-        anonymized: anonymizeResult?.data || null,
-        rephrased: rephraseResult?.data || null,
-        localSearchChunks,
-        generated: generateResult.data,
-        modelName: model.name,
-        modelFamily: getFamilyModel(model),
-      },
+      data: createAnalyzeResponse(preparedData, generateResult.data),
     };
   } catch (error) {
     return {
@@ -358,117 +403,36 @@ export const analyzeQuestionStream = async (
   requiredConfig?: Config
 ): Promise<void> => {
   try {
-    const config = requiredConfig || Config.V1_1;
-    const instructions = PROMPT_INSTRUCTIONS[config];
-    const model = getRandomModel();
+    const preparedData = await prepareQuestionData(
+      userQuestion,
+      requiredConfig
+    );
 
-    let query = userQuestion;
-    let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
-      undefined;
-    let rephraseResult: UseApiResponse<RephraseResponse> | undefined =
-      undefined;
-
-    // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
-    if (config == Config.V1_0) {
-      anonymizeResult = await anonymize({
-        model: ALBERT_LLM,
-        user_question: userQuestion,
-        anonymization_prompt: instructions.anonymisation,
-      });
-
-      if (anonymizeResult.error) {
-        throw new Error(
-          `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
-        );
-      }
-
-      if (!anonymizeResult.data) {
-        throw new Error("Erreur lors de l'anonymisation");
-      }
-
-      rephraseResult = await rephrase({
-        model,
-        question: anonymizeResult.data.anonymized_question,
-        rephrasing_prompt: instructions.reformulation,
-        queries_splitting_prompt: instructions.split_multiple_queries,
-      });
-
-      if (rephraseResult.error) {
-        throw new Error(
-          `Erreur lors de la reformulation: ${rephraseResult.error}`
-        );
-      }
-
-      if (!rephraseResult.data) {
-        throw new Error("Erreur lors de la reformulation");
-      }
-      query = rephraseResult.data.rephrased_question;
-    }
-
-    const localSearchResult = await search({
-      prompts: [query],
-      options: SEARCH_OPTIONS_LOCAL,
-    });
-
-    if (localSearchResult.error) {
-      console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
-    }
-
-    const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-
-    if (localSearchChunks.length === 0) {
-      console.warn("Aucun résultat de recherche trouvé");
-    }
-
-    localSearchChunks
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_SOURCE_COUNT);
+    const chatHistory = createChatHistory(
+      preparedData.query,
+      preparedData.localSearchChunks
+    );
 
     await generateStream(
       {
-        model,
-        chat_history: [
-          {
-            role: "user",
-            content: query,
-          },
-          {
-            role: "user",
-            content: `Voici les sources pertinentes pour répondre à la question:
-
-                ${localSearchChunks
-                  .map(
-                    (
-                      chunk
-                    ) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-                          Contenu: ${chunk.content}
-                          ---`
-                  )
-                  .join("\n")}`,
-          },
-        ],
-        system_prompt: instructions.generate_instruction,
+        model: preparedData.model,
+        chat_history: chatHistory,
+        system_prompt: preparedData.instructions.generate_instruction,
       },
       onChunk,
       undefined, // onStart
       (endData) => {
         // onEnd - call completion callback with full result
+        const generatedData: GenerateResponse = {
+          time: endData.time,
+          text: endData.text,
+          nb_token_input: endData.nb_token_input,
+          nb_token_output: endData.nb_token_output,
+        };
+
         onComplete({
           success: true,
-          data: {
-            config: config.toString(),
-            anonymized: anonymizeResult?.data || null,
-            rephrased: rephraseResult?.data || null,
-            localSearchChunks,
-            generated: {
-              time: endData.time,
-              text: endData.text,
-              nb_token_input: endData.nb_token_input,
-              nb_token_output: endData.nb_token_output,
-            },
-            modelName: model.name,
-            modelFamily: getFamilyModel(model),
-          },
+          data: createAnalyzeResponse(preparedData, generatedData),
         });
       },
       (error) => {

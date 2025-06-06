@@ -1,0 +1,15 @@
+.streamingCursor {
+  animation: blink 1s infinite;
+  color: var(--text-action-high-blue-france);
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
