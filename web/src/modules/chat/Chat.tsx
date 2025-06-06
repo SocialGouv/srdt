@@ -8,10 +8,12 @@ import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
 import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
+import styles from "./Chat.module.css";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
   isLoading?: boolean;
+  isStreaming?: boolean;
 }
 
 export const Chat = () => {
@@ -21,27 +23,34 @@ export const Chat = () => {
   const [userQuestion, setUserQuestion] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-  const { generateAnswer, isLoading } = useApi();
+  const [useStreaming, setUseStreaming] = useState(false); // Enable streaming by default
+  const { generateAnswer, generateAnswerStream, isLoading } = useApi();
   const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
   const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
   const [apiError, setApiError] = useState<string | undefined>(undefined);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const streamingMessageRef = useRef<string>("");
+  const [messagesLength, setMessagesLength] = useState(messages.length);
 
   useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    // Only auto-scroll when a new message is added (array length changes),
+    // not when existing message content is updated during streaming
+    if (messages.length !== messagesLength) {
+      setMessagesLength(messages.length);
+      if (lastMessageRef.current) {
+        lastMessageRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
     }
-  }, [messages]);
+  }, [messages, messagesLength]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isDisabled) return;
 
     setIsDisabled(true);
-
     setUserQuestion(newMessage);
 
     const userMessage = { content: newMessage, role: "user" as const };
@@ -51,46 +60,103 @@ export const Chat = () => {
     const loadingMessage = {
       content: "",
       role: "assistant" as const,
-      isLoading: true,
+      isLoading: !useStreaming,
+      isStreaming: useStreaming,
     };
     setMessages((prev) => [...prev, loadingMessage]);
 
     const startTime = performance.now();
+    streamingMessageRef.current = "";
 
-    const result = await generateAnswer(newMessage);
+    if (useStreaming) {
+      // Use streaming
+      await generateAnswerStream(
+        newMessage,
+        (chunk: string) => {
+          // Handle each streaming chunk
+          streamingMessageRef.current += chunk;
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage && lastMessage.isStreaming) {
+              lastMessage.content = streamingMessageRef.current;
+            }
+            return newMessages;
+          });
+        },
+        (result) => {
+          // Handle completion
+          const endTime = performance.now();
+          const responseTimeInSeconds = (endTime - startTime) / 1000;
 
-    const endTime = performance.now();
+          setGlobalResponseTime(responseTimeInSeconds);
+          setApiResult(result.data);
 
-    const responseTimeInSeconds = (endTime - startTime) / 1000;
+          setMessages((prev) => {
+            const newMessages = prev.filter(
+              (msg) => !msg.isLoading && !msg.isStreaming
+            );
 
-    setGlobalResponseTime(responseTimeInSeconds);
+            if (result.error || !result.success) {
+              setApiError(result.error?.toString());
+              return [
+                ...newMessages,
+                {
+                  content: `Une erreur est survenue : ${result.error}`,
+                  role: "assistant",
+                  isError: true,
+                },
+              ];
+            }
 
-    setApiResult(result.data);
+            return [
+              ...newMessages,
+              {
+                content:
+                  result.data?.generated?.text ?? streamingMessageRef.current,
+                role: "assistant",
+              },
+            ];
+          });
 
-    setMessages((prev) => prev.filter((msg) => !msg.isLoading));
+          setIsDisabled(false);
+        }
+      );
+    } else {
+      // Use traditional non-streaming approach
+      const result = await generateAnswer(newMessage);
+      const endTime = performance.now();
+      const responseTimeInSeconds = (endTime - startTime) / 1000;
 
-    if (result.error || !result.success) {
-      setApiError(result.error?.toString());
+      setGlobalResponseTime(responseTimeInSeconds);
+      setApiResult(result.data);
+      setMessages((prev) => prev.filter((msg) => !msg.isLoading));
+
+      if (result.error || !result.success) {
+        setApiError(result.error?.toString());
+        setMessages((prev) => [
+          ...prev,
+          {
+            content: `Une erreur est survenue : ${result.error}`,
+            role: "assistant",
+            isError: true,
+          },
+        ]);
+        setIsDisabled(false);
+        return;
+      }
+
       setMessages((prev) => [
         ...prev,
         {
-          content: `Une erreur est survenue : ${result.error}`,
+          content:
+            result.data?.generated?.text ??
+            "Désolé, je n'ai pas pu générer de réponse.",
           role: "assistant",
-          isError: true,
         },
       ]);
-      return;
+      setIsDisabled(false);
     }
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        content:
-          result.data?.generated?.text ??
-          "Désolé, je n'ai pas pu générer de réponse.",
-        role: "assistant",
-      },
-    ]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -110,6 +176,7 @@ export const Chat = () => {
     setApiResult(null);
     setGlobalResponseTime(0);
     setApiError(undefined);
+    streamingMessageRef.current = "";
   };
 
   const renderMessage = (message: ChatMessage, index: number) => {
@@ -135,6 +202,7 @@ export const Chat = () => {
       message.role === "assistant" &&
       index === messages.length - 1 &&
       !message.isLoading &&
+      !message.isStreaming &&
       !message.isError;
 
     const isLastMessage = index === messages.length - 1;
@@ -152,11 +220,26 @@ export const Chat = () => {
           style={{ maxWidth: "70%", minWidth: "200px" }}
         >
           <div style={bubbleMessageStyle}>
-            <div style={!message.isLoading ? { marginBottom: "-1.5rem" } : {}}>
+            <div
+              style={
+                !message.isLoading && !message.isStreaming
+                  ? { marginBottom: "-1.5rem" }
+                  : {}
+              }
+            >
               <Markdown>{message.content}</Markdown>
-              {message.isLoading && (
+              {(message.isLoading || message.isStreaming) && (
                 <div className={fr.cx("fr-mt-1w")}>
-                  {isLoading && <div>Génération de la réponse...</div>}
+                  {isLoading && (
+                    <div>
+                      {message.isStreaming
+                        ? "Génération en cours..."
+                        : "Génération de la réponse..."}
+                      {message.isStreaming && (
+                        <span className={styles.streamingCursor}>▋</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -198,14 +281,29 @@ export const Chat = () => {
           marginBottom: "1rem",
         }}
       >
-        <Button
-          onClick={handleReset}
-          iconId="fr-icon-refresh-line"
-          priority="secondary"
+        <div
           className={fr.cx("fr-mt-2w")}
+          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
         >
-          Nouvelle conversation
-        </Button>
+          <Button
+            onClick={handleReset}
+            iconId="fr-icon-refresh-line"
+            priority="secondary"
+          >
+            Nouvelle conversation
+          </Button>
+          <label
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <input
+              type="checkbox"
+              checked={useStreaming}
+              onChange={(e) => setUseStreaming(e.target.checked)}
+              disabled={isLoading}
+            />
+            <span>Mode streaming</span>
+          </label>
+        </div>
         <div className={fr.cx("fr-card", "fr-mt-2w")}>
           <div className={fr.cx("fr-card__body")}>
             <h1 className={fr.cx("fr-card__title")}>
