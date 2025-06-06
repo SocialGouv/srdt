@@ -273,18 +273,19 @@ export const Chat = () => {
             disabled={isDisabled}
           />
         </div>
+        {!isDisabled && (
+          <div className={fr.cx("fr-col-11")}>
+            <AgreementSearchInput
+              onAgreementSelect={(agreement) => {
+                console.log("agreement", agreement);
+                setSelectedAgreement(agreement);
+              }}
+              defaultAgreement={undefined}
+              trackingActionName="chat"
+            />
+          </div>
+        )}
       </form>
-
-      {!isDisabled && (
-        <AgreementSearchInput
-          onAgreementSelect={(agreement) => {
-            console.log("agreement", agreement);
-            setSelectedAgreement(agreement);
-          }}
-          defaultAgreement={undefined}
-          trackingActionName="chat"
-        />
-      )}
     </div>
   );
 };

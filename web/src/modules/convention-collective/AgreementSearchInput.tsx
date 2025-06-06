@@ -60,12 +60,12 @@ export const AgreementSearchInput = ({
   };
   return (
     <>
-      <div className={fr.cx("fr-mt-2w")}>
+      <div>
         <div className={fr.cx("fr-col-12")}>
           <Autocomplete<Agreement>
             defaultValue={selectedAgreement}
             dataTestId="AgreementSearchAutocomplete"
-            hintText="Vous pouvez proposer de manière optionnelle une convention collective pour améliorer la qualité de la réponse. Ex : transport routier ou 1486"
+            hintText="Indiquez une convention collective pour améliorer la qualité de la réponse. Ex : transport routier ou 1486"
             label={
               <>
                 Nom de la convention collective ou son numéro d’identification
