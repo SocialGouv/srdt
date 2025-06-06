@@ -5,6 +5,7 @@ import traceback
 from operator import itemgetter
 
 import sentry_sdk
+from srdt_analysis.api.anonymizer import run_ano
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
@@ -81,21 +82,13 @@ async def health():
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
 async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    tokenizer = Tokenizer()
-    llm_runner = LLMRunner(
-        llm_api_token=request.model.api_key,
-        llm_model=request.model.name,
-        llm_url=request.model.base_url,
-    )
     try:
-        anonymized_question = await llm_runner.anonymize(
-            request.user_question, request.anonymization_prompt
-        )
+        anonymized_question = run_ano(request.user_question)
         return AnonymizeResponse(
             time=time.time() - start_time,
             anonymized_question=anonymized_question,
-            nb_token_input=tokenizer.compute_nb_tokens(request.user_question),
-            nb_token_output=tokenizer.compute_nb_tokens(anonymized_question),
+            nb_token_input=42,
+            nb_token_output=42,
         )
     except ValueError as ve:
         logger.error(f"Anonymize validation error: {str(ve)}")
@@ -180,6 +173,18 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# @app.post(f"{BASE_API_URL}/rerank")
+# async def rerank(request, _api_key: str = Depends(get_api_key)):
+#     print(request)
+#     # start_time = time.time()
+#     collections = AlbertCollectionHandler()
+#     try:
+#         rerank_result = await collections.rerank(request["question"], request["inputs"])
+#         return rerank_result
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
