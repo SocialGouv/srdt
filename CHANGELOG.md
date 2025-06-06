@@ -1,3 +1,10 @@
+## [1.5.6](https://github.com/SocialGouv/srdt/compare/v1.5.5...v1.5.6) (2025-06-06)
+
+
+### Bug Fixes
+
+* do not scroll on first message ([#127](https://github.com/SocialGouv/srdt/issues/127)) ([74f76d4](https://github.com/SocialGouv/srdt/commit/74f76d4d6915ff2cff505d2a5962c3c96b5343e8))
+
 ## [1.5.5](https://github.com/SocialGouv/srdt/compare/v1.5.4...v1.5.5) (2025-06-05)
 
 
