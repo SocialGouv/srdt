@@ -140,7 +140,10 @@ export const Chat = () => {
     const isLastMessage = index === messages.length - 1;
 
     return (
-      <div key={index} ref={isLastMessage ? lastMessageRef : null}>
+      <div
+        key={index}
+        ref={isLastMessage && messages.length > 1 ? lastMessageRef : null}
+      >
         <div
           className={fr.cx(
             "fr-my-1w",
