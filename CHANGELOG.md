@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/SocialGouv/srdt/compare/v1.6.0...v1.6.1) (2025-06-10)
+
+
+### Bug Fixes
+
+* revert 4d95838 ([#134](https://github.com/SocialGouv/srdt/issues/134)) ([7912118](https://github.com/SocialGouv/srdt/commit/7912118a8684e5ff107c10f772a96565ddb9055f))
+
 # [1.6.0](https://github.com/SocialGouv/srdt/compare/v1.5.6...v1.6.0) (2025-06-06)
 
 
