@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/SocialGouv/srdt/compare/v1.6.2...v1.7.0) (2025-06-10)
+
+
+### Features
+
+* streaming des réponses ([#131](https://github.com/SocialGouv/srdt/issues/131)) ([bae747b](https://github.com/SocialGouv/srdt/commit/bae747b7178a4a6eaa650b76484b8ec806defc1b))
+
 ## [1.6.2](https://github.com/SocialGouv/srdt/compare/v1.6.1...v1.6.2) (2025-06-10)
 
 
