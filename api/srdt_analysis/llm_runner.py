@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import AsyncIterator, Optional, Tuple
 
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import (
@@ -77,3 +77,17 @@ class LLMRunner:
             system_prompt,
             chat_history,
         )
+
+    async def chat_with_full_document_stream(
+        self,
+        chat_history: list[UserLLMMessage],
+        system_prompt: Optional[str] = None,
+    ) -> AsyncIterator[str]:
+        system_prompt = (
+            system_prompt if system_prompt is not None else LLM_ANSWER_PROMPT
+        )
+        async for chunk in self.llm_processor.generate_completions_stream_async(
+            system_prompt,
+            chat_history,
+        ):
+            yield chunk

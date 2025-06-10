@@ -1,9 +1,11 @@
+import json
 import os
 import time
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
 from srdt_analysis.api.schemas import (
@@ -189,6 +191,79 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
             text=response,
             nb_token_input=tokenizer.compute_nb_tokens(chat_history_str),
             nb_token_output=tokenizer.compute_nb_tokens(response),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/generate/stream")
+async def generate_stream(
+    request: GenerateRequest, _api_key: str = Depends(get_api_key)
+):
+    start_time = time.time()
+    tokenizer = Tokenizer()
+    llm_runner = LLMRunner(
+        llm_api_token=request.model.api_key,
+        llm_model=request.model.name,
+        llm_url=request.model.base_url,
+    )
+
+    try:
+        chat_history_str = " ".join(
+            [msg.get("content", "") for msg in request.chat_history]
+        )
+        nb_token_input = tokenizer.compute_nb_tokens(chat_history_str)
+
+        async def generate_chunks():
+            accumulated_response = ""
+            try:
+                # Send initial metadata
+                initial_data = {
+                    "type": "start",
+                    "time": time.time() - start_time,
+                    "nb_token_input": nb_token_input,
+                }
+                yield f"data: {json.dumps(initial_data)}\n\n"
+
+                # Stream the response chunks
+                async for chunk in llm_runner.chat_with_full_document_stream(
+                    request.chat_history,
+                    request.system_prompt,
+                ):
+                    accumulated_response += chunk
+                    chunk_data = {
+                        "type": "chunk",
+                        "content": chunk,
+                    }
+                    yield f"data: {json.dumps(chunk_data)}\n\n"
+
+                # Send final metadata
+                final_data = {
+                    "type": "end",
+                    "time": time.time() - start_time,
+                    "text": accumulated_response,
+                    "nb_token_input": nb_token_input,
+                    "nb_token_output": tokenizer.compute_nb_tokens(
+                        accumulated_response
+                    ),
+                }
+                yield f"data: {json.dumps(final_data)}\n\n"
+
+            except Exception:
+                error_data = {
+                    "type": "error",
+                    "error": "An internal error occurred.",
+                }
+                yield f"data: {json.dumps(error_data)}\n\n"
+
+        return StreamingResponse(
+            generate_chunks(),
+            media_type="text/plain",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Content-Type": "text/plain; charset=utf-8",
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

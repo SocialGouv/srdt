@@ -1,0 +1,15 @@
+.streamingCursor {
+  animation: blink 1s infinite;
+  opacity: 0.5;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
