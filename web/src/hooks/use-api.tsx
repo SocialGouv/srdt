@@ -7,7 +7,9 @@ const useApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const generateAnswer = async (
-    userQuestion: string
+    userQuestion: string,
+    agreementId?: string,
+    agreementTitle?: string
   ): Promise<ApiResponse<AnalyzeResponse>> => {
     setIsLoading(true);
     try {
@@ -16,7 +18,11 @@ const useApi = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: userQuestion }),
+        body: JSON.stringify({
+          question: userQuestion,
+          agreementId,
+          agreementTitle,
+        }),
       });
 
       const result: ApiResponse<AnalyzeResponse> = await response.json();
@@ -36,7 +42,9 @@ const useApi = () => {
   const generateAnswerStream = async (
     userQuestion: string,
     onChunk: (chunk: string) => void,
-    onComplete: (result: ApiResponse<AnalyzeResponse>) => void
+    onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
+    agreementId?: string,
+    agreementTitle?: string
   ): Promise<void> => {
     setIsLoading(true);
     try {
@@ -45,7 +53,11 @@ const useApi = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: userQuestion }),
+        body: JSON.stringify({
+          question: userQuestion,
+          agreementId,
+          agreementTitle,
+        }),
       });
 
       if (!response.ok) {
