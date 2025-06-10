@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/SocialGouv/srdt/compare/v1.6.1...v1.6.2) (2025-06-10)
+
+
+### Bug Fixes
+
+* types pour pyright ([#136](https://github.com/SocialGouv/srdt/issues/136)) ([8764071](https://github.com/SocialGouv/srdt/commit/876407125a1ec3c3dd11e77563d0764e7cc2cc44))
+
 ## [1.6.1](https://github.com/SocialGouv/srdt/compare/v1.6.0...v1.6.1) (2025-06-10)
 
 
