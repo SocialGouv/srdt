@@ -124,7 +124,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
         for prompt in request.prompts:
             search_result = collections.search(
                 prompt=prompt,
-                id_collections=[str(cid) for cid in request.options.collections],
+                id_collections=request.options.collections,
                 k=request.options.top_K,
                 score_threshold=request.options.threshold,
             )
