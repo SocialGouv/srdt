@@ -105,7 +105,7 @@ class AlbertCollectionHandler:
     def upload(
         self,
         data: ListOfDocumentData,
-        id_collection: str,
+        id_collection: COLLECTION_ID,
     ) -> None:
         result = []
         for dt in data:

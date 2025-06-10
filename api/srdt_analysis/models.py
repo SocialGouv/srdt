@@ -26,8 +26,8 @@ JSONDict = Dict[str, Any]
 Timestamp = datetime
 URL = str
 FormattedTextContent = str
-COLLECTION_ID = str
-COLLECTIONS_ID = list[str]
+COLLECTION_ID = int
+COLLECTIONS_ID = list[int]
 
 
 @dataclass
@@ -54,7 +54,7 @@ ListOfDocumentData = list[DocumentData]
 @dataclass
 class ResultProcessDocumentType(TypedDict):
     documents: list[DocumentData]
-    id: str
+    id: COLLECTION_ID
 
 
 @dataclass
