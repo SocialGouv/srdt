@@ -23,7 +23,6 @@ export const Chat = () => {
   const [userQuestion, setUserQuestion] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-  const [useStreaming, setUseStreaming] = useState(false); // Enable streaming by default
   const { generateAnswer, generateAnswerStream, isLoading } = useApi();
   const [apiResult, setApiResult] = useState<AnalyzeResponse | null>(null);
   const [globalResponseTime, setGlobalResponseTime] = useState<number>(0);
@@ -31,6 +30,9 @@ export const Chat = () => {
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(messages.length);
+
+  // It was an option but it's not anymore since streaming works well
+  const useStreaming = true;
 
   useEffect(() => {
     // Only auto-scroll when a new message is added (array length changes),
@@ -292,17 +294,6 @@ export const Chat = () => {
           >
             Nouvelle conversation
           </Button>
-          <label
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <input
-              type="checkbox"
-              checked={useStreaming}
-              onChange={(e) => setUseStreaming(e.target.checked)}
-              disabled={isLoading}
-            />
-            <span>Mode streaming</span>
-          </label>
         </div>
         <div className={fr.cx("fr-card", "fr-mt-2w")}>
           <div className={fr.cx("fr-card__body")}>
