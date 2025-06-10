@@ -6,6 +6,8 @@ import {
   MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
+  SEARCH_OPTIONS_IDCC,
+  PROMPT_INSTRUCTIONS_GENERATE_IDCC,
 } from "@/constants";
 import {
   AnonymizeRequest,
@@ -238,7 +240,8 @@ const generateStream = async (
 // Common preprocessing logic for both streaming and non-streaming
 const prepareQuestionData = async (
   userQuestion: string,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string
 ): Promise<PreparedQuestionData> => {
   const config = requiredConfig || Config.V1_1;
   const instructions = PROMPT_INSTRUCTIONS[config];
@@ -297,6 +300,26 @@ const prepareQuestionData = async (
 
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
 
+  if (idcc) {
+    const idccSearchResult = await search({
+      prompts: [query],
+      options: SEARCH_OPTIONS_IDCC,
+    });
+    if (idccSearchResult.error) {
+      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+    }
+
+    const idccSearchChunks: ChunkResult[] = [];
+    if (idccSearchResult.data) {
+      idccSearchChunks.push(
+        ...idccSearchResult.data.top_chunks.filter((e) => {
+          return e.metadata.idcc === idcc;
+        })
+      );
+    }
+    localSearchChunks.push(...idccSearchChunks);
+  }
+
   if (localSearchChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
   }
@@ -352,12 +375,15 @@ const createAnalyzeResponse = (
 
 export const analyzeQuestion = async (
   userQuestion: string,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string,
+  agreementTitle?: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
     const preparedData = await prepareQuestionData(
       userQuestion,
-      requiredConfig
+      requiredConfig,
+      idcc
     );
 
     const chatHistory = createChatHistory(
@@ -368,7 +394,13 @@ export const analyzeQuestion = async (
     const generateResult = await generate({
       model: preparedData.model,
       chat_history: chatHistory,
-      system_prompt: preparedData.instructions.generate_instruction,
+      system_prompt:
+        idcc && agreementTitle
+          ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+              "[Titre de la convention collective]",
+              agreementTitle
+            )
+          : preparedData.instructions.generate_instruction,
     });
 
     if (generateResult.error) {
@@ -400,12 +432,15 @@ export const analyzeQuestionStream = async (
   userQuestion: string,
   onChunk: (chunk: string) => void,
   onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string,
+  agreementTitle?: string
 ): Promise<void> => {
   try {
     const preparedData = await prepareQuestionData(
       userQuestion,
-      requiredConfig
+      requiredConfig,
+      idcc
     );
 
     const chatHistory = createChatHistory(
@@ -417,7 +452,13 @@ export const analyzeQuestionStream = async (
       {
         model: preparedData.model,
         chat_history: chatHistory,
-        system_prompt: preparedData.instructions.generate_instruction,
+        system_prompt:
+          idcc && agreementTitle
+            ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+                "[Titre de la convention collective]",
+                agreementTitle
+              )
+            : preparedData.instructions.generate_instruction,
       },
       onChunk,
       undefined, // onStart
