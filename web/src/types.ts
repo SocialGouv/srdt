@@ -50,6 +50,12 @@ export interface SearchOptions {
 export interface SearchRequest {
   prompts: string[];
   options?: SearchOptions;
+  idcc?: string;
+}
+
+export interface RerankRequest {
+  prompt: string;
+  inputs: ChunkResult[];
 }
 
 export interface ChunkMetadata {
@@ -57,6 +63,7 @@ export interface ChunkMetadata {
   url: string;
   document_id: number;
   source: string;
+  idcc?: string;
 }
 
 export interface ChunkResult {
@@ -69,6 +76,11 @@ export interface ChunkResult {
 export interface SearchResponse {
   time: number;
   top_chunks: ChunkResult[];
+}
+
+export interface RerankResponse {
+  time: number;
+  results: ChunkResult[];
 }
 
 // Generate types

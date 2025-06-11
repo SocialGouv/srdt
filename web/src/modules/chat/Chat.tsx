@@ -9,6 +9,8 @@ import Markdown from "react-markdown";
 import { Feedback } from "@/modules/feedback/Feedback";
 import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 import styles from "./Chat.module.css";
+import { Agreement } from "../convention-collective/search";
+import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -21,6 +23,9 @@ export const Chat = () => {
     { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
   ]);
   const [userQuestion, setUserQuestion] = useState<string>("");
+  const [selectedAgreement, setSelectedAgreement] = useState<
+    Agreement | undefined
+  >(undefined);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const { generateAnswer, generateAnswerStream, isLoading } = useApi();
@@ -122,11 +127,17 @@ export const Chat = () => {
           });
 
           setIsDisabled(false);
-        }
+        },
+        selectedAgreement?.id,
+        selectedAgreement?.title
       );
     } else {
       // Use traditional non-streaming approach
-      const result = await generateAnswer(newMessage);
+      const result = await generateAnswer(
+        newMessage,
+        selectedAgreement?.id,
+        selectedAgreement?.title
+      );
       const endTime = performance.now();
       const responseTimeInSeconds = (endTime - startTime) / 1000;
 
@@ -360,6 +371,18 @@ export const Chat = () => {
             disabled={isDisabled}
           />
         </div>
+        {!isDisabled && (
+          <div className={fr.cx("fr-col-11")}>
+            <AgreementSearchInput
+              onAgreementSelect={(agreement) => {
+                console.log("agreement", agreement);
+                setSelectedAgreement(agreement);
+              }}
+              defaultAgreement={undefined}
+              trackingActionName="chat"
+            />
+          </div>
+        )}
       </form>
     </div>
   );

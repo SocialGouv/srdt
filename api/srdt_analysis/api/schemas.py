@@ -67,6 +67,7 @@ class SearchOptions(BaseModel):
 class SearchRequest(BaseModel):
     prompts: List[str] = Field(max_length=10)
     options: SearchOptions = Field(default_factory=SearchOptions)
+    idcc: Optional[str] = None
 
     @classmethod
     def model_validate(
@@ -89,6 +90,7 @@ class ChunkMetadata(BaseModel):
     url: str
     document_id: ID
     source: CollectionName
+    idcc: Optional[str] = None
 
 
 class ChunkResult(BaseModel):
@@ -98,9 +100,24 @@ class ChunkResult(BaseModel):
     metadata: ChunkMetadata
 
 
+class RerankedChunk(BaseModel):
+    # rerank_score: float
+    chunk: ChunkResult
+
+
+class RerankRequest(BaseModel):
+    prompt: str
+    inputs: List[ChunkResult]
+
+
 class SearchResponse(BaseModel):
     time: float
     top_chunks: List[ChunkResult]
+
+
+class RerankResponse(BaseModel):
+    time: float
+    results: List[RerankedChunk]
 
 
 class GenerateRequest(BaseModel):

@@ -6,6 +6,8 @@ import {
   MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
+  SEARCH_OPTIONS_IDCC,
+  PROMPT_INSTRUCTIONS_GENERATE_IDCC,
 } from "@/constants";
 import {
   AnonymizeRequest,
@@ -18,6 +20,8 @@ import {
   GenerateResponse,
   ChunkResult,
   LLMModel,
+  RerankRequest,
+  RerankResponse,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -108,6 +112,20 @@ const search = async (
 ): Promise<UseApiResponse<SearchResponse>> => {
   try {
     const data = await fetchApi<SearchResponse>("/api/v1/search", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+const rerank = async (
+  request: RerankRequest
+): Promise<UseApiResponse<RerankResponse>> => {
+  try {
+    const data = await fetchApi<RerankResponse>("/api/v1/rerank", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -238,7 +256,8 @@ const generateStream = async (
 // Common preprocessing logic for both streaming and non-streaming
 const prepareQuestionData = async (
   userQuestion: string,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string
 ): Promise<PreparedQuestionData> => {
   const config = requiredConfig || Config.V1_1;
   const instructions = PROMPT_INSTRUCTIONS[config];
@@ -297,20 +316,68 @@ const prepareQuestionData = async (
 
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
 
+  if (idcc) {
+    const idccSearchResult = await search({
+      prompts: [query],
+      options: SEARCH_OPTIONS_IDCC,
+    });
+    if (idccSearchResult.error) {
+      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+    }
+
+    const idccSearchChunks: ChunkResult[] = [];
+    if (idccSearchResult.data) {
+      idccSearchChunks.push(
+        ...idccSearchResult.data.top_chunks.filter((e) => {
+          return e.metadata.idcc === idcc;
+        })
+      );
+    }
+    localSearchChunks.push(...idccSearchChunks);
+  }
+
   if (localSearchChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  localSearchChunks
+  // rerank process
+
+  // merge chunks if same origin
+
+  const toRerankRecord = localSearchChunks
     .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_SOURCE_COUNT);
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content.concat("/n/n" + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  // take top 64
+  const toRerankChunks = Object.values(toRerankRecord).slice(0, 64);
+
+  // and call rerank
+  const reranked = await rerank({
+    prompt: userQuestion,
+    inputs: toRerankChunks,
+  });
+
+  // take 10
+  const selectedRerankedChunked = reranked.data?.results.slice(0, 10) || [];
+
+  if (selectedRerankedChunked.length === 0) {
+    console.warn("Aucun résultat de recherche trouvé");
+  }
 
   return {
     query,
     model,
     config,
     instructions,
-    localSearchChunks,
+    localSearchChunks: selectedRerankedChunked,
     anonymizeResult,
     rephraseResult,
   };
@@ -352,12 +419,15 @@ const createAnalyzeResponse = (
 
 export const analyzeQuestion = async (
   userQuestion: string,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string,
+  agreementTitle?: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
     const preparedData = await prepareQuestionData(
       userQuestion,
-      requiredConfig
+      requiredConfig,
+      idcc
     );
 
     const chatHistory = createChatHistory(
@@ -368,7 +438,13 @@ export const analyzeQuestion = async (
     const generateResult = await generate({
       model: preparedData.model,
       chat_history: chatHistory,
-      system_prompt: preparedData.instructions.generate_instruction,
+      system_prompt:
+        idcc && agreementTitle
+          ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+              "[Titre de la convention collective]",
+              agreementTitle
+            )
+          : preparedData.instructions.generate_instruction,
     });
 
     if (generateResult.error) {
@@ -400,12 +476,15 @@ export const analyzeQuestionStream = async (
   userQuestion: string,
   onChunk: (chunk: string) => void,
   onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
-  requiredConfig?: Config
+  requiredConfig?: Config,
+  idcc?: string,
+  agreementTitle?: string
 ): Promise<void> => {
   try {
     const preparedData = await prepareQuestionData(
       userQuestion,
-      requiredConfig
+      requiredConfig,
+      idcc
     );
 
     const chatHistory = createChatHistory(
@@ -417,7 +496,13 @@ export const analyzeQuestionStream = async (
       {
         model: preparedData.model,
         chat_history: chatHistory,
-        system_prompt: preparedData.instructions.generate_instruction,
+        system_prompt:
+          idcc && agreementTitle
+            ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+                "[Titre de la convention collective]",
+                agreementTitle
+              )
+            : preparedData.instructions.generate_instruction,
       },
       onChunk,
       undefined, // onStart
