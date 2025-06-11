@@ -9,7 +9,8 @@ const CHATGPT_BASE_URL = "https://api.openai.com";
 const MISTRAL_BASE_URL = "https://api.mistral.ai";
 const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
 
-export const MAX_SOURCE_COUNT = 15;
+export const MAX_RERANK = 64;
+export const K_RERANK = 10;
 
 const PROMPT_INSTRUCTIONS_V1_0: InstructionPrompts = {
   anonymisation: `# Instructions Anonymise le texte suivant en remplaçant toutes les informations personnelles par des balises standard, sauf le titre de poste et la civilité, qui doivent rester inchangés. Utilise [PERSONNE] pour les noms de personnes, [EMAIL] pour les adresses email, [TELEPHONE] pour les numéros de téléphone, [ADRESSE] pour les adresses physiques, [DATE] pour les dates, et [IDENTIFIANT] pour tout identifiant unique ou sensible. # Exemple - Texte : "Bonjour, je suis employé chez ABC Construction à Lyon en tant que chef de chantier. Mon responsable, M. Dupont, m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est 123456. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci." - Texte anonymisé : Bonjour, je suis employé chez [ENTREPRISE] en tant que chef de chantier. Mon responsable, [PERSONNE], m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est [IDENTIFIANT]. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci.`,
@@ -140,15 +141,9 @@ export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
 export const AB_rand = 0;
 
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
-  top_K: 5,
-  threshold: 0.6,
+  top_K: 64,
+  threshold: 0.4,
   collections: [733, 734, 735, 736, 738],
-};
-
-export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
-  top_K: 5,
-  threshold: 0.5,
-  collections: [], //"internet"],
 };
 
 export const SEARCH_OPTIONS_IDCC: SearchOptions = {

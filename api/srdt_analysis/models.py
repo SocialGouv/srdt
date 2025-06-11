@@ -181,6 +181,12 @@ class RankedChunk(TypedDict):
 
 
 @dataclass
+class RerankedChunk(TypedDict):
+    score: float
+    index: int
+
+
+@dataclass
 class EnrichedRankedChunk(TypedDict):
     score: float
     chunk: Chunk

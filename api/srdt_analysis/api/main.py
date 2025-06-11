@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from operator import itemgetter
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
@@ -17,6 +18,9 @@ from srdt_analysis.api.schemas import (
     GenerateResponse,
     RephraseRequest,
     RephraseResponse,
+    RerankRequest,
+    RerankResponse,
+    RerankedChunk,
     SearchRequest,
     SearchResponse,
 )
@@ -116,6 +120,27 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post(f"{BASE_API_URL}/rerank", response_model=RerankResponse)
+async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
+    start_time = time.time()
+    collections = AlbertCollectionHandler()
+    try:
+        inputs = [input.content for input in request.inputs]
+        res = collections.rerank(request.prompt, inputs)
+
+        # reorder chunks based on rerank indices
+        zipped = list(zip([rr["index"] for rr in res], request.inputs))
+        # TODO add reranked score too
+        reordered = [
+            RerankedChunk(chunk=r[1]) for r in sorted(zipped, key=itemgetter(0))
+        ]
+
+        return RerankResponse(time=time.time() - start_time, results=reordered)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
 async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
@@ -147,13 +172,15 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                     id_chunk=int(chunk_data["id"]),
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
-                        source=metadata["source"]
-                        if "source" in metadata
-                        else "internet",
+                        source=(
+                            metadata["source"] if "source" in metadata else "internet"
+                        ),
                         title=metadata["document_name"],
-                        url=metadata["url"]
-                        if "url" in metadata
-                        else metadata["document_name"],
+                        url=(
+                            metadata["url"]
+                            if "url" in metadata
+                            else metadata["document_name"]
+                        ),
                         idcc=metadata["idcc"] if "idcc" in metadata else None,
                     ),
                 )
