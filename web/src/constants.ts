@@ -140,15 +140,9 @@ export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
 export const AB_rand = 0;
 
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
-  top_K: 5,
-  threshold: 0.6,
+  top_K: 64,
+  threshold: 0.4,
   collections: [733, 734, 735, 736, 738],
-};
-
-export const SEARCH_OPTIONS_INTERNET: SearchOptions = {
-  top_K: 5,
-  threshold: 0.5,
-  collections: [], //"internet"],
 };
 
 export const SEARCH_OPTIONS_IDCC: SearchOptions = {

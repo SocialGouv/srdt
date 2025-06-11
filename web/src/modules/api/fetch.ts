@@ -20,6 +20,8 @@ import {
   GenerateResponse,
   ChunkResult,
   LLMModel,
+  RerankRequest,
+  RerankResponse,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -110,6 +112,20 @@ const search = async (
 ): Promise<UseApiResponse<SearchResponse>> => {
   try {
     const data = await fetchApi<SearchResponse>("/api/v1/search", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+const rerank = async (
+  request: RerankRequest
+): Promise<UseApiResponse<RerankResponse>> => {
+  try {
+    const data = await fetchApi<RerankResponse>("/api/v1/rerank", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -324,16 +340,44 @@ const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  localSearchChunks
+  // rerank process
+
+  // merge chunks if same origin
+
+  const toRerankRecord = localSearchChunks
     .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_SOURCE_COUNT);
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content.concat("/n/n" + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  // take top 64
+  const toRerankChunks = Object.values(toRerankRecord).slice(0, 64);
+
+  // and call rerank
+  const reranked = await rerank({
+    prompt: userQuestion,
+    inputs: toRerankChunks,
+  });
+
+  // take 10
+  const selectedRerankedChunked = reranked.data?.results.slice(0, 10) || [];
+
+  if (selectedRerankedChunked.length === 0) {
+    console.warn("Aucun résultat de recherche trouvé");
+  }
 
   return {
     query,
     model,
     config,
     instructions,
-    localSearchChunks,
+    localSearchChunks: selectedRerankedChunked,
     anonymizeResult,
     rephraseResult,
   };
