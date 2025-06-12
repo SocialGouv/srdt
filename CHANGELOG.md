@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/SocialGouv/srdt/compare/v1.7.0...v1.8.0) (2025-06-12)
+
+
+### Features
+
+* explication de la nouvelle conversation améliorée et fix de la réinit ([#140](https://github.com/SocialGouv/srdt/issues/140)) ([151d748](https://github.com/SocialGouv/srdt/commit/151d7481de900a3fe0233e5398f66bd8e3d8d0dc))
+
 # [1.7.0](https://github.com/SocialGouv/srdt/compare/v1.6.2...v1.7.0) (2025-06-10)
 
 
