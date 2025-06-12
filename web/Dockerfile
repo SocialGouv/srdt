@@ -16,7 +16,7 @@ COPY . .
 
 # Build the application
 RUN --mount=type=secret,id=sentry_auth_token \
-    export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; export SENTRY_AUTH_TOKEN; \
     export GENERATE_SOURCEMAP=true; \
     export SENTRY_ALLOW_FAILURE=true; \ 
     yarn build:standalone && \
