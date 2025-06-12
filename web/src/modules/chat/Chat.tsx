@@ -431,8 +431,6 @@ export const Chat = () => {
   };
 
   const renderConversationHistory = () => {
-    if (conversationsWithMessages.length <= 1) return null;
-
     return (
       <div
         style={{
@@ -467,6 +465,19 @@ export const Chat = () => {
             </div>
 
             <div style={{ maxHeight: "calc(80vh - 200px)", overflowY: "auto" }}>
+              {conversationsWithMessages.length === 0 && (
+                <div className={fr.cx("fr-mt-4v", "fr-px-1v")}>
+                  <p className={fr.cx("fr-text--sm")}>
+                    Vous n&apos;avez pas encore de conversations enregistrées.
+                  </p>
+                  <p className={fr.cx("fr-text--sm")}>
+                    <i>
+                      Cliquez sur le bouton « Nouvelle conversation » pour en
+                      créer une.
+                    </i>
+                  </p>
+                </div>
+              )}
               {conversationsWithMessages.map((conversation) => (
                 <div
                   key={conversation.id}
@@ -553,19 +564,18 @@ export const Chat = () => {
             className={fr.cx("fr-mt-2w")}
             style={{ display: "flex", gap: "1rem", alignItems: "center" }}
           >
-            {conversationsWithMessages.length > 1 && (
-              <Button
-                onClick={() => setShowHistory(!showHistory)}
-                iconId={
-                  // showHistory ? "fr-icon-close-line" : "fr-icon-menu-fill"
-                  "fr-icon-menu-fill"
-                }
-                priority="tertiary no outline"
-                title={
-                  showHistory ? "Masquer l'historique" : "Afficher l'historique"
-                }
-              />
-            )}
+            <Button
+              onClick={() => setShowHistory(!showHistory)}
+              iconId={
+                // showHistory ? "fr-icon-close-line" : "fr-icon-menu-fill"
+                "fr-icon-menu-fill"
+              }
+              priority="tertiary no outline"
+              title={
+                showHistory ? "Masquer l'historique" : "Afficher l'historique"
+              }
+            />
+
             <Button
               onClick={handleNewConversation}
               iconId="fr-icon-add-line"
