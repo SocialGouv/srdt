@@ -97,7 +97,7 @@ web:
     - name: SENTRY_AUTH_TOKEN
       valueFrom:
         secretKeyRef:
-          name: sentry
+          name: web-secret
           key: SENTRY_AUTH_TOKEN
   resources:
     limits:
