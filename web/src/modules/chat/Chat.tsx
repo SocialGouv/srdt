@@ -522,7 +522,11 @@ export const Chat = () => {
                         color: "var(--text-mention-grey)",
                       }}
                     >
-                      {conversation.createdAt.toLocaleDateString("fr-FR")}
+                      {conversation.createdAt.toLocaleDateString("fr-FR")} à{" "}
+                      {conversation.createdAt.toLocaleTimeString("fr-FR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </div>
                   </div>
                   <Button
