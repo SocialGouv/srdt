@@ -120,8 +120,6 @@ export const Chat = () => {
               },
             ];
           });
-
-          setIsDisabled(false);
         }
       );
     } else {
@@ -144,7 +142,6 @@ export const Chat = () => {
             isError: true,
           },
         ]);
-        setIsDisabled(false);
         return;
       }
 
@@ -157,7 +154,6 @@ export const Chat = () => {
           role: "assistant",
         },
       ]);
-      setIsDisabled(false);
     }
   };
 
@@ -332,7 +328,7 @@ export const Chat = () => {
             onKeyDown={handleKeyDown}
             placeholder={
               isDisabled
-                ? "Veuillez démarrer une nouvelle conversation pour poser une autre question"
+                ? "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
                 : "Saisissez votre message"
             }
             disabled={isDisabled}
