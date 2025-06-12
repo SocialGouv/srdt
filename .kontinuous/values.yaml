@@ -94,11 +94,6 @@ web:
   env:
     - name: API_BASE_URL
       value: https://api-{{.Values.global.host}}
-    - name: SENTRY_AUTH_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: web-secret
-          key: SENTRY_AUTH_TOKEN
   resources:
     limits:
       cpu: 400m
