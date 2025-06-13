@@ -22,6 +22,7 @@ import {
   LLMModel,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
+import { jsonrepair } from "jsonrepair";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8000";
 
@@ -178,7 +179,8 @@ const generateStream = async (
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
-              const data: StreamChunk = JSON.parse(line.slice(6));
+              // A voir si on peut corriger en amont (c'est des \n dans les localSearchChunks)
+              const data: StreamChunk = JSON.parse(jsonrepair(line.slice(6)));
 
               switch (data.type) {
                 case "start":
