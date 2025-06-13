@@ -20,6 +20,7 @@ type Props = {
   userQuestion?: string;
   llmResponse?: string;
   errorMessage?: string;
+  idcc?: string;
 };
 
 export const Feedback = (props: Props) => {
