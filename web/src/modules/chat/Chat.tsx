@@ -28,6 +28,7 @@ interface Conversation {
   lastResponseTime?: number;
   lastUserQuestion?: string;
   lastApiError?: string;
+  hasFailed?: boolean;
 }
 
 const STORAGE_KEY = "chat-conversations";
@@ -79,6 +80,7 @@ export const Chat = () => {
             },
           ],
           createdAt: new Date(),
+          hasFailed: false,
         };
 
         setConversations([newConversation, ...parsed]);
@@ -92,12 +94,29 @@ export const Chat = () => {
     }
   }, []);
 
-  // Save conversations to localStorage whenever they change
+  // Save conversations to localStorage whenever they change, but exclude failed conversations
   useEffect(() => {
     if (conversations.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+      // Filter out conversations that have failed responses (excluding the current one if it's being processed)
+      const conversationsToSave = conversations.filter((conv) => {
+        // Always keep the current conversation in memory for UI purposes
+        if (conv.id === currentConversationId) {
+          return true;
+        }
+        // Only save non-failed conversations to localStorage
+        return !conv.hasFailed;
+      });
+
+      // Only save to localStorage if we have successful conversations or current conversation
+      const storageConversations = conversationsToSave.filter(
+        (conv) => conv.id !== currentConversationId || !conv.hasFailed
+      );
+
+      if (storageConversations.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageConversations));
+      }
     }
-  }, [conversations]);
+  }, [conversations, currentConversationId]);
 
   // Save current conversation ID to localStorage
   useEffect(() => {
@@ -112,6 +131,7 @@ export const Chat = () => {
       title: "Nouvelle conversation",
       messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
+      hasFailed: false,
     };
     setConversations([defaultConversation]);
     setCurrentConversationId("default");
@@ -164,9 +184,10 @@ export const Chat = () => {
     return title;
   };
 
-  // Get conversations that have actual user messages (not just the welcome message)
-  const conversationsWithMessages = conversations.filter((conv) =>
-    conv.messages.some((msg) => msg.role === "user")
+  // Get conversations that have actual user messages (not just the welcome message) and haven't failed
+  const conversationsWithMessages = conversations.filter(
+    (conv) =>
+      conv.messages.some((msg) => msg.role === "user") && !conv.hasFailed
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -240,6 +261,7 @@ export const Chat = () => {
               ]),
               lastApiError: result.error?.toString(),
               lastResponseTime: responseTimeInSeconds,
+              hasFailed: true,
             });
           } else {
             updateCurrentConversation({
@@ -253,6 +275,7 @@ export const Chat = () => {
               lastApiResult: result.data,
               lastResponseTime: responseTimeInSeconds,
               lastApiError: undefined,
+              hasFailed: false,
             });
           }
         },
@@ -280,6 +303,7 @@ export const Chat = () => {
           ]),
           lastApiError: result.error?.toString(),
           lastResponseTime: responseTimeInSeconds,
+          hasFailed: true,
         });
       } else {
         updateCurrentConversation({
@@ -294,6 +318,7 @@ export const Chat = () => {
           lastApiResult: result.data,
           lastResponseTime: responseTimeInSeconds,
           lastApiError: undefined,
+          hasFailed: false,
         });
       }
     }
@@ -313,6 +338,7 @@ export const Chat = () => {
       title: "Nouvelle conversation",
       messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
+      hasFailed: false,
     };
 
     setConversations((prev) => [newConversation, ...prev]);
