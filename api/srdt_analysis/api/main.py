@@ -154,6 +154,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                         url=metadata["url"]
                         if "url" in metadata
                         else metadata["document_name"],
+                        idcc=metadata["idcc"] if "idcc" in metadata else None,
                     ),
                 )
                 transformed_results.append(transformed_chunk)
