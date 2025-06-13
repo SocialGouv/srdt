@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/SocialGouv/srdt/compare/v1.11.0...v1.11.1) (2025-06-13)
+
+
+### Bug Fixes
+
+* on ne garde pas les conversations échouées en mémoire ([#159](https://github.com/SocialGouv/srdt/issues/159)) ([f0cdc2b](https://github.com/SocialGouv/srdt/commit/f0cdc2b878e47ad61dad4e0172810aa010ffc0b0))
+
 # [1.11.0](https://github.com/SocialGouv/srdt/compare/v1.10.0...v1.11.0) (2025-06-13)
 
 
