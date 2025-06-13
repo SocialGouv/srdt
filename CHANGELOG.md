@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/SocialGouv/srdt/compare/v1.9.0...v1.10.0) (2025-06-13)
+
+
+### Features
+
+* possibilité de rechercher une convention collective (masqué pour l'instant) ([#137](https://github.com/SocialGouv/srdt/issues/137)) ([92bd3a3](https://github.com/SocialGouv/srdt/commit/92bd3a35b8d2ff45139a8a40fea630b2c78e085e)), closes [#116](https://github.com/SocialGouv/srdt/issues/116)
+
 # [1.9.0](https://github.com/SocialGouv/srdt/compare/v1.8.0...v1.9.0) (2025-06-13)
 
 
