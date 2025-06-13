@@ -33,6 +33,9 @@ interface Conversation {
 const STORAGE_KEY = "chat-conversations";
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
+const initialConversationText =
+  "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
+
 export const Chat = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] =
@@ -71,7 +74,7 @@ export const Chat = () => {
           title: "Nouvelle conversation",
           messages: [
             {
-              content: "Bonjour, comment puis-je vous aider ?",
+              content: initialConversationText,
               role: "assistant",
             },
           ],
@@ -107,9 +110,7 @@ export const Chat = () => {
     const defaultConversation: Conversation = {
       id: "default",
       title: "Nouvelle conversation",
-      messages: [
-        { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
-      ],
+      messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
     };
     setConversations([defaultConversation]);
@@ -310,9 +311,7 @@ export const Chat = () => {
     const newConversation: Conversation = {
       id: newId,
       title: "Nouvelle conversation",
-      messages: [
-        { content: "Bonjour, comment puis-je vous aider ?", role: "assistant" },
-      ],
+      messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
     };
 
@@ -577,7 +576,7 @@ export const Chat = () => {
           }}
         >
           <div
-            className={fr.cx("fr-mt-2w")}
+            className={fr.cx("fr-my-2w")}
             style={{ display: "flex", gap: "1rem", alignItems: "center" }}
           >
             <Button
@@ -599,26 +598,6 @@ export const Chat = () => {
             >
               Nouvelle conversation
             </Button>
-          </div>
-          <div className={fr.cx("fr-card", "fr-mt-2w")}>
-            <div className={fr.cx("fr-card__body")}>
-              <h1 className={fr.cx("fr-card__title")}>
-                Assistant conversationnel
-              </h1>
-              <p className={fr.cx("fr-card__desc")}>
-                Je suis un assistant juridique spécialisé en droit du travail.
-                Mon rôle est de proposer une réponse à la question que vous me
-                posez ci-dessous. Je m&apos;appuie principalement sur des sites
-                publics (service-public, code du travail numérique,
-                travail-emploi, ...) pour générer ma réponse, et je détaille à
-                chaque fois les sources que j&apos;utilise. Cependant, je suis
-                encore en formation et mes réponses ne sont pas parfaites. Aussi
-                et pendant cette phase d&apos;expérimentation, je vous demande
-                de prendre le temps de noter ma réponse via le formulaire qui se
-                déroule sous ma réponse. Cela sera précieux pour
-                m&apos;améliorer !
-              </p>
-            </div>
           </div>
           {messages.map((message, index) => renderMessage(message, index))}
         </div>
