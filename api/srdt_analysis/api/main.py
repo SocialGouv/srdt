@@ -31,6 +31,16 @@ app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 
 
+def sanitize_content(content: str) -> str:
+    """Sanitize content to ensure it doesn't break JSON parsing."""
+    if not isinstance(content, str):
+        return str(content)
+    
+    # Use json.dumps to properly escape the string, then remove the outer quotes
+    escaped = json.dumps(content)[1:-1]
+    return escaped
+
+
 async def get_api_key(api_key: str = Security(api_key_header)):
     if not api_key.startswith("Bearer "):
         raise HTTPException(
@@ -143,7 +153,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
 
                 transformed_chunk = ChunkResult(
                     score=item["score"],
-                    content=chunk_data["content"],
+                    content=sanitize_content(chunk_data["content"]),
                     id_chunk=int(chunk_data["id"]),
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
