@@ -11,6 +11,7 @@ import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 import styles from "./Chat.module.css";
 import { Agreement } from "../convention-collective/search";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
+import { IDCC_ENABLED } from "@/constants";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -665,7 +666,7 @@ export const Chat = () => {
               disabled={isDisabled}
             />
           </div>
-          {!isDisabled && (
+          {!isDisabled && IDCC_ENABLED && (
             <div className={fr.cx("fr-col-11")}>
               <AgreementSearchInput
                 onAgreementSelect={(agreement) => {

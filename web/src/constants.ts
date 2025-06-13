@@ -9,6 +9,8 @@ const CHATGPT_BASE_URL = "https://api.openai.com";
 const MISTRAL_BASE_URL = "https://api.mistral.ai";
 const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
 
+export const IDCC_ENABLED = process.env.NEXT_PUBLIC_IDCC_ENABLED === "true";
+
 export const MAX_SOURCE_COUNT = 15;
 
 const PROMPT_INSTRUCTIONS_V1_0: InstructionPrompts = {
