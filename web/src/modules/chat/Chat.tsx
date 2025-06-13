@@ -434,6 +434,7 @@ export const Chat = () => {
               userQuestion={userQuestion}
               llmResponse={apiResult?.generated.text}
               errorMessage={apiError}
+              idcc={selectedAgreement?.id}
             />
           </div>
         )}
