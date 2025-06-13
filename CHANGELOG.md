@@ -1,3 +1,11 @@
+# [1.11.0](https://github.com/SocialGouv/srdt/compare/v1.10.0...v1.11.0) (2025-06-13)
+
+
+### Features
+
+* on envoie l'idcc à tally quand il est présent ([#156](https://github.com/SocialGouv/srdt/issues/156)) ([d053c99](https://github.com/SocialGouv/srdt/commit/d053c9946cd72b5c567caec0edf354007b95b8cb)), closes [#147](https://github.com/SocialGouv/srdt/issues/147)
+* simplification de l'affichage explicatif de l'assistant ([#155](https://github.com/SocialGouv/srdt/issues/155)) ([c650a6f](https://github.com/SocialGouv/srdt/commit/c650a6ff0bcb40542457679b7c5649a626276e5e)), closes [#150](https://github.com/SocialGouv/srdt/issues/150) [#150](https://github.com/SocialGouv/srdt/issues/150)
+
 # [1.10.0](https://github.com/SocialGouv/srdt/compare/v1.9.0...v1.10.0) (2025-06-13)
 
 
