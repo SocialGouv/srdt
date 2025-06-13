@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/SocialGouv/srdt/compare/v1.8.0...v1.9.0) (2025-06-13)
+
+
+### Features
+
+* historique de chat ([#139](https://github.com/SocialGouv/srdt/issues/139)) ([ad556f9](https://github.com/SocialGouv/srdt/commit/ad556f97b0874b6e2b36b3f79c05d7d9177a82e4))
+
 # [1.8.0](https://github.com/SocialGouv/srdt/compare/v1.7.0...v1.8.0) (2025-06-12)
 
 
