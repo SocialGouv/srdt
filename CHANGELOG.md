@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/SocialGouv/srdt/compare/v1.11.2...v1.11.3) (2025-06-16)
+
+
+### Bug Fixes
+
+* erreur de stream dans les longues réponses (complete) ([d93da55](https://github.com/SocialGouv/srdt/commit/d93da5597a868bfbe640a90a3587bc803dc7a402))
+
 ## [1.11.2](https://github.com/SocialGouv/srdt/compare/v1.11.1...v1.11.2) (2025-06-16)
 
 
