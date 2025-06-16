@@ -5,7 +5,6 @@ import {
   getRandomModel,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
-  SEARCH_OPTIONS_IDCC,
   PROMPT_INSTRUCTIONS_GENERATE_IDCC,
   MAX_RERANK,
   K_RERANK,
@@ -101,6 +100,19 @@ const rephrase = async (
     const data = await fetchApi<RephraseResponse>("/api/v1/rephrase", {
       method: "POST",
       body: JSON.stringify(request),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+const getIdccChunks = async (
+  idcc: string
+): Promise<UseApiResponse<SearchResponse>> => {
+  try {
+    const data = await fetchApi<SearchResponse>(`/api/v1/idcc/${idcc}`, {
+      method: "GET",
     });
     return { data, error: null, loading: false };
   } catch (error) {
@@ -318,23 +330,15 @@ const prepareQuestionData = async (
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
 
   if (idcc) {
-    const idccSearchResult = await search({
-      prompts: [query],
-      options: SEARCH_OPTIONS_IDCC,
-    });
+    const idccSearchResult = await getIdccChunks(idcc);
+
     if (idccSearchResult.error) {
       console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
     }
 
-    const idccSearchChunks: ChunkResult[] = [];
-    if (idccSearchResult.data) {
-      idccSearchChunks.push(
-        ...idccSearchResult.data.top_chunks.filter((e) => {
-          return e.metadata.idcc === idcc;
-        })
-      );
+    if (idccSearchResult.data?.top_chunks) {
+      localSearchChunks.push(...idccSearchResult.data?.top_chunks);
     }
-    localSearchChunks.push(...idccSearchChunks);
   }
 
   if (localSearchChunks.length === 0) {
@@ -353,6 +357,8 @@ const prepareQuestionData = async (
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
+
+  // rerank 128 then merge and take 10
 
   const toRerankChunks = Object.values(toRerankRecord).slice(0, MAX_RERANK);
 

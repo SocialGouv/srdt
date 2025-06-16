@@ -120,6 +120,20 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
+async def get_contributions_idcc(idcc):
+    start_time = time.time()
+    collections = AlbertCollectionHandler()
+    try:
+        idcc_chunks = collections.get_contributions_idcc(idcc)
+        return SearchResponse(
+            time=time.time() - start_time,
+            top_chunks=idcc_chunks,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post(f"{BASE_API_URL}/rerank", response_model=RerankResponse)
 async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()

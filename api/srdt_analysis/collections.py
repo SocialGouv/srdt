@@ -5,6 +5,7 @@ from io import BytesIO
 
 import httpx
 
+from srdt_analysis.corpus import getChunksByIdcc
 from srdt_analysis.constants import (
     ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
@@ -81,6 +82,10 @@ class AlbertCollectionHandler:
             if collection["name"] == collection_name:
                 self.delete(collection["id"])
         return None
+
+    def get_contributions_idcc(self, idcc):
+        contribs_idcc = getChunksByIdcc(idcc)
+        return contribs_idcc
 
     def search(
         self,
