@@ -143,10 +143,15 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
         res = collections.rerank(request.prompt, inputs)
 
         # reorder chunks based on rerank indices
-        zipped = list(zip([rr["index"] for rr in res], request.inputs))
-        # TODO add reranked score too
+        zipped = list(
+            zip(
+                [rr["index"] for rr in res], [rr["score"] for rr in res], request.inputs
+            )
+        )
+
         reordered = [
-            RerankedChunk(chunk=r[1]) for r in sorted(zipped, key=itemgetter(0))
+            RerankedChunk(chunk=r[2], rerank_score=r[1])
+            for r in sorted(zipped, key=itemgetter(0))
         ]
 
         return RerankResponse(time=time.time() - start_time, results=reordered)

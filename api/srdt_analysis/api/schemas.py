@@ -101,8 +101,7 @@ class ChunkResult(BaseModel):
 
 
 class RerankedChunk(BaseModel):
-    # TODO
-    # rerank_score: float
+    rerank_score: float
     chunk: ChunkResult
 
 
