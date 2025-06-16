@@ -89,7 +89,9 @@ async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_k
         logger.error(f"Anonymize validation error: {str(ve)}")
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        logger.error(f"Anonymize unexpected error: {str(e)}, traceback: {traceback.format_exc()}")
+        logger.error(
+            f"Anonymize unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"Anonymization failed: {str(e)}")
 
 
@@ -118,7 +120,9 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
             nb_token_output=tokenizer.compute_nb_tokens(rephrased),
         )
     except Exception as e:
-        logger.error(f"Rephrase unexpected error: {str(e)}, traceback: {traceback.format_exc()}")
+        logger.error(
+            f"Rephrase unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"Rephrasing failed: {str(e)}")
 
 
@@ -170,7 +174,9 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
             top_chunks=transformed_results,
         )
     except Exception as e:
-        logger.error(f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}")
+        logger.error(
+            f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
@@ -201,7 +207,9 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
             nb_token_output=tokenizer.compute_nb_tokens(response),
         )
     except Exception as e:
-        logger.error(f"Generate unexpected error: {str(e)}, traceback: {traceback.format_exc()}")
+        logger.error(
+            f"Generate unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 
@@ -259,7 +267,9 @@ async def generate_stream(
                 yield f"data: {json.dumps(final_data)}\n\n"
 
             except Exception as e:
-                logger.error(f"Stream generation error: {str(e)}, traceback: {traceback.format_exc()}")
+                logger.error(
+                    f"Stream generation error: {str(e)}, traceback: {traceback.format_exc()}"
+                )
                 error_data = {
                     "type": "error",
                     "error": f"Stream generation failed: {str(e)}",
@@ -276,5 +286,7 @@ async def generate_stream(
             },
         )
     except Exception as e:
-        logger.error(f"Stream generate setup error: {str(e)}, traceback: {traceback.format_exc()}")
+        logger.error(
+            f"Stream generate setup error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
         raise HTTPException(status_code=500, detail=f"Stream setup failed: {str(e)}")
