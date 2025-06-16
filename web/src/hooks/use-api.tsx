@@ -70,6 +70,7 @@ const useApi = () => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = ""; // Buffer to accumulate incomplete lines
 
       try {
         while (true) {
@@ -77,12 +78,17 @@ const useApi = () => {
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
+          buffer += chunk;
+
+          // Split by newlines but keep the last potentially incomplete line in buffer
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Keep the last (potentially incomplete) line in buffer
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               try {
-                const data = JSON.parse(line.slice(6));
+                const jsonStr = line.slice(6);
+                const data = JSON.parse(jsonStr);
 
                 switch (data.type) {
                   case "chunk":
@@ -108,7 +114,12 @@ const useApi = () => {
                     return;
                 }
               } catch (parseError) {
-                console.warn("Failed to parse streaming data:", parseError);
+                console.warn(
+                  "Failed to parse streaming data:",
+                  parseError,
+                  "Line:",
+                  line
+                );
               }
             }
           }

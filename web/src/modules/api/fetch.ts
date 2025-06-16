@@ -166,6 +166,7 @@ const generateStream = async (
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = ""; // Buffer to accumulate incomplete lines
 
     try {
       while (true) {
@@ -173,12 +174,17 @@ const generateStream = async (
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        buffer += chunk;
+
+        // Split by newlines but keep the last potentially incomplete line in buffer
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep the last (potentially incomplete) line in buffer
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
-              const data: StreamChunk = JSON.parse(line.slice(6));
+              const jsonStr = line.slice(6);
+              const data: StreamChunk = JSON.parse(jsonStr);
 
               switch (data.type) {
                 case "start":
@@ -221,7 +227,12 @@ const generateStream = async (
                   break;
               }
             } catch (parseError) {
-              console.warn("Failed to parse streaming data:", parseError);
+              console.warn(
+                "Failed to parse streaming data:",
+                parseError,
+                "Line:",
+                line
+              );
             }
           }
         }
