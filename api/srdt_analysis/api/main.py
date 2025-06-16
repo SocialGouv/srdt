@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
+import sentry_sdk
+
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
@@ -26,6 +28,13 @@ from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
+
+sentry_sdk.init(
+    dsn="https://cf211345d704b74ef78cab4e59ea73ea@sentry2.fabrique.social.gouv.fr/47",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+)
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
@@ -56,7 +65,6 @@ app.add_middleware(
 @app.get(f"{BASE_API_URL}/")
 async def root(_api_key: str = Depends(get_api_key)):
     return {"status": "ok", "path": BASE_API_URL}
-
 
 @app.get(f"{BASE_API_URL}/healthz")
 async def health():
