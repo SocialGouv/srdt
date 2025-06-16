@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/SocialGouv/srdt/compare/v1.11.4...v1.12.0) (2025-06-16)
+
+
+### Features
+
+* ajoute sentry pour python ([#165](https://github.com/SocialGouv/srdt/issues/165)) ([2f86cb9](https://github.com/SocialGouv/srdt/commit/2f86cb9eea3378ed58fd3ce25001d706857f33e6))
+
 ## [1.11.4](https://github.com/SocialGouv/srdt/compare/v1.11.3...v1.11.4) (2025-06-16)
 
 
