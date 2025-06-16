@@ -21,7 +21,7 @@ from srdt_analysis.models import (
 class LLMClient:
     def __init__(self, base_url, api_key, model):
         super().__init__()
-        self.logger = Logger("LLMCLient")
+        self.logger = Logger("LLMClient")
         self.client = httpx.AsyncClient(timeout=30.0)
         self.rate_limit = asyncio.Semaphore(10)
         self.base_url = base_url
