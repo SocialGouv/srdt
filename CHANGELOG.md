@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/SocialGouv/srdt/compare/v1.11.3...v1.11.4) (2025-06-16)
+
+
+### Bug Fixes
+
+* remove useless sanitization ([#163](https://github.com/SocialGouv/srdt/issues/163)) ([6de476e](https://github.com/SocialGouv/srdt/commit/6de476ef3a610346ed2242ae721385d7406030bf))
+
 ## [1.11.3](https://github.com/SocialGouv/srdt/compare/v1.11.2...v1.11.3) (2025-06-16)
 
 
