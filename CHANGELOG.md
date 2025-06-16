@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/SocialGouv/srdt/compare/v1.12.0...v1.12.1) (2025-06-16)
+
+
+### Bug Fixes
+
+* trigger deploy ([90face2](https://github.com/SocialGouv/srdt/commit/90face2bb3df3a2bbe91288ae9421d7fdba3f65f))
+
 # [1.12.0](https://github.com/SocialGouv/srdt/compare/v1.11.4...v1.12.0) (2025-06-16)
 
 
