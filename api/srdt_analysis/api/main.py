@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import traceback
 
 import sentry_sdk
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ from srdt_analysis.api.schemas import (
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL
 from srdt_analysis.llm_runner import LLMRunner
+from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
@@ -37,6 +39,7 @@ sentry_sdk.init(
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
+logger = Logger("API")
 
 
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -91,9 +94,13 @@ async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_k
             nb_token_output=tokenizer.compute_nb_tokens(anonymized_question),
         )
     except ValueError as ve:
+        logger.error(f"Anonymize validation error: {str(ve)}")
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(
+            f"Anonymize unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Anonymization failed: {str(e)}")
 
 
 @app.post(f"{BASE_API_URL}/rephrase", response_model=RephraseResponse)
@@ -121,7 +128,10 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
             nb_token_output=tokenizer.compute_nb_tokens(rephrased),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(
+            f"Rephrase unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Rephrasing failed: {str(e)}")
 
 
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
@@ -172,7 +182,10 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
             top_chunks=transformed_results,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(
+            f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
 @app.post(f"{BASE_API_URL}/generate", response_model=GenerateResponse)
@@ -202,7 +215,10 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
             nb_token_output=tokenizer.compute_nb_tokens(response),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(
+            f"Generate unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
 
 @app.post(f"{BASE_API_URL}/generate/stream")
@@ -258,10 +274,13 @@ async def generate_stream(
                 }
                 yield f"data: {json.dumps(final_data)}\n\n"
 
-            except Exception:
+            except Exception as e:
+                logger.error(
+                    f"Stream generation error: {str(e)}, traceback: {traceback.format_exc()}"
+                )
                 error_data = {
                     "type": "error",
-                    "error": "An internal error occurred.",
+                    "error": f"Stream generation failed: {str(e)}",
                 }
                 yield f"data: {json.dumps(error_data)}\n\n"
 
@@ -275,4 +294,7 @@ async def generate_stream(
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(
+            f"Stream generate setup error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Stream setup failed: {str(e)}")
