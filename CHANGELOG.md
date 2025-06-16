@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/SocialGouv/srdt/compare/v1.11.1...v1.11.2) (2025-06-16)
+
+
+### Bug Fixes
+
+* réparation du JSON des chunks du search ([#162](https://github.com/SocialGouv/srdt/issues/162)) ([22f1920](https://github.com/SocialGouv/srdt/commit/22f1920a5958a7fde2c3059eb1bac7f57e550f90))
+
 ## [1.11.1](https://github.com/SocialGouv/srdt/compare/v1.11.0...v1.11.1) (2025-06-13)
 
 
