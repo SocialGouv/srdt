@@ -2,13 +2,12 @@ import json
 import os
 import time
 
+import sentry_sdk
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
-
-import sentry_sdk
 
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
@@ -65,6 +64,7 @@ app.add_middleware(
 @app.get(f"{BASE_API_URL}/")
 async def root(_api_key: str = Depends(get_api_key)):
     return {"status": "ok", "path": BASE_API_URL}
+
 
 @app.get(f"{BASE_API_URL}/healthz")
 async def health():
