@@ -35,7 +35,7 @@ def sanitize_content(content: str) -> str:
     """Sanitize content to ensure it doesn't break JSON parsing."""
     if not isinstance(content, str):
         return str(content)
-    
+
     # Use json.dumps to properly escape the string, then remove the outer quotes
     escaped = json.dumps(content)[1:-1]
     return escaped
