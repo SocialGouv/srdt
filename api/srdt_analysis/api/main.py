@@ -2,6 +2,7 @@ import json
 import os
 import time
 
+import sentry_sdk
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +27,13 @@ from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
+
+sentry_sdk.init(
+    dsn="https://cf211345d704b74ef78cab4e59ea73ea@sentry2.fabrique.social.gouv.fr/47",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+)
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
