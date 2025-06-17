@@ -9,10 +9,11 @@ import { StartDsfr } from "@/modules/dsfr/StartDsfr";
 import { AuthProvider } from "@/hooks/use-auth";
 import Link from "next/link";
 import Head from "next/head";
+import Matomo from "@/components/Matomo";
 
 export function ClientHtml({
   children,
-  lang
+  lang,
 }: {
   children: ReactNode;
   lang: string;
@@ -32,10 +33,9 @@ export function ClientHtml({
       </Head>
       <body>
         <AuthProvider>
-          <DsfrProvider lang={lang}>
-            {children}
-          </DsfrProvider>
+          <DsfrProvider lang={lang}>{children}</DsfrProvider>
         </AuthProvider>
+        <Matomo />
       </body>
     </html>
   );
