@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/SocialGouv/srdt/compare/v1.13.0...v1.14.0) (2025-06-17)
+
+
+### Features
+
+* le code d'accès est un vrai champ password dsfr ([#168](https://github.com/SocialGouv/srdt/issues/168)) ([9bc161a](https://github.com/SocialGouv/srdt/commit/9bc161a195562eaeea58988ae97e3e143d3caa80))
+
 # [1.13.0](https://github.com/SocialGouv/srdt/compare/v1.12.1...v1.13.0) (2025-06-17)
 
 
