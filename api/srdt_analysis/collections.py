@@ -5,13 +5,13 @@ from io import BytesIO
 
 import httpx
 
-from srdt_analysis.corpus import getChunksByIdcc
 from srdt_analysis.constants import (
     ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
     COLLECTIONS_UPLOAD_BATCH_SIZE,
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
+from srdt_analysis.corpus import getChunksByIdcc
 from srdt_analysis.models import (
     COLLECTION_ID,
     COLLECTIONS_ID,

@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -9,7 +10,6 @@ from srdt_analysis.data_exploiter import (
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
-
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
 
@@ -19,7 +19,6 @@ logger = Logger("Ingester")
 
 
 def start():
-
     logger.info("Read data from Postgres")
     data = get_data(
         [

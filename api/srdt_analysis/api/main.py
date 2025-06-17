@@ -20,9 +20,9 @@ from srdt_analysis.api.schemas import (
     GenerateResponse,
     RephraseRequest,
     RephraseResponse,
+    RerankedChunk,
     RerankRequest,
     RerankResponse,
-    RerankedChunk,
     SearchRequest,
     SearchResponse,
 )
