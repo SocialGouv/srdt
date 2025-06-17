@@ -5,7 +5,9 @@ from io import BytesIO
 
 import httpx
 
+from srdt_analysis.corpus import getChunksByIdcc
 from srdt_analysis.constants import (
+    ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
     COLLECTIONS_UPLOAD_BATCH_SIZE,
     COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
@@ -18,6 +20,7 @@ from srdt_analysis.models import (
     DocumentData,
     ListOfDocumentData,
     RankedChunk,
+    RerankedChunk,
 )
 
 
@@ -80,6 +83,10 @@ class AlbertCollectionHandler:
                 self.delete(collection["id"])
         return None
 
+    def get_contributions_idcc(self, idcc):
+        contribs_idcc = getChunksByIdcc(idcc)
+        return contribs_idcc
+
     def search(
         self,
         prompt: str,
@@ -98,6 +105,19 @@ class AlbertCollectionHandler:
                 "score_threshold": score_threshold,
             },
             timeout=timeout,
+        )
+        result = response.json()
+        return result.get("data", [])
+
+    def rerank(
+        self,
+        prompt: str,
+        input: list[str],
+    ) -> list[RerankedChunk]:
+        response = httpx.post(
+            f"{self.base_url}/v1/rerank",
+            headers=self.headers,
+            json={"prompt": prompt, "input": input, "model": ALBERT_RERANK_MODEL},
         )
         result = response.json()
         return result.get("data", [])

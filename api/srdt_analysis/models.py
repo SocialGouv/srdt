@@ -24,7 +24,7 @@ ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
 CHUNK_ID = int
-ID = int
+ID = int | str
 HTML = str
 PlainText = str
 JSONDict = Dict[str, Any]
@@ -178,6 +178,12 @@ class Chunk(TypedDict):
 class RankedChunk(TypedDict):
     score: float
     chunk: Chunk
+
+
+@dataclass
+class RerankedChunk(TypedDict):
+    score: float
+    index: int
 
 
 @dataclass

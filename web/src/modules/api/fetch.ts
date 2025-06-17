@@ -3,11 +3,12 @@ import {
   Config,
   getFamilyModel,
   getRandomModel,
-  MAX_SOURCE_COUNT,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
-  SEARCH_OPTIONS_IDCC,
   PROMPT_INSTRUCTIONS_GENERATE_IDCC,
+  MAX_RERANK,
+  K_RERANK,
+  K_RERANK_IDCC,
 } from "@/constants";
 import {
   AnonymizeRequest,
@@ -20,6 +21,9 @@ import {
   GenerateResponse,
   ChunkResult,
   LLMModel,
+  RerankRequest,
+  RerankResponse,
+  RerankResult,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -105,11 +109,38 @@ const rephrase = async (
   }
 };
 
+const getIdccChunks = async (
+  idcc: string
+): Promise<UseApiResponse<SearchResponse>> => {
+  try {
+    const data = await fetchApi<SearchResponse>(`/api/v1/idcc/${idcc}`, {
+      method: "GET",
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
 const search = async (
   request: SearchRequest
 ): Promise<UseApiResponse<SearchResponse>> => {
   try {
     const data = await fetchApi<SearchResponse>("/api/v1/search", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+const rerank = async (
+  request: RerankRequest
+): Promise<UseApiResponse<RerankResponse>> => {
+  try {
+    const data = await fetchApi<RerankResponse>("/api/v1/rerank", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -300,6 +331,29 @@ const prepareQuestionData = async (
     query = rephraseResult.data.rephrased_question;
   }
 
+  let rerankedIdcc: RerankResult[] = [];
+
+  // retrieve all IDCC content then rerank them
+  if (idcc) {
+    const idccSearchResult = await getIdccChunks(idcc);
+
+    if (idccSearchResult.error && idccSearchResult.data?.top_chunks) {
+      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+    } else {
+      const idccRerankResults = await rerank({
+        prompt: userQuestion,
+        inputs: idccSearchResult.data?.top_chunks.slice(
+          0,
+          MAX_RERANK
+        ) as ChunkResult[],
+      });
+
+      if (idccRerankResults.data) {
+        rerankedIdcc = idccRerankResults.data.results;
+      }
+    }
+  }
+
   const localSearchResult = await search({
     prompts: [query],
     options: SEARCH_OPTIONS_LOCAL,
@@ -311,40 +365,54 @@ const prepareQuestionData = async (
 
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
 
-  if (idcc) {
-    const idccSearchResult = await search({
-      prompts: [query],
-      options: SEARCH_OPTIONS_IDCC,
-    });
-    if (idccSearchResult.error) {
-      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
-    }
-
-    const idccSearchChunks: ChunkResult[] = [];
-    if (idccSearchResult.data) {
-      idccSearchChunks.push(
-        ...idccSearchResult.data.top_chunks.filter((e) => {
-          return e.metadata.idcc === idcc;
-        })
-      );
-    }
-    localSearchChunks.push(...idccSearchChunks);
-  }
-
   if (localSearchChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  localSearchChunks
+  // merge chunks if they come from the same document
+  const toRerankRecord = localSearchChunks
     .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_SOURCE_COUNT);
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content.concat(" /n/n " + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  const toRerankChunks = Object.values(toRerankRecord).slice(0, MAX_RERANK);
+
+  const searchRerankResults = await rerank({
+    prompt: userQuestion,
+    inputs: toRerankChunks,
+  });
+
+  if (!searchRerankResults.data) {
+    console.warn("Aucun résultat de recherche trouvé après le rerank");
+  }
+
+  // take top k rerank for the generate step
+  const selectedRerankedChunked =
+    searchRerankResults.data?.results
+      .slice(0, K_RERANK)
+      .map(({ chunk }) => chunk) || [];
+
+  selectedRerankedChunked.push(
+    ...rerankedIdcc.slice(0, K_RERANK_IDCC).map(({ chunk }) => chunk)
+  );
+
+  if (selectedRerankedChunked.length === 0) {
+    console.warn("Aucun résultat de recherche trouvé");
+  }
 
   return {
     query,
     model,
     config,
     instructions,
-    localSearchChunks,
+    localSearchChunks: selectedRerankedChunked,
     anonymizeResult,
     rephraseResult,
   };

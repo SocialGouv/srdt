@@ -100,9 +100,24 @@ class ChunkResult(BaseModel):
     metadata: ChunkMetadata
 
 
+class RerankedChunk(BaseModel):
+    rerank_score: float
+    chunk: ChunkResult
+
+
+class RerankRequest(BaseModel):
+    prompt: str
+    inputs: List[ChunkResult]
+
+
 class SearchResponse(BaseModel):
     time: float
     top_chunks: List[ChunkResult]
+
+
+class RerankResponse(BaseModel):
+    time: float
+    results: List[RerankedChunk]
 
 
 class GenerateRequest(BaseModel):
