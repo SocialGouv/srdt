@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/SocialGouv/srdt/compare/v1.12.1...v1.13.0) (2025-06-17)
+
+
+### Features
+
+* ajout de matomo ([#167](https://github.com/SocialGouv/srdt/issues/167)) ([92c46bc](https://github.com/SocialGouv/srdt/commit/92c46bc8e7348e499d2914cc355ec1a84c7a2d70))
+
 ## [1.12.1](https://github.com/SocialGouv/srdt/compare/v1.12.0...v1.12.1) (2025-06-16)
 
 
