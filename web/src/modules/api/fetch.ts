@@ -8,6 +8,7 @@ import {
   PROMPT_INSTRUCTIONS_GENERATE_IDCC,
   MAX_RERANK,
   K_RERANK,
+  K_RERANK_IDCC,
 } from "@/constants";
 import {
   AnonymizeRequest,
@@ -22,6 +23,7 @@ import {
   LLMModel,
   RerankRequest,
   RerankResponse,
+  RerankResult,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 
@@ -318,6 +320,29 @@ const prepareQuestionData = async (
     query = rephraseResult.data.rephrased_question;
   }
 
+  let rerankedIdcc: RerankResult[] = [];
+
+  // retrieve all IDCC content then rerank them
+  if (idcc) {
+    const idccSearchResult = await getIdccChunks(idcc);
+
+    if (idccSearchResult.error && idccSearchResult.data?.top_chunks) {
+      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+    } else {
+      const idccRerankResults = await rerank({
+        prompt: userQuestion,
+        inputs: idccSearchResult.data?.top_chunks.slice(
+          0,
+          MAX_RERANK
+        ) as ChunkResult[],
+      });
+
+      if (idccRerankResults.data) {
+        rerankedIdcc = idccRerankResults.data.results;
+      }
+    }
+  }
+
   const localSearchResult = await search({
     prompts: [query],
     options: SEARCH_OPTIONS_LOCAL,
@@ -328,18 +353,6 @@ const prepareQuestionData = async (
   }
 
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-
-  if (idcc) {
-    const idccSearchResult = await getIdccChunks(idcc);
-
-    if (idccSearchResult.error) {
-      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
-    }
-
-    if (idccSearchResult.data?.top_chunks) {
-      localSearchChunks.push(...idccSearchResult.data?.top_chunks);
-    }
-  }
 
   if (localSearchChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
@@ -353,23 +366,31 @@ const prepareQuestionData = async (
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content.concat("/n/n" + curr.content);
+        acc[id].content.concat(" /n/n " + curr.content);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
 
-  // rerank 128 then merge and take 10
-
   const toRerankChunks = Object.values(toRerankRecord).slice(0, MAX_RERANK);
 
-  const reranked = await rerank({
+  const searchRerankResults = await rerank({
     prompt: userQuestion,
     inputs: toRerankChunks,
   });
 
+  if (!searchRerankResults.data) {
+    console.warn("Aucun résultat de recherche trouvé après le rerank");
+  }
+
   // take top k rerank for the generate step
   const selectedRerankedChunked =
-    reranked.data?.results.slice(0, K_RERANK).map(({ chunk }) => chunk) || [];
+    searchRerankResults.data?.results
+      .slice(0, K_RERANK)
+      .map(({ chunk }) => chunk) || [];
+
+  selectedRerankedChunked.push(
+    ...rerankedIdcc.slice(0, K_RERANK_IDCC).map(({ chunk }) => chunk)
+  );
 
   if (selectedRerankedChunked.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");

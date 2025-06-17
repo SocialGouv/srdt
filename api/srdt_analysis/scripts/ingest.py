@@ -103,6 +103,7 @@ def start():
                 "cdtn_id": all_docs.cdtn_id,
                 "metadata": metadata,
                 "content": chunks_content,
+                "idcc": all_docs["idcc"],
             }
         ).explode("content")
 
@@ -112,7 +113,7 @@ def start():
         chunks.reset_index(inplace=True)
         chunks.rename({"index": "id_chunk"}, axis="columns", inplace=True)
 
-        all_docs.drop("content_chunked", axis=1, inplace=True)
+        all_docs["content_chunked"] = chunks_content
 
         all_docs.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/docs.parquet")
         chunks.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/chunks.parquet")
