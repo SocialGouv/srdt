@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { Input } from "@codegouvfr/react-dsfr/Input";
+import { PasswordInput } from "@codegouvfr/react-dsfr/blocks/PasswordInput";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -36,14 +36,25 @@ export const AuthVerification = () => {
   return (
     <div className="fr-container fr-my-6w">
       <form onSubmit={handleSubmit}>
-        <Input
+        <PasswordInput
           label="Code d'accès"
-          state={error ? "error" : "default"}
-          stateRelatedMessage={error}
+          messagesHint=""
+          messages={
+            error
+              ? [
+                  {
+                    severity: "error",
+                    message: error,
+                  },
+                ]
+              : undefined
+          }
           nativeInputProps={{
             value: verificationCode,
-            onChange: (e) => setVerificationCode(e.target.value),
-            type: "text",
+            onChange: (e) => {
+              setVerificationCode(e.target.value);
+              setError("");
+            },
             placeholder: "Entrez votre code",
             required: true,
           }}
