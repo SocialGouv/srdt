@@ -91,7 +91,7 @@ def start():
 
         metadata = all_docs.rename({"cdtn_id": "document_id"}, axis="columns")[
             ["url", "title", "document_id", "source", "idcc"]
-        ].to_dict("records")
+        ].to_dict(orient="records")
 
         chunks_content = all_docs["content_chunked"].apply(
             lambda x: [sd.page_content for sd in x]
