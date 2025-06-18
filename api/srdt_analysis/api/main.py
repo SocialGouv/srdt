@@ -160,16 +160,20 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
         inputs = [input.content for input in request.inputs]
         res = collections.rerank(request.prompt, inputs)
 
-        # reorder chunks based on rerank indices
+        # reorder results based on rerank indices to map chunks and results
+        sorted_res = sorted(res, key=lambda res: res["index"])
         zipped = list(
             zip(
-                [rr["index"] for rr in res], [rr["score"] for rr in res], request.inputs
+                [rr["index"] for rr in sorted_res],
+                [rr["score"] for rr in sorted_res],
+                request.inputs,
             )
         )
 
+        # reorder using rerank score
         reordered = [
             RerankedChunk(chunk=r[2], rerank_score=r[1])
-            for r in sorted(zipped, key=itemgetter(0))
+            for r in sorted(zipped, key=itemgetter(1), reverse=True)
         ]
 
         return RerankResponse(time=time.time() - start_time, results=reordered)

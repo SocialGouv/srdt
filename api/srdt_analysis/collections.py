@@ -120,6 +120,7 @@ class AlbertCollectionHandler:
             json={"prompt": prompt, "input": input, "model": ALBERT_RERANK_MODEL},
         )
         result = response.json()
+
         return result.get("data", [])
 
     def upload(
