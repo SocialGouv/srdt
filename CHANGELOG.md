@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/SocialGouv/srdt/compare/v1.15.0...v1.15.1) (2025-06-18)
+
+
+### Bug Fixes
+
+* **web:** enable IDCC in UI ([3edc5d1](https://github.com/SocialGouv/srdt/commit/3edc5d12ad2cfbf8d6b8924c3e6171b349990f7e))
+
 # [1.15.0](https://github.com/SocialGouv/srdt/compare/v1.14.0...v1.15.0) (2025-06-18)
 
 
