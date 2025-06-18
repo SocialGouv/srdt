@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/SocialGouv/srdt/compare/v1.14.0...v1.15.0) (2025-06-18)
+
+
+### Features
+
+* IDCC + Reranker [#106](https://github.com/SocialGouv/srdt/issues/106) [#102](https://github.com/SocialGouv/srdt/issues/102) ([f85147b](https://github.com/SocialGouv/srdt/commit/f85147bbb7e4cbbd43325bd6061263c424a2b9f7))
+
 # [1.14.0](https://github.com/SocialGouv/srdt/compare/v1.13.0...v1.14.0) (2025-06-17)
 
 
