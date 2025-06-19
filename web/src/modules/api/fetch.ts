@@ -56,6 +56,7 @@ interface PreparedQuestionData {
     split_multiple_queries?: string;
   };
   localSearchChunks: ChunkResult[];
+  idccChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
 }
@@ -393,17 +394,17 @@ const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé après le rerank");
   }
 
-  // take top k rerank for the generate step
-  const selectedRerankedChunked =
+  // take top k rerank for the generate step (keep general chunks separate)
+  const selectedGeneralChunks =
     searchRerankResults.data?.results
       .slice(0, K_RERANK)
       .map(({ chunk }) => chunk) || [];
 
-  selectedRerankedChunked.push(
-    ...rerankedIdcc.slice(0, K_RERANK_IDCC).map(({ chunk }) => chunk)
-  );
+  const selectedIdccChunks = rerankedIdcc
+    .slice(0, K_RERANK_IDCC)
+    .map(({ chunk }) => chunk);
 
-  if (selectedRerankedChunked.length === 0) {
+  if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
@@ -412,10 +413,22 @@ const prepareQuestionData = async (
     model,
     config,
     instructions,
-    localSearchChunks: selectedRerankedChunked,
+    localSearchChunks: selectedGeneralChunks,
+    idccChunks: selectedIdccChunks,
     anonymizeResult,
     rephraseResult,
   };
+};
+
+// Helper to format chunks for display
+const formatChunks = (chunks: ChunkResult[]) => {
+  return chunks
+    .map(
+      (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
+                Contenu: ${chunk.content}
+                ---`
+    )
+    .join("\n");
 };
 
 // Helper to create chat history for generation
@@ -428,13 +441,29 @@ const createChatHistory = (query: string, localSearchChunks: ChunkResult[]) => [
     role: "user" as const,
     content: `Voici les sources pertinentes pour répondre à la question:
 
-        ${localSearchChunks
-          .map(
-            (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-                  Contenu: ${chunk.content}
-                  ---`
-          )
-          .join("\n")}`,
+        ${formatChunks(localSearchChunks)}`,
+  },
+];
+
+// Helper to create IDCC-specific chat history with both general and IDCC chunks
+const createIdccChatHistory = (
+  query: string,
+  generalChunks: ChunkResult[],
+  idccChunks: ChunkResult[]
+) => [
+  {
+    role: "user" as const,
+    content: query,
+  },
+  {
+    role: "user" as const,
+    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
+
+### Documents généralistes :
+${formatChunks(generalChunks)}
+
+### Documents spécifiques à la convention collective renseignée :
+${formatChunks(idccChunks)}`,
   },
 ];
 
@@ -446,7 +475,10 @@ const createAnalyzeResponse = (
   config: preparedData.config.toString(),
   anonymized: preparedData.anonymizeResult?.data || null,
   rephrased: preparedData.rephraseResult?.data || null,
-  localSearchChunks: preparedData.localSearchChunks,
+  localSearchChunks: [
+    ...preparedData.localSearchChunks,
+    ...preparedData.idccChunks,
+  ],
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
@@ -455,8 +487,7 @@ const createAnalyzeResponse = (
 export const analyzeQuestion = async (
   userQuestion: string,
   requiredConfig?: Config,
-  idcc?: string,
-  agreementTitle?: string
+  idcc?: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
     const preparedData = await prepareQuestionData(
@@ -465,21 +496,31 @@ export const analyzeQuestion = async (
       idcc
     );
 
-    const chatHistory = createChatHistory(
-      preparedData.query,
-      preparedData.localSearchChunks
-    );
+    // Determine chat history and system prompt based on whether IDCC is provided
+    const { chatHistory, systemPrompt } = idcc
+      ? {
+          chatHistory: createIdccChatHistory(
+            preparedData.query,
+            preparedData.localSearchChunks,
+            preparedData.idccChunks
+          ),
+          systemPrompt: PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+            "[URL_convention_collective]",
+            `https://code.travail.gouv.fr/convention-collective/${idcc}`
+          ),
+        }
+      : {
+          chatHistory: createChatHistory(
+            preparedData.query,
+            preparedData.localSearchChunks
+          ),
+          systemPrompt: preparedData.instructions.generate_instruction,
+        };
 
     const generateResult = await generate({
       model: preparedData.model,
       chat_history: chatHistory,
-      system_prompt:
-        idcc && agreementTitle
-          ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
-              "[Titre de la convention collective]",
-              agreementTitle
-            )
-          : preparedData.instructions.generate_instruction,
+      system_prompt: systemPrompt,
     });
 
     if (generateResult.error) {
@@ -512,8 +553,7 @@ export const analyzeQuestionStream = async (
   onChunk: (chunk: string) => void,
   onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
   requiredConfig?: Config,
-  idcc?: string,
-  agreementTitle?: string
+  idcc?: string
 ): Promise<void> => {
   try {
     const preparedData = await prepareQuestionData(
@@ -522,22 +562,32 @@ export const analyzeQuestionStream = async (
       idcc
     );
 
-    const chatHistory = createChatHistory(
-      preparedData.query,
-      preparedData.localSearchChunks
-    );
+    // Determine chat history and system prompt based on whether IDCC is provided
+    const { chatHistory, systemPrompt } = idcc
+      ? {
+          chatHistory: createIdccChatHistory(
+            preparedData.query,
+            preparedData.localSearchChunks,
+            preparedData.idccChunks
+          ),
+          systemPrompt: PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
+            "[URL_convention_collective]",
+            `https://code.travail.gouv.fr/convention-collective/${idcc}`
+          ),
+        }
+      : {
+          chatHistory: createChatHistory(
+            preparedData.query,
+            preparedData.localSearchChunks
+          ),
+          systemPrompt: preparedData.instructions.generate_instruction,
+        };
 
     await generateStream(
       {
         model: preparedData.model,
         chat_history: chatHistory,
-        system_prompt:
-          idcc && agreementTitle
-            ? PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
-                "[Titre de la convention collective]",
-                agreementTitle
-              )
-            : preparedData.instructions.generate_instruction,
+        system_prompt: systemPrompt,
       },
       onChunk,
       undefined, // onStart
