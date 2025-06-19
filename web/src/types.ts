@@ -67,6 +67,7 @@ export interface ChunkMetadata {
 }
 
 export interface ChunkResult {
+  rerank_score?: number;
   score: number;
   content: string;
   id_chunk: number;
@@ -79,7 +80,7 @@ export interface SearchResponse {
 }
 
 export interface RerankResult {
-  score: number;
+  rerank_score: number;
   chunk: ChunkResult;
 }
 

@@ -5,4 +5,4 @@ metadata:
 data:
   CHATGPT_MODEL_NAME: gpt-4o-2024-11-20
   MISTRAL_MODEL_NAME: open-mixtral-8x7b
-  ALBERT_MODEL_NAME: meta-llama/Meta-Llama-3.1-70B-Instruct
+  ALBERT_MODEL_NAME: albert-large

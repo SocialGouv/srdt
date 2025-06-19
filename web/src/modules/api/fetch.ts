@@ -286,7 +286,7 @@ const prepareQuestionData = async (
   requiredConfig?: Config,
   idcc?: string
 ): Promise<PreparedQuestionData> => {
-  const config = requiredConfig || Config.V1_1;
+  const config = requiredConfig || Config.V1_15;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = getRandomModel();
 
@@ -296,7 +296,7 @@ const prepareQuestionData = async (
   let rephraseResult: UseApiResponse<RephraseResponse> | undefined = undefined;
 
   // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
-  if (config == Config.V1_0) {
+  if (config != Config.V1_15) {
     anonymizeResult = await anonymize({
       model: ALBERT_LLM,
       user_question: userQuestion,
@@ -394,15 +394,21 @@ const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé après le rerank");
   }
 
+  const rerankedToChunk = ({
+    chunk,
+    rerank_score,
+  }: RerankResult): ChunkResult => ({
+    ...chunk,
+    rerank_score,
+  });
+
   // take top k rerank for the generate step (keep general chunks separate)
   const selectedGeneralChunks =
-    searchRerankResults.data?.results
-      .slice(0, K_RERANK)
-      .map(({ chunk }) => chunk) || [];
+    searchRerankResults.data?.results.slice(0, K_RERANK).map(rerankedToChunk) ||
+    [];
 
-  const selectedIdccChunks = rerankedIdcc
-    .slice(0, K_RERANK_IDCC)
-    .map(({ chunk }) => chunk);
+  const selectedIdccChunks =
+    rerankedIdcc.slice(0, K_RERANK_IDCC).map(rerankedToChunk) || [];
 
   if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
     console.warn("Aucun résultat de recherche trouvé");
