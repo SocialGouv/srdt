@@ -404,6 +404,21 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.6.10)", "diff-cover (>=9.2.1)",
 typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
+name = "fr_core_news_md"
+version = "3.8.0"
+description = "French pipeline optimized for CPU. Components: tok2vec, morphologizer, parser, senter, ner, attribute_ruler, lemmatizer."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "fr_core_news_md-3.8.0.tar.gz", hash = "sha256:0353cfe24a3d0ef8b2ac1b493a5955708e92fe9647b7ddcaee9da09cee8ad6a9"},
+]
+
+[package.source]
+type = "url"
+url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0.tar.gz"
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -1911,4 +1926,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "~3.12"
-content-hash = "20866e17dea068341080f94d68037e1c1e54a77d021243e23cc322ff58311438"
+content-hash = "f9d25df8e30bbee6b99f8e38c1f1aad33726aa78ecce9bfab880498f23ad35df"
