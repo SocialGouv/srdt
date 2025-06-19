@@ -7,13 +7,12 @@ interface RequestBody {
   question: string;
   config?: Config;
   agreementId?: string;
-  agreementTitle?: string;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const body: RequestBody = await request.json();
-    const { question, config, agreementId, agreementTitle } = body;
+    const { question, config, agreementId } = body;
 
     if (!question) {
       return new Response(
@@ -48,8 +47,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const result: ApiResponse<AnalyzeResponse> = await analyzeQuestion(
       question,
       config,
-      agreementId,
-      agreementTitle
+      agreementId
     );
 
     if (!result.success) {
