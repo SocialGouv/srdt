@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/SocialGouv/srdt/compare/v1.15.1...v1.15.2) (2025-06-19)
+
+
+### Bug Fixes
+
+* update env ([#171](https://github.com/SocialGouv/srdt/issues/171)) ([fa49126](https://github.com/SocialGouv/srdt/commit/fa49126cd64d1d5d024c6a97051fb3bb64109e98))
+
 ## [1.15.1](https://github.com/SocialGouv/srdt/compare/v1.15.0...v1.15.1) (2025-06-18)
 
 
