@@ -8,5 +8,3 @@ data:
   TIKTOKEN_TOKENIZER_MODEL: o200k_base
   ALBERT_VECTORISATION_MODEL: BAAI/bge-m3
   ALBERT_ENDPOINT: https://albert.api.etalab.gouv.fr
-  DOCS_PARQUET: https://srdt-dev-app.s3.gra.io.cloud.ovh.net/srdt-docs-v1-2.parquet
-  CHUNKS_PARQUET: https://srdt-dev-app.s3.gra.io.cloud.ovh.net/srdt-chunks-v1-2.parquet
