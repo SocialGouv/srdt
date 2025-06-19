@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/SocialGouv/srdt/compare/v1.15.2...v1.15.3) (2025-06-19)
+
+
+### Bug Fixes
+
+* update yaml env format ([78ae176](https://github.com/SocialGouv/srdt/commit/78ae1762ab3d45a935305bd0d407e464f1e0dab0))
+
 ## [1.15.2](https://github.com/SocialGouv/srdt/compare/v1.15.1...v1.15.2) (2025-06-19)
 
 
