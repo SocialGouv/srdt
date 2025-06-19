@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/SocialGouv/srdt/compare/v1.15.3...v1.15.4) (2025-06-19)
+
+
+### Bug Fixes
+
+* remove idcc flag / update / update albert model name / add rerank score / update config to v1.15 ([3f4d25b](https://github.com/SocialGouv/srdt/commit/3f4d25b0c324828a2b07709bd5ea002fff2f117b))
+
 ## [1.15.3](https://github.com/SocialGouv/srdt/compare/v1.15.2...v1.15.3) (2025-06-19)
 
 
