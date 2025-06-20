@@ -24,15 +24,6 @@ LLM_ANSWER_PROMPT = """
 	## Base de connaissance externe.
 	Voici les extraits de documents que tu peux utiliser, avec cette structure : titre du document, contenu du document, url_source.
     """
-LLM_ANONYMIZATION_PROMPT = """
-  # Instructions
-	Anonymise le texte suivant en remplaçant toutes les informations personnelles par des balises standard, sauf le titre de poste et la civilité, qui doivent rester inchangés. Utilise [PERSONNE] pour les noms de personnes, [EMAIL] pour les adresses email, [TELEPHONE] pour les numéros de téléphone, [ADRESSE] pour les adresses physiques, [DATE] pour les dates, et [IDENTIFIANT] pour tout identifiant unique ou sensible.
-	# Exemple 
-	- Texte :
-	"Bonjour, je suis employé chez ABC Construction à Lyon en tant que chef de chantier. Mon responsable, M. Dupont, m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est 123456. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci."
-	- Texte anonymisé :
-	Bonjour, je suis employé chez [ENTREPRISE] en tant que chef de chantier. Mon responsable, [PERSONNE], m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est [IDENTIFIANT]. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci.
-    """
 LLM_REPHRASING_PROMPT = """
 	# Instructions
 	## Objectif

@@ -22,7 +22,8 @@ pydantic = "^2.10.4"
 pyarrow = "^20.0.0"
 tiktoken = "^0.8.0"
 sentry-sdk = {extras = ["fastapi"], version = "^2.30.0"}
-fr_core_news_md = {url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0.tar.gz"}
+spacy = "^3.7"
+fr_core_news_lg = {url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_lg-3.8.0/fr_core_news_lg-3.8.0.tar.gz"}
 
 [tool.poetry.group.dev.dependencies]
 pyright = "^1.1.389"
