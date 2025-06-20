@@ -1,3 +1,15 @@
+# [1.16.0](https://github.com/SocialGouv/srdt/compare/v1.15.5...v1.16.0) (2025-06-20)
+
+
+### Bug Fixes
+
+* désactivation de sentry en local ([#178](https://github.com/SocialGouv/srdt/issues/178)) ([ffc08ff](https://github.com/SocialGouv/srdt/commit/ffc08ff4b8dd79602cbaef7270b1bdd08e2195dc))
+
+
+### Features
+
+* log des erreurs côté next (backend et front) ([#177](https://github.com/SocialGouv/srdt/issues/177)) ([92a4d9b](https://github.com/SocialGouv/srdt/commit/92a4d9b41a6cf9ff88d8715c1a683cab3aa0599f))
+
 ## [1.15.5](https://github.com/SocialGouv/srdt/compare/v1.15.4...v1.15.5) (2025-06-20)
 
 
