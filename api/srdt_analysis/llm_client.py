@@ -10,6 +10,7 @@ from tenacity import (
     wait_exponential,
 )
 
+from srdt_analysis.constants import API_TIMEOUT
 from srdt_analysis.logger import Logger
 from srdt_analysis.models import (
     LLMChatPayload,
@@ -22,7 +23,7 @@ class LLMClient:
     def __init__(self, base_url, api_key, model):
         super().__init__()
         self.logger = Logger("LLMClient")
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = httpx.AsyncClient(timeout=API_TIMEOUT)
         self.rate_limit = asyncio.Semaphore(10)
         self.base_url = base_url
         self.headers = {
