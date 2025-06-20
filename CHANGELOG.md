@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/SocialGouv/srdt/compare/v1.15.4...v1.15.5) (2025-06-20)
+
+
+### Bug Fixes
+
+* **api:** apply API timeout to external LLMs ([fbf855f](https://github.com/SocialGouv/srdt/commit/fbf855f443d0032d62d065617fe462ee52137142))
+
 ## [1.15.4](https://github.com/SocialGouv/srdt/compare/v1.15.3...v1.15.4) (2025-06-19)
 
 
