@@ -11,6 +11,7 @@ import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 import styles from "./Chat.module.css";
 import { Agreement } from "../convention-collective/search";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
+import * as Sentry from "@sentry/nextjs";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -85,6 +86,16 @@ export const Chat = () => {
         setConversations([newConversation, ...parsed]);
         setCurrentConversationId(newId);
       } catch (error) {
+        Sentry.captureException(error, {
+          tags: {
+            component: "Chat",
+            method: "loadConversations",
+          },
+          extra: {
+            storageKey: STORAGE_KEY,
+            errorStep: "parsing_saved_conversations",
+          },
+        });
         console.error("Error parsing saved conversations:", error);
         initializeDefaultConversation();
       }

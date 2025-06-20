@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { analyzeQuestionStream } from "@/modules/api/fetch";
 import { Config } from "@/constants";
+import * as Sentry from "@sentry/nextjs";
 
 interface RequestBody {
   question: string;
@@ -75,6 +76,17 @@ export async function POST(request: NextRequest): Promise<Response> {
           config,
           agreementId
         ).catch((error) => {
+          Sentry.captureException(error, {
+            tags: {
+              endpoint: "/api/generate/stream",
+            },
+            extra: {
+              method: "POST",
+              question: question,
+              config: config,
+              agreementId: agreementId,
+            },
+          });
           const data = JSON.stringify({
             type: "error",
             success: false,
@@ -94,6 +106,15 @@ export async function POST(request: NextRequest): Promise<Response> {
       },
     });
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: "/api/generate/stream",
+      },
+      extra: {
+        method: "POST",
+        errorType: "outer_catch",
+      },
+    });
     return new Response(
       JSON.stringify({
         success: false,

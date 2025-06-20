@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ApiResponse, AnalyzeResponse } from "@/types";
+import * as Sentry from "@sentry/nextjs";
 
 const useApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -31,6 +32,17 @@ const useApi = () => {
       return result;
     } catch (error) {
       setIsLoading(false);
+      Sentry.captureException(error, {
+        tags: {
+          component: "useApi",
+          method: "generateAnswer",
+        },
+        extra: {
+          userQuestion: userQuestion,
+          agreementId: agreementId,
+          agreementTitle: agreementTitle,
+        },
+      });
       return {
         success: false,
         data: null,
@@ -114,6 +126,17 @@ const useApi = () => {
                     return;
                 }
               } catch (parseError) {
+                Sentry.captureException(parseError, {
+                  tags: {
+                    component: "useApi",
+                    method: "generateAnswerStream",
+                  },
+                  extra: {
+                    line: line,
+                    userQuestion: userQuestion,
+                    streamingStep: "parse_streaming_data",
+                  },
+                });
                 console.warn(
                   "Failed to parse streaming data:",
                   parseError,
@@ -129,6 +152,17 @@ const useApi = () => {
       }
     } catch (error) {
       setIsLoading(false);
+      Sentry.captureException(error, {
+        tags: {
+          component: "useApi",
+          method: "generateAnswerStream",
+        },
+        extra: {
+          userQuestion: userQuestion,
+          agreementId: agreementId,
+          agreementTitle: agreementTitle,
+        },
+      });
       onComplete({
         success: false,
         data: null,

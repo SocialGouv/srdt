@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 const SITE_URL = "https://code.travail.gouv.fr";
 
@@ -40,6 +41,17 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: "/api/idcc",
+      },
+      extra: {
+        method: "GET",
+        query: query,
+        size: size,
+        externalUrl: `${SITE_URL}/api/idcc`,
+      },
+    });
     console.error("Error proxying request to code.travail.gouv.fr:", error);
     return NextResponse.json(
       { error: "Ce service est momentanément indisponible." },

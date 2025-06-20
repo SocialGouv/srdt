@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { analyzeQuestion } from "@/modules/api/fetch";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 import { Config } from "@/constants";
+import * as Sentry from "@sentry/nextjs";
 
 interface RequestBody {
   question: string;
@@ -10,9 +11,10 @@ interface RequestBody {
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
+  let body: RequestBody | null = null;
   try {
-    const body: RequestBody = await request.json();
-    const { question, config, agreementId } = body;
+    body = await request.json();
+    const { question, config, agreementId } = body as RequestBody;
 
     if (!question) {
       return new Response(
@@ -69,6 +71,17 @@ export async function POST(request: NextRequest): Promise<Response> {
       },
     });
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: "/api/generate",
+      },
+      extra: {
+        method: "POST",
+        hasQuestion: !!body?.question,
+        config: body?.config,
+        agreementId: body?.agreementId,
+      },
+    });
     return new Response(
       JSON.stringify({ success: false, error: (error as Error).message }),
       {

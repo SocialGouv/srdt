@@ -26,6 +26,7 @@ import {
   RerankResult,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
+import * as Sentry from "@sentry/nextjs";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8000";
 
@@ -259,12 +260,17 @@ const generateStream = async (
                   break;
               }
             } catch (parseError) {
-              console.warn(
-                "Failed to parse streaming data:",
-                parseError,
-                "Line:",
-                line
+              const errorMessage = "Failed to parse streaming data";
+              const parseErrorWithContext = new Error(
+                `${errorMessage}: ${parseError}`
               );
+              Sentry.captureException(parseErrorWithContext, {
+                extra: {
+                  line: line,
+                  originalError: parseError,
+                },
+              });
+              console.warn(errorMessage, parseError, "Line:", line);
             }
           }
         }
@@ -339,6 +345,15 @@ const prepareQuestionData = async (
     const idccSearchResult = await getIdccChunks(idcc);
 
     if (idccSearchResult.error && idccSearchResult.data?.top_chunks) {
+      const searchError = new Error(
+        `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
+      );
+      Sentry.captureException(searchError, {
+        extra: {
+          idcc: idcc,
+          hasTopChunks: !!idccSearchResult.data?.top_chunks,
+        },
+      });
       console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
     } else {
       const idccRerankResults = await rerank({
@@ -361,12 +376,28 @@ const prepareQuestionData = async (
   });
 
   if (localSearchResult.error) {
+    const localSearchError = new Error(
+      `Erreur lors de la recherche locale: ${localSearchResult.error}`
+    );
+    Sentry.captureException(localSearchError, {
+      extra: {
+        query: query,
+        searchOptions: SEARCH_OPTIONS_LOCAL,
+      },
+    });
     console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
   }
 
   const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
 
   if (localSearchChunks.length === 0) {
+    Sentry.captureMessage("No search results found", {
+      level: "warning",
+      extra: {
+        query: query,
+        userQuestion: userQuestion,
+      },
+    });
     console.warn("Aucun résultat de recherche trouvé");
   }
 
@@ -391,6 +422,13 @@ const prepareQuestionData = async (
   });
 
   if (!searchRerankResults.data) {
+    Sentry.captureMessage("No rerank results found", {
+      level: "warning",
+      extra: {
+        userQuestion: userQuestion,
+        toRerankChunks: toRerankChunks.length,
+      },
+    });
     console.warn("Aucun résultat de recherche trouvé après le rerank");
   }
 
@@ -411,6 +449,14 @@ const prepareQuestionData = async (
     rerankedIdcc.slice(0, K_RERANK_IDCC).map(rerankedToChunk) || [];
 
   if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
+    Sentry.captureMessage("No chunks selected for generation", {
+      level: "warning",
+      extra: {
+        userQuestion: userQuestion,
+        generalChunksLength: selectedGeneralChunks.length,
+        idccChunksLength: selectedIdccChunks.length,
+      },
+    });
     console.warn("Aucun résultat de recherche trouvé");
   }
 
