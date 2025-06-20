@@ -2,7 +2,6 @@ from typing import AsyncIterator, Optional, Tuple
 
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import (
-    LLM_ANONYMIZATION_PROMPT,
     LLM_ANSWER_PROMPT,
     LLM_REPHRASING_PROMPT,
     LLM_SPLIT_MULTIPLE_QUERIES_PROMPT,
@@ -20,20 +19,6 @@ class LLMRunner:
     def __init__(self, llm_url: str, llm_api_token: str, llm_model: str):
         self.collections = AlbertCollectionHandler()
         self.llm_processor = LLMClient(llm_url, llm_api_token, llm_model)
-
-    async def anonymize(
-        self,
-        user_message: str,
-        optional_prompt: Optional[str] = None,
-    ) -> str:
-        prompt = (
-            optional_prompt if optional_prompt is not None else LLM_ANONYMIZATION_PROMPT
-        )
-        result = await self.llm_processor.generate_completions_async(
-            prompt,
-            [UserLLMMessage(role="user", content=user_message)],
-        )
-        return result
 
     async def rephrase_and_split(
         self,
