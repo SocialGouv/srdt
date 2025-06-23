@@ -1,3 +1,10 @@
+## [1.18.1](https://github.com/SocialGouv/srdt/compare/v1.18.0...v1.18.1) (2025-06-23)
+
+
+### Bug Fixes
+
+* test de déploiement ([#184](https://github.com/SocialGouv/srdt/issues/184)) ([35617ed](https://github.com/SocialGouv/srdt/commit/35617ed09f7c6f59286b6f8eb39254ef16a9b7b7))
+
 # [1.18.0](https://github.com/SocialGouv/srdt/compare/v1.17.0...v1.18.0) (2025-06-23)
 
 
