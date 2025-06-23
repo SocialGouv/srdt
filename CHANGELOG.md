@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/SocialGouv/srdt/compare/v1.17.0...v1.18.0) (2025-06-23)
+
+
+### Features
+
+* ajout des secrets en pre-prod et review ([#183](https://github.com/SocialGouv/srdt/issues/183)) ([1a9842e](https://github.com/SocialGouv/srdt/commit/1a9842efe96fca9713b214003ecf25c6e384ec05))
+
 # [1.17.0](https://github.com/SocialGouv/srdt/compare/v1.16.0...v1.17.0) (2025-06-23)
 
 
