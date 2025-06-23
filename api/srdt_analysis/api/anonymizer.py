@@ -1,5 +1,7 @@
+# type: ignore
+
 from transformers import AutoTokenizer, AutoModelForTokenClassification
-from transformers import pipeline
+from transformers.pipelines import pipeline
 
 ano_tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner")
 model = AutoModelForTokenClassification.from_pretrained("Jean-Baptiste/camembert-ner")
@@ -12,7 +14,6 @@ keys = entities_fr.keys()
 
 
 def run_ano(user_question):
-
     entities = nlp(user_question)
 
     for e in entities:
