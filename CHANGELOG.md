@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/SocialGouv/srdt/compare/v1.16.0...v1.17.0) (2025-06-23)
+
+
+### Features
+
+* ajout des sourcemaps de sentry ([#182](https://github.com/SocialGouv/srdt/issues/182)) ([b0bf8c3](https://github.com/SocialGouv/srdt/commit/b0bf8c3e229e4428e2bf15b96680fbfa4b6c6bd0))
+
 # [1.16.0](https://github.com/SocialGouv/srdt/compare/v1.15.5...v1.16.0) (2025-06-20)
 
 
