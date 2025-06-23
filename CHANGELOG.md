@@ -1,3 +1,10 @@
+## [1.18.2](https://github.com/SocialGouv/srdt/compare/v1.18.1...v1.18.2) (2025-06-23)
+
+
+### Bug Fixes
+
+* effacer la convention collective qui restait secrètement sélectionnée dans une nouvelle conversation ([#185](https://github.com/SocialGouv/srdt/issues/185)) ([08643a9](https://github.com/SocialGouv/srdt/commit/08643a9a2a66691861dc3caac7cf741f3baed2e8))
+
 ## [1.18.1](https://github.com/SocialGouv/srdt/compare/v1.18.0...v1.18.1) (2025-06-23)
 
 
