@@ -5,5 +5,5 @@ jobs:
       with:
         secrets:
           sentry_auth_token:
-            secretName: sentry
+            secretName: web-secret
             secretKey: SENTRY_AUTH_TOKEN
