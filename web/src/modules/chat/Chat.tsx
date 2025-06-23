@@ -355,6 +355,7 @@ export const Chat = () => {
     setCurrentConversationId(newId);
     setNewMessage("");
     setIsDisabled(false);
+    setSelectedAgreement(undefined);
     streamingMessageRef.current = "";
   };
 
