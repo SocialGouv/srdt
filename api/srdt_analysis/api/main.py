@@ -5,13 +5,13 @@ import traceback
 from operator import itemgetter
 
 import sentry_sdk
-from srdt_analysis.api.anonymizer import run_ano
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
+from srdt_analysis.api.anonymizer import run_ano
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,

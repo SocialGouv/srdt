@@ -1,6 +1,6 @@
 # type: ignore
 
-from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import AutoModelForTokenClassification, AutoTokenizer
 from transformers.pipelines import pipeline
 
 ano_tokenizer = AutoTokenizer.from_pretrained("Jean-Baptiste/camembert-ner")
