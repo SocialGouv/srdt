@@ -468,7 +468,7 @@ export const Chat = () => {
               inputNbTokens={apiResult?.anonymized?.nb_token_input}
               outputNbTokens={apiResult?.generated.nb_token_output}
               globalResponseTime={globalResponseTime}
-              userQuestion={userQuestion}
+              userQuestion={apiResult?.anonymized?.anonymized_question}
               llmResponse={apiResult?.generated.text}
               errorMessage={apiError}
               idcc={selectedAgreement?.id}

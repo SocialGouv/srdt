@@ -1,5 +1,4 @@
 import {
-  ALBERT_LLM,
   Config,
   getFamilyModel,
   getRandomModel,
@@ -97,6 +96,7 @@ const anonymize = async (
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rephrase = async (
   request: RephraseRequest
 ): Promise<UseApiResponse<RephraseResponse>> => {
@@ -296,47 +296,26 @@ const prepareQuestionData = async (
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = getRandomModel();
 
-  let query = userQuestion;
   let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
     undefined;
+
+  // rephrased disabled teporarly
+  // eslint-disable-next-line prefer-const
   let rephraseResult: UseApiResponse<RephraseResponse> | undefined = undefined;
 
-  // A/B testing : if v1_0 we run the rephrase otherwise we ignore it
-  if (config != Config.V1_15) {
-    anonymizeResult = await anonymize({
-      model: ALBERT_LLM,
-      user_question: userQuestion,
-      anonymization_prompt: instructions.anonymisation,
-    });
+  anonymizeResult = await anonymize({
+    user_question: userQuestion,
+  });
 
-    if (anonymizeResult.error) {
-      throw new Error(
-        `Erreur lors de l'anonymisation: ${anonymizeResult.error}`
-      );
-    }
-
-    if (!anonymizeResult.data) {
-      throw new Error("Erreur lors de l'anonymisation");
-    }
-
-    rephraseResult = await rephrase({
-      model,
-      question: anonymizeResult.data.anonymized_question,
-      rephrasing_prompt: instructions.reformulation,
-      queries_splitting_prompt: instructions.split_multiple_queries,
-    });
-
-    if (rephraseResult.error) {
-      throw new Error(
-        `Erreur lors de la reformulation: ${rephraseResult.error}`
-      );
-    }
-
-    if (!rephraseResult.data) {
-      throw new Error("Erreur lors de la reformulation");
-    }
-    query = rephraseResult.data.rephrased_question;
+  if (anonymizeResult.error) {
+    throw new Error(`Erreur lors de l'anonymisation: ${anonymizeResult.error}`);
   }
+
+  if (!anonymizeResult.data) {
+    throw new Error("Erreur lors de l'anonymisation");
+  }
+
+  const anonymized = anonymizeResult.data.anonymized_question;
 
   let rerankedIdcc: RerankResult[] = [];
 
@@ -371,7 +350,7 @@ const prepareQuestionData = async (
   }
 
   const localSearchResult = await search({
-    prompts: [query],
+    prompts: [anonymized],
     options: SEARCH_OPTIONS_LOCAL,
   });
 
@@ -381,7 +360,7 @@ const prepareQuestionData = async (
     );
     Sentry.captureException(localSearchError, {
       extra: {
-        query: query,
+        query: anonymized,
         searchOptions: SEARCH_OPTIONS_LOCAL,
       },
     });
@@ -394,7 +373,7 @@ const prepareQuestionData = async (
     Sentry.captureMessage("No search results found", {
       level: "warning",
       extra: {
-        query: query,
+        query: anonymized,
         userQuestion: userQuestion,
       },
     });
@@ -417,7 +396,7 @@ const prepareQuestionData = async (
   const toRerankChunks = Object.values(toRerankRecord).slice(0, MAX_RERANK);
 
   const searchRerankResults = await rerank({
-    prompt: userQuestion,
+    prompt: anonymized,
     inputs: toRerankChunks,
   });
 
@@ -425,7 +404,7 @@ const prepareQuestionData = async (
     Sentry.captureMessage("No rerank results found", {
       level: "warning",
       extra: {
-        userQuestion: userQuestion,
+        userQuestion: anonymized,
         toRerankChunks: toRerankChunks.length,
       },
     });
@@ -452,7 +431,7 @@ const prepareQuestionData = async (
     Sentry.captureMessage("No chunks selected for generation", {
       level: "warning",
       extra: {
-        userQuestion: userQuestion,
+        userQuestion: anonymized,
         generalChunksLength: selectedGeneralChunks.length,
         idccChunksLength: selectedIdccChunks.length,
       },
@@ -461,7 +440,7 @@ const prepareQuestionData = async (
   }
 
   return {
-    query,
+    query: anonymized,
     model,
     config,
     instructions,

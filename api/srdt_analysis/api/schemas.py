@@ -18,9 +18,7 @@ class LLMModel(BaseModel):
 
 
 class AnonymizeRequest(BaseModel):
-    model: LLMModel
     user_question: str
-    anonymization_prompt: Optional[str] = None  # TODO : to be removed in the future
 
 
 class AnonymizeResponse(BaseModel):
