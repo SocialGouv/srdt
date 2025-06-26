@@ -157,7 +157,6 @@ export const Chat = () => {
   );
 
   // Get conversation-specific state
-  const userQuestion = currentConversation?.lastUserQuestion || "";
   const apiResult = currentConversation?.lastApiResult || null;
   const globalResponseTime = currentConversation?.lastResponseTime || 0;
   const apiError = currentConversation?.lastApiError;

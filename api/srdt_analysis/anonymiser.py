@@ -1,7 +1,8 @@
 import spacy
 
 nlp = spacy.load(
-    "fr_core_news_lg",
+    # "fr_core_news_lg",
+    "fr_core_news_md",
     disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"],
 )
 
