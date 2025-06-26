@@ -76,6 +76,135 @@ const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
   return Object.values(toRerankRecord);
 };
 
+const rerankedToChunk = ({
+  chunk,
+  rerank_score,
+}: RerankResult): ChunkResult => ({
+  ...chunk,
+  rerank_score,
+});
+
+const searchTextContent = async (anonymized: string) => {
+  // call search
+  // get full content
+  // run rerank on the two batches
+  // merge it and take 10 first
+  // return best 10
+
+  const localSearchResult = await search({
+    prompts: [anonymized],
+    options: SEARCH_OPTIONS_LOCAL,
+  });
+
+  if (localSearchResult.error) {
+    const localSearchError = new Error(
+      `Erreur lors de la recherche locale: ${localSearchResult.error}`
+    );
+    Sentry.captureException(localSearchError, {
+      extra: {
+        query: anonymized,
+        searchOptions: SEARCH_OPTIONS_LOCAL,
+      },
+    });
+    console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
+  }
+
+  const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
+
+  if (localSearchChunks.length === 0) {
+    Sentry.captureMessage("No search results found", {
+      level: "warning",
+      extra: {
+        query: anonymized,
+      },
+    });
+    console.warn("Aucun résultat de recherche trouvé");
+  }
+
+  // TODO get full content for each search result
+
+  // implement me !
+
+  // TODO split in two rerank batches
+
+  // merge the reranked batches
+
+  // take K_RERANK (10)
+
+  // merge chunks if they come from the same document
+  // const toRerankChunks = mergeChunksByDocumentId(localSearchChunks).slice(
+  //   0,
+  //   MAX_RERANK
+  // );
+
+  const searchRerankResults = await rerank({
+    prompt: anonymized,
+    inputs: toRerankChunks,
+  });
+
+  if (!searchRerankResults.data) {
+    Sentry.captureMessage("No rerank results found", {
+      level: "warning",
+      extra: {
+        userQuestion: anonymized,
+        toRerankChunks: toRerankChunks.length,
+      },
+    });
+    console.warn("Aucun résultat de recherche trouvé après le rerank");
+  }
+
+  // take top k rerank for the generate step (keep general chunks separate)
+  return (
+    searchRerankResults.data?.results.slice(0, K_RERANK).map(rerankedToChunk) ||
+    []
+  );
+};
+
+// get all idcc content and run rerank using user question
+// return best 5
+const searchIDCC = async (idcc: string, question: string) => {
+  // TODO ensure we get all contrib
+
+  const idccSearchResult = await getIdccChunks(idcc);
+
+  if (idccSearchResult.error) {
+    const searchError = new Error(
+      `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
+    );
+    Sentry.captureException(searchError, {
+      extra: {
+        idcc: idcc,
+        hasTopChunks: !!idccSearchResult.data?.top_chunks,
+      },
+    });
+    console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+  } else {
+    const inputs = idccSearchResult.data?.top_chunks.slice(0, MAX_RERANK);
+
+    if (inputs?.length) {
+      const idccRerankResults = await rerank({
+        prompt: question,
+        inputs: inputs,
+      });
+
+      if (idccRerankResults.data) {
+        return idccRerankResults.data.results
+          .slice(0, K_RERANK_IDCC)
+          .map(rerankedToChunk);
+      }
+    }
+  }
+
+  return [];
+};
+
+const searchArticles = () => {
+  // call search
+  // get full content
+  // run rerank
+  // take 5
+};
+
 // Common preprocessing logic for both streaming and non-streaming
 export const prepareQuestionData = async (
   userQuestion: string,
@@ -107,104 +236,14 @@ export const prepareQuestionData = async (
 
   const anonymized = anonymizeResult.data.anonymized_question;
 
-  let rerankedIdcc: RerankResult[] = [];
+  let selectedIdccChunks: ChunkResult[] = [];
 
-  // retrieve all IDCC content then rerank them
   if (idcc) {
-    const idccSearchResult = await getIdccChunks(idcc);
-
-    if (idccSearchResult.error) {
-      const searchError = new Error(
-        `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
-      );
-      Sentry.captureException(searchError, {
-        extra: {
-          idcc: idcc,
-          hasTopChunks: !!idccSearchResult.data?.top_chunks,
-        },
-      });
-      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
-    } else {
-      const inputs = idccSearchResult.data?.top_chunks.slice(0, MAX_RERANK);
-      const idccRerankResults = await rerank({
-        prompt: userQuestion,
-        inputs: inputs || [],
-      });
-
-      if (idccRerankResults.data) {
-        rerankedIdcc = idccRerankResults.data.results;
-      }
-    }
+    // retrieve all IDCC content then rerank them
+    selectedIdccChunks = await searchIDCC(idcc, anonymized);
   }
 
-  const localSearchResult = await search({
-    prompts: [anonymized],
-    options: SEARCH_OPTIONS_LOCAL,
-  });
-
-  if (localSearchResult.error) {
-    const localSearchError = new Error(
-      `Erreur lors de la recherche locale: ${localSearchResult.error}`
-    );
-    Sentry.captureException(localSearchError, {
-      extra: {
-        query: anonymized,
-        searchOptions: SEARCH_OPTIONS_LOCAL,
-      },
-    });
-    console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
-  }
-
-  const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-
-  if (localSearchChunks.length === 0) {
-    Sentry.captureMessage("No search results found", {
-      level: "warning",
-      extra: {
-        query: anonymized,
-        userQuestion: userQuestion,
-      },
-    });
-    console.warn("Aucun résultat de recherche trouvé");
-  }
-
-  // merge chunks if they come from the same document
-  const toRerankChunks = mergeChunksByDocumentId(localSearchChunks).slice(
-    0,
-    MAX_RERANK
-  );
-
-  const searchRerankResults = await rerank({
-    prompt: anonymized,
-    inputs: toRerankChunks,
-  });
-
-  if (!searchRerankResults.data) {
-    Sentry.captureMessage("No rerank results found", {
-      level: "warning",
-      extra: {
-        userQuestion: anonymized,
-        toRerankChunks: toRerankChunks.length,
-      },
-    });
-    console.warn("Aucun résultat de recherche trouvé après le rerank");
-  }
-
-  const rerankedToChunk = ({
-    chunk,
-    rerank_score,
-  }: RerankResult): ChunkResult => ({
-    ...chunk,
-    rerank_score,
-  });
-
-  // take top k rerank for the generate step (keep general chunks separate)
-  const selectedGeneralChunks =
-    searchRerankResults.data?.results.slice(0, K_RERANK).map(rerankedToChunk) ||
-    [];
-
-  const selectedIdccChunks =
-    rerankedIdcc.slice(0, K_RERANK_IDCC).map(rerankedToChunk) || [];
+  const selectedGeneralChunks = await searchTextContent(anonymized);
 
   if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
     Sentry.captureMessage("No chunks selected for generation", {
@@ -218,6 +257,7 @@ export const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé");
   }
 
+  // TODO what's that ?
   const answerType = Math.random() < 0.5 ? "long" : "short";
 
   return {
