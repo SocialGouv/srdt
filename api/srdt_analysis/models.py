@@ -159,7 +159,7 @@ class ChunkMetadata(TypedDict):
     document_name: PlainText
     document_part: int
     document_created_at: int
-    id: ID
+    id: str
     source: CollectionName
     title: str
     url: str

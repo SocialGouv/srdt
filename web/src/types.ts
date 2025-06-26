@@ -12,9 +12,7 @@ export enum LLMFamily {
 
 // Anonymization types
 export interface AnonymizeRequest {
-  model: LLMModel;
   user_question: string;
-  anonymization_prompt?: string;
 }
 
 export interface AnonymizeResponse {
@@ -59,6 +57,7 @@ export interface RerankRequest {
 }
 
 export interface ChunkMetadata {
+  id: string;
   title: string;
   url: string;
   document_id: number;
@@ -74,9 +73,19 @@ export interface ChunkResult {
   metadata: ChunkMetadata;
 }
 
+export interface ContentResult {
+  content: string;
+  metadata: ChunkMetadata;
+}
+
 export interface SearchResponse {
   time: number;
   top_chunks: ChunkResult[];
+}
+
+export interface RetrieveResponse {
+  time: number;
+  contents: ContentResult[];
 }
 
 export interface RerankResult {

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
+from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
@@ -23,11 +24,14 @@ from srdt_analysis.api.schemas import (
     RerankedChunk,
     RerankRequest,
     RerankResponse,
+    RetrieveRequest,
+    RetrieveResponse,
     SearchRequest,
     SearchResponse,
 )
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL
+from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer
@@ -79,18 +83,11 @@ async def health():
 
 
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
-async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
+async def anonymize(request: AnonymizeRequest):
     start_time = time.time()
     tokenizer = Tokenizer()
-    llm_runner = LLMRunner(
-        llm_api_token=request.model.api_key,
-        llm_model=request.model.name,
-        llm_url=request.model.base_url,
-    )
     try:
-        anonymized_question = await llm_runner.anonymize(
-            request.user_question, request.anonymization_prompt
-        )
+        anonymized_question = anonymise_spacy(request.user_question)
         return AnonymizeResponse(
             time=time.time() - start_time,
             anonymized_question=anonymized_question,
@@ -141,13 +138,23 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
 @app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
 async def get_contributions_idcc(idcc):
     start_time = time.time()
-    collections = AlbertCollectionHandler()
     try:
-        idcc_chunks = collections.get_contributions_idcc(idcc)
+        idcc_chunks = getChunksByIdcc(idcc)
         return SearchResponse(
             time=time.time() - start_time,
             top_chunks=idcc_chunks,
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/docs/retrieve", response_model=RetrieveResponse)
+async def get_docs(request: RetrieveRequest):
+    start_time = time.time()
+    ids = request.ids
+    try:
+        contents = getDocsContent(ids)
+        return RetrieveResponse(time=time.time() - start_time, contents=contents)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -213,6 +220,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                     id_chunk=int(chunk_data["id"]),
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
+                        id=metadata["id"],
                         source=(
                             metadata["source"] if "source" in metadata else "internet"
                         ),

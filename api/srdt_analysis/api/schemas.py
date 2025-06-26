@@ -18,9 +18,7 @@ class LLMModel(BaseModel):
 
 
 class AnonymizeRequest(BaseModel):
-    model: LLMModel
     user_question: str
-    anonymization_prompt: Optional[str] = None  # TODO : to be removed in the future
 
 
 class AnonymizeResponse(BaseModel):
@@ -88,6 +86,7 @@ class SearchRequest(BaseModel):
 class ChunkMetadata(BaseModel):
     title: str
     url: str
+    id: str
     document_id: ID
     source: CollectionName
     idcc: Optional[str] = None
@@ -98,6 +97,11 @@ class ChunkResult(BaseModel):
     content: str
     id_chunk: CHUNK_ID
     metadata: ChunkMetadata
+
+
+class ContentResult(BaseModel):
+    metadata: ChunkMetadata
+    content: str
 
 
 class RerankedChunk(BaseModel):
@@ -113,6 +117,15 @@ class RerankRequest(BaseModel):
 class SearchResponse(BaseModel):
     time: float
     top_chunks: List[ChunkResult]
+
+
+class RetrieveRequest(BaseModel):
+    ids: List[str]
+
+
+class RetrieveResponse(BaseModel):
+    time: float
+    contents: List[ContentResult]
 
 
 class RerankResponse(BaseModel):
