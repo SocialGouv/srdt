@@ -41,9 +41,7 @@ const PROMPT_INSTRUCTIONS_V1_15: InstructionPrompts = {
       ## Base de connaissance externe
       Extraits de documents avec structure : titre, contenu, url_source.
   `,
-};
-
-export const PROMPT_INSTRUCTIONS_GENERATE_IDCC = `
+  generate_instruction_idcc: `
   # Instructions
   ## Rôle et objectif
   L'assistant juridique répond aux questions des salariés et employeurs du secteur privé en France sur le droit du travail, en fournissant des informations précises et sourcées, conformément au droit français, avec des citations au format Wikipédia (titre, extrait, URL).
@@ -71,7 +69,8 @@ export const PROMPT_INSTRUCTIONS_GENERATE_IDCC = `
   Également tu rajouteras dans la conclusion : "Pour plus de détails aux dispositions s'appliquant à votre convention collective, vous pouvez consulter le lien suivant : [URL_convention_collective]" 
 
   ## Base de connaissance externe
-`;
+`,
+};
 
 export enum Config {
   V1_15 = "v1.15",
