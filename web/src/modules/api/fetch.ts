@@ -5,7 +5,6 @@ import {
   getRandomModel,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_LOCAL,
-  PROMPT_INSTRUCTIONS_GENERATE_IDCC,
   MAX_RERANK,
   K_RERANK,
   K_RERANK_IDCC,
@@ -52,6 +51,7 @@ interface PreparedQuestionData {
   config: Config;
   instructions: {
     generate_instruction: string;
+    generate_instruction_idcc: string;
     anonymisation?: string;
     reformulation?: string;
     split_multiple_queries?: string;
@@ -556,10 +556,11 @@ export const analyzeQuestion = async (
             preparedData.localSearchChunks,
             preparedData.idccChunks
           ),
-          systemPrompt: PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
-            "[URL_convention_collective]",
-            `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ),
+          systemPrompt:
+            preparedData.instructions.generate_instruction_idcc.replace(
+              "[URL_convention_collective]",
+              `https://code.travail.gouv.fr/convention-collective/${idcc}`
+            ),
         }
       : {
           chatHistory: createChatHistory(
@@ -622,10 +623,11 @@ export const analyzeQuestionStream = async (
             preparedData.localSearchChunks,
             preparedData.idccChunks
           ),
-          systemPrompt: PROMPT_INSTRUCTIONS_GENERATE_IDCC.replace(
-            "[URL_convention_collective]",
-            `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ),
+          systemPrompt:
+            preparedData.instructions.generate_instruction_idcc.replace(
+              "[URL_convention_collective]",
+              `https://code.travail.gouv.fr/convention-collective/${idcc}`
+            ),
         }
       : {
           chatHistory: createChatHistory(
