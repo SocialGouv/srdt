@@ -55,11 +55,14 @@ interface PreparedQuestionData {
     anonymisation?: string;
     reformulation?: string;
     split_multiple_queries?: string;
+    generate_instruction_short_answer?: string;
+    generate_instruction_idcc_short_answer?: string;
   };
   localSearchChunks: ChunkResult[];
   idccChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
+  answerType: "long" | "short";
 }
 
 const fetchApi = async <T>(
@@ -460,6 +463,8 @@ const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé");
   }
 
+  const answerType = Math.random() < 0.5 ? "long" : "short";
+
   return {
     query,
     model,
@@ -469,6 +474,7 @@ const prepareQuestionData = async (
     idccChunks: selectedIdccChunks,
     anonymizeResult,
     rephraseResult,
+    answerType,
   };
 };
 
@@ -534,7 +540,57 @@ const createAnalyzeResponse = (
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
+  answerType: preparedData.answerType,
 });
+
+async function getGenerateData(
+  userQuestion: string,
+  requiredConfig?: Config,
+  idcc?: string
+) {
+  const preparedData = await prepareQuestionData(
+    userQuestion,
+    requiredConfig,
+    idcc
+  );
+
+  // Determine chat history and system prompt based on whether IDCC is provided
+  const generateInstruction =
+    preparedData.answerType === "long"
+      ? preparedData.instructions.generate_instruction
+      : preparedData.instructions.generate_instruction_short_answer;
+
+  const generateInstructionIdcc =
+    preparedData.answerType === "long"
+      ? preparedData.instructions.generate_instruction_idcc
+      : preparedData.instructions.generate_instruction_idcc_short_answer;
+
+  const { chatHistory, systemPrompt } = idcc
+    ? {
+        chatHistory: createIdccChatHistory(
+          preparedData.query,
+          preparedData.localSearchChunks,
+          preparedData.idccChunks
+        ),
+        systemPrompt: generateInstructionIdcc?.replace(
+          "[URL_convention_collective]",
+          `https://code.travail.gouv.fr/convention-collective/${idcc}`
+        ),
+      }
+    : {
+        chatHistory: createChatHistory(
+          preparedData.query,
+          preparedData.localSearchChunks
+        ),
+        systemPrompt: generateInstruction,
+      };
+
+  return {
+    preparedData,
+    chatHistory,
+    systemPrompt,
+  };
+}
 
 export const analyzeQuestion = async (
   userQuestion: string,
@@ -542,33 +598,11 @@ export const analyzeQuestion = async (
   idcc?: string
 ): Promise<ApiResponse<AnalyzeResponse>> => {
   try {
-    const preparedData = await prepareQuestionData(
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
       requiredConfig,
       idcc
     );
-
-    // Determine chat history and system prompt based on whether IDCC is provided
-    const { chatHistory, systemPrompt } = idcc
-      ? {
-          chatHistory: createIdccChatHistory(
-            preparedData.query,
-            preparedData.localSearchChunks,
-            preparedData.idccChunks
-          ),
-          systemPrompt:
-            preparedData.instructions.generate_instruction_idcc.replace(
-              "[URL_convention_collective]",
-              `https://code.travail.gouv.fr/convention-collective/${idcc}`
-            ),
-        }
-      : {
-          chatHistory: createChatHistory(
-            preparedData.query,
-            preparedData.localSearchChunks
-          ),
-          systemPrompt: preparedData.instructions.generate_instruction,
-        };
 
     const generateResult = await generate({
       model: preparedData.model,
@@ -609,33 +643,11 @@ export const analyzeQuestionStream = async (
   idcc?: string
 ): Promise<void> => {
   try {
-    const preparedData = await prepareQuestionData(
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
       requiredConfig,
       idcc
     );
-
-    // Determine chat history and system prompt based on whether IDCC is provided
-    const { chatHistory, systemPrompt } = idcc
-      ? {
-          chatHistory: createIdccChatHistory(
-            preparedData.query,
-            preparedData.localSearchChunks,
-            preparedData.idccChunks
-          ),
-          systemPrompt:
-            preparedData.instructions.generate_instruction_idcc.replace(
-              "[URL_convention_collective]",
-              `https://code.travail.gouv.fr/convention-collective/${idcc}`
-            ),
-        }
-      : {
-          chatHistory: createChatHistory(
-            preparedData.query,
-            preparedData.localSearchChunks
-          ),
-          systemPrompt: preparedData.instructions.generate_instruction,
-        };
 
     await generateStream(
       {
