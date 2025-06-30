@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/SocialGouv/srdt/compare/v1.18.2...v1.19.0) (2025-06-30)
+
+
+### Features
+
+* 50% de chance de tomber sur le prompt "réponse courte" pour les utilisateurs (envoyé à Tally) ([#195](https://github.com/SocialGouv/srdt/issues/195)) ([a344398](https://github.com/SocialGouv/srdt/commit/a3443981e9c0c8596ac99601de5c30c6e6fab564))
+
 ## [1.18.2](https://github.com/SocialGouv/srdt/compare/v1.18.1...v1.18.2) (2025-06-23)
 
 
