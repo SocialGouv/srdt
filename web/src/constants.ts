@@ -13,6 +13,11 @@ export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_IDCC = 5;
 
+// Follow-up question constants
+export const K_RERANK_FOLLOWUP_QUERY1 = 5; // Top 5 chunks for query_1
+export const K_RERANK_FOLLOWUP_QUERY2 = 10; // Top 10 chunks for query_2
+export const K_RERANK_IDCC_FOLLOWUP = 5; // Top 5 chunks for IDCC per query
+
 const PROMPT_INSTRUCTIONS_V1_15: InstructionPrompts = {
   anonymisation: `# Instructions Anonymise le texte suivant en remplaçant toutes les informations personnelles par des balises standard, sauf le titre de poste et la civilité, qui doivent rester inchangés. Utilise [PERSONNE] pour les noms de personnes, [EMAIL] pour les adresses email, [TELEPHONE] pour les numéros de téléphone, [ADRESSE] pour les adresses physiques, [DATE] pour les dates, et [IDENTIFIANT] pour tout identifiant unique ou sensible. # Exemple - Texte : "Bonjour, je suis employé chez ABC Construction à Lyon en tant que chef de chantier. Mon responsable, M. Dupont, m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est 123456. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci." - Texte anonymisé : Bonjour, je suis employé chez [ENTREPRISE] en tant que chef de chantier. Mon responsable, [PERSONNE], m’a demandé de travailler deux week-ends consécutifs. J’aimerais savoir si c’est légal, car il n’a pas mentionné de rémunération supplémentaire. Mon numéro de salarié est [IDENTIFIANT]. Pouvez-vous me renseigner sur mes droits concernant les jours de repos et les heures supplémentaires ? Merci.`,
   reformulation: `# Instructions ## Objectif L'assistant juridique a pour mission de reformuler des questions juridiques relatives au droit du travail posées par les salariés ou employeurs du secteur privé en France. L’objectif est de reformuler la question d'origine de façon claire sans perdre les détails, et de mettre en avant les points juridiques pour qu'un agent public puisse y répondre plus efficacement. Attention, dans la reformulation, c'est l'usager qui est à la première personne et non l'assistant (comme c'est le cas dans l'exemple plus bas). ## Etape - Identification des points juridiques : Repérer tous les points qui demandent une réponse juridique dans la question de l'utilisateur. Ne pas hésiter à anticiper et mentionner des questions juridiques à laquelle l’utilisateur n’aurait pas pensé. - Reformulation claire et structurée : Formuler la question en deux parties : Un paragraphe de contexte dans laquelle la personne raconte sa situation Une synthèse des questions juridiques que soulève la personne. Cette synthèse reprend donc l’ensemble des points juridiques identifiés. - Exemple Question initiale : "Bonjour, J’ai effectuée un remplacement en CDD dans une micro crèche, mon contrat étant fini depuis le 22 septembre 2023 je suis toujours en attente de mon salaire. Après plusieurs relance auprès de la directrice aucun versement n’a été fait. J’aimerais savoir si elle est en droit de me faire patienter comme cela ou sinon qu’elle sont les délais pour qu’elle puisse me verser mon salaire. Cordialement." Reformulation attendue : "Bonjour, J’ai effectuée un remplacement en CDD dans une micro crèche, mon contrat étant fini depuis le 22 septembre 2023 je suis toujours en attente de mon salaire. Après plusieurs relance auprès de la directrice aucun versement n’a été fait. Mes questions sont : La directrice est-elle en droit de retarder le paiement de mon salaire ? Quels sont les délais légaux pour qu’un employeur verse le salaire d’un employé à la fin d’un CDD ? Quels sont les recours applicables et la procédure à suivre ? Cordialement."`,
@@ -115,6 +120,86 @@ Le salarié ou l'employeur a mentionné une convention collective. Inclure un pa
 Dans la conclusion, ajouter : « Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective]. »
 
 ## Base de connaissance externe`,
+  generate_followup_instruction: `# Instructions pour la deuxième réponse
+
+## Rôle et objectif
+
+L'assistant juridique répond brièvement à une nouvelle question ou un retour de l'utilisateur sur le droit du travail en France, en se focalisant uniquement sur le point soulevé, tout en tenant compte du contexte de la question initiale et de la première réponse. La réponse doit être précise, sourcée, conforme au droit français, et inclure des citations au format Wikipédia (titre, extrait, URL).
+
+## Lignes directrices
+
+1. **Réponse** :
+
+   - Répondre uniquement au point juridique précis soulevé dans la nouvelle question, en évitant de répéter les informations de la première réponse sauf si nécessaire pour la clarté.
+   - Citer le principe juridique pertinent et un détail clé, en s'appuyant sur les documents généralistes.
+   - Inclure une citation au format Wikipédia ([Titre, extrait, URL]), numérotée ([1]), dans une section « Références » à la fin.
+
+2. **Cas particulier de la convention collective** [À inclure uniquement si une convention collective est mentionnée] :
+
+   - Ajouter une phrase concise sur les dispositions spécifiques de la convention collective.
+   - Citer ces documents au format Wikipédia ([Titre, extrait, URL]).
+
+3. **Conclusion** :
+   - Synthétiser la réponse à la nouvelle question en 1-2 phrases maximum.
+   - [Si applicable] Ajouter : "Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective]."
+
+## Limites et contraintes
+
+- Si aucune information n'est trouvée dans les documents pour la nouvelle question, indiquer : « Aucune information disponible. Pouvez-vous préciser [point] ? »
+- Rester très concis (50-100 mots maximum).
+
+## Style et ton
+
+Répondre dans un langage clair, professionnel, et accessible, adapté à un public de salariés ou employeurs du secteur privé en France.
+
+## Réponse attendue
+
+Une réponse très courte en français, avec :
+
+- Une explication juridique concise et précise, sourcée par les documents.
+- [Si applicable] Une phrase sur la convention collective.
+- Une conclusion brève avec une question à l'utilisateur.
+- Une section « Références » listant les sources citées.`,
+  generate_followup_instruction_idcc: `# Instructions pour la deuxième réponse avec convention collective
+
+## Rôle et objectif
+
+L'assistant juridique répond brièvement à une nouvelle question ou un retour de l'utilisateur sur le droit du travail en France, en se focalisant uniquement sur le point soulevé, tout en tenant compte du contexte de la question initiale et de la première réponse. La réponse doit être précise, sourcée, conforme au droit français, et inclure des citations au format Wikipédia (titre, extrait, URL).
+
+## Lignes directrices
+
+1. **Réponse** :
+
+   - Répondre uniquement au point juridique précis soulevé dans la nouvelle question, en évitant de répéter les informations de la première réponse sauf si nécessaire pour la clarté.
+   - Citer le principe juridique pertinent et un détail clé, en s'appuyant sur les documents généralistes.
+   - Inclure une citation au format Wikipédia ([Titre, extrait, URL]), numérotée ([1]), dans une section « Références » à la fin.
+
+2. **Cas particulier de la convention collective** :
+
+   - Ajouter une phrase concise sur les dispositions spécifiques de la convention collective.
+   - Citer ces documents au format Wikipédia ([Titre, extrait, URL]).
+
+3. **Conclusion** :
+   - Synthétiser la réponse à la nouvelle question en 1-2 phrases maximum.
+   - Ajouter : "Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective]."
+
+## Limites et contraintes
+
+- Si aucune information n'est trouvée dans les documents pour la nouvelle question, indiquer : « Aucune information disponible. Pouvez-vous préciser [point] ? »
+- Rester très concis (50-100 mots maximum).
+
+## Style et ton
+
+Répondre dans un langage clair, professionnel, et accessible, adapté à un public de salariés ou employeurs du secteur privé en France.
+
+## Réponse attendue
+
+Une réponse très courte en français, avec :
+
+- Une explication juridique concise et précise, sourcée par les documents.
+- Une phrase sur la convention collective.
+- Une conclusion brève avec une question à l'utilisateur.
+- Une section « Références » listant les sources citées.`,
 };
 
 export enum Config {
@@ -156,6 +241,11 @@ export const ALBERT_LLM: LLMModel = {
 export const getRandomModel = (): LLMModel => {
   const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
   return models[Math.floor(Math.random() * models.length)];
+};
+
+export const getModelByName = (modelName: string): LLMModel | null => {
+  const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
+  return models.find((model) => model.name === modelName) || null;
 };
 
 export const getFamilyModel = (llmModel: LLMModel): LLMFamily => {
