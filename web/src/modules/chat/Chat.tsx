@@ -472,6 +472,7 @@ export const Chat = () => {
               llmResponse={apiResult?.generated.text}
               errorMessage={apiError}
               idcc={selectedAgreement?.id}
+              answerType={apiResult?.answerType}
             />
           </div>
         )}

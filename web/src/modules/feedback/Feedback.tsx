@@ -21,6 +21,7 @@ type Props = {
   llmResponse?: string;
   errorMessage?: string;
   idcc?: string;
+  answerType?: "long" | "short";
 };
 
 export const Feedback = (props: Props) => {
