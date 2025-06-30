@@ -113,6 +113,7 @@ export interface InstructionPrompts {
   reformulation: string;
   split_multiple_queries: string;
   generate_instruction: string;
+  generate_instruction_idcc: string;
 }
 
 export interface AnalyzeResponse {
