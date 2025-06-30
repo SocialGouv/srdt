@@ -1,9 +1,0 @@
-jobs:
-  runs:
-    build-web:
-      use: build
-      with:
-        secrets:
-          sentry_auth_token:
-            secretName: web-secret
-            secretKey: SENTRY_AUTH_TOKEN
