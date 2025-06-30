@@ -1,24 +1,9 @@
-jobs:
-  ~chart: jobs
-  runs:
-    build-api:
-      use: build
-      with:
-        imagePackage: api
-        context: api
-    build-web:
-      use: build
-      with:
-        imagePackage: web
-        context: web
-
 api:
   ingress:
     annotations:
       nginx.ingress.kubernetes.io/proxy-read-timeout: 180
       nginx.ingress.kubernetes.io/proxy-send-timeout: 180
   ~chart: app
-  ~needs: [build-api]
   imagePackage: api
   probesPath: /api/v1/healthz
   livenessProbe:
@@ -71,7 +56,6 @@ web:
       nginx.ingress.kubernetes.io/proxy-read-timeout: 180
       nginx.ingress.kubernetes.io/proxy-send-timeout: 180
   ~chart: app
-  ~needs: [build-web]
   imagePackage: web
   probesPath: /api/healthz
   livenessProbe:
