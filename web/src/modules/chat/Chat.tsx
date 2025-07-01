@@ -344,7 +344,7 @@ export const Chat = () => {
                 selectedModel: result.data?.modelName,
               });
             }
-            setIsDisabled(false); // Re-enable for potential new conversation
+            setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
           },
           selectedAgreement?.id,
           selectedAgreement?.title,
@@ -458,7 +458,7 @@ export const Chat = () => {
             selectedModel: result.data?.modelName,
           });
         }
-        setIsDisabled(false);
+        setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
       } else {
         const result = await generateAnswer(
           newMessage,
@@ -840,7 +840,12 @@ export const Chat = () => {
               onKeyDown={handleKeyDown}
               placeholder={
                 isDisabled
-                  ? "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
+                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
+                    messages.length > 0 &&
+                    (messages[messages.length - 1].isLoading ||
+                      messages[messages.length - 1].isStreaming)
+                    ? "Génération de la réponse en cours...\nVous pourrez ensuite poser une question de suivi ou démarrer une nouvelle conversation."
+                    : "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
                   : currentConversation?.isAwaitingFollowup
                   ? "Posez une question de suivi ou démarrez une nouvelle conversation..."
                   : "Saisissez votre message"
@@ -862,7 +867,12 @@ export const Chat = () => {
               iconId="fr-icon-send-plane-fill"
               title={
                 isDisabled
-                  ? "Démarrez une nouvelle conversation pour poser une autre question"
+                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
+                    messages.length > 0 &&
+                    (messages[messages.length - 1].isLoading ||
+                      messages[messages.length - 1].isStreaming)
+                    ? "Génération en cours, patientez..."
+                    : "Démarrez une nouvelle conversation pour poser une autre question"
                   : currentConversation?.isAwaitingFollowup
                   ? "Envoyer votre question de suivi"
                   : "Envoyer votre message"
