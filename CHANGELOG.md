@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/SocialGouv/srdt/compare/v1.19.1...v1.20.0) (2025-07-01)
+
+
+### Features
+
+* possibilité de faire une question à la suite ([#196](https://github.com/SocialGouv/srdt/issues/196)) ([43500fe](https://github.com/SocialGouv/srdt/commit/43500fea3a1eadbb2c2baa8f8912822868abc81d)), closes [#186](https://github.com/SocialGouv/srdt/issues/186)
+
 ## [1.19.1](https://github.com/SocialGouv/srdt/compare/v1.19.0...v1.19.1) (2025-07-01)
 
 
