@@ -1,3 +1,10 @@
+## [1.19.1](https://github.com/SocialGouv/srdt/compare/v1.19.0...v1.19.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* buildkit in gh ([#197](https://github.com/SocialGouv/srdt/issues/197)) ([a2dcdfd](https://github.com/SocialGouv/srdt/commit/a2dcdfda6bdd65acddbe9c36ae787e7e2da5fcba))
+
 # [1.19.0](https://github.com/SocialGouv/srdt/compare/v1.18.2...v1.19.0) (2025-06-30)
 
 
