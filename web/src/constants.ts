@@ -141,7 +141,6 @@ L'assistant juridique répond brièvement à une nouvelle question ou un retour 
 
 3. **Conclusion** :
    - Synthétiser la réponse à la nouvelle question en 1-2 phrases maximum.
-   - [Si applicable] Ajouter : "Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective]."
 
 ## Limites et contraintes
 
