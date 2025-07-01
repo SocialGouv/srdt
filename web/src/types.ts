@@ -12,9 +12,7 @@ export enum LLMFamily {
 
 // Anonymization types
 export interface AnonymizeRequest {
-  model: LLMModel;
   user_question: string;
-  anonymization_prompt?: string;
 }
 
 export interface AnonymizeResponse {
