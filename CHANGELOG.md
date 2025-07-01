@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/SocialGouv/srdt/compare/v1.20.0...v1.20.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* info dans tally si c'est une followup response ([#201](https://github.com/SocialGouv/srdt/issues/201)) ([8f938d3](https://github.com/SocialGouv/srdt/commit/8f938d36bb6e33bb8a1b9e54465d04accf898f20))
+
 # [1.20.0](https://github.com/SocialGouv/srdt/compare/v1.19.1...v1.20.0) (2025-07-01)
 
 
