@@ -1,5 +1,1 @@
 projectName: srdt
-dependencies:
-  fabrique:
-    extends:
-      - name: ovh
