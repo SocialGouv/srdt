@@ -22,6 +22,7 @@ type Props = {
   errorMessage?: string;
   idcc?: string;
   answerType?: "long" | "short";
+  isFollowupResponse?: boolean;
 };
 
 export const Feedback = (props: Props) => {

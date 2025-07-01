@@ -657,6 +657,7 @@ export const Chat = () => {
               errorMessage={apiError}
               idcc={selectedAgreement?.id}
               answerType={apiResult?.answerType}
+              isFollowupResponse={message.isFollowup}
             />
           </div>
         )}
