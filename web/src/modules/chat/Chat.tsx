@@ -17,6 +17,7 @@ interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
   isLoading?: boolean;
   isStreaming?: boolean;
+  isFollowup?: boolean;
 }
 
 interface Conversation {
@@ -29,6 +30,10 @@ interface Conversation {
   lastUserQuestion?: string;
   lastApiError?: string;
   hasFailed?: boolean;
+  isAwaitingFollowup?: boolean;
+  firstUserQuestion?: string;
+  firstAssistantAnswer?: string;
+  selectedModel?: string;
 }
 
 const STORAGE_KEY = "chat-conversations";
@@ -47,7 +52,13 @@ export const Chat = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-  const { generateAnswer, generateAnswerStream, isLoading } = useApi();
+  const {
+    generateAnswer,
+    generateAnswerStream,
+    generateFollowupAnswer,
+    generateFollowupAnswerStream,
+    isLoading,
+  } = useApi();
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(0);
@@ -81,9 +92,23 @@ export const Chat = () => {
           ],
           createdAt: new Date(),
           hasFailed: false,
+          isAwaitingFollowup: false,
+          selectedModel: undefined,
         };
 
-        setConversations([newConversation, ...parsed]);
+        // Ensure backward compatibility by adding missing fields to loaded conversations
+        const compatibleParsed = parsed.map(
+          (conv: Partial<Conversation>) =>
+            ({
+              ...conv,
+              isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
+              firstUserQuestion: conv.firstUserQuestion ?? undefined,
+              firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
+              selectedModel: conv.selectedModel ?? undefined,
+            } as Conversation)
+        );
+
+        setConversations([newConversation, ...compatibleParsed]);
         setCurrentConversationId(newId);
       } catch (error) {
         Sentry.captureException(error, {
@@ -142,6 +167,8 @@ export const Chat = () => {
       messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
       hasFailed: false,
+      isAwaitingFollowup: false,
+      selectedModel: undefined,
     };
     setConversations([defaultConversation]);
     setCurrentConversationId("default");
@@ -206,8 +233,18 @@ export const Chat = () => {
 
     setIsDisabled(true);
 
-    const userMessage = { content: newMessage, role: "user" as const };
+    const userMessage = {
+      content: newMessage,
+      role: "user" as const,
+      isFollowup: currentConversation?.isAwaitingFollowup || false,
+    };
     const currentMessages = [...messages, userMessage];
+
+    // Check if this is a follow-up question
+    const isFollowupQuestion =
+      currentConversation?.isAwaitingFollowup &&
+      currentConversation?.firstUserQuestion &&
+      currentConversation?.firstAssistantAnswer;
 
     // Update conversation title if this is the first user message
     const shouldUpdateTitle =
@@ -219,6 +256,13 @@ export const Chat = () => {
 
     if (shouldUpdateTitle) {
       conversationUpdates.title = generateConversationTitle(newMessage);
+      // Store the first question for potential follow-up
+      conversationUpdates.firstUserQuestion = newMessage;
+    }
+
+    // If this is a follow-up, clear the awaiting state
+    if (isFollowupQuestion) {
+      conversationUpdates.isAwaitingFollowup = false;
     }
 
     updateCurrentConversation(conversationUpdates);
@@ -229,6 +273,7 @@ export const Chat = () => {
       role: "assistant" as const,
       isLoading: !useStreaming,
       isStreaming: useStreaming,
+      isFollowup: !!isFollowupQuestion,
     };
 
     updateCurrentConversation({
@@ -239,97 +284,225 @@ export const Chat = () => {
     streamingMessageRef.current = "";
 
     if (useStreaming) {
-      // Use streaming
-      await generateAnswerStream(
-        newMessage,
-        (chunk: string) => {
-          // Handle each streaming chunk
-          streamingMessageRef.current += chunk;
+      if (isFollowupQuestion) {
+        // Use follow-up streaming
+        await generateFollowupAnswerStream(
+          currentConversation.firstUserQuestion!,
+          currentConversation.firstAssistantAnswer!,
+          newMessage,
+          (chunk: string) => {
+            // Handle each streaming chunk
+            streamingMessageRef.current += chunk;
+            updateCurrentConversation({
+              messages: currentMessages.concat([
+                {
+                  content: streamingMessageRef.current,
+                  role: "assistant",
+                  isStreaming: true,
+                  isFollowup: true,
+                },
+              ]),
+            });
+          },
+          (result) => {
+            // Handle completion for follow-up
+            const endTime = performance.now();
+            const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+            if (result.error || !result.success) {
+              updateCurrentConversation({
+                messages: currentMessages.concat([
+                  {
+                    content: `Une erreur est survenue : ${result.error}`,
+                    role: "assistant",
+                    isError: true,
+                    isFollowup: true,
+                  },
+                ]),
+                lastApiError: result.error?.toString(),
+                lastResponseTime: responseTimeInSeconds,
+                hasFailed: true,
+              });
+            } else {
+              updateCurrentConversation({
+                messages: currentMessages.concat([
+                  {
+                    content:
+                      result.data?.generated?.text ??
+                      streamingMessageRef.current,
+                    role: "assistant",
+                    isFollowup: true,
+                  },
+                ]),
+                lastApiResult: result.data,
+                lastResponseTime: responseTimeInSeconds,
+                lastApiError: undefined,
+                hasFailed: false,
+                isAwaitingFollowup: false, // Followup is complete, no more follow-ups
+                firstAssistantAnswer:
+                  result.data?.generated?.text ?? streamingMessageRef.current,
+                selectedModel: result.data?.modelName,
+              });
+            }
+            setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
+          },
+          selectedAgreement?.id,
+          selectedAgreement?.title,
+          currentConversation.selectedModel
+        );
+      } else {
+        // Use regular streaming for initial question
+        await generateAnswerStream(
+          newMessage,
+          (chunk: string) => {
+            // Handle each streaming chunk
+            streamingMessageRef.current += chunk;
+            updateCurrentConversation({
+              messages: currentMessages.concat([
+                {
+                  content: streamingMessageRef.current,
+                  role: "assistant",
+                  isStreaming: true,
+                },
+              ]),
+            });
+          },
+          (result) => {
+            // Handle completion for initial question
+            const endTime = performance.now();
+            const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+            if (result.error || !result.success) {
+              updateCurrentConversation({
+                messages: currentMessages.concat([
+                  {
+                    content: `Une erreur est survenue : ${result.error}`,
+                    role: "assistant",
+                    isError: true,
+                  },
+                ]),
+                lastApiError: result.error?.toString(),
+                lastResponseTime: responseTimeInSeconds,
+                hasFailed: true,
+              });
+            } else {
+              updateCurrentConversation({
+                messages: currentMessages.concat([
+                  {
+                    content:
+                      result.data?.generated?.text ??
+                      streamingMessageRef.current,
+                    role: "assistant",
+                  },
+                ]),
+                lastApiResult: result.data,
+                lastResponseTime: responseTimeInSeconds,
+                lastApiError: undefined,
+                hasFailed: false,
+                isAwaitingFollowup: true, // Set flag to allow follow-up
+                firstAssistantAnswer:
+                  result.data?.generated?.text ?? streamingMessageRef.current,
+                selectedModel: result.data?.modelName,
+              });
+            }
+            setIsDisabled(false); // Re-enable for potential follow-up
+          },
+          selectedAgreement?.id,
+          selectedAgreement?.title
+        );
+      }
+    } else {
+      // Non-streaming approach (similar logic for both initial and follow-up)
+      if (isFollowupQuestion) {
+        const result = await generateFollowupAnswer(
+          currentConversation.firstUserQuestion!,
+          currentConversation.firstAssistantAnswer!,
+          newMessage,
+          selectedAgreement?.id,
+          selectedAgreement?.title,
+          currentConversation.selectedModel
+        );
+        const endTime = performance.now();
+        const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+        if (result.error || !result.success) {
           updateCurrentConversation({
             messages: currentMessages.concat([
               {
-                content: streamingMessageRef.current,
+                content: `Une erreur est survenue : ${result.error}`,
                 role: "assistant",
-                isStreaming: true,
+                isError: true,
+                isFollowup: true,
               },
             ]),
+            lastApiError: result.error?.toString(),
+            lastResponseTime: responseTimeInSeconds,
+            hasFailed: true,
           });
-        },
-        (result) => {
-          // Handle completion
-          const endTime = performance.now();
-          const responseTimeInSeconds = (endTime - startTime) / 1000;
-
-          if (result.error || !result.success) {
-            updateCurrentConversation({
-              messages: currentMessages.concat([
-                {
-                  content: `Une erreur est survenue : ${result.error}`,
-                  role: "assistant",
-                  isError: true,
-                },
-              ]),
-              lastApiError: result.error?.toString(),
-              lastResponseTime: responseTimeInSeconds,
-              hasFailed: true,
-            });
-          } else {
-            updateCurrentConversation({
-              messages: currentMessages.concat([
-                {
-                  content:
-                    result.data?.generated?.text ?? streamingMessageRef.current,
-                  role: "assistant",
-                },
-              ]),
-              lastApiResult: result.data,
-              lastResponseTime: responseTimeInSeconds,
-              lastApiError: undefined,
-              hasFailed: false,
-            });
-          }
-        },
-        selectedAgreement?.id,
-        selectedAgreement?.title
-      );
-    } else {
-      // Use traditional non-streaming approach
-      const result = await generateAnswer(
-        newMessage,
-        selectedAgreement?.id,
-        selectedAgreement?.title
-      );
-      const endTime = performance.now();
-      const responseTimeInSeconds = (endTime - startTime) / 1000;
-
-      if (result.error || !result.success) {
-        updateCurrentConversation({
-          messages: currentMessages.concat([
-            {
-              content: `Une erreur est survenue : ${result.error}`,
-              role: "assistant",
-              isError: true,
-            },
-          ]),
-          lastApiError: result.error?.toString(),
-          lastResponseTime: responseTimeInSeconds,
-          hasFailed: true,
-        });
+        } else {
+          updateCurrentConversation({
+            messages: currentMessages.concat([
+              {
+                content:
+                  result.data?.generated?.text ??
+                  "Désolé, je n'ai pas pu générer de réponse.",
+                role: "assistant",
+                isFollowup: true,
+              },
+            ]),
+            lastApiResult: result.data,
+            lastResponseTime: responseTimeInSeconds,
+            lastApiError: undefined,
+            hasFailed: false,
+            isAwaitingFollowup: false,
+            selectedModel: result.data?.modelName,
+          });
+        }
+        setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
       } else {
-        updateCurrentConversation({
-          messages: currentMessages.concat([
-            {
-              content:
-                result.data?.generated?.text ??
-                "Désolé, je n'ai pas pu générer de réponse.",
-              role: "assistant",
-            },
-          ]),
-          lastApiResult: result.data,
-          lastResponseTime: responseTimeInSeconds,
-          lastApiError: undefined,
-          hasFailed: false,
-        });
+        const result = await generateAnswer(
+          newMessage,
+          selectedAgreement?.id,
+          selectedAgreement?.title
+        );
+        const endTime = performance.now();
+        const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+        if (result.error || !result.success) {
+          updateCurrentConversation({
+            messages: currentMessages.concat([
+              {
+                content: `Une erreur est survenue : ${result.error}`,
+                role: "assistant",
+                isError: true,
+              },
+            ]),
+            lastApiError: result.error?.toString(),
+            lastResponseTime: responseTimeInSeconds,
+            hasFailed: true,
+          });
+        } else {
+          updateCurrentConversation({
+            messages: currentMessages.concat([
+              {
+                content:
+                  result.data?.generated?.text ??
+                  "Désolé, je n'ai pas pu générer de réponse.",
+                role: "assistant",
+              },
+            ]),
+            lastApiResult: result.data,
+            lastResponseTime: responseTimeInSeconds,
+            lastApiError: undefined,
+            hasFailed: false,
+            isAwaitingFollowup: true,
+            firstAssistantAnswer:
+              result.data?.generated?.text ??
+              "Désolé, je n'ai pas pu générer de réponse.",
+            selectedModel: result.data?.modelName,
+          });
+        }
+        setIsDisabled(false);
       }
     }
   };
@@ -349,6 +522,8 @@ export const Chat = () => {
       messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
       hasFailed: false,
+      isAwaitingFollowup: false, // Ensure new conversations are not awaiting follow-up
+      selectedModel: undefined,
     };
 
     setConversations((prev) => [newConversation, ...prev]);
@@ -362,7 +537,11 @@ export const Chat = () => {
   const handleConversationSelect = (conversationId: string) => {
     setCurrentConversationId(conversationId);
     setNewMessage("");
-    setIsDisabled(true);
+    // Don't disable if the conversation is awaiting a follow-up
+    const selectedConversation = conversations.find(
+      (c) => c.id === conversationId
+    );
+    setIsDisabled(!selectedConversation?.isAwaitingFollowup);
     streamingMessageRef.current = "";
   };
 
@@ -408,12 +587,17 @@ export const Chat = () => {
       padding: "1rem",
     };
 
+    // Check if this is the last assistant message and should show feedback
     const isLastAssistantMessage =
       message.role === "assistant" &&
       index === messages.length - 1 &&
       !message.isLoading &&
       !message.isStreaming &&
       !message.isError;
+
+    // Always show feedback for the last assistant message
+    // This naturally handles: show after first → hide when follow-up starts → show after follow-up
+    const shouldShowFeedback = isLastAssistantMessage;
 
     const isLastMessage = index === messages.length - 1;
 
@@ -456,7 +640,7 @@ export const Chat = () => {
           </div>
         </div>
 
-        {apiResult && isLastAssistantMessage && (
+        {apiResult && shouldShowFeedback && (
           <div style={bubbleMessageStyle}>
             <p className={fr.cx("fr-m-0", "fr-h1")}>
               Donnez votre avis sur cette réponse
@@ -522,7 +706,7 @@ export const Chat = () => {
                   </p>
                   <p className={fr.cx("fr-text--sm")}>
                     <i>
-                      Cliquez sur le bouton « Nouvelle conversation » pour en
+                      Cliquez sur le bouton « Nouvelle conversation » pour en
                       créer une.
                     </i>
                   </p>
@@ -656,7 +840,14 @@ export const Chat = () => {
               onKeyDown={handleKeyDown}
               placeholder={
                 isDisabled
-                  ? "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
+                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
+                    messages.length > 0 &&
+                    (messages[messages.length - 1].isLoading ||
+                      messages[messages.length - 1].isStreaming)
+                    ? "Génération de la réponse en cours...\nVous pourrez ensuite poser une question de suivi ou démarrer une nouvelle conversation."
+                    : "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
+                  : currentConversation?.isAwaitingFollowup
+                  ? "Posez une question de suivi ou démarrez une nouvelle conversation..."
                   : "Saisissez votre message"
               }
               disabled={isDisabled}
@@ -676,7 +867,14 @@ export const Chat = () => {
               iconId="fr-icon-send-plane-fill"
               title={
                 isDisabled
-                  ? "Démarrez une nouvelle conversation pour poser une autre question"
+                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
+                    messages.length > 0 &&
+                    (messages[messages.length - 1].isLoading ||
+                      messages[messages.length - 1].isStreaming)
+                    ? "Génération en cours, patientez..."
+                    : "Démarrez une nouvelle conversation pour poser une autre question"
+                  : currentConversation?.isAwaitingFollowup
+                  ? "Envoyer votre question de suivi"
                   : "Envoyer votre message"
               }
               type="submit"
@@ -684,7 +882,7 @@ export const Chat = () => {
               disabled={isDisabled}
             />
           </div>
-          {!isDisabled && (
+          {!isDisabled && !currentConversation?.firstUserQuestion && (
             <div className={fr.cx("fr-col-11")}>
               <AgreementSearchInput
                 onAgreementSelect={(agreement) => {
@@ -694,6 +892,23 @@ export const Chat = () => {
                 defaultAgreement={undefined}
                 trackingActionName="chat"
               />
+            </div>
+          )}
+          {currentConversation?.isAwaitingFollowup && !isDisabled && (
+            <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
+              <div
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--text-mention-grey)",
+                  padding: "0.5rem",
+                  backgroundColor: "var(--background-alt-grey)",
+                  borderRadius: "4px",
+                  borderLeft: "3px solid var(--border-action-high-blue-france)",
+                }}
+              >
+                💡 Vous pouvez poser une question de suivi pour approfondir
+                cette réponse, ou démarrer une nouvelle conversation.
+              </div>
             </div>
           )}
         </form>

@@ -8,6 +8,9 @@ import {
   MAX_RERANK,
   K_RERANK,
   K_RERANK_IDCC,
+  K_RERANK_FOLLOWUP_QUERY1,
+  K_RERANK_FOLLOWUP_QUERY2,
+  K_RERANK_IDCC_FOLLOWUP,
 } from "@/constants";
 import {
   AnonymizeRequest,
@@ -23,6 +26,7 @@ import {
   RerankRequest,
   RerankResponse,
   RerankResult,
+  InstructionPrompts,
 } from "../../types";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 import * as Sentry from "@sentry/nextjs";
@@ -63,6 +67,18 @@ interface PreparedQuestionData {
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
   answerType: "long" | "short";
+}
+
+interface PreparedFollowupQuestionData {
+  query1: string;
+  query2: string;
+  model: LLMModel;
+  config: Config;
+  instructions: InstructionPrompts;
+  generalChunksQuery1: ChunkResult[];
+  generalChunksQuery2: ChunkResult[];
+  idccChunksQuery1: ChunkResult[];
+  idccChunksQuery2: ChunkResult[];
 }
 
 const fetchApi = async <T>(
@@ -669,6 +685,439 @@ export const analyzeQuestionStream = async (
         onComplete({
           success: true,
           data: createAnalyzeResponse(preparedData, generatedData),
+        });
+      },
+      (error) => {
+        // onError
+        onComplete({
+          success: false,
+          data: null,
+          error,
+        });
+      }
+    );
+  } catch (error) {
+    onComplete({
+      success: false,
+      data: null,
+      error: (error as Error).message,
+    });
+  }
+};
+
+// Helper to create follow-up chat history with context from previous conversation
+const createFollowupChatHistory = (
+  query1: string,
+  answer1: string,
+  query2: string,
+  generalChunks: ChunkResult[]
+) => [
+  {
+    role: "user" as const,
+    content: `Contexte - Question initiale: "${query1}"`,
+  },
+  {
+    role: "assistant" as const,
+    content: `Première réponse: "${answer1}"`,
+  },
+  {
+    role: "user" as const,
+    content: `Nouvelle question ou retour: "${query2}"`,
+  },
+  {
+    role: "user" as const,
+    content: `Voici les sources pertinentes pour répondre à la nouvelle question:
+
+        ${formatChunks(generalChunks)}`,
+  },
+];
+
+// Helper to create follow-up IDCC chat history
+const createFollowupIdccChatHistory = (
+  query1: string,
+  answer1: string,
+  query2: string,
+  generalChunks: ChunkResult[],
+  idccChunks: ChunkResult[]
+) => [
+  {
+    role: "user" as const,
+    content: `Contexte - Question initiale: "${query1}"`,
+  },
+  {
+    role: "assistant" as const,
+    content: `Première réponse: "${answer1}"`,
+  },
+  {
+    role: "user" as const,
+    content: `Nouvelle question ou retour: "${query2}"`,
+  },
+  {
+    role: "user" as const,
+    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
+
+### Documents généralistes :
+${formatChunks(generalChunks)}
+
+### Documents spécifiques à la convention collective renseignée :
+${formatChunks(idccChunks)}`,
+  },
+];
+
+// Prepare data for follow-up question analysis
+const prepareFollowupQuestionData = async (
+  query1: string,
+  query2: string,
+  requiredConfig?: Config,
+  idcc?: string,
+  providedModel?: LLMModel
+): Promise<PreparedFollowupQuestionData> => {
+  const config = requiredConfig || Config.V1_15;
+  const instructions = PROMPT_INSTRUCTIONS[config];
+  const model = providedModel || getRandomModel(); // Use provided model or fallback to random
+
+  // Search for query1 (top 5)
+  const searchResultQuery1 = await search({
+    prompts: [query1],
+    options: SEARCH_OPTIONS_LOCAL,
+  });
+
+  if (searchResultQuery1.error) {
+    console.error(
+      `Erreur lors de la recherche query1: ${searchResultQuery1.error}`
+    );
+  }
+
+  const localSearchChunksQuery1 = searchResultQuery1.data?.top_chunks ?? [];
+
+  // Merge chunks from same document for query1
+  const toRerankRecordQuery1 = localSearchChunksQuery1
+    .sort((a, b) => b.score - a.score)
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content.concat(" /n/n " + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  const toRerankChunksQuery1 = Object.values(toRerankRecordQuery1).slice(
+    0,
+    MAX_RERANK
+  );
+
+  // Rerank for query1
+  const rerankResultQuery1 = await rerank({
+    prompt: query1,
+    inputs: toRerankChunksQuery1,
+  });
+
+  const rerankedQuery1 = rerankResultQuery1.data?.results || [];
+
+  // Search for query2 (top 10)
+  const searchResultQuery2 = await search({
+    prompts: [query2],
+    options: SEARCH_OPTIONS_LOCAL,
+  });
+
+  if (searchResultQuery2.error) {
+    console.error(
+      `Erreur lors de la recherche query2: ${searchResultQuery2.error}`
+    );
+  }
+
+  const localSearchChunksQuery2 = searchResultQuery2.data?.top_chunks ?? [];
+
+  // Merge chunks from same document for query2
+  const toRerankRecordQuery2 = localSearchChunksQuery2
+    .sort((a, b) => b.score - a.score)
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content.concat(" /n/n " + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  const toRerankChunksQuery2 = Object.values(toRerankRecordQuery2).slice(
+    0,
+    MAX_RERANK
+  );
+
+  // Rerank for query2
+  const rerankResultQuery2 = await rerank({
+    prompt: query2,
+    inputs: toRerankChunksQuery2,
+  });
+
+  const rerankedQuery2 = rerankResultQuery2.data?.results || [];
+
+  // Convert rerank results to chunks
+  const rerankedToChunk = ({
+    chunk,
+    rerank_score,
+  }: RerankResult): ChunkResult => ({
+    ...chunk,
+    rerank_score,
+  });
+
+  const selectedGeneralChunksQuery1 = rerankedQuery1
+    .slice(0, K_RERANK_FOLLOWUP_QUERY1)
+    .map(rerankedToChunk);
+
+  const selectedGeneralChunksQuery2 = rerankedQuery2
+    .slice(0, K_RERANK_FOLLOWUP_QUERY2)
+    .map(rerankedToChunk);
+
+  // Handle IDCC chunks if applicable
+  let selectedIdccChunksQuery1: ChunkResult[] = [];
+  let selectedIdccChunksQuery2: ChunkResult[] = [];
+
+  if (idcc) {
+    // Get all IDCC content
+    const idccSearchResult = await getIdccChunks(idcc);
+
+    if (idccSearchResult.error) {
+      console.error(
+        `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
+      );
+    } else if (idccSearchResult.data?.top_chunks) {
+      // Rerank IDCC chunks for query1
+      const idccRerankResultQuery1 = await rerank({
+        prompt: query1,
+        inputs: idccSearchResult.data.top_chunks.slice(0, MAX_RERANK),
+      });
+
+      if (idccRerankResultQuery1.data) {
+        selectedIdccChunksQuery1 = idccRerankResultQuery1.data.results
+          .slice(0, K_RERANK_IDCC_FOLLOWUP)
+          .map(rerankedToChunk);
+      }
+
+      // Rerank IDCC chunks for query2
+      const idccRerankResultQuery2 = await rerank({
+        prompt: query2,
+        inputs: idccSearchResult.data.top_chunks.slice(0, MAX_RERANK),
+      });
+
+      if (idccRerankResultQuery2.data) {
+        selectedIdccChunksQuery2 = idccRerankResultQuery2.data.results
+          .slice(0, K_RERANK_IDCC_FOLLOWUP)
+          .map(rerankedToChunk);
+      }
+    }
+  }
+
+  return {
+    query1,
+    query2,
+    model,
+    config,
+    instructions,
+    generalChunksQuery1: selectedGeneralChunksQuery1,
+    generalChunksQuery2: selectedGeneralChunksQuery2,
+    idccChunksQuery1: selectedIdccChunksQuery1,
+    idccChunksQuery2: selectedIdccChunksQuery2,
+  };
+};
+
+// Get generate data for follow-up questions
+async function getFollowupGenerateData(
+  query1: string,
+  answer1: string,
+  query2: string,
+  requiredConfig?: Config,
+  idcc?: string,
+  providedModel?: LLMModel
+) {
+  const preparedData = await prepareFollowupQuestionData(
+    query1,
+    query2,
+    requiredConfig,
+    idcc,
+    providedModel
+  );
+
+  // Combine chunks from both queries
+  const allGeneralChunks = [
+    ...preparedData.generalChunksQuery1,
+    ...preparedData.generalChunksQuery2,
+  ];
+
+  const allIdccChunks = [
+    ...preparedData.idccChunksQuery1,
+    ...preparedData.idccChunksQuery2,
+  ];
+
+  // Determine system prompt based on whether IDCC is provided
+  const { chatHistory, systemPrompt } = idcc
+    ? {
+        chatHistory: createFollowupIdccChatHistory(
+          query1,
+          answer1,
+          query2,
+          allGeneralChunks,
+          allIdccChunks
+        ),
+        systemPrompt:
+          preparedData.instructions.generate_followup_instruction_idcc?.replace(
+            "[URL_convention_collective]",
+            `https://code.travail.gouv.fr/convention-collective/${idcc}`
+          ),
+      }
+    : {
+        chatHistory: createFollowupChatHistory(
+          query1,
+          answer1,
+          query2,
+          allGeneralChunks
+        ),
+        systemPrompt: preparedData.instructions.generate_followup_instruction,
+      };
+
+  return {
+    preparedData,
+    chatHistory,
+    systemPrompt,
+    allGeneralChunks,
+    allIdccChunks,
+  };
+}
+
+// Create follow-up analyze response
+const createFollowupAnalyzeResponse = (
+  preparedData: PreparedFollowupQuestionData,
+  generatedData: GenerateResponse,
+  allGeneralChunks: ChunkResult[],
+  allIdccChunks: ChunkResult[]
+): AnalyzeResponse => ({
+  config: preparedData.config.toString(),
+  anonymized: null, // Follow-up doesn't use anonymization
+  rephrased: null, // Follow-up doesn't use rephrasing
+  localSearchChunks: [...allGeneralChunks, ...allIdccChunks],
+  generated: generatedData,
+  modelName: preparedData.model.name,
+  modelFamily: getFamilyModel(preparedData.model),
+  answerType: "short", // Follow-up responses are always short
+});
+
+// Analyze follow-up question (non-streaming)
+export const analyzeFollowupQuestion = async (
+  query1: string,
+  answer1: string,
+  query2: string,
+  requiredConfig?: Config,
+  idcc?: string,
+  providedModel?: LLMModel
+): Promise<ApiResponse<AnalyzeResponse>> => {
+  try {
+    const {
+      preparedData,
+      chatHistory,
+      systemPrompt,
+      allGeneralChunks,
+      allIdccChunks,
+    } = await getFollowupGenerateData(
+      query1,
+      answer1,
+      query2,
+      requiredConfig,
+      idcc,
+      providedModel
+    );
+
+    const generateResult = await generate({
+      model: preparedData.model,
+      chat_history: chatHistory,
+      system_prompt: systemPrompt,
+    });
+
+    if (generateResult.error) {
+      throw new Error(
+        `Erreur lors de la génération de la réponse de suivi: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
+      );
+    }
+
+    if (!generateResult.data) {
+      throw new Error(
+        `Erreur lors de la génération de la réponse de suivi. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
+      );
+    }
+
+    return {
+      success: true,
+      data: createFollowupAnalyzeResponse(
+        preparedData,
+        generateResult.data,
+        allGeneralChunks,
+        allIdccChunks
+      ),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: (error as Error).message,
+    };
+  }
+};
+
+// Analyze follow-up question (streaming)
+export const analyzeFollowupQuestionStream = async (
+  query1: string,
+  answer1: string,
+  query2: string,
+  onChunk: (chunk: string) => void,
+  onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
+  requiredConfig?: Config,
+  idcc?: string,
+  providedModel?: LLMModel
+): Promise<void> => {
+  try {
+    const {
+      preparedData,
+      chatHistory,
+      systemPrompt,
+      allGeneralChunks,
+      allIdccChunks,
+    } = await getFollowupGenerateData(
+      query1,
+      answer1,
+      query2,
+      requiredConfig,
+      idcc,
+      providedModel
+    );
+
+    await generateStream(
+      {
+        model: preparedData.model,
+        chat_history: chatHistory,
+        system_prompt: systemPrompt,
+      },
+      onChunk,
+      undefined, // onStart
+      (endData) => {
+        // onEnd - call completion callback with full result
+        const generatedData: GenerateResponse = {
+          time: endData.time,
+          text: endData.text,
+          nb_token_input: endData.nb_token_input,
+          nb_token_output: endData.nb_token_output,
+        };
+
+        onComplete({
+          success: true,
+          data: createFollowupAnalyzeResponse(
+            preparedData,
+            generatedData,
+            allGeneralChunks,
+            allIdccChunks
+          ),
         });
       },
       (error) => {
