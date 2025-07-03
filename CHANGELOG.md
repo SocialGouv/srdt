@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/SocialGouv/srdt/compare/v1.20.1...v1.21.0) (2025-07-03)
+
+
+### Features
+
+* les liens sont toujours transformés en liens et s'ouvrent dans une nouvelle fenêtre ([#202](https://github.com/SocialGouv/srdt/issues/202)) ([74a4c80](https://github.com/SocialGouv/srdt/commit/74a4c80317b7043e29cffe854e2018cf39edc2dc)), closes [#199](https://github.com/SocialGouv/srdt/issues/199)
+
 ## [1.20.1](https://github.com/SocialGouv/srdt/compare/v1.20.0...v1.20.1) (2025-07-01)
 
 
