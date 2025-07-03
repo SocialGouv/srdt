@@ -6,6 +6,7 @@ import { fr } from "@codegouvfr/react-dsfr";
 import { AnalyzeResponse, UserLLMMessage } from "@/types";
 import useApi from "@/hooks/use-api";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Feedback } from "@/modules/feedback/Feedback";
 import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 import styles from "./Chat.module.css";
@@ -41,6 +42,13 @@ const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
+
+// Custom markdown components to handle links properly
+const markdownComponents = {
+  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props} target="_blank" rel="noopener noreferrer" />
+  ),
+};
 
 export const Chat = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -621,7 +629,12 @@ export const Chat = () => {
                   : {}
               }
             >
-              <Markdown>{message.content}</Markdown>
+              <Markdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {message.content}
+              </Markdown>
               {(message.isLoading || message.isStreaming) && (
                 <div className={fr.cx("fr-mt-1w")}>
                   {isLoading && (
