@@ -68,7 +68,7 @@ export const Chat = () => {
     generateFollowupAnswerStream,
     isLoading,
   } = useApi();
-  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(0);
 
@@ -198,16 +198,17 @@ export const Chat = () => {
   const globalResponseTime = currentConversation?.lastResponseTime || 0;
   const apiError = currentConversation?.lastApiError;
 
-  // Restored original scrolling behavior
+  // Scroll within the chat messages container only
   useEffect(() => {
     // Only auto-scroll when a new message is added (array length changes),
     // not when existing message content is updated during streaming
     if (messages.length !== messagesLength) {
       setMessagesLength(messages.length);
-      if (lastMessageRef.current) {
-        lastMessageRef.current.scrollIntoView({
+      if (chatMessagesRef.current) {
+        // Scroll to bottom of the chat messages container with smooth behavior
+        chatMessagesRef.current.scrollTo({
+          top: chatMessagesRef.current.scrollHeight,
           behavior: "smooth",
-          block: "start",
         });
       }
     }
@@ -611,13 +612,8 @@ export const Chat = () => {
     // This naturally handles: show after first → hide when follow-up starts → show after follow-up
     const shouldShowFeedback = isLastAssistantMessage;
 
-    const isLastMessage = index === messages.length - 1;
-
     return (
-      <div
-        key={index}
-        ref={isLastMessage && messages.length > 1 ? lastMessageRef : null}
-      >
+      <div key={index}>
         <div
           className={fr.cx(
             "fr-my-1w",
@@ -805,41 +801,53 @@ export const Chat = () => {
       {renderConversationHistory()}
 
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Fixed header with buttons - always visible */}
         <div
+          className={fr.cx("fr-mt-2w")}
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            flexShrink: 0,
+            paddingBottom: "1rem",
+            borderBottom: "1px solid var(--background-alt-blue-france)",
+          }}
+        >
+          <Button
+            onClick={() => setShowHistory(!showHistory)}
+            iconId={
+              // showHistory ? "fr-icon-close-line" : "fr-icon-menu-fill"
+              "fr-icon-menu-fill"
+            }
+            priority="tertiary no outline"
+            title={
+              showHistory ? "Masquer l'historique" : "Afficher l'historique"
+            }
+          />
+
+          <Button
+            onClick={handleNewConversation}
+            iconId="fr-icon-add-line"
+            priority="secondary"
+          >
+            Nouvelle conversation
+          </Button>
+        </div>
+
+        {/* Scrollable messages area */}
+        <div
+          ref={chatMessagesRef}
           className={`chat-messages`}
           style={{
             display: "flex",
             flexDirection: "column",
-            height: "calc(80vh - 20px)",
+            flex: 1,
             overflowY: "auto",
             gap: "1rem",
             marginBottom: "1rem",
+            paddingTop: "1rem",
           }}
         >
-          <div
-            className={fr.cx("fr-my-2w")}
-            style={{ display: "flex", gap: "1rem", alignItems: "center" }}
-          >
-            <Button
-              onClick={() => setShowHistory(!showHistory)}
-              iconId={
-                // showHistory ? "fr-icon-close-line" : "fr-icon-menu-fill"
-                "fr-icon-menu-fill"
-              }
-              priority="tertiary no outline"
-              title={
-                showHistory ? "Masquer l'historique" : "Afficher l'historique"
-              }
-            />
-
-            <Button
-              onClick={handleNewConversation}
-              iconId="fr-icon-add-line"
-              priority="secondary"
-            >
-              Nouvelle conversation
-            </Button>
-          </div>
           {messages.map((message, index) => renderMessage(message, index))}
         </div>
 
