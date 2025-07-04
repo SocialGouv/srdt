@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/SocialGouv/srdt/compare/v1.21.0...v1.22.0) (2025-07-04)
+
+
+### Features
+
+* evenement matomo au clic sur envoyer message ([#204](https://github.com/SocialGouv/srdt/issues/204)) ([2d36d71](https://github.com/SocialGouv/srdt/commit/2d36d71994e9b792ea29e93dcb9b4b0d82924cd5))
+
 # [1.21.0](https://github.com/SocialGouv/srdt/compare/v1.20.1...v1.21.0) (2025-07-03)
 
 
