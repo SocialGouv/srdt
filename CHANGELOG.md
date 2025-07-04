@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/SocialGouv/srdt/compare/v1.22.0...v1.22.1) (2025-07-04)
+
+
+### Bug Fixes
+
+* garder nouvelle conversation visible en haut ([#203](https://github.com/SocialGouv/srdt/issues/203)) ([632a6d5](https://github.com/SocialGouv/srdt/commit/632a6d53ce73b29ef5855176862fab7dbdc03287)), closes [#198](https://github.com/SocialGouv/srdt/issues/198)
+
 # [1.22.0](https://github.com/SocialGouv/srdt/compare/v1.21.0...v1.22.0) (2025-07-04)
 
 
