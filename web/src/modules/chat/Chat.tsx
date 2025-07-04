@@ -13,6 +13,7 @@ import styles from "./Chat.module.css";
 import { Agreement } from "../convention-collective/search";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import * as Sentry from "@sentry/nextjs";
+import { push } from "@socialgouv/matomo-next";
 
 interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -237,6 +238,9 @@ export const Chat = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    push(["trackEvent", "chat", "send message"]);
+
     if (!newMessage.trim() || isDisabled) return;
 
     setIsDisabled(true);
