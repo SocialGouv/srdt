@@ -5,8 +5,8 @@ export const formatChunks = (chunks: ChunkResult[]) => {
   return chunks
     .map(
       (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-                Contenu: ${chunk.content}
-                ---`
+Contenu: ${chunk.content}
+---`
     )
     .join("\n");
 };
