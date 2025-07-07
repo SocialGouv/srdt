@@ -73,7 +73,7 @@ export const createFollowupChatHistory = (
     role: "user" as const,
     content: `Voici les sources pertinentes pour répondre à la nouvelle question:
 
-        ${formatChunks(generalChunks)}`,
+${formatChunks(generalChunks)}`,
   },
 ];
 
