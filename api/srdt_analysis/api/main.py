@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
+from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
@@ -79,18 +80,11 @@ async def health():
 
 
 @app.post(f"{BASE_API_URL}/anonymize", response_model=AnonymizeResponse)
-async def anonymize(request: AnonymizeRequest, _api_key: str = Depends(get_api_key)):
+async def anonymize(request: AnonymizeRequest):
     start_time = time.time()
     tokenizer = Tokenizer()
-    llm_runner = LLMRunner(
-        llm_api_token=request.model.api_key,
-        llm_model=request.model.name,
-        llm_url=request.model.base_url,
-    )
     try:
-        anonymized_question = await llm_runner.anonymize(
-            request.user_question, request.anonymization_prompt
-        )
+        anonymized_question = anonymise_spacy(request.user_question)
         return AnonymizeResponse(
             time=time.time() - start_time,
             anonymized_question=anonymized_question,
