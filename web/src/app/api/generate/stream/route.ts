@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { analyzeQuestionStream } from "@/modules/api/fetch";
+import { analyzeQuestionStream } from "@/modules/api/process";
 import { Config } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
 
