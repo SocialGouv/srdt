@@ -1,12 +1,11 @@
 import spacy
 
 nlp = spacy.load(
-    # "fr_core_news_lg",
     "fr_core_news_md",
     disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"],
 )
 
-entities_fr = {"ORG": "ENTREPRISE", "PER": "PERSON", "LOC": "LIEU"}
+entities_fr = {"ORG": "ENTREPRISE", "PER": "PERSONNE", "LOC": "LIEU"}
 
 
 def anonymise_spacy(question: str):
