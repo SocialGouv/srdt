@@ -24,7 +24,7 @@ export const createChatHistory = (
     role: "user" as const,
     content: `Voici les sources pertinentes pour répondre à la question:
 
-        ${formatChunks(localSearchChunks)}`,
+${formatChunks(localSearchChunks)}`,
   },
 ];
 
