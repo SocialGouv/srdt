@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/SocialGouv/srdt/compare/v1.22.1...v1.23.0) (2025-07-07)
+
+
+### Features
+
+* nouveaux événements envoyés sur matomo ([#205](https://github.com/SocialGouv/srdt/issues/205)) ([7e0c27c](https://github.com/SocialGouv/srdt/commit/7e0c27c2d9ecb47e13d9012d97afb717ece4e023))
+
 ## [1.22.1](https://github.com/SocialGouv/srdt/compare/v1.22.0...v1.22.1) (2025-07-04)
 
 
