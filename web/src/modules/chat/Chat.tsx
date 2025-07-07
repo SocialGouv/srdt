@@ -240,8 +240,6 @@ export const Chat = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    push(["trackEvent", "chat", "send message"]);
-
     if (!newMessage.trim() || isDisabled) return;
 
     setIsDisabled(true);
@@ -258,6 +256,12 @@ export const Chat = () => {
       currentConversation?.isAwaitingFollowup &&
       currentConversation?.firstUserQuestion &&
       currentConversation?.firstAssistantAnswer;
+
+    push([
+      "trackEvent",
+      "chat",
+      isFollowupQuestion ? "send message followup" : "send message initial",
+    ]);
 
     // Update conversation title if this is the first user message
     const shouldUpdateTitle =
@@ -545,6 +549,8 @@ export const Chat = () => {
     setIsDisabled(false);
     setSelectedAgreement(undefined);
     streamingMessageRef.current = "";
+
+    push(["trackEvent", "chat", "new conversation"]);
   };
 
   const handleConversationSelect = (conversationId: string) => {
@@ -746,7 +752,10 @@ export const Chat = () => {
                     justifyContent: "space-between",
                     alignItems: "flex-start",
                   }}
-                  onClick={() => handleConversationSelect(conversation.id)}
+                  onClick={() => {
+                    handleConversationSelect(conversation.id);
+                    push(["trackEvent", "history", "select conversation"]);
+                  }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
@@ -814,11 +823,13 @@ export const Chat = () => {
           }}
         >
           <Button
-            onClick={() => setShowHistory(!showHistory)}
-            iconId={
-              // showHistory ? "fr-icon-close-line" : "fr-icon-menu-fill"
-              "fr-icon-menu-fill"
-            }
+            onClick={() => {
+              if (!showHistory) {
+                push(["trackEvent", "history", "show history"]);
+              }
+              setShowHistory(!showHistory);
+            }}
+            iconId={"fr-icon-menu-fill"}
             priority="tertiary no outline"
             title={
               showHistory ? "Masquer l'historique" : "Afficher l'historique"
