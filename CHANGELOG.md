@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/SocialGouv/srdt/compare/v1.23.0...v1.23.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* séparation de fetch en process et client ([#206](https://github.com/SocialGouv/srdt/issues/206)) ([506bdec](https://github.com/SocialGouv/srdt/commit/506bdecf17c59c59569ed0405dca3f611beac78f))
+
 # [1.23.0](https://github.com/SocialGouv/srdt/compare/v1.22.1...v1.23.0) (2025-07-07)
 
 
