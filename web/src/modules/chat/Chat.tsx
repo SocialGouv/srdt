@@ -61,19 +61,11 @@ export const Chat = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-  const {
-    generateAnswer,
-    generateAnswerStream,
-    generateFollowupAnswer,
-    generateFollowupAnswerStream,
-    isLoading,
-  } = useApi();
+  const { generateAnswerStream, generateFollowupAnswerStream, isLoading } =
+    useApi();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(0);
-
-  // It was an option but it's not anymore since streaming works well
-  const useStreaming = true;
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
@@ -287,8 +279,8 @@ export const Chat = () => {
     const loadingMessage = {
       content: "",
       role: "assistant" as const,
-      isLoading: !useStreaming,
-      isStreaming: useStreaming,
+      isLoading: false,
+      isStreaming: true,
       isFollowup: !!isFollowupQuestion,
     };
 
@@ -299,227 +291,130 @@ export const Chat = () => {
     const startTime = performance.now();
     streamingMessageRef.current = "";
 
-    if (useStreaming) {
-      if (isFollowupQuestion) {
-        // Use follow-up streaming
-        await generateFollowupAnswerStream(
-          currentConversation.firstUserQuestion!,
-          currentConversation.firstAssistantAnswer!,
-          newMessage,
-          (chunk: string) => {
-            // Handle each streaming chunk
-            streamingMessageRef.current += chunk;
+    if (isFollowupQuestion) {
+      // Use follow-up streaming
+      await generateFollowupAnswerStream(
+        currentConversation.firstUserQuestion!,
+        currentConversation.firstAssistantAnswer!,
+        newMessage,
+        (chunk: string) => {
+          // Handle each streaming chunk
+          streamingMessageRef.current += chunk;
+          updateCurrentConversation({
+            messages: currentMessages.concat([
+              {
+                content: streamingMessageRef.current,
+                role: "assistant",
+                isStreaming: true,
+                isFollowup: true,
+              },
+            ]),
+          });
+        },
+        (result) => {
+          // Handle completion for follow-up
+          const endTime = performance.now();
+          const responseTimeInSeconds = (endTime - startTime) / 1000;
+
+          if (result.error || !result.success) {
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content: streamingMessageRef.current,
+                  content: `Une erreur est survenue : ${result.error}`,
                   role: "assistant",
-                  isStreaming: true,
+                  isError: true,
                   isFollowup: true,
                 },
               ]),
+              lastApiError: result.error?.toString(),
+              lastResponseTime: responseTimeInSeconds,
+              hasFailed: true,
             });
-          },
-          (result) => {
-            // Handle completion for follow-up
-            const endTime = performance.now();
-            const responseTimeInSeconds = (endTime - startTime) / 1000;
-
-            if (result.error || !result.success) {
-              updateCurrentConversation({
-                messages: currentMessages.concat([
-                  {
-                    content: `Une erreur est survenue : ${result.error}`,
-                    role: "assistant",
-                    isError: true,
-                    isFollowup: true,
-                  },
-                ]),
-                lastApiError: result.error?.toString(),
-                lastResponseTime: responseTimeInSeconds,
-                hasFailed: true,
-              });
-            } else {
-              updateCurrentConversation({
-                messages: currentMessages.concat([
-                  {
-                    content:
-                      result.data?.generated?.text ??
-                      streamingMessageRef.current,
-                    role: "assistant",
-                    isFollowup: true,
-                  },
-                ]),
-                lastApiResult: result.data,
-                lastResponseTime: responseTimeInSeconds,
-                lastApiError: undefined,
-                hasFailed: false,
-                isAwaitingFollowup: false, // Followup is complete, no more follow-ups
-                firstAssistantAnswer:
-                  result.data?.generated?.text ?? streamingMessageRef.current,
-                selectedModel: result.data?.modelName,
-              });
-            }
-            setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
-          },
-          selectedAgreement?.id,
-          selectedAgreement?.title,
-          currentConversation.selectedModel
-        );
-      } else {
-        // Use regular streaming for initial question
-        await generateAnswerStream(
-          newMessage,
-          (chunk: string) => {
-            // Handle each streaming chunk
-            streamingMessageRef.current += chunk;
+          } else {
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content: streamingMessageRef.current,
+                  content:
+                    result.data?.generated?.text ?? streamingMessageRef.current,
                   role: "assistant",
-                  isStreaming: true,
+                  isFollowup: true,
                 },
               ]),
+              lastApiResult: result.data,
+              lastResponseTime: responseTimeInSeconds,
+              lastApiError: undefined,
+              hasFailed: false,
+              isAwaitingFollowup: false, // Followup is complete, no more follow-ups
+              firstAssistantAnswer:
+                result.data?.generated?.text ?? streamingMessageRef.current,
+              selectedModel: result.data?.modelName,
             });
-          },
-          (result) => {
-            // Handle completion for initial question
-            const endTime = performance.now();
-            const responseTimeInSeconds = (endTime - startTime) / 1000;
-
-            if (result.error || !result.success) {
-              updateCurrentConversation({
-                messages: currentMessages.concat([
-                  {
-                    content: `Une erreur est survenue : ${result.error}`,
-                    role: "assistant",
-                    isError: true,
-                  },
-                ]),
-                lastApiError: result.error?.toString(),
-                lastResponseTime: responseTimeInSeconds,
-                hasFailed: true,
-              });
-            } else {
-              updateCurrentConversation({
-                messages: currentMessages.concat([
-                  {
-                    content:
-                      result.data?.generated?.text ??
-                      streamingMessageRef.current,
-                    role: "assistant",
-                  },
-                ]),
-                lastApiResult: result.data,
-                lastResponseTime: responseTimeInSeconds,
-                lastApiError: undefined,
-                hasFailed: false,
-                isAwaitingFollowup: true, // Set flag to allow follow-up
-                firstAssistantAnswer:
-                  result.data?.generated?.text ?? streamingMessageRef.current,
-                selectedModel: result.data?.modelName,
-              });
-            }
-            setIsDisabled(false); // Re-enable for potential follow-up
-          },
-          selectedAgreement?.id,
-          selectedAgreement?.title
-        );
-      }
+          }
+          setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
+        },
+        selectedAgreement?.id,
+        selectedAgreement?.title,
+        currentConversation.selectedModel
+      );
     } else {
-      // Non-streaming approach (similar logic for both initial and follow-up)
-      if (isFollowupQuestion) {
-        const result = await generateFollowupAnswer(
-          currentConversation.firstUserQuestion!,
-          currentConversation.firstAssistantAnswer!,
-          newMessage,
-          selectedAgreement?.id,
-          selectedAgreement?.title,
-          currentConversation.selectedModel
-        );
-        const endTime = performance.now();
-        const responseTimeInSeconds = (endTime - startTime) / 1000;
+      // Use regular streaming for initial question
+      await generateAnswerStream(
+        newMessage,
+        (chunk: string) => {
+          // Handle each streaming chunk
+          streamingMessageRef.current += chunk;
+          updateCurrentConversation({
+            messages: currentMessages.concat([
+              {
+                content: streamingMessageRef.current,
+                role: "assistant",
+                isStreaming: true,
+              },
+            ]),
+          });
+        },
+        (result) => {
+          // Handle completion for initial question
+          const endTime = performance.now();
+          const responseTimeInSeconds = (endTime - startTime) / 1000;
 
-        if (result.error || !result.success) {
-          updateCurrentConversation({
-            messages: currentMessages.concat([
-              {
-                content: `Une erreur est survenue : ${result.error}`,
-                role: "assistant",
-                isError: true,
-                isFollowup: true,
-              },
-            ]),
-            lastApiError: result.error?.toString(),
-            lastResponseTime: responseTimeInSeconds,
-            hasFailed: true,
-          });
-        } else {
-          updateCurrentConversation({
-            messages: currentMessages.concat([
-              {
-                content:
-                  result.data?.generated?.text ??
-                  "Désolé, je n'ai pas pu générer de réponse.",
-                role: "assistant",
-                isFollowup: true,
-              },
-            ]),
-            lastApiResult: result.data,
-            lastResponseTime: responseTimeInSeconds,
-            lastApiError: undefined,
-            hasFailed: false,
-            isAwaitingFollowup: false,
-            selectedModel: result.data?.modelName,
-          });
-        }
-        setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
-      } else {
-        const result = await generateAnswer(
-          newMessage,
-          selectedAgreement?.id,
-          selectedAgreement?.title
-        );
-        const endTime = performance.now();
-        const responseTimeInSeconds = (endTime - startTime) / 1000;
-
-        if (result.error || !result.success) {
-          updateCurrentConversation({
-            messages: currentMessages.concat([
-              {
-                content: `Une erreur est survenue : ${result.error}`,
-                role: "assistant",
-                isError: true,
-              },
-            ]),
-            lastApiError: result.error?.toString(),
-            lastResponseTime: responseTimeInSeconds,
-            hasFailed: true,
-          });
-        } else {
-          updateCurrentConversation({
-            messages: currentMessages.concat([
-              {
-                content:
-                  result.data?.generated?.text ??
-                  "Désolé, je n'ai pas pu générer de réponse.",
-                role: "assistant",
-              },
-            ]),
-            lastApiResult: result.data,
-            lastResponseTime: responseTimeInSeconds,
-            lastApiError: undefined,
-            hasFailed: false,
-            isAwaitingFollowup: true,
-            firstAssistantAnswer:
-              result.data?.generated?.text ??
-              "Désolé, je n'ai pas pu générer de réponse.",
-            selectedModel: result.data?.modelName,
-          });
-        }
-        setIsDisabled(false);
-      }
+          if (result.error || !result.success) {
+            updateCurrentConversation({
+              messages: currentMessages.concat([
+                {
+                  content: `Une erreur est survenue : ${result.error}`,
+                  role: "assistant",
+                  isError: true,
+                },
+              ]),
+              lastApiError: result.error?.toString(),
+              lastResponseTime: responseTimeInSeconds,
+              hasFailed: true,
+            });
+          } else {
+            updateCurrentConversation({
+              messages: currentMessages.concat([
+                {
+                  content:
+                    result.data?.generated?.text ?? streamingMessageRef.current,
+                  role: "assistant",
+                },
+              ]),
+              lastApiResult: result.data,
+              lastResponseTime: responseTimeInSeconds,
+              lastApiError: undefined,
+              hasFailed: false,
+              isAwaitingFollowup: true, // Set flag to allow follow-up
+              firstAssistantAnswer:
+                result.data?.generated?.text ?? streamingMessageRef.current,
+              selectedModel: result.data?.modelName,
+            });
+          }
+          setIsDisabled(false); // Re-enable for potential follow-up
+        },
+        selectedAgreement?.id,
+        selectedAgreement?.title
+      );
     }
   };
 
