@@ -1,3 +1,10 @@
+## [1.23.2](https://github.com/SocialGouv/srdt/compare/v1.23.1...v1.23.2) (2025-07-07)
+
+
+### Bug Fixes
+
+* suppression du mode non streaming dans le front ([#207](https://github.com/SocialGouv/srdt/issues/207)) ([5436572](https://github.com/SocialGouv/srdt/commit/54365726e4606fed03535974468008a023089720))
+
 ## [1.23.1](https://github.com/SocialGouv/srdt/compare/v1.23.0...v1.23.1) (2025-07-07)
 
 
