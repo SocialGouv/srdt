@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { analyzeFollowupQuestion } from "@/modules/api/fetch";
+import { analyzeFollowupQuestion } from "@/modules/api/process";
 import { ApiResponse, AnalyzeResponse } from "@/types";
 import { Config, getModelByName } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
