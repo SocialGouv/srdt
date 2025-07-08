@@ -1,3 +1,10 @@
+## [1.23.3](https://github.com/SocialGouv/srdt/compare/v1.23.2...v1.23.3) (2025-07-08)
+
+
+### Bug Fixes
+
+* disable sentry for python localhost ([#213](https://github.com/SocialGouv/srdt/issues/213)) ([bc2729c](https://github.com/SocialGouv/srdt/commit/bc2729cafb31d9bb5f288388c8c4a104c93a542e))
+
 ## [1.23.2](https://github.com/SocialGouv/srdt/compare/v1.23.1...v1.23.2) (2025-07-07)
 
 
