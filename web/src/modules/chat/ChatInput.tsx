@@ -2,7 +2,7 @@
 
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
-import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
+import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
 import { Agreement } from "../convention-collective/search";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import { Conversation, ChatMessage } from "./types";
