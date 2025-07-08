@@ -13,3 +13,81 @@
     opacity: 0;
   }
 }
+
+.chatContainer {
+  display: flex;
+  height: 80vh;
+}
+
+.chatMainContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.chatHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-shrink: 0;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--background-alt-blue-france);
+}
+
+.chatMessagesContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+}
+
+.messageWrapper {
+  max-width: 70%;
+  min-width: 200px;
+}
+
+.messageBubble {
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.messageBubbleUser {
+  background-color: var(--text-action-high-blue-france);
+  color: white;
+}
+
+.messageBubbleAssistant {
+  background-color: var(--background-default-grey-hover);
+}
+
+.messageBubbleError {
+  color: var(--text-default-error);
+}
+
+.messageContent {
+  margin-bottom: -1.5rem;
+}
+
+.chatForm {
+  background-color: var(--background-default-grey);
+  border-top: 1px solid var(--background-alt-blue-france);
+}
+
+.submitButtonContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.followupInfo {
+  font-size: 0.875rem;
+  color: var(--text-mention-grey);
+  padding: 0.5rem;
+  background-color: var(--background-alt-grey);
+  border-radius: 4px;
+  border-left: 3px solid var(--border-action-high-blue-france);
+}

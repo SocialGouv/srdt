@@ -3,16 +3,13 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
-import { ChatMessage, Conversation } from "./types";
+import { Conversation } from "./types";
 import useApi from "@/hooks/use-api";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { Feedback } from "@/modules/feedback/Feedback";
-import { AutoresizeTextarea } from "@/components/AutoresizeTextarea";
 import styles from "./Chat.module.css";
 import { Agreement } from "../convention-collective/search";
-import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import { ChatHistory } from "./ChatHistory";
+import { ChatMessage } from "./ChatMessage";
+import { ChatInput } from "./ChatInput";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
 
@@ -21,13 +18,6 @@ const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
-
-// Custom markdown components to handle links properly
-const markdownComponents = {
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a {...props} target="_blank" rel="noopener noreferrer" />
-  ),
-};
 
 export const Chat = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -415,7 +405,6 @@ export const Chat = () => {
     setIsDisabled(false);
     setSelectedAgreement(undefined);
     streamingMessageRef.current = "";
-
     push(["trackEvent", "chat", "new conversation"]);
   };
 
@@ -453,105 +442,8 @@ export const Chat = () => {
     }
   };
 
-  const renderMessage = (message: ChatMessage, index: number) => {
-    const backgroundColor =
-      message.role === "user"
-        ? "var(--text-action-high-blue-france)"
-        : "var(--background-default-grey-hover)";
-
-    const textColor = message.isError
-      ? "var(--text-default-error)"
-      : message.role === "user"
-      ? "white"
-      : "inherit";
-
-    const bubbleMessageStyle = {
-      backgroundColor,
-      color: textColor,
-      borderRadius: "8px",
-      padding: "1rem",
-    };
-
-    // Check if this is the last assistant message and should show feedback
-    const isLastAssistantMessage =
-      message.role === "assistant" &&
-      index === messages.length - 1 &&
-      !message.isLoading &&
-      !message.isStreaming &&
-      !message.isError;
-
-    // Always show feedback for the last assistant message
-    // This naturally handles: show after first → hide when follow-up starts → show after follow-up
-    const shouldShowFeedback = isLastAssistantMessage;
-
-    return (
-      <div key={index}>
-        <div
-          className={fr.cx(
-            "fr-my-1w",
-            message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
-          )}
-          style={{ maxWidth: "70%", minWidth: "200px" }}
-        >
-          <div style={bubbleMessageStyle}>
-            <div
-              style={
-                !message.isLoading && !message.isStreaming
-                  ? { marginBottom: "-1.5rem" }
-                  : {}
-              }
-            >
-              <Markdown
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {message.content}
-              </Markdown>
-              {(message.isLoading || message.isStreaming) && (
-                <div className={fr.cx("fr-mt-1w")}>
-                  {isLoading && (
-                    <div>
-                      {message.isStreaming
-                        ? "Génération en cours..."
-                        : "Génération de la réponse..."}
-                      {message.isStreaming && (
-                        <span className={styles.streamingCursor}>▋</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {apiResult && shouldShowFeedback && (
-          <div style={bubbleMessageStyle}>
-            <p className={fr.cx("fr-m-0", "fr-h1")}>
-              Donnez votre avis sur cette réponse
-            </p>
-            <Feedback
-              modelName={apiResult?.modelName}
-              familyModel={apiResult?.modelFamily}
-              scenarioVersion={apiResult?.config}
-              inputNbTokens={apiResult?.anonymized?.nb_token_input}
-              outputNbTokens={apiResult?.generated.nb_token_output}
-              globalResponseTime={globalResponseTime}
-              userQuestion={apiResult?.anonymized?.anonymized_question}
-              llmResponse={apiResult?.generated.text}
-              errorMessage={apiError}
-              idcc={selectedAgreement?.id}
-              answerType={apiResult?.answerType}
-              isFollowupResponse={message.isFollowup}
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div style={{ display: "flex", height: "80vh" }}>
+    <div className={styles.chatContainer}>
       <ChatHistory
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -561,19 +453,9 @@ export const Chat = () => {
         onDeleteConversation={handleDeleteConversation}
       />
 
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div className={styles.chatMainContent}>
         {/* Fixed header with buttons - always visible */}
-        <div
-          className={fr.cx("fr-mt-2w")}
-          style={{
-            display: "flex",
-            gap: "1rem",
-            alignItems: "center",
-            flexShrink: 0,
-            paddingBottom: "1rem",
-            borderBottom: "1px solid var(--background-alt-blue-france)",
-          }}
-        >
+        <div className={`${fr.cx("fr-mt-2w")} ${styles.chatHeader}`}>
           <Button
             onClick={() => {
               if (!showHistory) {
@@ -600,107 +482,34 @@ export const Chat = () => {
         {/* Scrollable messages area */}
         <div
           ref={chatMessagesRef}
-          className={`chat-messages`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            overflowY: "auto",
-            gap: "1rem",
-            marginBottom: "1rem",
-            paddingTop: "1rem",
-          }}
+          className={`chat-messages ${styles.chatMessagesContainer}`}
         >
-          {messages.map((message, index) => renderMessage(message, index))}
+          {messages.map((message, index) => (
+            <ChatMessage
+              key={index}
+              message={message}
+              index={index}
+              isLastMessage={index === messages.length - 1}
+              isLoading={isLoading}
+              apiResult={apiResult}
+              globalResponseTime={globalResponseTime}
+              apiError={apiError}
+              selectedAgreement={selectedAgreement}
+            />
+          ))}
         </div>
 
-        <form
+        <ChatInput
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
           onSubmit={handleSubmit}
-          className={fr.cx("fr-grid-row", "fr-grid-row--gutters")}
-          style={{
-            backgroundColor: "var(--background-default-grey)",
-            borderTop: "1px solid var(--background-alt-blue-france)",
-          }}
-        >
-          <div className={fr.cx("fr-col-11")}>
-            <AutoresizeTextarea
-              value={newMessage}
-              onChange={setNewMessage}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                isDisabled
-                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
-                    messages.length > 0 &&
-                    (messages[messages.length - 1].isLoading ||
-                      messages[messages.length - 1].isStreaming)
-                    ? "Génération de la réponse en cours...\nVous pourrez ensuite poser une question de suivi ou démarrer une nouvelle conversation."
-                    : "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
-                  : currentConversation?.isAwaitingFollowup
-                  ? "Posez une question de suivi ou démarrez une nouvelle conversation..."
-                  : "Saisissez votre message"
-              }
-              disabled={isDisabled}
-              maxLines={10}
-            />
-          </div>
-          <div
-            className={fr.cx("fr-col-1")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "flex-start",
-            }}
-          >
-            <Button
-              iconId="fr-icon-send-plane-fill"
-              title={
-                isDisabled
-                  ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
-                    messages.length > 0 &&
-                    (messages[messages.length - 1].isLoading ||
-                      messages[messages.length - 1].isStreaming)
-                    ? "Génération en cours, patientez..."
-                    : "Démarrez une nouvelle conversation pour poser une autre question"
-                  : currentConversation?.isAwaitingFollowup
-                  ? "Envoyer votre question de suivi"
-                  : "Envoyer votre message"
-              }
-              type="submit"
-              className={fr.cx("fr-cell--center")}
-              disabled={isDisabled}
-            />
-          </div>
-          {!isDisabled && !currentConversation?.firstUserQuestion && (
-            <div className={fr.cx("fr-col-11")}>
-              <AgreementSearchInput
-                onAgreementSelect={(agreement) => {
-                  console.log("agreement", agreement);
-                  setSelectedAgreement(agreement);
-                }}
-                defaultAgreement={undefined}
-                trackingActionName="chat"
-              />
-            </div>
-          )}
-          {currentConversation?.isAwaitingFollowup && !isDisabled && (
-            <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
-              <div
-                style={{
-                  fontSize: "0.875rem",
-                  color: "var(--text-mention-grey)",
-                  padding: "0.5rem",
-                  backgroundColor: "var(--background-alt-grey)",
-                  borderRadius: "4px",
-                  borderLeft: "3px solid var(--border-action-high-blue-france)",
-                }}
-              >
-                💡 Vous pouvez poser une question de suivi pour approfondir
-                cette réponse, ou démarrer une nouvelle conversation.
-              </div>
-            </div>
-          )}
-        </form>
+          onKeyDown={handleKeyDown}
+          isDisabled={isDisabled}
+          messages={messages}
+          currentConversation={currentConversation}
+          selectedAgreement={selectedAgreement}
+          setSelectedAgreement={setSelectedAgreement}
+        />
       </div>
     </div>
   );
