@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ApiResponse, AnalyzeResponse } from "@/types";
+import { ApiResponse, AnswerResponse } from "@/types";
 import * as Sentry from "@sentry/nextjs";
 
 const useApi = () => {
@@ -11,7 +11,7 @@ const useApi = () => {
     userQuestion: string,
     agreementId?: string,
     agreementTitle?: string
-  ): Promise<ApiResponse<AnalyzeResponse>> => {
+  ): Promise<ApiResponse<AnswerResponse>> => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate", {
@@ -26,7 +26,7 @@ const useApi = () => {
         }),
       });
 
-      const result: ApiResponse<AnalyzeResponse> = await response.json();
+      const result: ApiResponse<AnswerResponse> = await response.json();
       setIsLoading(false);
       console.log(result);
       return result;
@@ -54,7 +54,7 @@ const useApi = () => {
   const generateAnswerStream = async (
     userQuestion: string,
     onChunk: (chunk: string) => void,
-    onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
+    onComplete: (result: ApiResponse<AnswerResponse>) => void,
     agreementId?: string,
     agreementTitle?: string
   ): Promise<void> => {
@@ -178,7 +178,7 @@ const useApi = () => {
     agreementId?: string,
     agreementTitle?: string,
     modelName?: string
-  ): Promise<ApiResponse<AnalyzeResponse>> => {
+  ): Promise<ApiResponse<AnswerResponse>> => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate/followup", {
@@ -196,7 +196,7 @@ const useApi = () => {
         }),
       });
 
-      const result: ApiResponse<AnalyzeResponse> = await response.json();
+      const result: ApiResponse<AnswerResponse> = await response.json();
       setIsLoading(false);
       console.log(result);
       return result;
@@ -228,7 +228,7 @@ const useApi = () => {
     answer1: string,
     query2: string,
     onChunk: (chunk: string) => void,
-    onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
+    onComplete: (result: ApiResponse<AnswerResponse>) => void,
     agreementId?: string,
     agreementTitle?: string,
     modelName?: string

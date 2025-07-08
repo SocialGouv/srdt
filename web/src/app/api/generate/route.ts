@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { analyzeQuestion } from "@/modules/api/process";
-import { ApiResponse, AnalyzeResponse } from "@/types";
+import { generateAnswer } from "@/modules/api/process";
+import { ApiResponse, AnswerResponse } from "@/types";
 import { Config } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const result: ApiResponse<AnalyzeResponse> = await analyzeQuestion(
+    const result: ApiResponse<AnswerResponse> = await generateAnswer(
       question,
       config,
       agreementId

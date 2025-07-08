@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { analyzeQuestionStream } from "@/modules/api/process";
+import { generateAnswerStream } from "@/modules/api/process";
 import { Config } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     // Create a ReadableStream for the streaming response
     const stream = new ReadableStream({
       start(controller) {
-        analyzeQuestionStream(
+        generateAnswerStream(
           question,
           (chunk: string) => {
             // Send each chunk as Server-Sent Events

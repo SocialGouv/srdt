@@ -1,4 +1,4 @@
-import { UserLLMMessage, AnalyzeResponse } from "@/types";
+import { UserLLMMessage, AnswerResponse } from "@/types";
 
 export interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
@@ -12,7 +12,7 @@ export interface Conversation {
   title: string;
   messages: ChatMessage[];
   createdAt: Date;
-  lastApiResult?: AnalyzeResponse | null;
+  lastApiResult?: AnswerResponse | null;
   lastResponseTime?: number;
   lastUserQuestion?: string;
   lastApiError?: string;
