@@ -83,7 +83,6 @@ export const ChatInput = ({
         <div className={fr.cx("fr-col-11")}>
           <AgreementSearchInput
             onAgreementSelect={(agreement) => {
-              console.log("agreement", agreement);
               setSelectedAgreement(agreement);
             }}
             defaultAgreement={selectedAgreement}
