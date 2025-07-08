@@ -9,7 +9,7 @@ import { StartDsfr } from "@/modules/dsfr/StartDsfr";
 import { AuthProvider } from "@/hooks/use-auth";
 import Link from "next/link";
 import Head from "next/head";
-import Matomo from "@/components/Matomo";
+import Matomo from "@/modules/common/Matomo";
 
 export function ClientHtml({
   children,
