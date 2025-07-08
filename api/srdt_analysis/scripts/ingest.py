@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
+from srdt_analysis.legi_data import get_legi_data
 from srdt_analysis.data_exploiter import (
     ArticlesCodeDuTravailExploiter,
     FichesMTExploiter,
@@ -20,6 +21,14 @@ logger = Logger("Ingester")
 
 
 def start():
+    article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
+    articles_code_du_travail = get_legi_data()
+    article_code_du_travail_exploiter.reset_collection_data(
+        articles_code_du_travail[:5], "code_du_travail_tree"
+    )
+
+    return
+
     logger.info("Read data from Postgres")
     data = get_data(
         [
@@ -89,7 +98,9 @@ def start():
 
         metadata = all_docs.rename({"cdtn_id": "document_id"}, axis="columns")[
             ["url", "title", "document_id", "source", "idcc"]
-        ].to_dict("records")  # type: ignore
+        ].to_dict(
+            "records"
+        )  # type: ignore
 
         chunks_content = all_docs["content_chunked"].apply(
             lambda x: [sd.page_content for sd in x]
