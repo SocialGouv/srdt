@@ -161,7 +161,7 @@ export const prepareQuestionData = async (
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content.concat(" /n/n " + curr.content);
+        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
@@ -261,7 +261,7 @@ export const prepareFollowupQuestionData = async (
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content.concat(" /n/n " + curr.content);
+        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
@@ -301,7 +301,7 @@ export const prepareFollowupQuestionData = async (
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content.concat(" /n/n " + curr.content);
+        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
