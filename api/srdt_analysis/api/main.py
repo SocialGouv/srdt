@@ -35,12 +35,18 @@ from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
 
-sentry_sdk.init(
-    dsn="https://cf211345d704b74ef78cab4e59ea73ea@sentry2.fabrique.social.gouv.fr/47",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
-    traces_sample_rate=1.0,
-)
+# Only initialize Sentry if not running locally
+api_host = os.getenv("API_HOST", "localhost")
+if api_host not in ["localhost", "127.0.0.1"]:
+    sentry_sdk.init(
+        dsn="https://cf211345d704b74ef78cab4e59ea73ea@sentry2.fabrique.social.gouv.fr/47",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+    )
+    print("Sentry initialized for production environment")
+else:
+    print("Sentry disabled for local development")
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
