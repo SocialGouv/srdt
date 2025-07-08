@@ -59,6 +59,23 @@ export interface PreparedFollowupQuestionData {
   idccChunksQuery2: ChunkResult[];
 }
 
+// Helper function to merge chunks by document ID
+const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
+  const toRerankRecord = chunks
+    .sort((a, b) => b.score - a.score)
+    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
+      const id = curr.metadata.document_id;
+      if (!acc[id]) {
+        acc[id] = curr;
+      } else {
+        acc[id].content = acc[id].content.concat("\n\n" + curr.content);
+      }
+      return acc;
+    }, {} as Record<string, ChunkResult>);
+
+  return Object.values(toRerankRecord);
+};
+
 // Common preprocessing logic for both streaming and non-streaming
 export const prepareQuestionData = async (
   userQuestion: string,
@@ -154,19 +171,10 @@ export const prepareQuestionData = async (
   }
 
   // merge chunks if they come from the same document
-  const toRerankRecord = localSearchChunks
-    .sort((a, b) => b.score - a.score)
-    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
-      const id = curr.metadata.document_id;
-      if (!acc[id]) {
-        acc[id] = curr;
-      } else {
-        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
-      }
-      return acc;
-    }, {} as Record<string, ChunkResult>);
-
-  const toRerankChunks = Object.values(toRerankRecord).slice(0, MAX_RERANK);
+  const toRerankChunks = mergeChunksByDocumentId(localSearchChunks).slice(
+    0,
+    MAX_RERANK
+  );
 
   const searchRerankResults = await rerank({
     prompt: anonymized,
@@ -254,22 +262,9 @@ export const prepareFollowupQuestionData = async (
   const localSearchChunksQuery1 = searchResultQuery1.data?.top_chunks ?? [];
 
   // Merge chunks from same document for query1
-  const toRerankRecordQuery1 = localSearchChunksQuery1
-    .sort((a, b) => b.score - a.score)
-    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
-      const id = curr.metadata.document_id;
-      if (!acc[id]) {
-        acc[id] = curr;
-      } else {
-        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
-      }
-      return acc;
-    }, {} as Record<string, ChunkResult>);
-
-  const toRerankChunksQuery1 = Object.values(toRerankRecordQuery1).slice(
-    0,
-    MAX_RERANK
-  );
+  const toRerankChunksQuery1 = mergeChunksByDocumentId(
+    localSearchChunksQuery1
+  ).slice(0, MAX_RERANK);
 
   // Rerank for query1
   const rerankResultQuery1 = await rerank({
@@ -294,22 +289,9 @@ export const prepareFollowupQuestionData = async (
   const localSearchChunksQuery2 = searchResultQuery2.data?.top_chunks ?? [];
 
   // Merge chunks from same document for query2
-  const toRerankRecordQuery2 = localSearchChunksQuery2
-    .sort((a, b) => b.score - a.score)
-    .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
-      const id = curr.metadata.document_id;
-      if (!acc[id]) {
-        acc[id] = curr;
-      } else {
-        acc[id].content = acc[id].content.concat(" /n/n " + curr.content);
-      }
-      return acc;
-    }, {} as Record<string, ChunkResult>);
-
-  const toRerankChunksQuery2 = Object.values(toRerankRecordQuery2).slice(
-    0,
-    MAX_RERANK
-  );
+  const toRerankChunksQuery2 = mergeChunksByDocumentId(
+    localSearchChunksQuery2
+  ).slice(0, MAX_RERANK);
 
   // Rerank for query2
   const rerankResultQuery2 = await rerank({
