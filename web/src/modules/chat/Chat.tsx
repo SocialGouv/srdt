@@ -399,13 +399,13 @@ export const Chat = () => {
       selectedModel: undefined,
     };
 
-    push(["trackEvent", "chat", "new conversation"]);
     setConversations((prev) => [newConversation, ...prev]);
     setCurrentConversationId(newId);
     setNewMessage("");
     setIsDisabled(false);
     setSelectedAgreement(undefined);
     streamingMessageRef.current = "";
+    push(["trackEvent", "chat", "new conversation"]);
   };
 
   const handleConversationSelect = (conversationId: string) => {
