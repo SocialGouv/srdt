@@ -44,9 +44,9 @@ if api_host not in ["localhost", "127.0.0.1"]:
         # of transactions for tracing.
         traces_sample_rate=1.0,
     )
-    print("Sentry initialized for production environment")
+    logger.info("Sentry initialized for production environment")
 else:
-    print("Sentry disabled for local development")
+    logger.info("Sentry disabled for local development")
 
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
