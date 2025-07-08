@@ -1,6 +1,6 @@
 import { Config, getFamilyModel } from "@/constants";
 import { GenerateResponse, ChunkResult, LLMModel } from "../../types";
-import { ApiResponse, AnalyzeResponse } from "@/types";
+import { ApiResponse, AnswerResponse } from "@/types";
 import { generate, generateStream } from "./client";
 import {
   createChatHistory,
@@ -15,11 +15,11 @@ import {
   prepareFollowupQuestionData,
 } from "./prepare";
 
-// Helper to create final response
-const createAnalyzeResponse = (
+// Build answer response
+const buildAnswer = (
   preparedData: PreparedQuestionData,
   generatedData: GenerateResponse
-): AnalyzeResponse => ({
+): AnswerResponse => ({
   config: preparedData.config.toString(),
   anonymized: preparedData.anonymizeResult?.data || null,
   rephrased: preparedData.rephraseResult?.data || null,
@@ -33,6 +33,24 @@ const createAnalyzeResponse = (
   answerType: preparedData.answerType,
 });
 
+// Build follow-up answer response
+const buildFollowupAnswer = (
+  preparedData: PreparedFollowupQuestionData,
+  generatedData: GenerateResponse,
+  allGeneralChunks: ChunkResult[],
+  allIdccChunks: ChunkResult[]
+): AnswerResponse => ({
+  config: preparedData.config.toString(),
+  anonymized: null, // Follow-up doesn't use anonymization
+  rephrased: null, // Follow-up doesn't use rephrasing
+  localSearchChunks: [...allGeneralChunks, ...allIdccChunks],
+  generated: generatedData,
+  modelName: preparedData.model.name,
+  modelFamily: getFamilyModel(preparedData.model),
+  answerType: "short", // Follow-up responses are always short
+});
+
+// Get generate data for question
 async function getGenerateData(
   userQuestion: string,
   requiredConfig?: Config,
@@ -81,103 +99,6 @@ async function getGenerateData(
     systemPrompt,
   };
 }
-
-export const analyzeQuestion = async (
-  userQuestion: string,
-  requiredConfig?: Config,
-  idcc?: string
-): Promise<ApiResponse<AnalyzeResponse>> => {
-  try {
-    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
-      userQuestion,
-      requiredConfig,
-      idcc
-    );
-
-    const generateResult = await generate({
-      model: preparedData.model,
-      chat_history: chatHistory,
-      system_prompt: systemPrompt,
-    });
-
-    if (generateResult.error) {
-      throw new Error(
-        `Erreur lors de la génération de la réponse: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
-      );
-    }
-
-    if (!generateResult.data) {
-      throw new Error(
-        `Erreur lors de la génération de la réponse. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
-      );
-    }
-
-    return {
-      success: true,
-      data: createAnalyzeResponse(preparedData, generateResult.data),
-    };
-  } catch (error) {
-    return {
-      success: false,
-      data: null,
-      error: (error as Error).message,
-    };
-  }
-};
-
-export const analyzeQuestionStream = async (
-  userQuestion: string,
-  onChunk: (chunk: string) => void,
-  onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
-  requiredConfig?: Config,
-  idcc?: string
-): Promise<void> => {
-  try {
-    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
-      userQuestion,
-      requiredConfig,
-      idcc
-    );
-
-    await generateStream(
-      {
-        model: preparedData.model,
-        chat_history: chatHistory,
-        system_prompt: systemPrompt,
-      },
-      onChunk,
-      undefined, // onStart
-      (endData) => {
-        // onEnd - call completion callback with full result
-        const generatedData: GenerateResponse = {
-          time: endData.time,
-          text: endData.text,
-          nb_token_input: endData.nb_token_input,
-          nb_token_output: endData.nb_token_output,
-        };
-
-        onComplete({
-          success: true,
-          data: createAnalyzeResponse(preparedData, generatedData),
-        });
-      },
-      (error) => {
-        // onError
-        onComplete({
-          success: false,
-          data: null,
-          error,
-        });
-      }
-    );
-  } catch (error) {
-    onComplete({
-      success: false,
-      data: null,
-      error: (error as Error).message,
-    });
-  }
-};
 
 // Get generate data for follow-up questions
 async function getFollowupGenerateData(
@@ -242,32 +163,114 @@ async function getFollowupGenerateData(
   };
 }
 
-// Create follow-up analyze response
-const createFollowupAnalyzeResponse = (
-  preparedData: PreparedFollowupQuestionData,
-  generatedData: GenerateResponse,
-  allGeneralChunks: ChunkResult[],
-  allIdccChunks: ChunkResult[]
-): AnalyzeResponse => ({
-  config: preparedData.config.toString(),
-  anonymized: null, // Follow-up doesn't use anonymization
-  rephrased: null, // Follow-up doesn't use rephrasing
-  localSearchChunks: [...allGeneralChunks, ...allIdccChunks],
-  generated: generatedData,
-  modelName: preparedData.model.name,
-  modelFamily: getFamilyModel(preparedData.model),
-  answerType: "short", // Follow-up responses are always short
-});
+// Generate answer (non-streaming)
+export const generateAnswer = async (
+  userQuestion: string,
+  requiredConfig?: Config,
+  idcc?: string
+): Promise<ApiResponse<AnswerResponse>> => {
+  try {
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
+      userQuestion,
+      requiredConfig,
+      idcc
+    );
 
-// Analyze follow-up question (non-streaming)
-export const analyzeFollowupQuestion = async (
+    const generateResult = await generate({
+      model: preparedData.model,
+      chat_history: chatHistory,
+      system_prompt: systemPrompt,
+    });
+
+    if (generateResult.error) {
+      throw new Error(
+        `Erreur lors de la génération de la réponse: ${generateResult.error}. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
+      );
+    }
+
+    if (!generateResult.data) {
+      throw new Error(
+        `Erreur lors de la génération de la réponse. Pour information, le model utilisé lors de la génération est ${preparedData.model.name}`
+      );
+    }
+
+    return {
+      success: true,
+      data: buildAnswer(preparedData, generateResult.data),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: (error as Error).message,
+    };
+  }
+};
+
+// Generate answer (streaming)
+export const generateAnswerStream = async (
+  userQuestion: string,
+  onChunk: (chunk: string) => void,
+  onComplete: (result: ApiResponse<AnswerResponse>) => void,
+  requiredConfig?: Config,
+  idcc?: string
+): Promise<void> => {
+  try {
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
+      userQuestion,
+      requiredConfig,
+      idcc
+    );
+
+    await generateStream(
+      {
+        model: preparedData.model,
+        chat_history: chatHistory,
+        system_prompt: systemPrompt,
+      },
+      onChunk,
+      undefined, // onStart
+      (endData) => {
+        // onEnd - call completion callback with full result
+        const generatedData: GenerateResponse = {
+          time: endData.time,
+          text: endData.text,
+          nb_token_input: endData.nb_token_input,
+          nb_token_output: endData.nb_token_output,
+        };
+
+        onComplete({
+          success: true,
+          data: buildAnswer(preparedData, generatedData),
+        });
+      },
+      (error) => {
+        // onError
+        onComplete({
+          success: false,
+          data: null,
+          error,
+        });
+      }
+    );
+  } catch (error) {
+    onComplete({
+      success: false,
+      data: null,
+      error: (error as Error).message,
+    });
+  }
+};
+
+// Generate follow-up answer (non-streaming)
+export const generateFollowupAnswer = async (
   query1: string,
   answer1: string,
   query2: string,
   requiredConfig?: Config,
   idcc?: string,
   providedModel?: LLMModel
-): Promise<ApiResponse<AnalyzeResponse>> => {
+): Promise<ApiResponse<AnswerResponse>> => {
   try {
     const {
       preparedData,
@@ -304,7 +307,7 @@ export const analyzeFollowupQuestion = async (
 
     return {
       success: true,
-      data: createFollowupAnalyzeResponse(
+      data: buildFollowupAnswer(
         preparedData,
         generateResult.data,
         allGeneralChunks,
@@ -320,13 +323,13 @@ export const analyzeFollowupQuestion = async (
   }
 };
 
-// Analyze follow-up question (streaming)
-export const analyzeFollowupQuestionStream = async (
+// Generate follow-up answer (streaming)
+export const generateFollowupAnswerStream = async (
   query1: string,
   answer1: string,
   query2: string,
   onChunk: (chunk: string) => void,
-  onComplete: (result: ApiResponse<AnalyzeResponse>) => void,
+  onComplete: (result: ApiResponse<AnswerResponse>) => void,
   requiredConfig?: Config,
   idcc?: string,
   providedModel?: LLMModel
@@ -366,7 +369,7 @@ export const analyzeFollowupQuestionStream = async (
 
         onComplete({
           success: true,
-          data: createFollowupAnalyzeResponse(
+          data: buildFollowupAnswer(
             preparedData,
             generatedData,
             allGeneralChunks,

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { analyzeFollowupQuestionStream } from "@/modules/api/process";
+import { generateFollowupAnswerStream } from "@/modules/api/process";
 import { Config, getModelByName } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     // Create a ReadableStream for the streaming response
     const stream = new ReadableStream({
       start(controller) {
-        analyzeFollowupQuestionStream(
+        generateFollowupAnswerStream(
           query1,
           answer1,
           query2,

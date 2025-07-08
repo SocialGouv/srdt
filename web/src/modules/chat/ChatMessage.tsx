@@ -5,7 +5,7 @@ import { Feedback } from "@/modules/feedback/Feedback";
 import styles from "./Chat.module.css";
 import { ChatMessage as ChatMessageType } from "./types";
 import { Agreement } from "../convention-collective/search";
-import { AnalyzeResponse } from "@/types";
+import { AnswerResponse } from "@/types";
 import React from "react";
 
 // Custom markdown components to handle links properly
@@ -20,7 +20,7 @@ interface ChatMessageProps {
   index: number;
   isLastMessage: boolean;
   isLoading: boolean;
-  apiResult: AnalyzeResponse | null;
+  apiResult: AnswerResponse | null;
   globalResponseTime: number;
   apiError?: string;
   selectedAgreement?: Agreement;

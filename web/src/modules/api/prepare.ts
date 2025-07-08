@@ -113,7 +113,7 @@ export const prepareQuestionData = async (
   if (idcc) {
     const idccSearchResult = await getIdccChunks(idcc);
 
-    if (idccSearchResult.error && idccSearchResult.data?.top_chunks) {
+    if (idccSearchResult.error) {
       const searchError = new Error(
         `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
       );
@@ -125,12 +125,10 @@ export const prepareQuestionData = async (
       });
       console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
     } else {
+      const inputs = idccSearchResult.data?.top_chunks.slice(0, MAX_RERANK);
       const idccRerankResults = await rerank({
         prompt: userQuestion,
-        inputs: idccSearchResult.data?.top_chunks.slice(
-          0,
-          MAX_RERANK
-        ) as ChunkResult[],
+        inputs: inputs || [],
       });
 
       if (idccRerankResults.data) {

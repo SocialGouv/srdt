@@ -118,7 +118,7 @@ export interface InstructionPrompts {
   generate_followup_instruction_idcc: string;
 }
 
-export interface AnalyzeResponse {
+export interface AnswerResponse {
   config: string;
   anonymized: AnonymizeResponse | null;
   rephrased: RephraseResponse | null;
