@@ -454,23 +454,15 @@ export const Chat = () => {
   };
 
   const renderMessage = (message: ChatMessage, index: number) => {
-    const backgroundColor =
+    const bubbleClasses = [
+      styles.messageBubble,
       message.role === "user"
-        ? "var(--text-action-high-blue-france)"
-        : "var(--background-default-grey-hover)";
-
-    const textColor = message.isError
-      ? "var(--text-default-error)"
-      : message.role === "user"
-      ? "white"
-      : "inherit";
-
-    const bubbleMessageStyle = {
-      backgroundColor,
-      color: textColor,
-      borderRadius: "8px",
-      padding: "1rem",
-    };
+        ? styles.messageBubbleUser
+        : styles.messageBubbleAssistant,
+      message.isError ? styles.messageBubbleError : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     // Check if this is the last assistant message and should show feedback
     const isLastAssistantMessage =
@@ -487,18 +479,17 @@ export const Chat = () => {
     return (
       <div key={index}>
         <div
-          className={fr.cx(
+          className={`${fr.cx(
             "fr-my-1w",
             message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
-          )}
-          style={{ maxWidth: "70%", minWidth: "200px" }}
+          )} ${styles.messageWrapper}`}
         >
-          <div style={bubbleMessageStyle}>
+          <div className={bubbleClasses}>
             <div
-              style={
+              className={
                 !message.isLoading && !message.isStreaming
-                  ? { marginBottom: "-1.5rem" }
-                  : {}
+                  ? styles.messageContent
+                  : ""
               }
             >
               <Markdown
@@ -526,7 +517,9 @@ export const Chat = () => {
         </div>
 
         {apiResult && shouldShowFeedback && (
-          <div style={bubbleMessageStyle}>
+          <div
+            className={`${styles.messageBubble} ${styles.messageBubbleAssistant}`}
+          >
             <p className={fr.cx("fr-m-0", "fr-h1")}>
               Donnez votre avis sur cette réponse
             </p>
@@ -551,7 +544,7 @@ export const Chat = () => {
   };
 
   return (
-    <div style={{ display: "flex", height: "80vh" }}>
+    <div className={styles.chatContainer}>
       <ChatHistory
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -561,19 +554,9 @@ export const Chat = () => {
         onDeleteConversation={handleDeleteConversation}
       />
 
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <div className={styles.chatMainContent}>
         {/* Fixed header with buttons - always visible */}
-        <div
-          className={fr.cx("fr-mt-2w")}
-          style={{
-            display: "flex",
-            gap: "1rem",
-            alignItems: "center",
-            flexShrink: 0,
-            paddingBottom: "1rem",
-            borderBottom: "1px solid var(--background-alt-blue-france)",
-          }}
-        >
+        <div className={`${fr.cx("fr-mt-2w")} ${styles.chatHeader}`}>
           <Button
             onClick={() => {
               if (!showHistory) {
@@ -600,27 +583,16 @@ export const Chat = () => {
         {/* Scrollable messages area */}
         <div
           ref={chatMessagesRef}
-          className={`chat-messages`}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            overflowY: "auto",
-            gap: "1rem",
-            marginBottom: "1rem",
-            paddingTop: "1rem",
-          }}
+          className={`chat-messages ${styles.chatMessagesContainer}`}
         >
           {messages.map((message, index) => renderMessage(message, index))}
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className={fr.cx("fr-grid-row", "fr-grid-row--gutters")}
-          style={{
-            backgroundColor: "var(--background-default-grey)",
-            borderTop: "1px solid var(--background-alt-blue-france)",
-          }}
+          className={`${fr.cx("fr-grid-row", "fr-grid-row--gutters")} ${
+            styles.chatForm
+          }`}
         >
           <div className={fr.cx("fr-col-11")}>
             <AutoresizeTextarea
@@ -644,13 +616,7 @@ export const Chat = () => {
             />
           </div>
           <div
-            className={fr.cx("fr-col-1")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "flex-start",
-            }}
+            className={`${fr.cx("fr-col-1")} ${styles.submitButtonContainer}`}
           >
             <Button
               iconId="fr-icon-send-plane-fill"
@@ -685,16 +651,7 @@ export const Chat = () => {
           )}
           {currentConversation?.isAwaitingFollowup && !isDisabled && (
             <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
-              <div
-                style={{
-                  fontSize: "0.875rem",
-                  color: "var(--text-mention-grey)",
-                  padding: "0.5rem",
-                  backgroundColor: "var(--background-alt-grey)",
-                  borderRadius: "4px",
-                  borderLeft: "3px solid var(--border-action-high-blue-france)",
-                }}
-              >
+              <div className={styles.followupInfo}>
                 💡 Vous pouvez poser une question de suivi pour approfondir
                 cette réponse, ou démarrer une nouvelle conversation.
               </div>
