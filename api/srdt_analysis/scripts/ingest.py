@@ -3,7 +3,6 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-from srdt_analysis.legi_data import get_legi_data
 from srdt_analysis.data_exploiter import (
     ArticlesCodeDuTravailExploiter,
     FichesMTExploiter,
@@ -11,6 +10,7 @@ from srdt_analysis.data_exploiter import (
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
+from srdt_analysis.legi_data import get_legi_data
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
 
@@ -89,9 +89,7 @@ def start():
 
         metadata = all_docs.rename({"cdtn_id": "document_id"}, axis="columns")[
             ["url", "title", "document_id", "source", "idcc"]
-        ].to_dict(
-            "records"
-        )  # type: ignore
+        ].to_dict("records")  # type: ignore
 
         chunks_content = all_docs["content_chunked"].apply(
             lambda x: [sd.page_content for sd in x]
