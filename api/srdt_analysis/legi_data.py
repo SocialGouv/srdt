@@ -56,6 +56,6 @@ def recursive_lookup(path, node) -> list[DocumentData]:
 
 
 def get_legi_data() -> list[DocumentData]:
-    with open(os.getenv("LEGI_DATA_PATH")) as f:
+    with open(str(os.getenv("LEGI_DATA_PATH"))) as f:
         code = json.load(f)
         return recursive_lookup([], code)
