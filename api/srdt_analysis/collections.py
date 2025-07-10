@@ -1,15 +1,11 @@
 import json
 import os
-import time
-from io import BytesIO
 
 import httpx
 
 from srdt_analysis.constants import (
     ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
-    COLLECTIONS_UPLOAD_BATCH_SIZE,
-    COLLECTIONS_UPLOAD_DELAY_IN_SECONDS,
 )
 from srdt_analysis.corpus import getChunksByIdcc
 from srdt_analysis.models import (
@@ -128,53 +124,39 @@ class AlbertCollectionHandler:
         data: ListOfDocumentData,
         id_collection: COLLECTION_ID,
     ) -> None:
-        result = []
         for dt in data:
             dt: DocumentData
             chunks = dt["content_chunked"]
             for chunk in chunks:
-                metadata = {
+                chunk_metadata = {
                     "id": dt["cdtn_id"],
                     "url": dt["url"],
                     "source": dt["source"],
                     "title": dt["title"],
                 }
                 if dt["idcc"]:
-                    metadata["idcc"] = dt["idcc"]
+                    chunk_metadata["idcc"] = dt["idcc"]
 
-                result.append(
-                    {
-                        "text": chunk.page_content,
-                        "title": dt["title"],
-                        "metadata": metadata,
-                    }
+                chunk_text = chunk.page_content
+                chunk_bytes = chunk_text.encode("utf-8")
+
+                files = {"file": (f"{dt['title']}.txt", chunk_bytes, "text/plain")}
+
+                metadata_json = json.dumps(chunk_metadata, ensure_ascii=False)
+
+                form_data = {
+                    "collection": id_collection,
+                    "chunker": "NoSplitter",
+                    "metadata": metadata_json,
+                }
+
+                response = httpx.post(
+                    f"{self.base_url}/v1/documents",
+                    headers=self.headers,
+                    files=files,
+                    data=form_data,
                 )
 
-        for i in range(0, len(result), COLLECTIONS_UPLOAD_BATCH_SIZE):
-            batch = result[i : i + COLLECTIONS_UPLOAD_BATCH_SIZE]
-            file_content = json.dumps(batch).encode("utf-8")
-
-            files = {
-                "file": (
-                    "content.json",
-                    BytesIO(file_content),
-                    "application/json",
-                )
-            }
-
-            request_data = {
-                "request": '{"collection": "%s", "chunker": {"name": "NoChunker"}}'
-                % id_collection
-            }
-            response = httpx.post(
-                f"{self.base_url}/v1/files",
-                headers=self.headers,
-                files=files,
-                data=request_data,
-            )
-
-            response.raise_for_status()
-
-            time.sleep(COLLECTIONS_UPLOAD_DELAY_IN_SECONDS)
+                response.raise_for_status()
 
         return
