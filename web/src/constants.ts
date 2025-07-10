@@ -216,7 +216,7 @@ export const AB_rand = 0;
 export const SEARCH_OPTIONS_LOCAL: SearchOptions = {
   top_K: 64,
   threshold: 0.4,
-  collections: [733, 734, 735, 736, 738],
+  collections: [733, 734, 735, 738, 1170],
 };
 
 export const CHATGPT_LLM: LLMModel = {

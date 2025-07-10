@@ -20,14 +20,6 @@ logger = Logger("Ingester")
 
 
 def start():
-    article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    articles_code_du_travail = get_legi_data()
-    article_code_du_travail_exploiter.reset_collection_data(
-        articles_code_du_travail[:5], "code_du_travail_tree"
-    )
-
-    return
-
     logger.info("Read data from Postgres")
     data = get_data(
         [
