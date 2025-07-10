@@ -140,7 +140,7 @@ class AlbertCollectionHandler:
                 chunk_text = chunk.page_content
                 chunk_bytes = chunk_text.encode("utf-8")
 
-                files = {"file": (f"{dt['title']}.txt", chunk_bytes, "text/plain")}
+                files = {"file": (dt['title'], chunk_bytes, "text/plain")}
 
                 metadata_json = json.dumps(chunk_metadata, ensure_ascii=False)
 
