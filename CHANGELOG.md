@@ -1,3 +1,10 @@
+## [1.23.4](https://github.com/SocialGouv/srdt/compare/v1.23.3...v1.23.4) (2025-07-10)
+
+
+### Bug Fixes
+
+* l'ancienne collection n'était plus supprimée dans albert en cas de ré-ingestion ([#219](https://github.com/SocialGouv/srdt/issues/219)) ([a33d3b3](https://github.com/SocialGouv/srdt/commit/a33d3b32159b3278d4b2d3e19b696e550c7971cf))
+
 ## [1.23.3](https://github.com/SocialGouv/srdt/compare/v1.23.2...v1.23.3) (2025-07-08)
 
 
