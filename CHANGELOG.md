@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/SocialGouv/srdt/compare/v1.23.4...v1.24.0) (2025-07-10)
+
+
+### Features
+
+* nouvelle api albert pour l'ingestion ([#218](https://github.com/SocialGouv/srdt/issues/218)) ([2956746](https://github.com/SocialGouv/srdt/commit/29567460a95641e5041608dccd40ddda069ad07b))
+
 ## [1.23.4](https://github.com/SocialGouv/srdt/compare/v1.23.3...v1.23.4) (2025-07-10)
 
 
