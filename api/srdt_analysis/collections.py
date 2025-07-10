@@ -130,6 +130,7 @@ class AlbertCollectionHandler:
             for chunk in chunks:
                 chunk_metadata = {
                     "id": dt["cdtn_id"],
+                    "initial_id": dt["initial_id"],
                     "url": dt["url"],
                     "source": dt["source"],
                     "title": dt["title"],
@@ -137,7 +138,7 @@ class AlbertCollectionHandler:
                 if dt["idcc"]:
                     chunk_metadata["idcc"] = dt["idcc"]
 
-                chunk_text = chunk.page_content
+                chunk_text = f"{dt['title']} \n {chunk.page_content}"
                 chunk_bytes = chunk_text.encode("utf-8")
 
                 files = {"file": (dt['title'], chunk_bytes, "text/plain")}
