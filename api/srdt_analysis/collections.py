@@ -62,7 +62,9 @@ class AlbertCollectionHandler:
     def list_collections(self) -> AlbertCollectionsList:
         try:
             response = httpx.get(
-                f"{self.base_url}/v1/collections", headers=self.headers
+                f"{self.base_url}/v1/collections",
+                headers=self.headers,
+                params={"limit": 100},
             )
             response.raise_for_status()
             response_data = response.json()
