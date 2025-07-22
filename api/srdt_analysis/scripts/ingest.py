@@ -10,6 +10,7 @@ from srdt_analysis.data_exploiter import (
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
+from srdt_analysis.legi_data import get_legi_data
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
 
@@ -23,7 +24,6 @@ def start():
     data = get_data(
         [
             "information",
-            "code_du_travail",
             "page_fiche_ministere_travail",
             "fiches_service_public",
             "contributions",
@@ -50,9 +50,7 @@ def start():
     )
 
     article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    articles_code_du_travail = article_code_du_travail_exploiter.process_documents(
-        data["code_du_travail"], "character_recursive"
-    )
+    articles_code_du_travail = get_legi_data()
 
     page_sp_exploiter = FichesSPExploiter()
     page_sp = page_sp_exploiter.process_documents(
