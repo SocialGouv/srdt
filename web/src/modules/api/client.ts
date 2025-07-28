@@ -66,7 +66,6 @@ export const anonymize = async (
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const rephrase = async (
   request: RephraseRequest
 ): Promise<UseApiResponse<RephraseResponse>> => {
@@ -130,7 +129,6 @@ export const rerank = async (
     });
     return { data, error: null, loading: false };
   } catch (error) {
-    console.log(JSON.stringify(error, null, 2));
     return { data: null, error: (error as Error).message, loading: false };
   }
 };
