@@ -2,13 +2,15 @@ import {
   Config,
   getRandomModel,
   PROMPT_INSTRUCTIONS,
-  SEARCH_OPTIONS_LOCAL,
+  SEARCH_OPTIONS_CONTENT,
   MAX_RERANK,
   K_RERANK,
   K_RERANK_IDCC,
   K_RERANK_FOLLOWUP_QUERY1,
   K_RERANK_FOLLOWUP_QUERY2,
   K_RERANK_IDCC_FOLLOWUP,
+  SEARCH_OPTIONS_CODE,
+  K_RERANK_CODE,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -17,6 +19,7 @@ import {
   LLMModel,
   RerankResult,
   InstructionPrompts,
+  ContentResult,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 import {
@@ -25,6 +28,7 @@ import {
   getIdccChunks,
   search,
   rerank,
+  retrieveDocs,
 } from "./client";
 
 export interface PreparedQuestionData {
@@ -84,16 +88,23 @@ const rerankedToChunk = ({
   rerank_score,
 });
 
+const fullContentToChunk = (fc: ContentResult): ChunkResult => {
+  return {
+    ...fc,
+    score: 1,
+    id_chunk: fc.metadata.document_id,
+  };
+};
+
 const searchTextContent = async (anonymized: string) => {
-  // call search
-  // get full content
-  // run rerank on the two batches
-  // merge it and take 10 first
-  // return best 10
+  // call search for 128 chunks
+  // run rerank on two batches of chunks
+  // merge results and take 10 best
+  // return full content for these 10
 
   const localSearchResult = await search({
     prompts: [anonymized],
-    options: SEARCH_OPTIONS_LOCAL,
+    options: SEARCH_OPTIONS_CONTENT,
   });
 
   if (localSearchResult.error) {
@@ -103,7 +114,7 @@ const searchTextContent = async (anonymized: string) => {
     Sentry.captureException(localSearchError, {
       extra: {
         query: anonymized,
-        searchOptions: SEARCH_OPTIONS_LOCAL,
+        searchOptions: SEARCH_OPTIONS_CONTENT,
       },
     });
     console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
@@ -121,50 +132,55 @@ const searchTextContent = async (anonymized: string) => {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  // TODO get full content for each search result
-
-  // implement me !
-
-  // TODO split in two rerank batches
-
-  // merge the reranked batches
-
-  // take K_RERANK (10)
-
-  // merge chunks if they come from the same document
-  // const toRerankChunks = mergeChunksByDocumentId(localSearchChunks).slice(
-  //   0,
-  //   MAX_RERANK
-  // );
-
-  const searchRerankResults = await rerank({
+  const rerankBatch1 = await rerank({
     prompt: anonymized,
-    inputs: toRerankChunks,
+    inputs: localSearchChunks.slice(0, MAX_RERANK),
   });
 
-  if (!searchRerankResults.data) {
+  const rerankBatch2 = await rerank({
+    prompt: anonymized,
+    inputs: localSearchChunks.slice(MAX_RERANK),
+  });
+
+  const allReranked = [
+    ...(rerankBatch1.data?.results || []),
+    ...(rerankBatch2.data?.results || []),
+  ].sort((a, b) => b.rerank_score - a.rerank_score);
+
+  if (!allReranked) {
     Sentry.captureMessage("No rerank results found", {
       level: "warning",
       extra: {
         userQuestion: anonymized,
-        toRerankChunks: toRerankChunks.length,
+        toRerankChunks: localSearchChunks,
       },
     });
     console.warn("Aucun résultat de recherche trouvé après le rerank");
   }
 
-  // take top k rerank for the generate step (keep general chunks separate)
-  return (
-    searchRerankResults.data?.results.slice(0, K_RERANK).map(rerankedToChunk) ||
-    []
+  // get best (deduplicate by cdtn id)
+  const selectedDocumentsIds = allReranked.reduce(
+    (acc: Array<string>, curr) => {
+      if (acc.length < K_RERANK && !acc.includes(curr.chunk.metadata.id)) {
+        // todo keep original chunk score here to assignate to actual document
+        acc.push(curr.chunk.metadata.id);
+      }
+      return acc;
+    },
+    new Array<string>()
   );
+
+  const retrieveResponse = await retrieveDocs(selectedDocumentsIds);
+
+  const selectedDocuments = retrieveResponse.data?.contents || [];
+
+  // take top k rerank for the generate step (keep general chunks separate)
+  return selectedDocuments.map(fullContentToChunk);
 };
 
 // get all idcc content and run rerank using user question
 // return best 5
-const searchIDCC = async (idcc: string, question: string) => {
-  // TODO ensure we get all contrib
-
+const searchIDCC = async (idcc: string, anonymized: string) => {
   const idccSearchResult = await getIdccChunks(idcc);
 
   if (idccSearchResult.error) {
@@ -183,7 +199,7 @@ const searchIDCC = async (idcc: string, question: string) => {
 
     if (inputs?.length) {
       const idccRerankResults = await rerank({
-        prompt: question,
+        prompt: anonymized,
         inputs: inputs,
       });
 
@@ -198,11 +214,33 @@ const searchIDCC = async (idcc: string, question: string) => {
   return [];
 };
 
-const searchArticles = () => {
+const searchArticles = async (anonymized: string) => {
   // call search
-  // get full content
+  const codeSearchResult = await search({
+    prompts: [anonymized],
+    options: SEARCH_OPTIONS_CODE,
+  });
+
   // run rerank
-  // take 5
+  const reranked = await rerank({
+    prompt: anonymized,
+    inputs: codeSearchResult.data?.top_chunks.slice(0, MAX_RERANK) || [],
+  });
+
+  // get best 5 (deduplicate by id)
+  const selectedArticleIds =
+    reranked.data?.results.reduce((acc: Array<string>, curr) => {
+      if (acc.length < K_RERANK_CODE && !acc.includes(curr.chunk.metadata.id)) {
+        // todo keep original chunk score here to assignate to actual document
+        acc.push(curr.chunk.metadata.id);
+      }
+      return acc;
+    }, new Array<string>()) || [];
+
+  const retrieveResponse = await retrieveDocs(selectedArticleIds);
+
+  // get full content
+  return retrieveResponse.data?.contents.map(fullContentToChunk) || [];
 };
 
 // Common preprocessing logic for both streaming and non-streaming
@@ -211,7 +249,7 @@ export const prepareQuestionData = async (
   requiredConfig?: Config,
   idcc?: string
 ): Promise<PreparedQuestionData> => {
-  const config = requiredConfig || Config.V1_15;
+  const config = requiredConfig || Config.V1_16;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = getRandomModel();
 
@@ -245,6 +283,10 @@ export const prepareQuestionData = async (
 
   const selectedGeneralChunks = await searchTextContent(anonymized);
 
+  const selectedArticles = await searchArticles(anonymized);
+
+  selectedGeneralChunks.push(...selectedArticles);
+
   if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
     Sentry.captureMessage("No chunks selected for generation", {
       level: "warning",
@@ -257,7 +299,6 @@ export const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  // TODO what's that ?
   const answerType = Math.random() < 0.5 ? "long" : "short";
 
   return {
@@ -281,14 +322,14 @@ export const prepareFollowupQuestionData = async (
   idcc?: string,
   providedModel?: LLMModel
 ): Promise<PreparedFollowupQuestionData> => {
-  const config = requiredConfig || Config.V1_15;
+  const config = requiredConfig || Config.V1_16;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = providedModel || getRandomModel(); // Use provided model or fallback to random
 
   // Search for query1 (top 5)
   const searchResultQuery1 = await search({
     prompts: [query1],
-    options: SEARCH_OPTIONS_LOCAL,
+    options: SEARCH_OPTIONS_CONTENT,
   });
 
   if (searchResultQuery1.error) {
@@ -315,7 +356,7 @@ export const prepareFollowupQuestionData = async (
   // Search for query2 (top 10)
   const searchResultQuery2 = await search({
     prompts: [query2],
-    options: SEARCH_OPTIONS_LOCAL,
+    options: SEARCH_OPTIONS_CONTENT,
   });
 
   if (searchResultQuery2.error) {

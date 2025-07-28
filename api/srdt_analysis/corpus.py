@@ -15,11 +15,13 @@ chunks = pd.read_parquet(cast(str, os.getenv("CHUNKS_PARQUET")))
 def getChunksByIdcc(idcc: str) -> List[ChunkResult]:
     idcc_chunks = chunks[chunks["idcc"] == idcc][["metadata", "content", "id_chunk"]]
     idcc_chunks["score"] = 1
-    return cast(List[ChunkResult], idcc_chunks.to_dict("records"))  # type: ignore
+    records = idcc_chunks.to_dict("records")  # type: ignore
+    for r in records:
+        r["metadata"]["id"] = r["metadata"]["document_id"]
+    return cast(List[ChunkResult], records)
 
 
 def getDocsContent(ids: List[str]) -> List[ContentResult]:
-    print(ids)
     matches = docs[docs["cdtn_id"].isin(ids)]
     records = matches.apply(
         lambda row: (

@@ -23,7 +23,7 @@ CollectionName = Literal[
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
-CHUNK_ID = int
+CHUNK_ID = int | str
 ID = int | str
 HTML = str
 PlainText = str

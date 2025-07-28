@@ -9,6 +9,7 @@ import {
   GenerateResponse,
   RerankRequest,
   RerankResponse,
+  RetrieveResponse,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 
@@ -107,6 +108,18 @@ export const search = async (
   }
 };
 
+export const retrieveDocs = async (ids: string[]) => {
+  try {
+    const data = await fetchApi<RetrieveResponse>("/api/v1/docs/retrieve", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
 export const rerank = async (
   request: RerankRequest
 ): Promise<UseApiResponse<RerankResponse>> => {
@@ -117,6 +130,7 @@ export const rerank = async (
     });
     return { data, error: null, loading: false };
   } catch (error) {
+    console.log(JSON.stringify(error, null, 2));
     return { data: null, error: (error as Error).message, loading: false };
   }
 };
