@@ -151,6 +151,7 @@ async def get_contributions_idcc(idcc):
             top_chunks=idcc_chunks,
         )
     except Exception as e:
+        logger.error(f"IDCC get error :  {str(e)}, traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
