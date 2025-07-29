@@ -8,6 +8,10 @@ nlp = spacy.load(
 entities_fr = {"ORG": "ENTREPRISE", "PER": "PERSONNE", "LOC": "LIEU"}
 
 
+# we don't want to replace those tokens
+restricted_token = ["CSE", "CSSCT", "RPX", "IJ", "CP"]
+
+
 def anonymise_spacy(question: str):
     doc = nlp(question)
 
@@ -18,7 +22,7 @@ def anonymise_spacy(question: str):
         start = ent.start_char
         end = start + len(ent.text)
         label_en = ent.label_
-        if label_en in entities_fr.keys():
+        if label_en in entities_fr.keys() and ent.text not in restricted_token:
             anonymised = anonymised[:start] + entities_fr[label_en] + anonymised[end:]
 
     return anonymised

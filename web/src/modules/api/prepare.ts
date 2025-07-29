@@ -68,11 +68,14 @@ const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
   const toRerankRecord = chunks
     .sort((a, b) => b.score - a.score)
     .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
-      const id = curr.metadata.document_id;
+      const id = curr.metadata.id;
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content = acc[id].content.concat("\n\n" + curr.content);
+        acc[id].content = acc[id].content
+          .concat("\n\n" + curr.content)
+          // try to respect rerank limitation (8192 tokens, using 5 chars token for now until we have token split available here)
+          .slice(0, 8192 * 5);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
@@ -97,8 +100,9 @@ const fullContentToChunk = (fc: ContentResult): ChunkResult => {
 };
 
 const searchTextContent = async (anonymized: string) => {
-  // call search for 128 chunks
-  // run rerank on two batches of chunks
+  // call search for 256 chunks
+  // merge them by source document
+  // run rerank on two 64 batches of these merged chunks
   // merge results and take 10 best
   // return full content for these 10
 
@@ -132,14 +136,16 @@ const searchTextContent = async (anonymized: string) => {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
+  const mergedChunks = mergeChunksByDocumentId(localSearchChunks);
+
   const rerankBatch1 = await rerank({
     prompt: anonymized,
-    inputs: localSearchChunks.slice(0, MAX_RERANK),
+    inputs: mergedChunks.slice(0, MAX_RERANK) || [],
   });
 
   const rerankBatch2 = await rerank({
     prompt: anonymized,
-    inputs: localSearchChunks.slice(MAX_RERANK),
+    inputs: mergedChunks.slice(MAX_RERANK, MAX_RERANK * 2) || [],
   });
 
   const allReranked = [

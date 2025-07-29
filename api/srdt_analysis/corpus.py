@@ -39,4 +39,6 @@ def getDocsContent(ids: List[str]) -> List[ContentResult]:
         ),
         axis=1,
     )
-    return records.to_list()  # type: ignore
+    record_dict = dict(zip(matches["cdtn_id"], records.to_list()))  # type: ignore
+
+    return [record_dict[id] for id in ids]
