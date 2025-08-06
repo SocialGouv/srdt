@@ -72,10 +72,7 @@ const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
       if (!acc[id]) {
         acc[id] = curr;
       } else {
-        acc[id].content = acc[id].content
-          .concat("\n\n" + curr.content)
-          // try to respect rerank limitation (8192 tokens, using 5 chars token for now until we have token split available here)
-          .slice(0, 8192 * 5);
+        acc[id].content = acc[id].content.concat("\n\n" + curr.content);
       }
       return acc;
     }, {} as Record<string, ChunkResult>);
@@ -136,7 +133,9 @@ const searchTextContent = async (anonymized: string) => {
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  const mergedChunks = mergeChunksByDocumentId(localSearchChunks);
+  const mergedChunks = mergeChunksByDocumentId(localSearchChunks).sort(
+    (a, b) => b.score - a.score
+  );
 
   const rerankBatch1 = await rerank({
     prompt: anonymized,
@@ -148,12 +147,10 @@ const searchTextContent = async (anonymized: string) => {
     inputs: mergedChunks.slice(MAX_RERANK, MAX_RERANK * 2) || [],
   });
 
-  const allReranked = [
-    ...(rerankBatch1.data?.results || []),
-    ...(rerankBatch2.data?.results || []),
-  ].sort((a, b) => b.rerank_score - a.rerank_score);
-
-  if (!allReranked) {
+  if (
+    !rerankBatch1.data?.results.length ||
+    !rerankBatch2.data?.results.length
+  ) {
     Sentry.captureMessage("No rerank results found", {
       level: "warning",
       extra: {
@@ -163,6 +160,11 @@ const searchTextContent = async (anonymized: string) => {
     });
     console.warn("Aucun résultat de recherche trouvé après le rerank");
   }
+
+  const allReranked = [
+    ...(rerankBatch1.data?.results || []),
+    ...(rerankBatch2.data?.results || []),
+  ].sort((a, b) => b.rerank_score - a.rerank_score);
 
   // get best (deduplicate by cdtn id)
   const selectedDocumentsIds = allReranked.reduce(
