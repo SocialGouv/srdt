@@ -170,8 +170,12 @@ async def get_docs(request: RetrieveRequest):
 async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
+
+    tokenizer = Tokenizer()
+
     try:
-        inputs = [input.content for input in request.inputs]
+        # Albert uses bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit
+        inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
         res = collections.rerank(request.prompt, inputs)
 
         # reorder results based on rerank indices to map chunks and results
