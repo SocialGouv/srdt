@@ -41,14 +41,11 @@ export interface PreparedQuestionData {
     anonymisation?: string;
     reformulation?: string;
     split_multiple_queries?: string;
-    generate_instruction_short_answer?: string;
-    generate_instruction_idcc_short_answer?: string;
   };
   localSearchChunks: ChunkResult[];
   idccChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
-  answerType: "long" | "short";
 }
 
 export interface PreparedFollowupQuestionData {
@@ -307,8 +304,6 @@ export const prepareQuestionData = async (
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  const answerType = Math.random() < 0.5 ? "long" : "short";
-
   return {
     query: anonymized,
     model,
@@ -318,7 +313,6 @@ export const prepareQuestionData = async (
     idccChunks: selectedIdccChunks,
     anonymizeResult,
     rephraseResult,
-    answerType,
   };
 };
 

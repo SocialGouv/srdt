@@ -30,7 +30,6 @@ const buildAnswer = (
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
-  answerType: preparedData.answerType,
 });
 
 // Build follow-up answer response
@@ -47,7 +46,6 @@ const buildFollowupAnswer = (
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
-  answerType: "short", // Follow-up responses are always short
 });
 
 // Get generate data for question
@@ -63,16 +61,6 @@ async function getGenerateData(
   );
 
   // Determine chat history and system prompt based on whether IDCC is provided
-  const generateInstruction =
-    preparedData.answerType === "long"
-      ? preparedData.instructions.generate_instruction
-      : preparedData.instructions.generate_instruction_short_answer;
-
-  const generateInstructionIdcc =
-    preparedData.answerType === "long"
-      ? preparedData.instructions.generate_instruction_idcc
-      : preparedData.instructions.generate_instruction_idcc_short_answer;
-
   const { chatHistory, systemPrompt } = idcc
     ? {
         chatHistory: createIdccChatHistory(
@@ -80,17 +68,18 @@ async function getGenerateData(
           preparedData.localSearchChunks,
           preparedData.idccChunks
         ),
-        systemPrompt: generateInstructionIdcc?.replace(
-          "[URL_convention_collective]",
-          `https://code.travail.gouv.fr/convention-collective/${idcc}`
-        ),
+        systemPrompt:
+          preparedData.instructions.generate_instruction_idcc?.replace(
+            "[URL_convention_collective]",
+            `https://code.travail.gouv.fr/convention-collective/${idcc}`
+          ),
       }
     : {
         chatHistory: createChatHistory(
           preparedData.query,
           preparedData.localSearchChunks
         ),
-        systemPrompt: generateInstruction,
+        systemPrompt: preparedData.instructions.generate_instruction,
       };
 
   return {

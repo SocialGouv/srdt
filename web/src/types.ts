@@ -123,8 +123,6 @@ export interface InstructionPrompts {
   split_multiple_queries: string;
   generate_instruction: string;
   generate_instruction_idcc: string;
-  generate_instruction_short_answer: string;
-  generate_instruction_idcc_short_answer: string;
   generate_followup_instruction: string;
   generate_followup_instruction_idcc: string;
 }
@@ -137,7 +135,6 @@ export interface AnswerResponse {
   generated: GenerateResponse;
   modelName: string;
   modelFamily: LLMFamily;
-  answerType: "long" | "short";
 }
 
 export interface ApiResponse<T> {

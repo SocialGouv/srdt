@@ -21,7 +21,6 @@ type Props = {
   llmResponse?: string;
   errorMessage?: string;
   idcc?: string;
-  answerType?: "long" | "short";
   isFollowupResponse?: boolean;
 };
 
