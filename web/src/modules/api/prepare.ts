@@ -42,7 +42,8 @@ export interface PreparedQuestionData {
     reformulation?: string;
     split_multiple_queries?: string;
   };
-  localSearchChunks: ChunkResult[];
+  fichesOfficiellesChunks: ChunkResult[];
+  codeDuTravailChunks: ChunkResult[];
   idccChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
@@ -54,8 +55,10 @@ export interface PreparedFollowupQuestionData {
   model: LLMModel;
   config: Config;
   instructions: InstructionPrompts;
-  generalChunksQuery1: ChunkResult[];
-  generalChunksQuery2: ChunkResult[];
+  fichesOfficiellesChunksQuery1: ChunkResult[];
+  fichesOfficiellesChunksQuery2: ChunkResult[];
+  codeDuTravailChunksQuery1: ChunkResult[];
+  codeDuTravailChunksQuery2: ChunkResult[];
   idccChunksQuery1: ChunkResult[];
   idccChunksQuery2: ChunkResult[];
 }
@@ -286,18 +289,21 @@ export const prepareQuestionData = async (
     selectedIdccChunks = await searchIDCC(idcc, anonymized);
   }
 
-  const selectedGeneralChunks = await searchTextContent(anonymized);
+  const selectedFichesOfficiellesChunks = await searchTextContent(anonymized);
 
-  const selectedArticles = await searchArticles(anonymized);
+  const selectedCodeDuTravailChunks = await searchArticles(anonymized);
 
-  selectedGeneralChunks.push(...selectedArticles);
-
-  if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
+  if (
+    selectedFichesOfficiellesChunks.length === 0 &&
+    selectedCodeDuTravailChunks.length === 0 &&
+    selectedIdccChunks.length === 0
+  ) {
     Sentry.captureMessage("No chunks selected for generation", {
       level: "warning",
       extra: {
         userQuestion: anonymized,
-        generalChunksLength: selectedGeneralChunks.length,
+        fichesOfficiellesChunksLength: selectedFichesOfficiellesChunks.length,
+        codeDuTravailChunksLength: selectedCodeDuTravailChunks.length,
         idccChunksLength: selectedIdccChunks.length,
       },
     });
@@ -309,7 +315,8 @@ export const prepareQuestionData = async (
     model,
     config,
     instructions,
-    localSearchChunks: selectedGeneralChunks,
+    fichesOfficiellesChunks: selectedFichesOfficiellesChunks,
+    codeDuTravailChunks: selectedCodeDuTravailChunks,
     idccChunks: selectedIdccChunks,
     anonymizeResult,
     rephraseResult,
@@ -391,13 +398,18 @@ export const prepareFollowupQuestionData = async (
     rerank_score,
   });
 
-  const selectedGeneralChunksQuery1 = rerankedQuery1
+  const selectedFichesOfficiellesChunksQuery1 = rerankedQuery1
     .slice(0, K_RERANK_FOLLOWUP_QUERY1)
     .map(rerankedToChunk);
 
-  const selectedGeneralChunksQuery2 = rerankedQuery2
+  const selectedFichesOfficiellesChunksQuery2 = rerankedQuery2
     .slice(0, K_RERANK_FOLLOWUP_QUERY2)
     .map(rerankedToChunk);
+
+  // For follow-up questions, we currently don't search Code du Travail articles
+  // This could be added in the future if needed
+  const selectedCodeDuTravailChunksQuery1: ChunkResult[] = [];
+  const selectedCodeDuTravailChunksQuery2: ChunkResult[] = [];
 
   // Handle IDCC chunks if applicable
   let selectedIdccChunksQuery1: ChunkResult[] = [];
@@ -444,8 +456,10 @@ export const prepareFollowupQuestionData = async (
     model,
     config,
     instructions,
-    generalChunksQuery1: selectedGeneralChunksQuery1,
-    generalChunksQuery2: selectedGeneralChunksQuery2,
+    fichesOfficiellesChunksQuery1: selectedFichesOfficiellesChunksQuery1,
+    fichesOfficiellesChunksQuery2: selectedFichesOfficiellesChunksQuery2,
+    codeDuTravailChunksQuery1: selectedCodeDuTravailChunksQuery1,
+    codeDuTravailChunksQuery2: selectedCodeDuTravailChunksQuery2,
     idccChunksQuery1: selectedIdccChunksQuery1,
     idccChunksQuery2: selectedIdccChunksQuery2,
   };

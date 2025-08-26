@@ -24,7 +24,8 @@ const buildAnswer = (
   anonymized: preparedData.anonymizeResult?.data || null,
   rephrased: preparedData.rephraseResult?.data || null,
   localSearchChunks: [
-    ...preparedData.localSearchChunks,
+    ...preparedData.fichesOfficiellesChunks,
+    ...preparedData.codeDuTravailChunks,
     ...preparedData.idccChunks,
   ],
   generated: generatedData,
@@ -36,13 +37,18 @@ const buildAnswer = (
 const buildFollowupAnswer = (
   preparedData: PreparedFollowupQuestionData,
   generatedData: GenerateResponse,
-  allGeneralChunks: ChunkResult[],
+  allFichesOfficiellesChunks: ChunkResult[],
+  allCodeDuTravailChunks: ChunkResult[],
   allIdccChunks: ChunkResult[]
 ): AnswerResponse => ({
   config: preparedData.config.toString(),
   anonymized: null, // Follow-up doesn't use anonymization
   rephrased: null, // Follow-up doesn't use rephrasing
-  localSearchChunks: [...allGeneralChunks, ...allIdccChunks],
+  localSearchChunks: [
+    ...allFichesOfficiellesChunks,
+    ...allCodeDuTravailChunks,
+    ...allIdccChunks,
+  ],
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
@@ -65,7 +71,8 @@ async function getGenerateData(
     ? {
         chatHistory: createIdccChatHistory(
           preparedData.query,
-          preparedData.localSearchChunks,
+          preparedData.fichesOfficiellesChunks,
+          preparedData.codeDuTravailChunks,
           preparedData.idccChunks
         ),
         systemPrompt:
@@ -77,7 +84,8 @@ async function getGenerateData(
     : {
         chatHistory: createChatHistory(
           preparedData.query,
-          preparedData.localSearchChunks
+          preparedData.fichesOfficiellesChunks,
+          preparedData.codeDuTravailChunks
         ),
         systemPrompt: preparedData.instructions.generate_instruction,
       };
@@ -107,9 +115,14 @@ async function getFollowupGenerateData(
   );
 
   // Combine chunks from both queries
-  const allGeneralChunks = [
-    ...preparedData.generalChunksQuery1,
-    ...preparedData.generalChunksQuery2,
+  const allFichesOfficiellesChunks = [
+    ...preparedData.fichesOfficiellesChunksQuery1,
+    ...preparedData.fichesOfficiellesChunksQuery2,
+  ];
+
+  const allCodeDuTravailChunks = [
+    ...preparedData.codeDuTravailChunksQuery1,
+    ...preparedData.codeDuTravailChunksQuery2,
   ];
 
   const allIdccChunks = [
@@ -124,7 +137,8 @@ async function getFollowupGenerateData(
           query1,
           answer1,
           query2,
-          allGeneralChunks,
+          allFichesOfficiellesChunks,
+          allCodeDuTravailChunks,
           allIdccChunks
         ),
         systemPrompt:
@@ -138,7 +152,8 @@ async function getFollowupGenerateData(
           query1,
           answer1,
           query2,
-          allGeneralChunks
+          allFichesOfficiellesChunks,
+          allCodeDuTravailChunks
         ),
         systemPrompt: preparedData.instructions.generate_followup_instruction,
       };
@@ -147,7 +162,8 @@ async function getFollowupGenerateData(
     preparedData,
     chatHistory,
     systemPrompt,
-    allGeneralChunks,
+    allFichesOfficiellesChunks,
+    allCodeDuTravailChunks,
     allIdccChunks,
   };
 }
@@ -265,7 +281,8 @@ export const generateFollowupAnswer = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      allGeneralChunks,
+      allFichesOfficiellesChunks,
+      allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
       query1,
@@ -299,7 +316,8 @@ export const generateFollowupAnswer = async (
       data: buildFollowupAnswer(
         preparedData,
         generateResult.data,
-        allGeneralChunks,
+        allFichesOfficiellesChunks,
+        allCodeDuTravailChunks,
         allIdccChunks
       ),
     };
@@ -328,7 +346,8 @@ export const generateFollowupAnswerStream = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      allGeneralChunks,
+      allFichesOfficiellesChunks,
+      allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
       query1,
@@ -361,7 +380,8 @@ export const generateFollowupAnswerStream = async (
           data: buildFollowupAnswer(
             preparedData,
             generatedData,
-            allGeneralChunks,
+            allFichesOfficiellesChunks,
+            allCodeDuTravailChunks,
             allIdccChunks
           ),
         });
