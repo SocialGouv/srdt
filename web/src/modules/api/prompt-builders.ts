@@ -11,10 +11,11 @@ Contenu: ${chunk.content}
     .join("\n");
 };
 
-// Helper to create chat history for generation
+// Helper to create chat history for generation with separate source types
 export const createChatHistory = (
   query: string,
-  localSearchChunks: ChunkResult[]
+  fichesOfficiellesChunks: ChunkResult[],
+  codeDuTravailChunks: ChunkResult[]
 ) => [
   {
     role: "user" as const,
@@ -22,16 +23,33 @@ export const createChatHistory = (
   },
   {
     role: "user" as const,
-    content: `Voici les sources pertinentes pour répondre à la question:
+    content: `3 types de documents sont ajoutés dans la base de connaissance externe
 
-${formatChunks(localSearchChunks)}`,
+**Fiches officielles (1 à 10 extraits) :**
+
+Sources : Fiches des services publics, fiches du ministère du travail, contributions des pages du Code du travail numérique.
+
+Caractéristiques : Ces articles sont rédigés ou validés par des professionnels du droit et offrent une synthèse fiable.
+
+${formatChunks(fichesOfficiellesChunks)}
+
+**Code du travail (1 à 5 extraits) :**
+
+Sources : Sections entières du Code du travail.
+
+Caractéristiques : Textes légaux officiels.
+
+Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
+
+${formatChunks(codeDuTravailChunks)}`,
   },
 ];
 
-// Helper to create IDCC-specific chat history with both general and IDCC chunks
+// Helper to create IDCC-specific chat history with three source types
 export const createIdccChatHistory = (
   query: string,
-  generalChunks: ChunkResult[],
+  fichesOfficiellesChunks: ChunkResult[],
+  codeDuTravailChunks: ChunkResult[],
   idccChunks: ChunkResult[]
 ) => [
   {
@@ -40,12 +58,34 @@ export const createIdccChatHistory = (
   },
   {
     role: "user" as const,
-    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
+    content: `3 types de documents sont ajoutés dans la base de connaissance externe
 
-### Documents généralistes :
-${formatChunks(generalChunks)}
+**Fiches officielles (1 à 10 extraits) :**
 
-### Documents spécifiques à la convention collective renseignée :
+Sources : Fiches des services publics, fiches du ministère du travail, contributions des pages du Code du travail numérique.
+
+Caractéristiques : Ces articles sont rédigés ou validés par des professionnels du droit et offrent une synthèse fiable.
+
+${formatChunks(fichesOfficiellesChunks)}
+
+**Code du travail (1 à 5 extraits) :**
+
+Sources : Sections entières du Code du travail.
+
+Caractéristiques : Textes légaux officiels.
+
+Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
+
+${formatChunks(codeDuTravailChunks)}
+
+**Conventions collectives (1 à 5 extraits, si applicable) :**
+
+Sources : Pages du Code du travail numérique dédiées aux conventions collectives.
+
+Caractéristiques : Spécifiques à la convention collective mentionnée par l'utilisateur (via son IDCC).
+
+Utilisation : Utiliser ces sources uniquement si l'utilisateur a fourni l'IDCC de sa convention collective. Inclure un paragraphe dédié dans la réponse et un lien vers la convention collective dans la conclusion.
+
 ${formatChunks(idccChunks)}`,
   },
 ];
@@ -55,7 +95,8 @@ export const createFollowupChatHistory = (
   query1: string,
   answer1: string,
   query2: string,
-  generalChunks: ChunkResult[]
+  fichesOfficiellesChunks: ChunkResult[],
+  codeDuTravailChunks: ChunkResult[]
 ) => [
   {
     role: "user" as const,
@@ -71,9 +112,25 @@ export const createFollowupChatHistory = (
   },
   {
     role: "user" as const,
-    content: `Voici les sources pertinentes pour répondre à la nouvelle question:
+    content: `3 types de documents sont ajoutés dans la base de connaissance externe
 
-${formatChunks(generalChunks)}`,
+**Fiches officielles (1 à 10 extraits) :**
+
+Sources : Fiches des services publics, fiches du ministère du travail, contributions des pages du Code du travail numérique.
+
+Caractéristiques : Ces articles sont rédigés ou validés par des professionnels du droit et offrent une synthèse fiable.
+
+${formatChunks(fichesOfficiellesChunks)}
+
+**Code du travail (1 à 5 extraits) :**
+
+Sources : Sections entières du Code du travail.
+
+Caractéristiques : Textes légaux officiels.
+
+Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
+
+${formatChunks(codeDuTravailChunks)}`,
   },
 ];
 
@@ -82,7 +139,8 @@ export const createFollowupIdccChatHistory = (
   query1: string,
   answer1: string,
   query2: string,
-  generalChunks: ChunkResult[],
+  fichesOfficiellesChunks: ChunkResult[],
+  codeDuTravailChunks: ChunkResult[],
   idccChunks: ChunkResult[]
 ) => [
   {
@@ -99,12 +157,34 @@ export const createFollowupIdccChatHistory = (
   },
   {
     role: "user" as const,
-    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
+    content: `3 types de documents sont ajoutés dans la base de connaissance externe
 
-### Documents généralistes :
-${formatChunks(generalChunks)}
+**Fiches officielles (1 à 10 extraits) :**
 
-### Documents spécifiques à la convention collective renseignée :
+Sources : Fiches des services publics, fiches du ministère du travail, contributions des pages du Code du travail numérique.
+
+Caractéristiques : Ces articles sont rédigés ou validés par des professionnels du droit et offrent une synthèse fiable.
+
+${formatChunks(fichesOfficiellesChunks)}
+
+**Code du travail (1 à 5 extraits) :**
+
+Sources : Sections entières du Code du travail.
+
+Caractéristiques : Textes légaux officiels.
+
+Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
+
+${formatChunks(codeDuTravailChunks)}
+
+**Conventions collectives (1 à 5 extraits, si applicable) :**
+
+Sources : Pages du Code du travail numérique dédiées aux conventions collectives.
+
+Caractéristiques : Spécifiques à la convention collective mentionnée par l'utilisateur (via son IDCC).
+
+Utilisation : Utiliser ces sources uniquement si l'utilisateur a fourni l'IDCC de sa convention collective. Inclure un paragraphe dédié dans la réponse et un lien vers la convention collective dans la conclusion.
+
 ${formatChunks(idccChunks)}`,
   },
 ];
