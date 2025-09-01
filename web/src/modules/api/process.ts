@@ -7,6 +7,7 @@ import {
   createIdccChatHistory,
   createFollowupChatHistory,
   createFollowupIdccChatHistory,
+  createKnowledgeBaseContent,
 } from "./prompt-builders";
 import {
   PreparedQuestionData,
@@ -66,29 +67,33 @@ async function getGenerateData(
     idcc
   );
 
+  // Create knowledge base content
+  const knowledgeBaseContent = createKnowledgeBaseContent(
+    preparedData.fichesOfficiellesChunks,
+    preparedData.codeDuTravailChunks,
+    idcc ? preparedData.idccChunks : undefined
+  );
+
   // Determine chat history and system prompt based on whether IDCC is provided
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createIdccChatHistory(
-          preparedData.query,
-          preparedData.fichesOfficiellesChunks,
-          preparedData.codeDuTravailChunks,
-          preparedData.idccChunks
-        ),
+        chatHistory: createIdccChatHistory(preparedData.query),
         systemPrompt:
-          preparedData.instructions.generate_instruction_idcc?.replace(
+          (preparedData.instructions.generate_instruction_idcc?.replace(
             "[URL_convention_collective]",
             `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ),
+          ) || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       }
     : {
-        chatHistory: createChatHistory(
-          preparedData.query,
-          preparedData.fichesOfficiellesChunks,
-          preparedData.codeDuTravailChunks
-        ),
-        systemPrompt: preparedData.instructions.generate_instruction,
+        chatHistory: createChatHistory(preparedData.query),
+        systemPrompt:
+          (preparedData.instructions.generate_instruction || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       };
+  console.log("systemPrompt", systemPrompt);
 
   return {
     preparedData,
@@ -130,32 +135,31 @@ async function getFollowupGenerateData(
     ...preparedData.idccChunksQuery2,
   ];
 
+  // Create knowledge base content
+  const knowledgeBaseContent = createKnowledgeBaseContent(
+    allFichesOfficiellesChunks,
+    allCodeDuTravailChunks,
+    idcc ? allIdccChunks : undefined
+  );
+
   // Determine system prompt based on whether IDCC is provided
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createFollowupIdccChatHistory(
-          query1,
-          answer1,
-          query2,
-          allFichesOfficiellesChunks,
-          allCodeDuTravailChunks,
-          allIdccChunks
-        ),
+        chatHistory: createFollowupIdccChatHistory(query1, answer1, query2),
         systemPrompt:
-          preparedData.instructions.generate_followup_instruction_idcc?.replace(
+          (preparedData.instructions.generate_followup_instruction_idcc?.replace(
             "[URL_convention_collective]",
             `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ),
+          ) || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       }
     : {
-        chatHistory: createFollowupChatHistory(
-          query1,
-          answer1,
-          query2,
-          allFichesOfficiellesChunks,
-          allCodeDuTravailChunks
-        ),
-        systemPrompt: preparedData.instructions.generate_followup_instruction,
+        chatHistory: createFollowupChatHistory(query1, answer1, query2),
+        systemPrompt:
+          (preparedData.instructions.generate_followup_instruction || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       };
 
   return {
