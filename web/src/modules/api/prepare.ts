@@ -19,7 +19,6 @@ import {
   LLMModel,
   RerankResult,
   InstructionPrompts,
-  ContentResult,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 import {
@@ -28,7 +27,6 @@ import {
   getIdccChunks,
   search,
   rerank,
-  retrieveDocs,
 } from "./client";
 
 export interface PreparedQuestionData {
@@ -87,14 +85,6 @@ const rerankedToChunk = ({
   ...chunk,
   rerank_score,
 });
-
-const fullContentToChunk = (fc: ContentResult): ChunkResult => {
-  return {
-    ...fc,
-    score: 1,
-    id_chunk: fc.metadata.document_id,
-  };
-};
 
 const searchTextContent = async (anonymized: string) => {
   // call search for 256 chunks
@@ -166,24 +156,7 @@ const searchTextContent = async (anonymized: string) => {
     ...(rerankBatch2.data?.results || []),
   ].sort((a, b) => b.rerank_score - a.rerank_score);
 
-  // get best (deduplicate by cdtn id)
-  const selectedDocumentsIds = allReranked.reduce(
-    (acc: Array<string>, curr) => {
-      if (acc.length < K_RERANK && !acc.includes(curr.chunk.metadata.id)) {
-        // todo keep original chunk score here to assignate to actual document
-        acc.push(curr.chunk.metadata.id);
-      }
-      return acc;
-    },
-    new Array<string>()
-  );
-
-  const retrieveResponse = await retrieveDocs(selectedDocumentsIds);
-
-  const selectedDocuments = retrieveResponse.data?.contents || [];
-
-  // take top k rerank for the generate step (keep general chunks separate)
-  return selectedDocuments.map(fullContentToChunk);
+  return allReranked.slice(0, K_RERANK).map(rerankedToChunk);
 };
 
 // get all idcc content and run rerank using user question
@@ -235,20 +208,9 @@ const searchArticles = async (anonymized: string) => {
     inputs: codeSearchResult.data?.top_chunks.slice(0, MAX_RERANK) || [],
   });
 
-  // get best 5 (deduplicate by id)
-  const selectedArticleIds =
-    reranked.data?.results.reduce((acc: Array<string>, curr) => {
-      if (acc.length < K_RERANK_CODE && !acc.includes(curr.chunk.metadata.id)) {
-        // todo keep original chunk score here to assignate to actual document
-        acc.push(curr.chunk.metadata.id);
-      }
-      return acc;
-    }, new Array<string>()) || [];
-
-  const retrieveResponse = await retrieveDocs(selectedArticleIds);
-
-  // get full content
-  return retrieveResponse.data?.contents.map(fullContentToChunk) || [];
+  return (
+    reranked.data?.results?.slice(0, K_RERANK_CODE).map(rerankedToChunk) || []
+  );
 };
 
 // Common preprocessing logic for both streaming and non-streaming
