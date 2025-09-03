@@ -22,6 +22,7 @@ def preprocess(chunks: List[str]):
 
 
 def row_to_chunk(docs, cdtn_id, score) -> ChunkResult:
+    print(cdtn_id)
     doc = docs[docs["cdtn_id"] == cdtn_id].to_dict(orient="records")[0]
     return cast(
         ChunkResult,
