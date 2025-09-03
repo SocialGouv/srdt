@@ -22,7 +22,6 @@ def preprocess(chunks: List[str]):
 
 
 def row_to_chunk(docs, cdtn_id, score) -> ChunkResult:
-    print(cdtn_id)
     doc = docs[docs["cdtn_id"] == cdtn_id].to_dict(orient="records")[0]
     return cast(
         ChunkResult,
@@ -47,9 +46,10 @@ class SparseRetriever:
         docs = getDocs()
         self.tokenizer = Tokenizer()
 
-        # for now we use hybrid search only for editorial content (no article / no idcc)
+        # for now we use hybrid search only for generic editorial content (no article / no idcc)
         self.indexed_docs = docs[
-            ~docs.source.isin(["code_du_travail", "contributions"])
+            ~docs.source.isin(["code_du_travail"])
+            & (docs.idcc.isna() | (docs.idcc == "0000"))
         ].reset_index(inplace=False)
 
         indexed_list = self.indexed_docs["sparse_prepro"].to_list()
