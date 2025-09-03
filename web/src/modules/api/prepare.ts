@@ -156,6 +156,16 @@ const searchTextContent = async (anonymized: string) => {
     ...(rerankBatch2.data?.results || []),
   ].sort((a, b) => b.rerank_score - a.rerank_score);
 
+  // console.log(
+  //   JSON.stringify(
+  //     mergedChunks
+  //       .slice(0, 10)
+  //       .map(({ score, metadata }) => ({ score, metadata })),
+  //     null,
+  //     2
+  //   )
+  // );
+
   return allReranked.slice(0, K_RERANK).map(rerankedToChunk);
 };
 

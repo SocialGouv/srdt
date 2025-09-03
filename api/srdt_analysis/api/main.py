@@ -3,6 +3,7 @@ import os
 import time
 import traceback
 from operator import itemgetter
+from typing import List
 
 import sentry_sdk
 from dotenv import load_dotenv
@@ -34,6 +35,7 @@ from srdt_analysis.constants import BASE_API_URL
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
+from srdt_analysis.sparse import SparseRetriever
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
@@ -54,6 +56,8 @@ else:
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
+
+sparse_retriever = SparseRetriever()
 
 
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -142,7 +146,7 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
 
 
 @app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
-async def get_contributions_idcc(idcc):
+async def get_contributions_idcc(idcc: str, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     try:
         idcc_chunks = getChunksByIdcc(idcc)
@@ -156,7 +160,7 @@ async def get_contributions_idcc(idcc):
 
 
 @app.post(f"{BASE_API_URL}/docs/retrieve", response_model=RetrieveResponse)
-async def get_docs(request: RetrieveRequest):
+async def get_docs(request: RetrieveRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     ids = request.ids
     try:
@@ -205,7 +209,8 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
     try:
-        transformed_results = []
+        transformed_results: List[ChunkResult] = []
+        collections = AlbertCollectionHandler()
 
         for prompt in request.prompts:
             search_result = collections.search(
@@ -221,6 +226,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 if item["score"] >= request.options.threshold
             )
 
+            transformed_chunks = []
             for item in filtered_search_result:
                 chunk_data = item["chunk"]
                 metadata = chunk_data["metadata"]
@@ -244,7 +250,15 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                         idcc=metadata["idcc"] if "idcc" in metadata else None,
                     ),
                 )
-                transformed_results.append(transformed_chunk)
+                transformed_chunks.append(transformed_chunk)
+
+            if request.options.hybrid:
+                combined_results = sparse_retriever.combined_search(
+                    prompt, request.options.top_K, transformed_chunks
+                )
+                transformed_results.extend(combined_results)
+            else:
+                transformed_results.extend(transformed_chunks)
 
         return SearchResponse(
             time=time.time() - start_time,

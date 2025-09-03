@@ -93,7 +93,7 @@ async function getGenerateData(
           "\n\n" +
           knowledgeBaseContent,
       };
-  console.log("systemPrompt", systemPrompt);
+  // console.log("systemPrompt", systemPrompt);
 
   return {
     preparedData,

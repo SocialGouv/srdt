@@ -47,6 +47,7 @@ class SearchOptions(BaseModel):
     top_K: int = Field(default=20)
     threshold: float = Field(default=0.7, ge=0.0, le=1.0)
     collections: List[int] = Field(default=ALBERT_COLLECTION_IDS)
+    hybrid: Optional[bool] = False
 
     @field_validator("collections")
     @classmethod

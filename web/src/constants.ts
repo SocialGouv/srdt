@@ -180,6 +180,7 @@ export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
 export const AB_rand = 0;
 
 export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
+  hybrid: true,
   top_K: 256,
   threshold: 0.2,
   collections: [733, 734, 735, 738],

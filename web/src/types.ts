@@ -40,6 +40,7 @@ export interface RephraseResponse {
 
 // Search types
 export interface SearchOptions {
+  hybrid?: boolean;
   top_K?: number;
   threshold?: number;
   collections?: number[];
