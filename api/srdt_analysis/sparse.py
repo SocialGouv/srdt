@@ -21,7 +21,14 @@ def preprocess(chunks: List[str]):
     return " ".join(res).lower()
 
 
-def row_to_chunk(docs, cdtn_id, score) -> ChunkResult:
+def row_to_chunk(
+    docs, dense_results: List[ChunkResult], cdtn_id: str, score: float
+) -> ChunkResult:
+    for dr in dense_results:
+        if dr.metadata.id == cdtn_id:
+            dr.score = score
+            return dr
+
     doc = docs[docs["cdtn_id"] == cdtn_id].to_dict(orient="records")[0]
     return cast(
         ChunkResult,
@@ -98,6 +105,6 @@ class SparseRetriever:
         )
 
         return [
-            row_to_chunk(self.indexed_docs, id, score)
+            row_to_chunk(self.indexed_docs, dense_results, id, score)
             for id, score in combined_test_run[k].items()
         ][:top_k]
