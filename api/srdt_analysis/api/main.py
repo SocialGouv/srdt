@@ -175,11 +175,13 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
 
-    tokenizer = Tokenizer()
+    # tokenizer = Tokenizer()
 
     try:
-        # Albert uses bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit
-        inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
+        # Albert seemd to be using bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit / not documented
+        # inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
+        # TODO dunno why but hard limit seemd to perform better than token selection, we should build chunks based on this limitation if it actually exists
+        inputs = [input.content[:8192] for input in request.inputs]
         res = collections.rerank(request.prompt, inputs)
 
         # reorder results based on rerank indices to map chunks and results
