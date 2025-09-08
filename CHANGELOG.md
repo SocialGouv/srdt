@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/SocialGouv/srdt/compare/v1.25.0...v1.25.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* increase kube limits for api ([381cd7a](https://github.com/SocialGouv/srdt/commit/381cd7a98c35f693224c21090d11116a9c977277))
+
 # [1.25.0](https://github.com/SocialGouv/srdt/compare/v1.24.0...v1.25.0) (2025-09-08)
 
 
