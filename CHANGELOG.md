@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/SocialGouv/srdt/compare/v1.24.0...v1.25.0) (2025-09-08)
+
+
+### Features
+
+* hybrid search 145 + articles [#144](https://github.com/SocialGouv/srdt/issues/144) + new prompt + rerank update [#220](https://github.com/SocialGouv/srdt/issues/220) ([3d76d4e](https://github.com/SocialGouv/srdt/commit/3d76d4e6e3daf9bcbb9030c20de78995795eb44d))
+
 # [1.24.0](https://github.com/SocialGouv/srdt/compare/v1.23.4...v1.24.0) (2025-07-10)
 
 
