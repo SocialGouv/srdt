@@ -25,16 +25,16 @@ api:
         name: www-secret
   resources:
     limits:
-      cpu: 400m
-      memory: 1024Mi
+      cpu: 800m
+      memory: 2048Mi
     requests:
       cpu: 200m
       memory: 512Mi
   annotations:
     oblik.socialgouv.io/min-request-cpu: 200m
     oblik.socialgouv.io/min-request-memory: 512Mi
-    oblik.socialgouv.io/min-limit-cpu: 400m
-    oblik.socialgouv.io/min-limit-memory: 1024Mi
+    oblik.socialgouv.io/min-limit-cpu: 800m
+    oblik.socialgouv.io/min-limit-memory: 2048Mi
   volumes:
     - name: tmp
       emptyDir: {}
