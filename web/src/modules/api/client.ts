@@ -9,6 +9,7 @@ import {
   GenerateResponse,
   RerankRequest,
   RerankResponse,
+  RetrieveResponse,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 
@@ -65,7 +66,6 @@ export const anonymize = async (
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const rephrase = async (
   request: RephraseRequest
 ): Promise<UseApiResponse<RephraseResponse>> => {
@@ -100,6 +100,18 @@ export const search = async (
     const data = await fetchApi<SearchResponse>("/api/v1/search", {
       method: "POST",
       body: JSON.stringify(request),
+    });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+export const retrieveDocs = async (ids: string[]) => {
+  try {
+    const data = await fetchApi<RetrieveResponse>("/api/v1/docs/retrieve", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
     });
     return { data, error: null, loading: false };
   } catch (error) {

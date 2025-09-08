@@ -28,7 +28,7 @@ const useApi = () => {
 
       const result: ApiResponse<AnswerResponse> = await response.json();
       setIsLoading(false);
-      console.log(result);
+      // console.log(result);
       return result;
     } catch (error) {
       setIsLoading(false);
@@ -198,7 +198,7 @@ const useApi = () => {
 
       const result: ApiResponse<AnswerResponse> = await response.json();
       setIsLoading(false);
-      console.log(result);
+      // console.log(result);
       return result;
     } catch (error) {
       setIsLoading(false);

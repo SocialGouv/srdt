@@ -13,3 +13,11 @@ class Tokenizer:
     def compute_nb_tokens(self, text: str) -> int:
         tokens = self._tokenizer.encode(text)
         return len(tokens)
+
+    def take_n(self, text: str, n: int) -> str:
+        tokens = self._tokenizer.encode(text)
+
+        if len(tokens) > n:
+            return self._tokenizer.decode(tokens[:n])
+        else:
+            return text

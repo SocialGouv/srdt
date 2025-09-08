@@ -2,13 +2,15 @@ import {
   Config,
   getRandomModel,
   PROMPT_INSTRUCTIONS,
-  SEARCH_OPTIONS_LOCAL,
+  SEARCH_OPTIONS_CONTENT,
   MAX_RERANK,
   K_RERANK,
   K_RERANK_IDCC,
   K_RERANK_FOLLOWUP_QUERY1,
   K_RERANK_FOLLOWUP_QUERY2,
   K_RERANK_IDCC_FOLLOWUP,
+  SEARCH_OPTIONS_CODE,
+  K_RERANK_CODE,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -37,14 +39,12 @@ export interface PreparedQuestionData {
     anonymisation?: string;
     reformulation?: string;
     split_multiple_queries?: string;
-    generate_instruction_short_answer?: string;
-    generate_instruction_idcc_short_answer?: string;
   };
-  localSearchChunks: ChunkResult[];
+  fichesOfficiellesChunks: ChunkResult[];
+  codeDuTravailChunks: ChunkResult[];
   idccChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
-  answerType: "long" | "short";
 }
 
 export interface PreparedFollowupQuestionData {
@@ -53,8 +53,10 @@ export interface PreparedFollowupQuestionData {
   model: LLMModel;
   config: Config;
   instructions: InstructionPrompts;
-  generalChunksQuery1: ChunkResult[];
-  generalChunksQuery2: ChunkResult[];
+  fichesOfficiellesChunksQuery1: ChunkResult[];
+  fichesOfficiellesChunksQuery2: ChunkResult[];
+  codeDuTravailChunksQuery1: ChunkResult[];
+  codeDuTravailChunksQuery2: ChunkResult[];
   idccChunksQuery1: ChunkResult[];
   idccChunksQuery2: ChunkResult[];
 }
@@ -64,7 +66,7 @@ const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
   const toRerankRecord = chunks
     .sort((a, b) => b.score - a.score)
     .reduce((acc: Record<string, ChunkResult>, curr: ChunkResult) => {
-      const id = curr.metadata.document_id;
+      const id = curr.metadata.id;
       if (!acc[id]) {
         acc[id] = curr;
       } else {
@@ -76,13 +78,158 @@ const mergeChunksByDocumentId = (chunks: ChunkResult[]): ChunkResult[] => {
   return Object.values(toRerankRecord);
 };
 
+const rerankedToChunk = ({
+  chunk,
+  rerank_score,
+}: RerankResult): ChunkResult => ({
+  ...chunk,
+  rerank_score,
+});
+
+const searchTextContent = async (anonymized: string) => {
+  // call search for 256 chunks
+  // merge them by source document
+  // run rerank on two 64 batches of these merged chunks
+  // merge results and take 10 best
+  // return full content for these 10
+
+  const localSearchResult = await search({
+    prompts: [anonymized],
+    options: SEARCH_OPTIONS_CONTENT,
+  });
+
+  if (localSearchResult.error) {
+    const localSearchError = new Error(
+      `Erreur lors de la recherche locale: ${localSearchResult.error}`
+    );
+    Sentry.captureException(localSearchError, {
+      extra: {
+        query: anonymized,
+        searchOptions: SEARCH_OPTIONS_CONTENT,
+      },
+    });
+    console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
+  }
+
+  const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
+
+  if (localSearchChunks.length === 0) {
+    Sentry.captureMessage("No search results found", {
+      level: "warning",
+      extra: {
+        query: anonymized,
+      },
+    });
+    console.warn("Aucun résultat de recherche trouvé");
+  }
+
+  const mergedChunks = mergeChunksByDocumentId(localSearchChunks).sort(
+    (a, b) => b.score - a.score
+  );
+
+  const rerankBatch1 = await rerank({
+    prompt: anonymized,
+    inputs: mergedChunks.slice(0, MAX_RERANK) || [],
+  });
+
+  const rerankBatch2 = await rerank({
+    prompt: anonymized,
+    inputs: mergedChunks.slice(MAX_RERANK, MAX_RERANK * 2) || [],
+  });
+
+  if (
+    !rerankBatch1.data?.results.length ||
+    !rerankBatch2.data?.results.length
+  ) {
+    Sentry.captureMessage("No rerank results found", {
+      level: "warning",
+      extra: {
+        userQuestion: anonymized,
+        toRerankChunks: localSearchChunks,
+      },
+    });
+    console.warn("Aucun résultat de recherche trouvé après le rerank");
+  }
+
+  const allReranked = [
+    ...(rerankBatch1.data?.results || []),
+    ...(rerankBatch2.data?.results || []),
+  ].sort((a, b) => b.rerank_score - a.rerank_score);
+
+  // console.log(
+  //   JSON.stringify(
+  //     mergedChunks
+  //       .slice(0, 10)
+  //       .map(({ score, metadata }) => ({ score, metadata })),
+  //     null,
+  //     2
+  //   )
+  // );
+
+  return allReranked.slice(0, K_RERANK).map(rerankedToChunk);
+};
+
+// get all idcc content and run rerank using user question
+// return best 5
+const searchIDCC = async (idcc: string, anonymized: string) => {
+  const idccSearchResult = await getIdccChunks(idcc);
+
+  if (idccSearchResult.error) {
+    const searchError = new Error(
+      `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
+    );
+    Sentry.captureException(searchError, {
+      extra: {
+        idcc: idcc,
+        hasTopChunks: !!idccSearchResult.data?.top_chunks,
+      },
+    });
+    console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
+  } else {
+    const inputs = idccSearchResult.data?.top_chunks.slice(0, MAX_RERANK);
+
+    if (inputs?.length) {
+      const idccRerankResults = await rerank({
+        prompt: anonymized,
+        inputs: inputs,
+      });
+
+      if (idccRerankResults.data) {
+        return idccRerankResults.data.results
+          .slice(0, K_RERANK_IDCC)
+          .map(rerankedToChunk);
+      }
+    }
+  }
+
+  return [];
+};
+
+const searchArticles = async (anonymized: string) => {
+  // call search
+  const codeSearchResult = await search({
+    prompts: [anonymized],
+    options: SEARCH_OPTIONS_CODE,
+  });
+
+  // run rerank
+  const reranked = await rerank({
+    prompt: anonymized,
+    inputs: codeSearchResult.data?.top_chunks.slice(0, MAX_RERANK) || [],
+  });
+
+  return (
+    reranked.data?.results?.slice(0, K_RERANK_CODE).map(rerankedToChunk) || []
+  );
+};
+
 // Common preprocessing logic for both streaming and non-streaming
 export const prepareQuestionData = async (
   userQuestion: string,
   requiredConfig?: Config,
   idcc?: string
 ): Promise<PreparedQuestionData> => {
-  const config = requiredConfig || Config.V1_15;
+  const config = requiredConfig || Config.V1_16;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = getRandomModel();
 
@@ -107,129 +254,44 @@ export const prepareQuestionData = async (
 
   const anonymized = anonymizeResult.data.anonymized_question;
 
-  let rerankedIdcc: RerankResult[] = [];
+  let selectedIdccChunks: ChunkResult[] = [];
 
-  // retrieve all IDCC content then rerank them
   if (idcc) {
-    const idccSearchResult = await getIdccChunks(idcc);
-
-    if (idccSearchResult.error) {
-      const searchError = new Error(
-        `Erreur lors de la recherche IDCC: ${idccSearchResult.error}`
-      );
-      Sentry.captureException(searchError, {
-        extra: {
-          idcc: idcc,
-          hasTopChunks: !!idccSearchResult.data?.top_chunks,
-        },
-      });
-      console.error(`Erreur lors de la recherche: ${idccSearchResult.error}`);
-    } else {
-      const inputs = idccSearchResult.data?.top_chunks.slice(0, MAX_RERANK);
-      const idccRerankResults = await rerank({
-        prompt: userQuestion,
-        inputs: inputs || [],
-      });
-
-      if (idccRerankResults.data) {
-        rerankedIdcc = idccRerankResults.data.results;
-      }
-    }
+    // retrieve all IDCC content then rerank them
+    selectedIdccChunks = await searchIDCC(idcc, anonymized);
   }
 
-  const localSearchResult = await search({
-    prompts: [anonymized],
-    options: SEARCH_OPTIONS_LOCAL,
-  });
+  const selectedFichesOfficiellesChunks = await searchTextContent(anonymized);
 
-  if (localSearchResult.error) {
-    const localSearchError = new Error(
-      `Erreur lors de la recherche locale: ${localSearchResult.error}`
-    );
-    Sentry.captureException(localSearchError, {
-      extra: {
-        query: anonymized,
-        searchOptions: SEARCH_OPTIONS_LOCAL,
-      },
-    });
-    console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
-  }
+  const selectedCodeDuTravailChunks = await searchArticles(anonymized);
 
-  const localSearchChunks = localSearchResult.data?.top_chunks ?? [];
-
-  if (localSearchChunks.length === 0) {
-    Sentry.captureMessage("No search results found", {
-      level: "warning",
-      extra: {
-        query: anonymized,
-        userQuestion: userQuestion,
-      },
-    });
-    console.warn("Aucun résultat de recherche trouvé");
-  }
-
-  // merge chunks if they come from the same document
-  const toRerankChunks = mergeChunksByDocumentId(localSearchChunks).slice(
-    0,
-    MAX_RERANK
-  );
-
-  const searchRerankResults = await rerank({
-    prompt: anonymized,
-    inputs: toRerankChunks,
-  });
-
-  if (!searchRerankResults.data) {
-    Sentry.captureMessage("No rerank results found", {
-      level: "warning",
-      extra: {
-        userQuestion: anonymized,
-        toRerankChunks: toRerankChunks.length,
-      },
-    });
-    console.warn("Aucun résultat de recherche trouvé après le rerank");
-  }
-
-  const rerankedToChunk = ({
-    chunk,
-    rerank_score,
-  }: RerankResult): ChunkResult => ({
-    ...chunk,
-    rerank_score,
-  });
-
-  // take top k rerank for the generate step (keep general chunks separate)
-  const selectedGeneralChunks =
-    searchRerankResults.data?.results.slice(0, K_RERANK).map(rerankedToChunk) ||
-    [];
-
-  const selectedIdccChunks =
-    rerankedIdcc.slice(0, K_RERANK_IDCC).map(rerankedToChunk) || [];
-
-  if (selectedGeneralChunks.length === 0 && selectedIdccChunks.length === 0) {
+  if (
+    selectedFichesOfficiellesChunks.length === 0 &&
+    selectedCodeDuTravailChunks.length === 0 &&
+    selectedIdccChunks.length === 0
+  ) {
     Sentry.captureMessage("No chunks selected for generation", {
       level: "warning",
       extra: {
         userQuestion: anonymized,
-        generalChunksLength: selectedGeneralChunks.length,
+        fichesOfficiellesChunksLength: selectedFichesOfficiellesChunks.length,
+        codeDuTravailChunksLength: selectedCodeDuTravailChunks.length,
         idccChunksLength: selectedIdccChunks.length,
       },
     });
     console.warn("Aucun résultat de recherche trouvé");
   }
 
-  const answerType = Math.random() < 0.5 ? "long" : "short";
-
   return {
     query: anonymized,
     model,
     config,
     instructions,
-    localSearchChunks: selectedGeneralChunks,
+    fichesOfficiellesChunks: selectedFichesOfficiellesChunks,
+    codeDuTravailChunks: selectedCodeDuTravailChunks,
     idccChunks: selectedIdccChunks,
     anonymizeResult,
     rephraseResult,
-    answerType,
   };
 };
 
@@ -241,14 +303,14 @@ export const prepareFollowupQuestionData = async (
   idcc?: string,
   providedModel?: LLMModel
 ): Promise<PreparedFollowupQuestionData> => {
-  const config = requiredConfig || Config.V1_15;
+  const config = requiredConfig || Config.V1_16;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = providedModel || getRandomModel(); // Use provided model or fallback to random
 
   // Search for query1 (top 5)
   const searchResultQuery1 = await search({
     prompts: [query1],
-    options: SEARCH_OPTIONS_LOCAL,
+    options: SEARCH_OPTIONS_CONTENT,
   });
 
   if (searchResultQuery1.error) {
@@ -275,7 +337,7 @@ export const prepareFollowupQuestionData = async (
   // Search for query2 (top 10)
   const searchResultQuery2 = await search({
     prompts: [query2],
-    options: SEARCH_OPTIONS_LOCAL,
+    options: SEARCH_OPTIONS_CONTENT,
   });
 
   if (searchResultQuery2.error) {
@@ -308,13 +370,18 @@ export const prepareFollowupQuestionData = async (
     rerank_score,
   });
 
-  const selectedGeneralChunksQuery1 = rerankedQuery1
+  const selectedFichesOfficiellesChunksQuery1 = rerankedQuery1
     .slice(0, K_RERANK_FOLLOWUP_QUERY1)
     .map(rerankedToChunk);
 
-  const selectedGeneralChunksQuery2 = rerankedQuery2
+  const selectedFichesOfficiellesChunksQuery2 = rerankedQuery2
     .slice(0, K_RERANK_FOLLOWUP_QUERY2)
     .map(rerankedToChunk);
+
+  // For follow-up questions, we currently don't search Code du Travail articles
+  // This could be added in the future if needed
+  const selectedCodeDuTravailChunksQuery1: ChunkResult[] = [];
+  const selectedCodeDuTravailChunksQuery2: ChunkResult[] = [];
 
   // Handle IDCC chunks if applicable
   let selectedIdccChunksQuery1: ChunkResult[] = [];
@@ -361,8 +428,10 @@ export const prepareFollowupQuestionData = async (
     model,
     config,
     instructions,
-    generalChunksQuery1: selectedGeneralChunksQuery1,
-    generalChunksQuery2: selectedGeneralChunksQuery2,
+    fichesOfficiellesChunksQuery1: selectedFichesOfficiellesChunksQuery1,
+    fichesOfficiellesChunksQuery2: selectedFichesOfficiellesChunksQuery2,
+    codeDuTravailChunksQuery1: selectedCodeDuTravailChunksQuery1,
+    codeDuTravailChunksQuery2: selectedCodeDuTravailChunksQuery2,
     idccChunksQuery1: selectedIdccChunksQuery1,
     idccChunksQuery2: selectedIdccChunksQuery2,
   };

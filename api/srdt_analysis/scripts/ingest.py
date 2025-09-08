@@ -13,6 +13,7 @@ from srdt_analysis.data_exploiter import (
 from srdt_analysis.legi_data import get_legi_data
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
+from srdt_analysis.sparse import preprocess
 
 load_dotenv()
 
@@ -111,6 +112,9 @@ def start():
         chunks.rename({"index": "id_chunk"}, axis="columns", inplace=True)
 
         all_docs["content_chunked"] = chunks_content
+        all_docs["sparse_prepro"] = all_docs.apply(
+            lambda x: preprocess([x.title] + x.content_chunked), axis=1
+        )
 
         all_docs.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/docs.parquet")
         chunks.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/chunks.parquet")
