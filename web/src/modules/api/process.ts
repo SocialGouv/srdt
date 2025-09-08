@@ -7,6 +7,7 @@ import {
   createIdccChatHistory,
   createFollowupChatHistory,
   createFollowupIdccChatHistory,
+  createKnowledgeBaseContent,
 } from "./prompt-builders";
 import {
   PreparedQuestionData,
@@ -24,30 +25,34 @@ const buildAnswer = (
   anonymized: preparedData.anonymizeResult?.data || null,
   rephrased: preparedData.rephraseResult?.data || null,
   localSearchChunks: [
-    ...preparedData.localSearchChunks,
+    ...preparedData.fichesOfficiellesChunks,
+    ...preparedData.codeDuTravailChunks,
     ...preparedData.idccChunks,
   ],
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
-  answerType: preparedData.answerType,
 });
 
 // Build follow-up answer response
 const buildFollowupAnswer = (
   preparedData: PreparedFollowupQuestionData,
   generatedData: GenerateResponse,
-  allGeneralChunks: ChunkResult[],
+  allFichesOfficiellesChunks: ChunkResult[],
+  allCodeDuTravailChunks: ChunkResult[],
   allIdccChunks: ChunkResult[]
 ): AnswerResponse => ({
   config: preparedData.config.toString(),
   anonymized: null, // Follow-up doesn't use anonymization
   rephrased: null, // Follow-up doesn't use rephrasing
-  localSearchChunks: [...allGeneralChunks, ...allIdccChunks],
+  localSearchChunks: [
+    ...allFichesOfficiellesChunks,
+    ...allCodeDuTravailChunks,
+    ...allIdccChunks,
+  ],
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
-  answerType: "short", // Follow-up responses are always short
 });
 
 // Get generate data for question
@@ -62,36 +67,33 @@ async function getGenerateData(
     idcc
   );
 
+  // Create knowledge base content
+  const knowledgeBaseContent = createKnowledgeBaseContent(
+    preparedData.fichesOfficiellesChunks,
+    preparedData.codeDuTravailChunks,
+    idcc ? preparedData.idccChunks : undefined
+  );
+
   // Determine chat history and system prompt based on whether IDCC is provided
-  const generateInstruction =
-    preparedData.answerType === "long"
-      ? preparedData.instructions.generate_instruction
-      : preparedData.instructions.generate_instruction_short_answer;
-
-  const generateInstructionIdcc =
-    preparedData.answerType === "long"
-      ? preparedData.instructions.generate_instruction_idcc
-      : preparedData.instructions.generate_instruction_idcc_short_answer;
-
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createIdccChatHistory(
-          preparedData.query,
-          preparedData.localSearchChunks,
-          preparedData.idccChunks
-        ),
-        systemPrompt: generateInstructionIdcc?.replace(
-          "[URL_convention_collective]",
-          `https://code.travail.gouv.fr/convention-collective/${idcc}`
-        ),
+        chatHistory: createIdccChatHistory(preparedData.query),
+        systemPrompt:
+          (preparedData.instructions.generate_instruction_idcc?.replace(
+            "[URL_convention_collective]",
+            `https://code.travail.gouv.fr/convention-collective/${idcc}`
+          ) || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       }
     : {
-        chatHistory: createChatHistory(
-          preparedData.query,
-          preparedData.localSearchChunks
-        ),
-        systemPrompt: generateInstruction,
+        chatHistory: createChatHistory(preparedData.query),
+        systemPrompt:
+          (preparedData.instructions.generate_instruction || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       };
+  // console.log("systemPrompt", systemPrompt);
 
   return {
     preparedData,
@@ -118,9 +120,14 @@ async function getFollowupGenerateData(
   );
 
   // Combine chunks from both queries
-  const allGeneralChunks = [
-    ...preparedData.generalChunksQuery1,
-    ...preparedData.generalChunksQuery2,
+  const allFichesOfficiellesChunks = [
+    ...preparedData.fichesOfficiellesChunksQuery1,
+    ...preparedData.fichesOfficiellesChunksQuery2,
+  ];
+
+  const allCodeDuTravailChunks = [
+    ...preparedData.codeDuTravailChunksQuery1,
+    ...preparedData.codeDuTravailChunksQuery2,
   ];
 
   const allIdccChunks = [
@@ -128,37 +135,39 @@ async function getFollowupGenerateData(
     ...preparedData.idccChunksQuery2,
   ];
 
+  // Create knowledge base content
+  const knowledgeBaseContent = createKnowledgeBaseContent(
+    allFichesOfficiellesChunks,
+    allCodeDuTravailChunks,
+    idcc ? allIdccChunks : undefined
+  );
+
   // Determine system prompt based on whether IDCC is provided
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createFollowupIdccChatHistory(
-          query1,
-          answer1,
-          query2,
-          allGeneralChunks,
-          allIdccChunks
-        ),
+        chatHistory: createFollowupIdccChatHistory(query1, answer1, query2),
         systemPrompt:
-          preparedData.instructions.generate_followup_instruction_idcc?.replace(
+          (preparedData.instructions.generate_followup_instruction_idcc?.replace(
             "[URL_convention_collective]",
             `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ),
+          ) || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       }
     : {
-        chatHistory: createFollowupChatHistory(
-          query1,
-          answer1,
-          query2,
-          allGeneralChunks
-        ),
-        systemPrompt: preparedData.instructions.generate_followup_instruction,
+        chatHistory: createFollowupChatHistory(query1, answer1, query2),
+        systemPrompt:
+          (preparedData.instructions.generate_followup_instruction || "") +
+          "\n\n" +
+          knowledgeBaseContent,
       };
 
   return {
     preparedData,
     chatHistory,
     systemPrompt,
-    allGeneralChunks,
+    allFichesOfficiellesChunks,
+    allCodeDuTravailChunks,
     allIdccChunks,
   };
 }
@@ -276,7 +285,8 @@ export const generateFollowupAnswer = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      allGeneralChunks,
+      allFichesOfficiellesChunks,
+      allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
       query1,
@@ -310,7 +320,8 @@ export const generateFollowupAnswer = async (
       data: buildFollowupAnswer(
         preparedData,
         generateResult.data,
-        allGeneralChunks,
+        allFichesOfficiellesChunks,
+        allCodeDuTravailChunks,
         allIdccChunks
       ),
     };
@@ -339,7 +350,8 @@ export const generateFollowupAnswerStream = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      allGeneralChunks,
+      allFichesOfficiellesChunks,
+      allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
       query1,
@@ -372,7 +384,8 @@ export const generateFollowupAnswerStream = async (
           data: buildFollowupAnswer(
             preparedData,
             generatedData,
-            allGeneralChunks,
+            allFichesOfficiellesChunks,
+            allCodeDuTravailChunks,
             allIdccChunks
           ),
         });

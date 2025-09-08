@@ -47,6 +47,7 @@ class SearchOptions(BaseModel):
     top_K: int = Field(default=20)
     threshold: float = Field(default=0.7, ge=0.0, le=1.0)
     collections: List[int] = Field(default=ALBERT_COLLECTION_IDS)
+    hybrid: Optional[bool] = False
 
     @field_validator("collections")
     @classmethod
@@ -86,6 +87,7 @@ class SearchRequest(BaseModel):
 class ChunkMetadata(BaseModel):
     title: str
     url: str
+    id: str
     document_id: ID
     source: CollectionName
     idcc: Optional[str] = None
@@ -96,6 +98,11 @@ class ChunkResult(BaseModel):
     content: str
     id_chunk: CHUNK_ID
     metadata: ChunkMetadata
+
+
+class ContentResult(BaseModel):
+    metadata: ChunkMetadata
+    content: str
 
 
 class RerankedChunk(BaseModel):
@@ -111,6 +118,15 @@ class RerankRequest(BaseModel):
 class SearchResponse(BaseModel):
     time: float
     top_chunks: List[ChunkResult]
+
+
+class RetrieveRequest(BaseModel):
+    ids: List[str]
+
+
+class RetrieveResponse(BaseModel):
+    time: float
+    contents: List[ContentResult]
 
 
 class RerankResponse(BaseModel):

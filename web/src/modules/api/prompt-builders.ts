@@ -11,42 +11,63 @@ Contenu: ${chunk.content}
     .join("\n");
 };
 
-// Helper to create chat history for generation
-export const createChatHistory = (
-  query: string,
-  localSearchChunks: ChunkResult[]
-) => [
+// Helper to create knowledge base content for system prompt
+export const createKnowledgeBaseContent = (
+  fichesOfficiellesChunks: ChunkResult[],
+  codeDuTravailChunks: ChunkResult[],
+  idccChunks?: ChunkResult[]
+) => {
+  let content = `# Base de connaissance externe
+3 types de documents sont ajoutés dans la base de connaissance externe
+
+## Fiches officielles (1 à 10 extraits) :
+
+Sources : Fiches des services publics, fiches du ministère du travail, contributions des pages du Code du travail numérique.
+
+Caractéristiques : Ces articles sont rédigés ou validés par des professionnels du droit et offrent une synthèse fiable.
+
+${formatChunks(fichesOfficiellesChunks)}
+
+## Code du travail (1 à 5 extraits) :
+
+Sources : Sections entières du Code du travail.
+
+Caractéristiques : Textes légaux officiels.
+
+Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
+
+${formatChunks(codeDuTravailChunks)}`;
+
+  if (idccChunks && idccChunks.length > 0) {
+    content += `
+
+## Conventions collectives (1 à 5 extraits, si applicable) :
+
+Sources : Pages du Code du travail numérique dédiées aux conventions collectives.
+
+Caractéristiques : Spécifiques à la convention collective mentionnée par l'utilisateur (via son IDCC).
+
+Utilisation : Utiliser ces sources uniquement si l'utilisateur a fourni l'IDCC de sa convention collective. Inclure un paragraphe dédié dans la réponse et un lien vers la convention collective dans la conclusion.
+
+${formatChunks(idccChunks)}`;
+  }
+
+  return content;
+};
+
+// Helper to create chat history for generation with separate source types
+export const createChatHistory = (query: string) => [
   {
     role: "user" as const,
     content: query,
-  },
-  {
-    role: "user" as const,
-    content: `Voici les sources pertinentes pour répondre à la question:
-
-${formatChunks(localSearchChunks)}`,
   },
 ];
 
-// Helper to create IDCC-specific chat history with both general and IDCC chunks
-export const createIdccChatHistory = (
-  query: string,
-  generalChunks: ChunkResult[],
-  idccChunks: ChunkResult[]
-) => [
+// Helper to create IDCC-specific chat history with three source types
+export const createIdccChatHistory = (query: string) => [
   {
     role: "user" as const,
     content: query,
-  },
-  {
-    role: "user" as const,
-    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
-
-### Documents généralistes :
-${formatChunks(generalChunks)}
-
-### Documents spécifiques à la convention collective renseignée :
-${formatChunks(idccChunks)}`,
   },
 ];
 
@@ -54,8 +75,7 @@ ${formatChunks(idccChunks)}`,
 export const createFollowupChatHistory = (
   query1: string,
   answer1: string,
-  query2: string,
-  generalChunks: ChunkResult[]
+  query2: string
 ) => [
   {
     role: "user" as const,
@@ -68,12 +88,6 @@ export const createFollowupChatHistory = (
   {
     role: "user" as const,
     content: `Nouvelle question ou retour: "${query2}"`,
-  },
-  {
-    role: "user" as const,
-    content: `Voici les sources pertinentes pour répondre à la nouvelle question:
-
-${formatChunks(generalChunks)}`,
   },
 ];
 
@@ -81,9 +95,7 @@ ${formatChunks(generalChunks)}`,
 export const createFollowupIdccChatHistory = (
   query1: string,
   answer1: string,
-  query2: string,
-  generalChunks: ChunkResult[],
-  idccChunks: ChunkResult[]
+  query2: string
 ) => [
   {
     role: "user" as const,
@@ -96,15 +108,5 @@ export const createFollowupIdccChatHistory = (
   {
     role: "user" as const,
     content: `Nouvelle question ou retour: "${query2}"`,
-  },
-  {
-    role: "user" as const,
-    content: ` 2 types de documents sont ajoutées dans la base de connaissance externe :
-
-### Documents généralistes :
-${formatChunks(generalChunks)}
-
-### Documents spécifiques à la convention collective renseignée :
-${formatChunks(idccChunks)}`,
   },
 ];

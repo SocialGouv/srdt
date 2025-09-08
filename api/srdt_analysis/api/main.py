@@ -3,6 +3,7 @@ import os
 import time
 import traceback
 from operator import itemgetter
+from typing import List
 
 import sentry_sdk
 from dotenv import load_dotenv
@@ -24,13 +25,17 @@ from srdt_analysis.api.schemas import (
     RerankedChunk,
     RerankRequest,
     RerankResponse,
+    RetrieveRequest,
+    RetrieveResponse,
     SearchRequest,
     SearchResponse,
 )
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL
+from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
+from srdt_analysis.sparse import SparseRetriever
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
@@ -51,6 +56,8 @@ else:
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
+
+sparse_retriever = SparseRetriever()
 
 
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -139,15 +146,26 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
 
 
 @app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
-async def get_contributions_idcc(idcc):
+async def get_contributions_idcc(idcc: str, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    collections = AlbertCollectionHandler()
     try:
-        idcc_chunks = collections.get_contributions_idcc(idcc)
+        idcc_chunks = getChunksByIdcc(idcc)
         return SearchResponse(
             time=time.time() - start_time,
             top_chunks=idcc_chunks,
         )
+    except Exception as e:
+        logger.error(f"IDCC get error :  {str(e)}, traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(f"{BASE_API_URL}/docs/retrieve", response_model=RetrieveResponse)
+async def get_docs(request: RetrieveRequest, _api_key: str = Depends(get_api_key)):
+    start_time = time.time()
+    ids = request.ids
+    try:
+        contents = getDocsContent(ids)
+        return RetrieveResponse(time=time.time() - start_time, contents=contents)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -156,8 +174,14 @@ async def get_contributions_idcc(idcc):
 async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
+
+    # tokenizer = Tokenizer()
+
     try:
-        inputs = [input.content for input in request.inputs]
+        # Albert seemd to be using bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit / not documented
+        # inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
+        # TODO dunno why but hard limit seemd to perform better than token selection, we should build chunks based on this limitation if it actually exists
+        inputs = [input.content[:8192] for input in request.inputs]
         res = collections.rerank(request.prompt, inputs)
 
         # reorder results based on rerank indices to map chunks and results
@@ -187,7 +211,8 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
     try:
-        transformed_results = []
+        transformed_results: List[ChunkResult] = []
+        collections = AlbertCollectionHandler()
 
         for prompt in request.prompts:
             search_result = collections.search(
@@ -203,6 +228,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 if item["score"] >= request.options.threshold
             )
 
+            transformed_chunks = []
             for item in filtered_search_result:
                 chunk_data = item["chunk"]
                 metadata = chunk_data["metadata"]
@@ -213,6 +239,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                     id_chunk=int(chunk_data["id"]),
                     metadata=ChunkMetadata(
                         document_id=metadata["document_id"],
+                        id=metadata["id"],
                         source=(
                             metadata["source"] if "source" in metadata else "internet"
                         ),
@@ -225,7 +252,15 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                         idcc=metadata["idcc"] if "idcc" in metadata else None,
                     ),
                 )
-                transformed_results.append(transformed_chunk)
+                transformed_chunks.append(transformed_chunk)
+
+            if request.options.hybrid:
+                combined_results = sparse_retriever.combined_search(
+                    prompt, request.options.top_K, transformed_chunks
+                )
+                transformed_results.extend(combined_results)
+            else:
+                transformed_results.extend(transformed_chunks)
 
         return SearchResponse(
             time=time.time() - start_time,

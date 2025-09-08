@@ -116,7 +116,6 @@ export const ChatMessage = ({
             llmResponse={apiResult?.generated.text}
             errorMessage={apiError}
             idcc={selectedAgreement?.id}
-            answerType={apiResult?.answerType}
             isFollowupResponse={message.isFollowup}
           />
         </div>

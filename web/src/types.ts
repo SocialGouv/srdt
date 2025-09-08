@@ -40,6 +40,7 @@ export interface RephraseResponse {
 
 // Search types
 export interface SearchOptions {
+  hybrid?: boolean;
   top_K?: number;
   threshold?: number;
   collections?: number[];
@@ -57,6 +58,7 @@ export interface RerankRequest {
 }
 
 export interface ChunkMetadata {
+  id: string;
   title: string;
   url: string;
   document_id: number;
@@ -72,9 +74,19 @@ export interface ChunkResult {
   metadata: ChunkMetadata;
 }
 
+export interface ContentResult {
+  content: string;
+  metadata: ChunkMetadata;
+}
+
 export interface SearchResponse {
   time: number;
   top_chunks: ChunkResult[];
+}
+
+export interface RetrieveResponse {
+  time: number;
+  contents: ContentResult[];
 }
 
 export interface RerankResult {
@@ -112,8 +124,6 @@ export interface InstructionPrompts {
   split_multiple_queries: string;
   generate_instruction: string;
   generate_instruction_idcc: string;
-  generate_instruction_short_answer: string;
-  generate_instruction_idcc_short_answer: string;
   generate_followup_instruction: string;
   generate_followup_instruction_idcc: string;
 }
@@ -126,7 +136,6 @@ export interface AnswerResponse {
   generated: GenerateResponse;
   modelName: string;
   modelFamily: LLMFamily;
-  answerType: "long" | "short";
 }
 
 export interface ApiResponse<T> {

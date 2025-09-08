@@ -23,7 +23,7 @@ CollectionName = Literal[
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
-CHUNK_ID = int
+CHUNK_ID = int | str
 ID = int | str
 HTML = str
 PlainText = str
@@ -159,7 +159,7 @@ class ChunkMetadata(TypedDict):
     document_name: PlainText
     document_part: int
     document_created_at: int
-    id: ID
+    id: str
     source: CollectionName
     title: str
     url: str

@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from typing import Callable, Dict
 
 from langchain_text_splitters import (
@@ -39,21 +41,32 @@ class Chunker:
             separators=["\n\n", "\n", ". ", " "],
         )
 
+    def normalize(self, text):
+        normalized = unicodedata.normalize("NFKD", text)
+        # remove unecessary blanks
+        return re.sub(" {2,}", " ", normalized)
+
     def split_markdown(self, markdown: str) -> list[SplitDocument]:
         md_header_splits = self._markdown_splitter.split_text(markdown)
         documents = self._character_recursive_splitter.split_documents(md_header_splits)
-        return [SplitDocument(doc.page_content, doc.metadata) for doc in documents]
+        return [
+            SplitDocument(self.normalize(doc.page_content), doc.metadata)
+            for doc in documents
+        ]
 
     def split_html(self, html: str) -> list[SplitDocument]:
         html_header_splits = self._html_splitter.split_text(html)
         documents = self._character_recursive_splitter.split_documents(
             html_header_splits
         )
-        return [SplitDocument(doc.page_content, doc.metadata) for doc in documents]
+        return [
+            SplitDocument(self.normalize(doc.page_content), doc.metadata)
+            for doc in documents
+        ]
 
     def split_character_recursive(self, content: str) -> list[SplitDocument]:
         text_splits = self._character_recursive_splitter.split_text(content)
-        return [SplitDocument(text, {}) for text in text_splits]
+        return [SplitDocument(self.normalize(text), {}) for text in text_splits]
 
     def split(
         self,
