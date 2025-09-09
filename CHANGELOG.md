@@ -1,3 +1,10 @@
+## [1.25.2](https://github.com/SocialGouv/srdt/compare/v1.25.1...v1.25.2) (2025-09-09)
+
+
+### Bug Fixes
+
+* restore the 3 models ([8e909ee](https://github.com/SocialGouv/srdt/commit/8e909eeb02b4aaa84aad6b514dab9eba3b3598b5))
+
 ## [1.25.1](https://github.com/SocialGouv/srdt/compare/v1.25.0...v1.25.1) (2025-09-08)
 
 
