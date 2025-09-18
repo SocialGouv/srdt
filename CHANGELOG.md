@@ -1,3 +1,10 @@
+## [1.25.3](https://github.com/SocialGouv/srdt/compare/v1.25.2...v1.25.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* conversations history count limited to 30 ([#230](https://github.com/SocialGouv/srdt/issues/230)) ([a59c849](https://github.com/SocialGouv/srdt/commit/a59c8497a80421eb13cf0bba7276a03be1eecb41))
+
 ## [1.25.2](https://github.com/SocialGouv/srdt/compare/v1.25.1...v1.25.2) (2025-09-09)
 
 
