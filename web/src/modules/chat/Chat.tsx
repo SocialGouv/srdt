@@ -126,22 +126,8 @@ export const Chat = () => {
       );
 
       if (storageConversations.length > 0) {
-        // Keep only the 30 most recent conversations
-        const limitedConversations = storageConversations
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-          .slice(0, MAX_CONVERSATIONS_TO_STORE);
-
-        // If we had to remove conversations, update the state too
-        if (limitedConversations.length < storageConversations.length) {
-          setConversations((prev) =>
-            prev.filter((conv) =>
-              limitedConversations.some((limited) => limited.id === conv.id)
-            )
-          );
-        }
-
         // Prepare conversations for storage (remove heavy chunks)
-        const conversationsToStore = limitedConversations.map((conv) => ({
+        const conversationsToStore = storageConversations.map((conv) => ({
           ...conv,
           // Remove heavy localSearchChunks from API results before storing
           lastApiResult: conv.lastApiResult
@@ -451,6 +437,19 @@ export const Chat = () => {
   };
 
   const handleNewConversation = () => {
+    // Check if current conversation is already empty (only has the initial assistant message)
+    const currentConv = conversations.find(
+      (c) => c.id === currentConversationId
+    );
+    const hasUserMessages = currentConv?.messages.some(
+      (m) => m.role === "user"
+    );
+
+    // If current conversation is empty, don't create a new one
+    if (!hasUserMessages) {
+      return;
+    }
+
     const newId = `conv_${Date.now()}`;
     const newConversation: Conversation = {
       id: newId,
@@ -462,7 +461,14 @@ export const Chat = () => {
       selectedModel: undefined,
     };
 
-    setConversations((prev) => [newConversation, ...prev]);
+    setConversations((prev) => {
+      const newList = [newConversation, ...prev];
+      // If we exceed the limit, trim to keep only the most recent ones
+      if (newList.length > MAX_CONVERSATIONS_TO_STORE) {
+        return newList.slice(0, MAX_CONVERSATIONS_TO_STORE);
+      }
+      return newList;
+    });
     setCurrentConversationId(newId);
     setNewMessage("");
     setIsDisabled(false);
