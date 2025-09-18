@@ -16,6 +16,8 @@ import { push } from "@socialgouv/matomo-next";
 const STORAGE_KEY = "chat-conversations";
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
+const MAX_CONVERSATIONS_TO_STORE = 30;
+
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
 
@@ -45,6 +47,13 @@ export const Chat = () => {
           (conv: Omit<Conversation, "createdAt"> & { createdAt: string }) => ({
             ...conv,
             createdAt: new Date(conv.createdAt),
+            // Clean up heavy data that's not needed for display
+            lastApiResult: conv.lastApiResult
+              ? {
+                  ...conv.lastApiResult,
+                  localSearchChunks: [], // Remove heavy chunks data
+                }
+              : null,
           })
         );
 
@@ -117,7 +126,61 @@ export const Chat = () => {
       );
 
       if (storageConversations.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storageConversations));
+        // Keep only the 30 most recent conversations
+        const limitedConversations = storageConversations
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+          .slice(0, MAX_CONVERSATIONS_TO_STORE);
+
+        // If we had to remove conversations, update the state too
+        if (limitedConversations.length < storageConversations.length) {
+          setConversations((prev) =>
+            prev.filter((conv) =>
+              limitedConversations.some((limited) => limited.id === conv.id)
+            )
+          );
+        }
+
+        // Prepare conversations for storage (remove heavy chunks)
+        const conversationsToStore = limitedConversations.map((conv) => ({
+          ...conv,
+          // Remove heavy localSearchChunks from API results before storing
+          lastApiResult: conv.lastApiResult
+            ? {
+                ...conv.lastApiResult,
+                localSearchChunks: [],
+              }
+            : conv.lastApiResult,
+        }));
+
+        try {
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(conversationsToStore)
+          );
+        } catch (error) {
+          console.error("Error saving conversations to localStorage:", error);
+          // If quota exceeded, try with fewer conversations
+          if (
+            error instanceof DOMException &&
+            error.name === "QuotaExceededError"
+          ) {
+            try {
+              const reducedConversations = conversationsToStore.slice(0, 10);
+              localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(reducedConversations)
+              );
+              console.log(
+                "Saved reduced set of conversations due to quota limit"
+              );
+            } catch (retryError) {
+              console.error(
+                "Failed to save even reduced conversations:",
+                retryError
+              );
+            }
+          }
+        }
       }
     }
   }, [conversations, currentConversationId]);
