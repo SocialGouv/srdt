@@ -1,3 +1,10 @@
+## [1.25.4](https://github.com/SocialGouv/srdt/compare/v1.25.3...v1.25.4) (2025-10-07)
+
+
+### Bug Fixes
+
+* **api:** update max search to avoid Albert 500 ([fb86c80](https://github.com/SocialGouv/srdt/commit/fb86c801a513838cf0e8ed9b095c33596878aa16))
+
 ## [1.25.3](https://github.com/SocialGouv/srdt/compare/v1.25.2...v1.25.3) (2025-09-18)
 
 
