@@ -1,68 +1,40 @@
 "use client";
 
-import { Button } from "@codegouvfr/react-dsfr/Button";
-import { PasswordInput } from "@codegouvfr/react-dsfr/blocks/PasswordInput";
-import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { ProConnectButton } from "@codegouvfr/react-dsfr/ProConnectButton";
+import { signIn } from "next-auth/react";
 
 export const AuthVerification = () => {
-  const [verificationCode, setVerificationCode] = useState("");
-  const [error, setError] = useState("");
-  const { setHasValidatedAuth } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
+  const handleSignIn = async () => {
     try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: verificationCode }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Code invalide");
-      }
-
-      setHasValidatedAuth(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      await signIn("proconnect", { callbackUrl: "/" });
+    } catch (error) {
+      console.error("Error signing in:", error);
     }
   };
 
   return (
     <div className="fr-container fr-my-6w">
-      <form onSubmit={handleSubmit}>
-        <PasswordInput
-          label="Code d'accès"
-          messagesHint=""
-          messages={
-            error
-              ? [
-                  {
-                    severity: "error",
-                    message: error,
-                  },
-                ]
-              : undefined
-          }
-          nativeInputProps={{
-            value: verificationCode,
-            onChange: (e) => {
-              setVerificationCode(e.target.value);
-              setError("");
-            },
-            placeholder: "Entrez votre code",
-            required: true,
-          }}
-        />
-        <div className="fr-mt-2w">
-          <Button type="submit">Valider</Button>
+      <div className="fr-grid-row fr-grid-row--center">
+        <div className="fr-col-12 fr-col-md-8 fr-col-lg-6">
+          <div className="fr-card">
+            <div className="fr-card__body">
+              <div className="fr-card__content">
+                <h1 className="fr-card__title">
+                  Bienvenue sur l&apos;expérimentation SRDT IA
+                </h1>
+                <p className="fr-card__desc">
+                  Pour accéder à l&apos;application, veuillez vous connecter
+                  avec ProConnect, le service d&apos;authentification des
+                  professionnels français.
+                </p>
+                <div className="fr-mt-4w">
+                  <ProConnectButton onClick={handleSignIn} />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
