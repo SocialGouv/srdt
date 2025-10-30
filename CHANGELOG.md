@@ -1,3 +1,10 @@
+## [1.25.5](https://github.com/SocialGouv/srdt/compare/v1.25.4...v1.25.5) (2025-10-30)
+
+
+### Bug Fixes
+
+* **front:** use mistral by default for generate calls ([5412965](https://github.com/SocialGouv/srdt/commit/5412965efac7f3fc9e498ef68428eb73a4f06fbd))
+
 ## [1.25.4](https://github.com/SocialGouv/srdt/compare/v1.25.3...v1.25.4) (2025-10-07)
 
 
