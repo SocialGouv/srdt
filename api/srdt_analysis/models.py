@@ -172,6 +172,7 @@ class Chunk(TypedDict):
     id: str
     metadata: ChunkMetadata
     content: str
+    embedding: Optional[list[float]]
 
 
 @dataclass

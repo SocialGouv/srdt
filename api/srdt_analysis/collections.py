@@ -80,11 +80,16 @@ class AlbertCollectionHandler:
                 self.delete(collection["id"])
         return None
 
-    def embeddings(self, chunks: list[str]):
+    def embeddings(
+        self,
+        chunks: list[str],
+        timeout: int = ALBERT_SEARCH_TIMEOUT,
+    ):
         response = httpx.post(
             f"{self.base_url}/v1/embeddings",
             headers=self.headers,
             json={"model": self.model, "input": chunks},
+            timeout=timeout,
         )
         result = response.json()
         return [q["embedding"] for q in result["data"]]

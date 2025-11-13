@@ -882,44 +882,43 @@ files = [
 
 [[package]]
 name = "elastic-transport"
-version = "9.2.0"
+version = "8.17.1"
 description = "Transport classes and utilities shared among Python Elastic client libraries"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "elastic_transport-9.2.0-py3-none-any.whl", hash = "sha256:f52b961e58e6b76d488993286907f61a6ddccbdae8e0135ce8d369227b6282d8"},
-    {file = "elastic_transport-9.2.0.tar.gz", hash = "sha256:0331466ca8febdb7d168c0fbf159294b0066492733b51da94f4dd28a0ee596cd"},
+    {file = "elastic_transport-8.17.1-py3-none-any.whl", hash = "sha256:192718f498f1d10c5e9aa8b9cf32aed405e469a7f0e9d6a8923431dbb2c59fb8"},
+    {file = "elastic_transport-8.17.1.tar.gz", hash = "sha256:5edef32ac864dca8e2f0a613ef63491ee8d6b8cfb52881fa7313ba9290cac6d2"},
 ]
 
 [package.dependencies]
 certifi = "*"
-sniffio = "*"
 urllib3 = ">=1.26.2,<3"
 
 [package.extras]
-develop = ["aiohttp", "anyio", "furo", "httpx", "opentelemetry-api", "opentelemetry-sdk", "orjson", "pytest", "pytest-asyncio", "pytest-cov", "pytest-httpbin", "pytest-httpserver", "pytest-mock", "requests", "respx", "sphinx (>2)", "sphinx-autodoc-typehints", "trio", "trustme"]
+develop = ["aiohttp", "furo", "httpx", "opentelemetry-api", "opentelemetry-sdk", "orjson", "pytest", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "pytest-mock", "requests", "respx", "sphinx (>2)", "sphinx-autodoc-typehints", "trustme"]
 
 [[package]]
 name = "elasticsearch"
-version = "9.1.1"
+version = "8.19.2"
 description = "Python client for Elasticsearch"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "elasticsearch-9.1.1-py3-none-any.whl", hash = "sha256:2a5c27c57ca3dd3365f665c82c9dcd8666ccfb550d5b07c688c21ec636c104e5"},
-    {file = "elasticsearch-9.1.1.tar.gz", hash = "sha256:be20acda2a97591a9a6cf4981fc398ee6fca3291cf9e7a9e52b6a9f41a46d393"},
+    {file = "elasticsearch-8.19.2-py3-none-any.whl", hash = "sha256:c16ba20c4c76cf6952e836dae7f4e724e00ba7bf31b94b79472b873683accdd4"},
+    {file = "elasticsearch-8.19.2.tar.gz", hash = "sha256:622efa6a3e662db45285f16ab57bf198ea73ac9e137e7ed8b1d1d1e47638959d"},
 ]
 
 [package.dependencies]
-elastic-transport = ">=9.1.0,<10"
+elastic-transport = ">=8.15.1,<9"
 python-dateutil = "*"
 typing-extensions = "*"
 
 [package.extras]
 async = ["aiohttp (>=3,<4)"]
-dev = ["aiohttp", "black", "build", "coverage", "isort", "jinja2", "mapbox-vector-tile", "mypy", "nox", "numpy", "orjson", "pandas", "pyarrow", "pyright", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "python-dateutil", "pyyaml (>=5.4)", "requests (>=2,<3)", "simsimd", "tqdm", "twine", "types-python-dateutil", "types-tqdm", "unasync"]
+dev = ["aiohttp", "black", "build", "coverage", "isort", "jinja2", "mapbox-vector-tile", "mypy", "nox", "numpy", "orjson", "pandas", "pyarrow ; python_version < \"3.14\"", "pyright", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "python-dateutil", "pyyaml (>=5.4)", "requests (>=2,<3)", "simsimd", "tqdm", "twine", "types-python-dateutil", "types-tqdm", "unasync"]
 docs = ["sphinx", "sphinx-autodoc-typehints", "sphinx-rtd-theme (>=2.0)"]
 orjson = ["orjson (>=3)"]
 pyarrow = ["pyarrow (>=1)"]
@@ -4370,4 +4369,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "~3.12"
-content-hash = "a3fceb07e16a90bcd4004e1da8236f5925af891f9b4d888948e9439b9778c600"
+content-hash = "8639317acd1f425658f61d4509433a2bb055892b90efe40a57d48ef3a2b374ed"

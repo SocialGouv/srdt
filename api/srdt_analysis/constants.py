@@ -7,6 +7,7 @@ API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "rerank-small"
 ALBERT_COLLECTION_IDS = [733, 734, 735, 738, 871, 1170]
+# CONTENT_TYPES = ["contributions"]
 LLM_ANSWER_PROMPT = """
   # Instructions
 	## Rôle et objectif

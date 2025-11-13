@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
@@ -212,7 +213,6 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     collections = AlbertCollectionHandler()
     try:
         transformed_results: List[ChunkResult] = []
-        collections = AlbertCollectionHandler()
 
         for prompt in request.prompts:
             search_result = collections.search(
@@ -261,6 +261,61 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 transformed_results.extend(combined_results)
             else:
                 transformed_results.extend(transformed_chunks)
+
+        return SearchResponse(
+            time=time.time() - start_time,
+            top_chunks=transformed_results,
+        )
+    except Exception as e:
+        logger.error(
+            f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
+        )
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+@app.post(f"{BASE_API_URL}/search_es", response_model=SearchResponse)
+async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
+    start_time = time.time()
+    es = ElasticIndicesHandler()
+    try:
+        transformed_results: List[ChunkResult] = []
+
+        for prompt in request.prompts:
+            search_result = es.search(
+                prompt=prompt, k=request.options.top_K, hybrid=request.options.hybrid
+            )
+
+            # todo move this
+            filtered_search_result = (
+                item
+                for item in search_result
+                if item["score"] >= request.options.threshold
+            )
+
+            for item in filtered_search_result:
+                #     chunk_data = item["chunk"]
+                metadata = item["metadata"]
+
+                transformed_chunk = ChunkResult(
+                    score=item["score"],
+                    content=item["content"],
+                    id_chunk=item["id"],
+                    metadata=ChunkMetadata(
+                        document_id=metadata["initial_id"],
+                        id=metadata["id"],
+                        source=(
+                            metadata["source"] if "source" in metadata else "internet"
+                        ),
+                        title=metadata["title"],
+                        url=(
+                            metadata["url"]
+                            if "url" in metadata
+                            else metadata["document_name"]
+                        ),
+                        idcc=metadata["idcc"] if "idcc" in metadata else None,
+                    ),
+                )
+                transformed_results.append(transformed_chunk)
 
         return SearchResponse(
             time=time.time() - start_time,
