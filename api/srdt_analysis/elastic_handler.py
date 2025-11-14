@@ -2,8 +2,48 @@ from typing import List
 from elasticsearch import Elasticsearch
 import random
 
+from ranx import Run, fuse
+
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.api.schemas import ChunkResult
+
+french_analyzer = {
+    "filter": {
+        "french_elision": {
+            "type": "elision",
+            "articles_case": True,
+            "articles": [
+                "l",
+                "m",
+                "t",
+                "qu",
+                "n",
+                "s",
+                "j",
+                "d",
+                "c",
+                "jusqu",
+                "quoiqu",
+                "lorsqu",
+                "puisqu",
+            ],
+        },
+        "french_stop": {"type": "stop", "stopwords": "_french_"},
+        "french_stemmer": {"type": "stemmer", "language": "light_french"},
+    },
+    "analyzer": {
+        "ascii_french": {
+            "tokenizer": "standard",
+            "filter": [
+                "french_elision",
+                "lowercase",
+                "asciifolding",
+                "french_stop",
+                "french_stemmer",
+            ],
+        }
+    },
+}
 
 
 class ElasticIndicesHandler:
@@ -45,9 +85,36 @@ class ElasticIndicesHandler:
         self.client.bulk(index=index_name, operations=operations, refresh=True)
 
     def reset_index(self, index_name, items):
-        alias = self.init_index({"name": index_name, "mappings": {}, "settings": {}})
+        alias = self.init_index(
+            {
+                "name": index_name,
+                "mappings": {
+                    "properties": {
+                        "content": {"type": "text", "analyzer": "ascii_french"}
+                    }
+                },
+                "settings": {"analysis": french_analyzer},
+            }
+        )
         self.add_items(alias, items)
         self.swap_aliases(index_name, alias)
+
+    def find_most_similar_text(self, index_name, query, k):
+        response = self.client.search(
+            index=index_name,
+            size=k,
+            query={"match": {"content": query}},
+        )
+        return [
+            {
+                **{
+                    "id": r["_id"],
+                    "score": r["_score"],
+                },
+                **r["_source"],
+            }
+            for r in response["hits"]["hits"][:k]
+        ]
 
     def find_most_similar_knn(self, index_name, query, k):
         response = self.client.search(
@@ -71,4 +138,44 @@ class ElasticIndicesHandler:
         ]
 
     def search(self, prompt: str, k: int, hybrid: bool) -> List[ChunkResult]:
-        return self.find_most_similar_knn(index_name="contributions", query=prompt, k=k)
+        k_min = 64 if k < 64 else k
+        knn_res = self.find_most_similar_knn(
+            query=prompt, index_name="contributions", k=k_min
+        )
+
+        if not hybrid:
+            return knn_res[:k]
+
+        text_res = self.find_most_similar_text(
+            query=prompt, index_name="contributions", k=k_min
+        )
+
+        if len(text_res) == 0:
+            return []
+
+        query_id = "q"
+
+        knn_run_dict = {query_id: {r["id"]: r["score"] for r in knn_res}}
+        text_run_dict = {query_id: {r["id"]: r["score"] for r in text_res}}
+
+        knn_run = Run.from_dict(knn_run_dict, name="knn")
+        text_run = Run.from_dict(text_run_dict, name="tex")
+
+        res_dict = {r["id"]: r for r in knn_res + text_res}
+
+        combined_run = fuse(runs=[knn_run, text_run], method="rrf")
+        sorted_results = sorted(
+            combined_run[query_id].items(), key=lambda item: item[1], reverse=True
+        )
+
+        print(sorted_results[:5])
+
+        return [res_dict[id] for [id, _] in sorted_results[:k]]
+
+        # TODO add rff score alongside orignal scores
+        # return [[res_dict[id], score] for [id, score] in sorted_results[:k]]
+
+        # return self.find_most_similar_knn(index_name="contributions", query=prompt, k=k)
+        return self.find_most_similar_text(
+            index_name="contributions", query=prompt, k=k
+        )
