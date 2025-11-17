@@ -2,6 +2,31 @@ import { NextAuthOptions } from "next-auth";
 import ProConnectProvider, { ProConnectProfile } from "./ProConnectProvider";
 import * as Sentry from "@sentry/nextjs";
 
+// Allowed email domains for access control
+const ALLOWED_EMAIL_DOMAINS = [
+  "pyrenees-atlantiques.gouv.fr",
+  "seine-maritime.gouv.fr",
+  "correze.gouv.fr",
+  "dreets.gouv.fr",
+  "travail.gouv.fr",
+  "fabrique.social.gouv.fr",
+  "sg.social.gouv.fr",
+  // Add beta.gouv.fr for local development
+  ...(process.env.NODE_ENV === "development" ? ["beta.gouv.fr"] : []),
+];
+
+// Helper function to check if email domain is allowed
+function isEmailDomainAllowed(email: string | null | undefined): boolean {
+  if (!email) return false;
+
+  const emailDomain = email.split("@")[1]?.toLowerCase();
+  if (!emailDomain) return false;
+
+  return ALLOWED_EMAIL_DOMAINS.some(
+    (domain) => emailDomain === domain.toLowerCase()
+  );
+}
+
 // Debug logging
 console.log("🔧 NextAuth Configuration:");
 console.log("  PROCONNECT_ENV:", process.env.PROCONNECT_ENV);
@@ -27,6 +52,23 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      const email = user.email || (profile as ProConnectProfile)?.email;
+
+      console.log("🔑 Sign in attempt:", {
+        email,
+        provider: account?.provider,
+      });
+
+      // Check if email domain is allowed
+      if (!isEmailDomainAllowed(email)) {
+        console.error("❌ Access denied - unauthorized domain:", email);
+        return false;
+      }
+
+      console.log("✅ Access granted:", email);
+      return true;
+    },
     async jwt({ token, account, profile }) {
       console.log("📝 JWT Callback:", {
         hasAccount: !!account,
@@ -58,7 +100,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/",
-    error: "/",
+    error: "/?error=AccessDenied",
   },
   events: {
     async signIn({ user }) {

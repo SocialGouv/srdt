@@ -1,9 +1,14 @@
 "use client";
 
 import { ProConnectButton } from "@codegouvfr/react-dsfr/ProConnectButton";
+import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 export const AuthVerification = () => {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
   const handleSignIn = async () => {
     try {
       await signIn("proconnect", { callbackUrl: "/" });
@@ -15,23 +20,33 @@ export const AuthVerification = () => {
   return (
     <div className="fr-container fr-my-6w">
       <div className="fr-grid-row fr-grid-row--center">
-        <div className="fr-col-12 fr-col-md-8 fr-col-lg-6">
-          <div className="fr-card">
-            <div className="fr-card__body">
-              <div className="fr-card__content">
-                <h1 className="fr-card__title">
-                  Bienvenue sur l&apos;expérimentation SRDT IA
-                </h1>
-                <p className="fr-card__desc">
-                  Pour accéder à l&apos;application, veuillez vous connecter
-                  avec ProConnect, le service d&apos;authentification des
-                  professionnels français.
-                </p>
-                <div className="fr-mt-4w">
-                  <ProConnectButton onClick={handleSignIn} />
-                </div>
-              </div>
-            </div>
+        <div className="fr-col-12 fr-col-md-8 fr-col-lg-7">
+          {error === "AccessDenied" && (
+            <Alert
+              severity="error"
+              title="Accès non autorisé"
+              description="Votre adresse email n'est pas autorisée à accéder à cette application. Seuls les agents des domaines gouvernementaux autorisés peuvent se connecter."
+              className="fr-mb-4w"
+            />
+          )}
+          {error === "OAuthSignin" && (
+            <Alert
+              severity="error"
+              title="Erreur de connexion"
+              description="Une erreur est survenue lors de la connexion avec ProConnect. Veuillez réessayer."
+              className="fr-mb-4w"
+            />
+          )}
+          <h1 className="fr-h4">
+            Bienvenue sur l&apos;expérimentation SRDT&nbsp;IA
+          </h1>
+          <div className="fr-mt-4w">
+            <ProConnectButton onClick={handleSignIn} />
+          </div>
+          <div className="fr-text--sm">
+            <strong>Domaines autorisés :</strong> pyrenees-atlantiques.gouv.fr,
+            seine-maritime.gouv.fr, correze.gouv.fr, dreets.gouv.fr,
+            travail.gouv.fr, fabrique.social.gouv.fr, sg.social.gouv.fr
           </div>
         </div>
       </div>
