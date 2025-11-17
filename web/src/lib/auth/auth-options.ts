@@ -60,16 +60,12 @@ export const authOptions: NextAuthOptions = {
         provider: account?.provider,
       });
 
-      // Check if email domain is allowed
-      if (!isEmailDomainAllowed(email)) {
-        console.error("❌ Access denied - unauthorized domain:", email);
-        return false;
-      }
-
-      console.log("✅ Access granted:", email);
+      // Always return true to allow session creation
+      // We'll check authorization in the JWT callback and redirect if needed
+      console.log("✅ Allowing sign in (will check authorization in session)");
       return true;
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       console.log("📝 JWT Callback:", {
         hasAccount: !!account,
         hasProfile: !!profile,
@@ -83,6 +79,14 @@ export const authOptions: NextAuthOptions = {
       if (profile) {
         console.log("  Profile email:", profile.email);
         token.profile = profile as ProConnectProfile;
+
+        // Check authorization here (after token is created)
+        const email = profile.email || user?.email;
+        if (!isEmailDomainAllowed(email)) {
+          console.error("❌ Unauthorized domain detected:", email);
+          // Mark the token as unauthorized
+          token.unauthorized = true;
+        }
       }
       return token;
     },
@@ -90,17 +94,19 @@ export const authOptions: NextAuthOptions = {
       console.log("🔐 Session Callback:", {
         hasToken: !!token,
         hasUser: !!session.user,
+        unauthorized: token.unauthorized,
       });
       // Send properties to the client
       session.accessToken = token.accessToken as string;
       session.idToken = token.idToken as string;
       session.profile = token.profile as ProConnectProfile | undefined;
+      session.unauthorized = token.unauthorized as boolean | undefined;
       return session;
     },
   },
   pages: {
     signIn: "/",
-    error: "/?error=AccessDenied",
+    error: "/access-denied",
   },
   events: {
     async signIn({ user }) {

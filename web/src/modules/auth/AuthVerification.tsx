@@ -21,14 +21,6 @@ export const AuthVerification = () => {
     <div className="fr-container fr-my-6w">
       <div className="fr-grid-row fr-grid-row--center">
         <div className="fr-col-12 fr-col-md-8 fr-col-lg-7">
-          {error === "AccessDenied" && (
-            <Alert
-              severity="error"
-              title="Accès non autorisé"
-              description="Votre adresse email n'est pas autorisée à accéder à cette application. Seuls les agents des domaines gouvernementaux autorisés peuvent se connecter."
-              className="fr-mb-4w"
-            />
-          )}
           {error === "OAuthSignin" && (
             <Alert
               severity="error"
@@ -43,7 +35,7 @@ export const AuthVerification = () => {
           <div className="fr-mt-4w">
             <ProConnectButton onClick={handleSignIn} />
           </div>
-          <div className="fr-text--sm">
+          <div className="fr-text--sm fr-mt-4w">
             <strong>Domaines autorisés :</strong> pyrenees-atlantiques.gouv.fr,
             seine-maritime.gouv.fr, correze.gouv.fr, dreets.gouv.fr,
             travail.gouv.fr, fabrique.social.gouv.fr, sg.social.gouv.fr
