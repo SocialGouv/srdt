@@ -72,6 +72,15 @@ export const LayoutWrapper = ({ children }: Props) => {
                 {
                   iconId: "fr-icon-account-circle-line",
                   text: user?.name || user?.email || "Mon compte",
+                  buttonProps: undefined,
+                  linkProps: {
+                    href: "#",
+                    onClick: (e: React.MouseEvent) => e.preventDefault(),
+                  },
+                },
+                {
+                  iconId: "fr-icon-logout-box-r-line",
+                  text: "Se déconnecter",
                   buttonProps: {
                     onClick: handleSignOut,
                   },

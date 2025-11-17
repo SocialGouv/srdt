@@ -14,6 +14,7 @@ export function AuthorizationCheck() {
   const router = useRouter();
   const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   useEffect(() => {
     // Skip check if on access-denied page
@@ -24,13 +25,23 @@ export function AuthorizationCheck() {
 
     // Wait for session to load
     if (status === "loading") {
+      setIsChecking(true);
+      return;
+    }
+
+    // If unauthenticated, no need to check authorization
+    if (status === "unauthenticated") {
+      setIsChecking(false);
+      setShouldRedirect(false);
       return;
     }
 
     // Check authorization when session is loaded
     if (status === "authenticated" && session) {
       if (session.unauthorized) {
-        // Redirect immediately without showing content
+        // Mark for redirect and keep checking state true
+        setShouldRedirect(true);
+        setIsChecking(true);
         router.push("/access-denied");
         return;
       }
@@ -38,11 +49,15 @@ export function AuthorizationCheck() {
 
     // Authorization check complete
     setIsChecking(false);
+    setShouldRedirect(false);
   }, [session, status, pathname, router]);
 
-  // Show loading overlay while checking authorization
+  // Show loading overlay while checking authorization or redirecting
   // This prevents flash of unauthorized content
-  if (isChecking && pathname !== "/access-denied" && pathname !== "/") {
+  if (
+    (isChecking && pathname !== "/access-denied") ||
+    (shouldRedirect && pathname !== "/access-denied")
+  ) {
     return (
       <div
         style={{
