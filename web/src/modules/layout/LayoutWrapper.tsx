@@ -20,10 +20,6 @@ export const LayoutWrapper = ({ children }: Props) => {
 
   const handleSignOut = async () => {
     try {
-      console.log("🔓 Logout initiated from header");
-      console.log("  Session exists:", !!session);
-      console.log("  ID Token available:", !!session?.idToken);
-
       // Get the ID token from the session
       const idToken = session?.idToken;
 
@@ -38,7 +34,6 @@ export const LayoutWrapper = ({ children }: Props) => {
       await signOut({ redirect: false });
 
       // Then redirect to ProConnect logout
-      console.log("  Redirecting to ProConnect logout:", proconnectLogoutUrl);
       window.location.href = proconnectLogoutUrl;
     } catch (error) {
       console.error("❌ Error signing out:", error);
