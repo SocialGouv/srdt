@@ -16,14 +16,8 @@ export function AuthorizationCheck() {
   useEffect(() => {
     // Only check when session is loaded and user is authenticated
     if (status === "authenticated" && session) {
-      console.log("🔒 Authorization check:", {
-        unauthorized: session.unauthorized,
-        pathname,
-      });
-
       // If user is unauthorized and not already on access-denied page
       if (session.unauthorized && pathname !== "/access-denied") {
-        console.log("❌ Unauthorized user detected - redirecting to /access-denied");
         router.push("/access-denied");
       }
     }
