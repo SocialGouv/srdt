@@ -10,36 +10,24 @@ export const AccessDeniedContent = () => {
 
   const handleSignOut = async () => {
     try {
-      console.log("🔓 Logout initiated from access-denied page");
-      console.log("  Session exists:", !!session);
-      console.log("  ID Token available:", !!session?.idToken);
-
-      // Get the ID token from the session
       const idToken = session?.idToken;
 
       if (idToken) {
-        // User has a valid session with id_token - do full ProConnect logout
-        console.log("  Using id_token_hint for full ProConnect logout");
+        // Full ProConnect logout with id_token
         const postLogoutRedirectUri = window.location.origin;
         const proconnectLogoutUrl = buildProConnectLogoutUrl(
           idToken,
           postLogoutRedirectUri
         );
 
-        // Clear NextAuth session first
         await signOut({ redirect: false });
-
-        // Then redirect to ProConnect logout
-        console.log("  Redirecting to ProConnect logout:", proconnectLogoutUrl);
         window.location.href = proconnectLogoutUrl;
       } else {
-        // No id_token - should not happen with new flow, but handle gracefully
-        console.warn("  No id_token available - using fallback logout");
+        // Fallback if no id_token
         await signOut({ callbackUrl: "/" });
       }
     } catch (error) {
-      console.error("❌ Error signing out:", error);
-      // Fallback: still try to sign out
+      console.error("Error signing out:", error);
       await signOut({ callbackUrl: "/" });
     }
   };

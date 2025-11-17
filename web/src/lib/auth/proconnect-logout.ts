@@ -35,11 +35,5 @@ export function buildProConnectLogoutUrl(
     params.set("id_token_hint", idToken);
   }
 
-  console.log("🔗 Building ProConnect logout URL:");
-  console.log("  Base URL:", logoutUrl);
-  console.log("  Has id_token_hint:", !!idToken);
-  console.log("  Redirect URI:", postLogoutRedirectUri);
-
   return `${logoutUrl}?${params.toString()}`;
 }
-
