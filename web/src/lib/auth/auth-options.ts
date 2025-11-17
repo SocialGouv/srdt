@@ -36,8 +36,15 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn() {
-      // Always return true to allow session creation
-      // Authorization check is done in the JWT callback
+      // Always return true to allow session creation with id_token
+      // This is needed for proper ProConnect logout (requires id_token_hint)
+      //
+      // Security: Authorization is enforced in multiple layers:
+      // 1. JWT callback marks unauthorized users (token.unauthorized = true)
+      // 2. useAuth() returns isAuthenticated = false for unauthorized users
+      // 3. AuthorizationCheck redirects unauthorized users to /access-denied
+      //
+      // This approach prevents the "user jail" problem while maintaining security
       return true;
     },
     async jwt({ token, account, profile, user }) {
