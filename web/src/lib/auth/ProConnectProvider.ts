@@ -1,4 +1,5 @@
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
+import * as jose from "jose";
 
 export interface ProConnectProfile {
   sub: string;
@@ -31,15 +32,6 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
       ? "https://auth.agentconnect.gouv.fr/api/v2/"
       : "https://fca.integ01.dev-agentconnect.fr/api/v2";
 
-  console.log("🔗 ProConnect Provider Configuration:");
-  console.log("  Domain:", PROCONNECT_DOMAIN);
-  console.log(
-    "  WellKnown:",
-    `${PROCONNECT_DOMAIN}/.well-known/openid-configuration`
-  );
-  console.log("  Client ID:", options.clientId ? "✓ Set" : "✗ Missing");
-  console.log("  Client Secret:", options.clientSecret ? "✓ Set" : "✗ Missing");
-
   return {
     id: "proconnect",
     name: "ProConnect",
@@ -47,7 +39,9 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
     wellKnown: `${PROCONNECT_DOMAIN}/.well-known/openid-configuration`,
     authorization: {
       params: {
-        scope: "openid email profile",
+        // ProConnect requires individual scopes for each claim
+        // See: https://partenaires.proconnect.gouv.fr/docs/fournisseur-service/scope-claims
+        scope: "openid email given_name usual_name uid siret",
         acr_values: "eidas1", // Level of authentication required
       },
     },
@@ -56,8 +50,62 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
     client: {
       token_endpoint_auth_method: "client_secret_post",
     },
+    // ProConnect returns userinfo as a JWT signed with HS256 (using client_secret)
+    // We need to manually fetch and verify it
+    // See: https://partenaires.proconnect.gouv.fr/docs/fournisseur-service/scope-claims
+    userinfo: {
+      url: `${PROCONNECT_DOMAIN}/userinfo`,
+      async request({ tokens }) {
+        const response = await fetch(`${PROCONNECT_DOMAIN}/userinfo`, {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Userinfo request failed: ${response.status}`);
+        }
+
+        // ProConnect returns userinfo as a signed JWT (HS256, RS256, or ES256)
+        const jwt = await response.text();
+        const header = jose.decodeProtectedHeader(jwt);
+
+        if (header.alg === "HS256") {
+          // For HS256, verify with client_secret
+          const secret = new TextEncoder().encode(options.clientSecret);
+          const { payload } = await jose.jwtVerify(jwt, secret, {
+            algorithms: ["HS256"],
+          });
+          return payload as unknown as P;
+        } else if (header.alg === "RS256" || header.alg === "ES256") {
+          // For RS256/ES256, verify with JWKS
+          const jwksUrls = [
+            `${PROCONNECT_DOMAIN}/jwks`,
+            `${PROCONNECT_DOMAIN}/.well-known/jwks.json`,
+          ];
+
+          for (const jwksUrl of jwksUrls) {
+            try {
+              const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
+              const { payload } = await jose.jwtVerify(jwt, JWKS, {
+                algorithms: ["RS256", "ES256"],
+              });
+              return payload as unknown as P;
+            } catch {
+              // Try next URL
+              continue;
+            }
+          }
+
+          throw new Error(
+            `Could not verify ${header.alg} JWT with available JWKS endpoints`
+          );
+        }
+
+        throw new Error(`Unsupported JWT algorithm: ${header.alg}`);
+      },
+    },
     profile(profile) {
-      console.log("👤 Profile mapping:", profile);
       return {
         id: profile.sub,
         email: profile.email,
