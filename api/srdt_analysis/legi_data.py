@@ -1,11 +1,18 @@
 import json
 import os
 
+from dotenv import load_dotenv
+
+from srdt_analysis.data_exploiter_embed import make_batches
+from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.chunker import Chunker
-from srdt_analysis.models import DocumentData
+from srdt_analysis.models import Chunk, DocumentData
 
 uri = "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050"
 chunker = Chunker()
+
+load_dotenv()
+albert = AlbertCollectionHandler()
 
 
 def get_text_flat(node):
@@ -59,3 +66,37 @@ def get_legi_data() -> list[DocumentData]:
     with open(str(os.getenv("LEGI_DATA_PATH"))) as f:
         code = json.load(f)
         return recursive_lookup([], code)
+
+
+def get_legi_data_chunked() -> list[Chunk]:
+    docs = get_legi_data()
+
+    chunk_list: list[Chunk] = []
+
+    for doc in docs:
+        for idx, ds in enumerate(doc["content_chunked"]):
+            chunk_list.append(
+                {
+                    "content": ds.page_content,
+                    "metadata": {
+                        "idx": idx,
+                        "id": doc["cdtn_id"],
+                        "initial_id": doc["initial_id"],
+                        "url": doc["url"],
+                        "source": doc["source"],
+                        "title": doc["title"],
+                    },
+                }
+            )
+
+    # run batches of 64 chunks to get embeddings
+    batches = make_batches(chunk_list, 64)
+
+    for docs in batches:
+        contents = [doc["content"] for doc in docs]
+        embeddings = albert.embeddings(contents)
+
+        for doc, emb in zip(docs, embeddings):
+            doc["embedding"] = emb
+
+    return chunk_list

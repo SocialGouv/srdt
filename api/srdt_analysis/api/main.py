@@ -274,7 +274,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
 
 
 @app.post(f"{BASE_API_URL}/search_es", response_model=SearchResponse)
-async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
+async def search_es(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     es = ElasticIndicesHandler()
     try:
@@ -282,7 +282,11 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
 
         for prompt in request.prompts:
             search_result = es.search(
-                prompt=prompt, k=request.options.top_K, hybrid=request.options.hybrid
+                index_name="chunks",
+                prompt=prompt,
+                k=request.options.top_K,
+                hybrid=request.options.hybrid,
+                sources=request.options.collections,
             )
 
             # todo move this

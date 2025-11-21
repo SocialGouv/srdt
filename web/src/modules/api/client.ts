@@ -97,7 +97,7 @@ export const search = async (
   request: SearchRequest
 ): Promise<UseApiResponse<SearchResponse>> => {
   try {
-    const data = await fetchApi<SearchResponse>("/api/v1/search", {
+    const data = await fetchApi<SearchResponse>("/api/v1/search_es", {
       method: "POST",
       body: JSON.stringify(request),
     });

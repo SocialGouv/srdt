@@ -43,7 +43,7 @@ export interface SearchOptions {
   hybrid?: boolean;
   top_K?: number;
   threshold?: number;
-  collections?: number[];
+  collections?: string[];
 }
 
 export interface SearchRequest {

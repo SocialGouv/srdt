@@ -182,14 +182,18 @@ export const AB_rand = 0;
 export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
   hybrid: true,
   top_K: 200,
-  threshold: 0.2,
-  collections: [733, 734, 735, 738],
+  collections: [
+    "contributions",
+    "page_fiche_ministere_travail",
+    "fiches_service_public",
+    "information",
+  ],
 };
 
 export const SEARCH_OPTIONS_CODE: SearchOptions = {
+  hybrid: true,
   top_K: 64,
-  threshold: 0.2,
-  collections: [1170],
+  collections: ["code_du_travail"],
 };
 
 export const CHATGPT_LLM: LLMModel = {

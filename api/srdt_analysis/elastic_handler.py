@@ -76,16 +76,12 @@ class ElasticIndicesHandler:
         operations = []
         for item in items:
             operations.append({"index": {"_index": index_name}})
-            # Transforming the title into an embedding using the model
-            # book["title_vector"] = model.encode(book["title"]).tolist()
             operations.append(item)
 
-        # print(operations)
-        # print(index_name)
         self.client.bulk(index=index_name, operations=operations, refresh=True)
 
-    def reset_index(self, index_name, items):
-        alias = self.init_index(
+    def init_index_default(self, index_name):
+        return self.init_index(
             {
                 "name": index_name,
                 "mappings": {
@@ -96,14 +92,24 @@ class ElasticIndicesHandler:
                 "settings": {"analysis": french_analyzer},
             }
         )
+
+    def reset_index(self, index_name, items):
+        alias = self.init_index(index_name)
         self.add_items(alias, items)
         self.swap_aliases(index_name, alias)
 
-    def find_most_similar_text(self, index_name, query, k):
+    def find_most_similar_text(self, index_name, query, k, sources: list[str]):
+
         response = self.client.search(
             index=index_name,
             size=k,
-            query={"match": {"content": query}},
+            query={
+                "bool": {
+                    "must": [{"match": {"content": query}}],
+                    "filter": [{"terms": {"metadata.source": sources}}],
+                }
+            },
+            source=["content", "metadata"],
         )
         return [
             {
@@ -116,8 +122,10 @@ class ElasticIndicesHandler:
             for r in response["hits"]["hits"][:k]
         ]
 
-    def find_most_similar_knn(self, index_name, query, k):
+    def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
+
         response = self.client.search(
+            query={"terms": {"metadata.source": sources}},
             index=index_name,
             knn={
                 "field": "embedding",
@@ -126,6 +134,7 @@ class ElasticIndicesHandler:
             },
             size=k,
         )
+
         return [
             {
                 **{
@@ -137,17 +146,19 @@ class ElasticIndicesHandler:
             for r in response["hits"]["hits"][:k]
         ]
 
-    def search(self, prompt: str, k: int, hybrid: bool) -> List[ChunkResult]:
+    def search(
+        self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
+    ) -> List[ChunkResult]:
         k_min = 64 if k < 64 else k
         knn_res = self.find_most_similar_knn(
-            query=prompt, index_name="contributions", k=k_min
+            query=prompt, index_name=index_name, k=k_min, sources=sources
         )
 
         if not hybrid:
             return knn_res[:k]
 
         text_res = self.find_most_similar_text(
-            query=prompt, index_name="contributions", k=k_min
+            query=prompt, index_name=index_name, k=k_min, sources=sources
         )
 
         if len(text_res) == 0:
@@ -168,14 +179,9 @@ class ElasticIndicesHandler:
             combined_run[query_id].items(), key=lambda item: item[1], reverse=True
         )
 
-        print(sorted_results[:5])
+        # add replace score with rff score
+        def update_score(elem, rff_score):
+            elem["score"] = rff_score
+            return elem
 
-        return [res_dict[id] for [id, _] in sorted_results[:k]]
-
-        # TODO add rff score alongside orignal scores
-        # return [[res_dict[id], score] for [id, score] in sorted_results[:k]]
-
-        # return self.find_most_similar_knn(index_name="contributions", query=prompt, k=k)
-        return self.find_most_similar_text(
-            index_name="contributions", query=prompt, k=k
-        )
+        return [update_score(res_dict[id], score) for [id, score] in sorted_results[:k]]
