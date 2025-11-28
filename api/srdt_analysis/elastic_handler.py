@@ -146,6 +146,24 @@ class ElasticIndicesHandler:
             for r in response["hits"]["hits"][:k]
         ]
 
+    def get_idcc(self, idcc: str):
+        response = self.client.search(
+            index="chunks",
+            query={"term": {"metadata.idcc.keyword": idcc}},
+            size=1000,
+            source=["content", "metadata"],
+        )
+        return [hit["_source"] for hit in response["hits"]["hits"]]
+
+    def get_chunks(self, doc_ids: List[str]):
+        response = self.client.search(
+            index="chunks",
+            query={"terms": {"metadata.id.keyword": doc_ids}},
+            size=1000,
+            source=["content", "metadata"],
+        )
+        return [hit["_source"] for hit in response["hits"]["hits"]]
+
     def search(
         self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
     ) -> List[ChunkResult]:

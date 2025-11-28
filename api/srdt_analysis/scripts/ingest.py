@@ -4,8 +4,7 @@ import pandas as pd
 from dotenv import load_dotenv
 
 from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from api.srdt_analysis.data_exploiter_embed import (
-    ArticlesCodeDuTravailExploiter,
+from srdt_analysis.data_exploiter_embed import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
@@ -51,8 +50,6 @@ def start():
         data["page_fiche_ministere_travail"], "html"
     )
 
-    # article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    # TODO run embedding on code content
     articles_code_du_travail = get_legi_data_chunked()
 
     page_sp_exploiter = FichesSPExploiter()
@@ -71,6 +68,7 @@ def start():
 
         for docs in [
             page_contribs,
+            page_contribs_idcc,
             page_infos,
             fiche_mt,
             page_sp,
