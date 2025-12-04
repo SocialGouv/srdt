@@ -1,7 +1,7 @@
 import { fr } from "@codegouvfr/react-dsfr";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Feedback } from "@/modules/feedback/Feedback";
+import { FeedbackSelector } from "@/modules/feedback/FeedbackSelector";
 import styles from "./Chat.module.css";
 import { ChatMessage as ChatMessageType } from "./types";
 import { Agreement } from "../convention-collective/search";
@@ -72,7 +72,7 @@ export const ChatMessage = ({
       const plainText = contentRef.current.innerText;
 
       // Check if ClipboardItem is supported (not in Firefox)
-      if (typeof ClipboardItem !== 'undefined') {
+      if (typeof ClipboardItem !== "undefined") {
         const clipboardItem = new ClipboardItem({
           "text/html": new Blob([htmlContent], { type: "text/html" }),
           "text/plain": new Blob([plainText], { type: "text/plain" }),
@@ -82,7 +82,7 @@ export const ChatMessage = ({
         // Fallback for Firefox: use plain text
         await navigator.clipboard.writeText(plainText);
       }
-      
+
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
@@ -167,7 +167,7 @@ export const ChatMessage = ({
           <p className={fr.cx("fr-m-0", "fr-h1")}>
             Donnez votre avis sur cette réponse
           </p>
-          <Feedback
+          <FeedbackSelector
             modelName={apiResult?.modelName}
             familyModel={apiResult?.modelFamily}
             scenarioVersion={apiResult?.config}
