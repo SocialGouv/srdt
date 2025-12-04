@@ -52,6 +52,8 @@
 .messageBubble {
   border-radius: 8px;
   padding: 1rem;
+  position: relative;
+  isolation: isolate;
 }
 
 .messageBubbleUser {
@@ -60,7 +62,20 @@
 }
 
 .messageBubbleAssistant {
+  /* Use pseudo-element for background to prevent it from being copied */
+  background: transparent;
+}
+
+.messageBubbleAssistant::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background-color: var(--background-default-grey-hover);
+  border-radius: 8px;
+  z-index: -1;
+  /* Prevent this pseudo-element from being selected/copied */
+  user-select: none;
+  pointer-events: none;
 }
 
 .messageBubbleError {
@@ -90,4 +105,14 @@
   background-color: var(--background-alt-grey);
   border-radius: 4px;
   border-left: 3px solid var(--border-action-high-blue-france);
+}
+
+.copyButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.copyButton {
+  font-size: 0.875rem;
 }

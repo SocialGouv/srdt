@@ -6,7 +6,8 @@ import styles from "./Chat.module.css";
 import { ChatMessage as ChatMessageType } from "./types";
 import { Agreement } from "../convention-collective/search";
 import { AnswerResponse } from "@/types";
-import React from "react";
+import React, { useState, useRef } from "react";
+import { Button } from "@codegouvfr/react-dsfr/Button";
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
@@ -36,6 +37,9 @@ export const ChatMessage = ({
   apiError,
   selectedAgreement,
 }: ChatMessageProps) => {
+  const [copySuccess, setCopySuccess] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const bubbleClasses = [
     styles.messageBubble,
     message.role === "user"
@@ -58,6 +62,42 @@ export const ChatMessage = ({
   // This naturally handles: show after first → hide when follow-up starts → show after follow-up
   const shouldShowFeedback = isLastAssistantMessage;
 
+  // Handle copy to clipboard with formatted HTML
+  const handleCopyToClipboard = async () => {
+    try {
+      if (!contentRef.current) return;
+
+      // Get the HTML content from the rendered markdown
+      const htmlContent = contentRef.current.innerHTML;
+      const plainText = contentRef.current.innerText;
+
+      // Check if ClipboardItem is supported (not in Firefox)
+      if (typeof ClipboardItem !== 'undefined') {
+        const clipboardItem = new ClipboardItem({
+          "text/html": new Blob([htmlContent], { type: "text/html" }),
+          "text/plain": new Blob([plainText], { type: "text/plain" }),
+        });
+        await navigator.clipboard.write([clipboardItem]);
+      } else {
+        // Fallback for Firefox: use plain text
+        await navigator.clipboard.writeText(plainText);
+      }
+      
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+      // Final fallback to plain text
+      try {
+        await navigator.clipboard.writeText(message.content);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (fallbackErr) {
+        console.error("Fallback copy also failed:", fallbackErr);
+      }
+    }
+  };
+
   return (
     <div key={index}>
       <div
@@ -68,6 +108,7 @@ export const ChatMessage = ({
       >
         <div className={bubbleClasses}>
           <div
+            ref={contentRef}
             className={
               !message.isLoading && !message.isStreaming
                 ? styles.messageContent
@@ -95,6 +136,27 @@ export const ChatMessage = ({
               </div>
             )}
           </div>
+          {message.role === "assistant" &&
+            !message.isLoading &&
+            !message.isStreaming &&
+            index !== 0 && (
+              <div className={styles.copyButtonContainer}>
+                <Button
+                  onClick={handleCopyToClipboard}
+                  iconId={
+                    copySuccess
+                      ? "fr-icon-check-line"
+                      : "fr-icon-file-text-line"
+                  }
+                  priority="tertiary no outline"
+                  size="small"
+                  title="Copier la réponse"
+                  className={styles.copyButton}
+                >
+                  {copySuccess ? "Copié !" : "Copier la réponse"}
+                </Button>
+              </div>
+            )}
         </div>
       </div>
 
