@@ -71,18 +71,23 @@ export const ChatMessage = ({
       const htmlContent = contentRef.current.innerHTML;
       const plainText = contentRef.current.innerText;
 
-      // Use the modern Clipboard API to copy both HTML and plain text
-      const clipboardItem = new ClipboardItem({
-        "text/html": new Blob([htmlContent], { type: "text/html" }),
-        "text/plain": new Blob([plainText], { type: "text/plain" }),
-      });
-
-      await navigator.clipboard.write([clipboardItem]);
+      // Check if ClipboardItem is supported (not in Firefox)
+      if (typeof ClipboardItem !== 'undefined') {
+        const clipboardItem = new ClipboardItem({
+          "text/html": new Blob([htmlContent], { type: "text/html" }),
+          "text/plain": new Blob([plainText], { type: "text/plain" }),
+        });
+        await navigator.clipboard.write([clipboardItem]);
+      } else {
+        // Fallback for Firefox: use plain text
+        await navigator.clipboard.writeText(plainText);
+      }
+      
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error("Failed to copy text:", err);
-      // Fallback to plain text copy if HTML copy fails
+      // Final fallback to plain text
       try {
         await navigator.clipboard.writeText(message.content);
         setCopySuccess(true);
