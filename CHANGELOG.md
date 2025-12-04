@@ -1,3 +1,10 @@
+## [1.25.6](https://github.com/SocialGouv/srdt/compare/v1.25.5...v1.25.6) (2025-12-04)
+
+
+### Bug Fixes
+
+* copy/paste without gray/black background, add a button to copy text ([#257](https://github.com/SocialGouv/srdt/issues/257)) ([b83f94e](https://github.com/SocialGouv/srdt/commit/b83f94e35bb4f5ea2cceff795f7b86357b2c9e2c))
+
 ## [1.25.5](https://github.com/SocialGouv/srdt/compare/v1.25.4...v1.25.5) (2025-10-30)
 
 
