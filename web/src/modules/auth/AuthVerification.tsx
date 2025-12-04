@@ -1,68 +1,47 @@
 "use client";
 
-import { Button } from "@codegouvfr/react-dsfr/Button";
-import { PasswordInput } from "@codegouvfr/react-dsfr/blocks/PasswordInput";
-import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { ProConnectButton } from "@codegouvfr/react-dsfr/ProConnectButton";
+import { Alert } from "@codegouvfr/react-dsfr/Alert";
+import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 export const AuthVerification = () => {
-  const [verificationCode, setVerificationCode] = useState("");
-  const [error, setError] = useState("");
-  const { setHasValidatedAuth } = useAuth();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
+  const handleSignIn = async () => {
     try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: verificationCode }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Code invalide");
-      }
-
-      setHasValidatedAuth(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      await signIn("proconnect", { callbackUrl: "/" });
+    } catch (error) {
+      console.error("Error signing in:", error);
     }
   };
 
   return (
     <div className="fr-container fr-my-6w">
-      <form onSubmit={handleSubmit}>
-        <PasswordInput
-          label="Code d'accès"
-          messagesHint=""
-          messages={
-            error
-              ? [
-                  {
-                    severity: "error",
-                    message: error,
-                  },
-                ]
-              : undefined
-          }
-          nativeInputProps={{
-            value: verificationCode,
-            onChange: (e) => {
-              setVerificationCode(e.target.value);
-              setError("");
-            },
-            placeholder: "Entrez votre code",
-            required: true,
-          }}
-        />
-        <div className="fr-mt-2w">
-          <Button type="submit">Valider</Button>
+      <div className="fr-grid-row fr-grid-row--center">
+        <div className="fr-col-12 fr-col-md-8 fr-col-lg-7">
+          {error === "OAuthSignin" && (
+            <Alert
+              severity="error"
+              title="Erreur de connexion"
+              description="Une erreur est survenue lors de la connexion avec ProConnect. Veuillez réessayer."
+              className="fr-mb-4w"
+            />
+          )}
+          <h1 className="fr-h4">
+            Bienvenue sur l&apos;expérimentation SRDT&nbsp;IA
+          </h1>
+          <div className="fr-mt-4w">
+            <ProConnectButton onClick={handleSignIn} />
+          </div>
+          <div className="fr-text--sm fr-mt-4w">
+            <strong>Domaines autorisés :</strong> pyrenees-atlantiques.gouv.fr,
+            seine-maritime.gouv.fr, correze.gouv.fr, dreets.gouv.fr,
+            travail.gouv.fr, fabrique.social.gouv.fr, sg.social.gouv.fr
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

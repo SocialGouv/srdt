@@ -6,7 +6,7 @@ import { DsfrHead } from "@codegouvfr/react-dsfr/next-appdir/DsfrHead";
 import { DsfrProvider } from "@codegouvfr/react-dsfr/next-appdir/DsfrProvider";
 import { defaultColorScheme } from "@/modules/dsfr/defaultColorScheme";
 import { StartDsfr } from "@/modules/dsfr/StartDsfr";
-import { AuthProvider } from "@/hooks/use-auth";
+import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import Head from "next/head";
 import Matomo from "@/modules/common/Matomo";
@@ -32,9 +32,9 @@ export function ClientHtml({
         />
       </Head>
       <body>
-        <AuthProvider>
+        <SessionProvider>
           <DsfrProvider lang={lang}>{children}</DsfrProvider>
-        </AuthProvider>
+        </SessionProvider>
         <Matomo />
       </body>
     </html>
