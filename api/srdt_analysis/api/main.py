@@ -219,37 +219,11 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 sources=request.options.collections,
             )
 
-            # todo move this
-            results = (
+            transformed_results = [
                 item
                 for item in search_result
                 if item.score >= request.options.threshold
-            )
-
-            for item in results:
-                #     chunk_data = item["chunk"]
-                # metadata = item.metadata
-
-                # transformed_chunk = ChunkResult(
-                #     score=item.score,
-                #     content=item.content,
-                #     id_chunk=item.id_chunk,
-                #     metadata=metadata,
-                # metadata=ChunkMetadata(
-                #     document_id=metadata.initial_id,
-                #     id=metadata.id,
-                #     source=(metadata.source),
-                #     title=metadata.title,
-                #     url=(
-                #         metadata["url"]
-                #         if "url" in metadata
-                #         else metadata["document_name"]
-                #     ),
-                #     idcc=metadata["idcc"] if "idcc" in metadata else None,
-                # ),
-                # )
-                # transformed_results.append(transformed_chunk)
-                transformed_results.append(item)
+            ]
 
         return SearchResponse(
             time=time.time() - start_time,

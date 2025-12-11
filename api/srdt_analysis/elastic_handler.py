@@ -151,13 +151,18 @@ class ElasticIndicesHandler:
         return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
 
     def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
+
         embeddings = self.albert.embeddings([query])[0]
+
+        # sources filter do not work properly if not every sources has been ingested
+        # i.e. if the there are no results for the required source, it will return results for other sources
         response = self.client.search(
             query={"terms": {"metadata.source": sources}},
             index=index_name,
             knn={
                 "field": "embedding",
                 "query_vector": embeddings,
+                "num_candidates": k * 1.5,
                 "k": k,
             },
             size=k,
