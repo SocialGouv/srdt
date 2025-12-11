@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { RadioButtons } from "@codegouvfr/react-dsfr/RadioButtons";
+import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { fr } from "@codegouvfr/react-dsfr";
 import { push } from "@socialgouv/matomo-next";
@@ -23,7 +23,9 @@ type SimpleFeedbackProps = {
 
 export const SimpleFeedback = (props: SimpleFeedbackProps) => {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
-  const [selectedReason, setSelectedReason] = useState<string>("");
+  const [selectedReasons, setSelectedReasons] = useState<Set<string>>(
+    new Set()
+  );
   const [otherReason, setOtherReason] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -43,11 +45,27 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
     setShowQuestionnaire(true);
   };
 
-  const handleSubmitNegativeFeedback = () => {
-    const reason = selectedReason === "other" ? otherReason : selectedReason;
+  const toggleReason = (reason: string) => {
+    setSelectedReasons((prev) => {
+      const newReasons = new Set(prev);
+      if (newReasons.has(reason)) {
+        newReasons.delete(reason);
+      } else {
+        newReasons.add(reason);
+      }
+      return newReasons;
+    });
+  };
 
-    // Track negative feedback with reason in Matomo
-    push(["trackEvent", "feedback", "negative", reason]);
+  const handleSubmitNegativeFeedback = () => {
+    const reasons = Array.from(selectedReasons);
+    // If "other" is selected, replace it with the actual text
+    const finalReasons = reasons.map((r) => (r === "other" ? otherReason : r));
+
+    // Track negative feedback with all reasons in Matomo
+    // Join multiple reasons with a separator
+    const reasonsString = finalReasons.join(" | ");
+    push(["trackEvent", "feedback", "negative", reasonsString]);
 
     setSubmitted(true);
   };
@@ -68,35 +86,40 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
         <p className={fr.cx("fr-text--bold", "fr-mb-1w")}>
           Pour quelle(s) raison(s) la réponse n'est pas satisfaisante ?
         </p>
-        <RadioButtons
+        <Checkbox
           options={[
             {
               label: "La réponse est fausse",
               nativeInputProps: {
-                value: "false",
-                checked: selectedReason === "false",
-                onChange: () => setSelectedReason("false"),
+                checked: selectedReasons.has("false"),
+                onChange: () => toggleReason("false"),
               },
             },
             {
               label: "La réponse est incomplète",
               nativeInputProps: {
-                value: "incomplete",
-                checked: selectedReason === "incomplete",
-                onChange: () => setSelectedReason("incomplete"),
+                checked: selectedReasons.has("incomplete"),
+                onChange: () => toggleReason("incomplete"),
+              },
+            },
+            {
+              label:
+                "La réponse de l'assistant n'est pas suffisamment compréhensible",
+              nativeInputProps: {
+                checked: selectedReasons.has("not_understandable"),
+                onChange: () => toggleReason("not_understandable"),
               },
             },
             {
               label: "Autre (préciser)",
               nativeInputProps: {
-                value: "other",
-                checked: selectedReason === "other",
-                onChange: () => setSelectedReason("other"),
+                checked: selectedReasons.has("other"),
+                onChange: () => toggleReason("other"),
               },
             },
           ]}
         />
-        {selectedReason === "other" && (
+        {selectedReasons.has("other") && (
           <Input
             label=""
             nativeInputProps={{
@@ -110,8 +133,8 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
         <Button
           onClick={handleSubmitNegativeFeedback}
           disabled={
-            !selectedReason ||
-            (selectedReason === "other" && !otherReason.trim())
+            selectedReasons.size === 0 ||
+            (selectedReasons.has("other") && !otherReason.trim())
           }
           className={fr.cx("fr-mt-2w")}
         >
