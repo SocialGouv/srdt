@@ -1,3 +1,10 @@
+## [1.25.7](https://github.com/SocialGouv/srdt/compare/v1.25.6...v1.25.7) (2025-12-10)
+
+
+### Bug Fixes
+
+* **deps:** next CVE-2025-55182 ([7f98f55](https://github.com/SocialGouv/srdt/commit/7f98f55d24994ba0e9b39a4b6c9d3c222b99a1a9))
+
 ## [1.25.6](https://github.com/SocialGouv/srdt/compare/v1.25.5...v1.25.6) (2025-12-04)
 
 
