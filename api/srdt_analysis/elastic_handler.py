@@ -151,7 +151,6 @@ class ElasticIndicesHandler:
         return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
 
     def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
-
         embeddings = self.albert.embeddings([query])[0]
 
         # sources filter do not work properly if not every sources has been ingested
