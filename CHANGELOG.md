@@ -1,3 +1,10 @@
+## [1.25.8](https://github.com/SocialGouv/srdt/compare/v1.25.7...v1.25.8) (2025-12-11)
+
+
+### Bug Fixes
+
+* improve prompt (only real link in response) ([#262](https://github.com/SocialGouv/srdt/issues/262)) ([55c4fce](https://github.com/SocialGouv/srdt/commit/55c4fcec8e706b90334db60325574a5f1396d67b))
+
 ## [1.25.7](https://github.com/SocialGouv/srdt/compare/v1.25.6...v1.25.7) (2025-12-10)
 
 
