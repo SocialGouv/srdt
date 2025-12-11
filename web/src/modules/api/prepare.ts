@@ -229,7 +229,7 @@ export const prepareQuestionData = async (
   requiredConfig?: Config,
   idcc?: string
 ): Promise<PreparedQuestionData> => {
-  const config = requiredConfig || Config.V1_16;
+  const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = getRandomModel();
 
@@ -303,7 +303,7 @@ export const prepareFollowupQuestionData = async (
   idcc?: string,
   providedModel?: LLMModel
 ): Promise<PreparedFollowupQuestionData> => {
-  const config = requiredConfig || Config.V1_16;
+  const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = providedModel || getRandomModel(); // Use provided model or fallback to random
 
