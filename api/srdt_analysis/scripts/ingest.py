@@ -1,15 +1,12 @@
-import os
-
-import pandas as pd
 from dotenv import load_dotenv
 
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.data_exploiter_embed import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.legi_data import get_legi_data_chunked
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data

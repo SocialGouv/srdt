@@ -4,8 +4,8 @@ from typing import List, cast
 import pandas as pd
 from dotenv import load_dotenv
 
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.api.schemas import ChunkResult, ContentResult
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 
 load_dotenv()
 

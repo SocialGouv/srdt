@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
@@ -34,6 +33,7 @@ from srdt_analysis.api.schemas import (
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer

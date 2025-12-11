@@ -1,12 +1,12 @@
 import os
-from typing import List
-from elasticsearch import Elasticsearch
 import random
+from typing import List
 
+from elasticsearch import Elasticsearch
 from ranx import Run, fuse
 
-from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.api.schemas import ChunkResult
+from srdt_analysis.collections import AlbertCollectionHandler
 
 french_analyzer = {
     "filter": {
@@ -106,7 +106,6 @@ class ElasticIndicesHandler:
         self.swap_aliases(index_name, alias)
 
     def find_most_similar_text(self, index_name, query, k, sources: list[str]):
-
         response = self.client.search(
             index=index_name,
             size=k,
@@ -130,7 +129,6 @@ class ElasticIndicesHandler:
         ]
 
     def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
-
         response = self.client.search(
             query={"terms": {"metadata.source": sources}},
             index=index_name,
