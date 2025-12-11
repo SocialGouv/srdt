@@ -84,7 +84,7 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
     return (
       <div className={fr.cx("fr-mt-2w")}>
         <p className={fr.cx("fr-text--bold", "fr-mb-1w")}>
-          Pour quelle(s) raison(s) la réponse n'est pas satisfaisante ?
+          Pour quelle(s) raison(s) la réponse n’est pas satisfaisante ?
         </p>
         <Checkbox
           options={[
