@@ -16,7 +16,6 @@ from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
-    ChunkMetadata,
     ChunkResult,
     GenerateRequest,
     GenerateResponse,
@@ -216,41 +215,41 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
                 index_name="chunks",
                 prompt=prompt,
                 k=request.options.top_K,
-                hybrid=request.options.hybrid,
+                hybrid=request.options.hybrid or False,
                 sources=request.options.collections,
             )
 
             # todo move this
-            filtered_search_result = (
+            results = (
                 item
                 for item in search_result
-                if item["score"] >= request.options.threshold
+                if item.score >= request.options.threshold
             )
 
-            for item in filtered_search_result:
+            for item in results:
                 #     chunk_data = item["chunk"]
-                metadata = item["metadata"]
+                # metadata = item.metadata
 
-                transformed_chunk = ChunkResult(
-                    score=item["score"],
-                    content=item["content"],
-                    id_chunk=item["id"],
-                    metadata=ChunkMetadata(
-                        document_id=metadata["initial_id"],
-                        id=metadata["id"],
-                        source=(
-                            metadata["source"] if "source" in metadata else "internet"
-                        ),
-                        title=metadata["title"],
-                        url=(
-                            metadata["url"]
-                            if "url" in metadata
-                            else metadata["document_name"]
-                        ),
-                        idcc=metadata["idcc"] if "idcc" in metadata else None,
-                    ),
-                )
-                transformed_results.append(transformed_chunk)
+                # transformed_chunk = ChunkResult(
+                #     score=item.score,
+                #     content=item.content,
+                #     id_chunk=item.id_chunk,
+                #     metadata=metadata,
+                # metadata=ChunkMetadata(
+                #     document_id=metadata.initial_id,
+                #     id=metadata.id,
+                #     source=(metadata.source),
+                #     title=metadata.title,
+                #     url=(
+                #         metadata["url"]
+                #         if "url" in metadata
+                #         else metadata["document_name"]
+                #     ),
+                #     idcc=metadata["idcc"] if "idcc" in metadata else None,
+                # ),
+                # )
+                # transformed_results.append(transformed_chunk)
+                transformed_results.append(item)
 
         return SearchResponse(
             time=time.time() - start_time,

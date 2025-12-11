@@ -23,8 +23,8 @@ CollectionName = Literal[
 ChunkerContentType = Literal["markdown", "html", "character_recursive"]
 
 
-CHUNK_ID = int | str
-ID = int | str
+CHUNK_ID = str
+ID = str
 HTML = str
 PlainText = str
 JSONDict = Dict[str, Any]
@@ -154,21 +154,17 @@ DocumentsList = list[Document]
 # Chunk
 @dataclass
 class ChunkMetadata(TypedDict):
-    collection_id: ID
-    document_id: ID
-    document_name: PlainText
-    document_part: int
-    document_created_at: int
     id: str
     source: CollectionName
     title: str
     url: str
-    collection: str
+    idcc: Optional[str]
+    idx: int
+    initial_id: Optional[str]
 
 
 @dataclass
 class Chunk(TypedDict):
-    object: str
     id: str
     metadata: ChunkMetadata
     content: str

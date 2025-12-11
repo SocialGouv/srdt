@@ -78,6 +78,8 @@ def get_legi_data_chunked() -> list[Chunk]:
             chunk_list.append(
                 {
                     "content": ds.page_content,
+                    "id": doc["cdtn_id"],
+                    "embedding": None,
                     "metadata": {
                         "idx": idx,
                         "id": doc["cdtn_id"],
@@ -85,6 +87,7 @@ def get_legi_data_chunked() -> list[Chunk]:
                         "url": doc["url"],
                         "source": doc["source"],
                         "title": doc["title"],
+                        "idcc": None,
                     },
                 }
             )
@@ -97,6 +100,6 @@ def get_legi_data_chunked() -> list[Chunk]:
         embeddings = albert.embeddings(contents)
 
         for doc, emb in zip(docs, embeddings):
-            doc["embedding"] = emb
+            doc["embedding"] = emb  # type: ignore
 
     return chunk_list

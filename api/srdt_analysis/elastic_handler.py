@@ -5,7 +5,7 @@ from typing import List
 from elasticsearch import Elasticsearch
 from ranx import Run, fuse
 
-from srdt_analysis.api.schemas import ChunkResult
+from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.collections import AlbertCollectionHandler
 
 french_analyzer = {
@@ -49,9 +49,21 @@ french_analyzer = {
 
 class ElasticIndicesHandler:
     def __init__(self):
+        self.api_key = os.getenv("ELASTIC_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "API key must be provided either in constructor or as environment variable"
+            )
+
+        self.base_url = os.getenv("ELASTIC_HOSTNAME")
+        if not self.base_url:
+            raise ValueError(
+                "Albert endpoint must be provided either in constructor or as environment variable"
+            )
+
         self.client = Elasticsearch(
-            [os.getenv("ELASTIC_HOSTNAME")],
-            basic_auth=os.getenv("ELASTIC_API_KEY"),
+            [self.base_url],
+            basic_auth=self.api_key,
             verify_certs=False,
             request_timeout=30,
         )
@@ -59,7 +71,7 @@ class ElasticIndicesHandler:
         self.albert = AlbertCollectionHandler()
 
     def create_index_name(self, name):
-        suff = random.randint(0, 100000)
+        suff = random.randint(0, 100000)  # nosec B311
         return f"{name}-{suff}"
 
     def init_index(self, config):
@@ -105,7 +117,26 @@ class ElasticIndicesHandler:
         self.add_items(alias, items)
         self.swap_aliases(index_name, alias)
 
-    def find_most_similar_text(self, index_name, query, k, sources: list[str]):
+    def to_chunk_result(self, r) -> ChunkResult:
+        source = r["_source"]
+        metadataDict = source["metadata"]
+        metadata = ChunkMetadata(
+            id=metadataDict["id"],
+            source=metadataDict["source"],
+            idcc=metadataDict["idcc"],
+            title=metadataDict["title"],
+            url=metadataDict["url"],
+        )
+        return ChunkResult(
+            id_chunk=r["_id"],
+            score=r["_score"],
+            metadata=metadata,
+            content=source["content"],
+        )
+
+    def find_most_similar_text(
+        self, index_name, query, k, sources: list[str]
+    ) -> list[ChunkResult]:
         response = self.client.search(
             index=index_name,
             size=k,
@@ -115,49 +146,31 @@ class ElasticIndicesHandler:
                     "filter": [{"terms": {"metadata.source": sources}}],
                 }
             },
-            source=["content", "metadata"],
+            source_includes=["content", "metadata"],
         )
-        return [
-            {
-                **{
-                    "id": r["_id"],
-                    "score": r["_score"],
-                },
-                **r["_source"],
-            }
-            for r in response["hits"]["hits"][:k]
-        ]
+        return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
 
     def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
+        embeddings = self.albert.embeddings([query])[0]
         response = self.client.search(
             query={"terms": {"metadata.source": sources}},
             index=index_name,
             knn={
                 "field": "embedding",
-                "query_vector": self.albert.embeddings([query])[0],
-                "num_candidates": k * 5,
+                "query_vector": embeddings,
                 "k": k,
             },
             size=k,
         )
 
-        return [
-            {
-                **{
-                    "id": r["_id"],
-                    "score": r["_score"],
-                },
-                **r["_source"],
-            }
-            for r in response["hits"]["hits"][:k]
-        ]
+        return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
 
     def get_idcc(self, idcc: str):
         response = self.client.search(
             index="chunks",
             query={"term": {"metadata.idcc.keyword": idcc}},
             size=1000,
-            source=["content", "metadata"],
+            source_includes=["content", "metadata"],
         )
         return [hit["_source"] for hit in response["hits"]["hits"]]
 
@@ -166,7 +179,7 @@ class ElasticIndicesHandler:
             index="chunks",
             query={"terms": {"metadata.id.keyword": doc_ids}},
             size=1000,
-            source=["content", "metadata"],
+            source_includes=["content", "metadata"],
         )
         return [hit["_source"] for hit in response["hits"]["hits"]]
 
@@ -190,13 +203,13 @@ class ElasticIndicesHandler:
 
         query_id = "q"
 
-        knn_run_dict = {query_id: {r["id"]: r["score"] for r in knn_res}}
-        text_run_dict = {query_id: {r["id"]: r["score"] for r in text_res}}
+        knn_run_dict = {query_id: {r.id_chunk: r.score for r in knn_res}}
+        text_run_dict = {query_id: {r.id_chunk: r.score for r in text_res}}
 
         knn_run = Run.from_dict(knn_run_dict, name="knn")
         text_run = Run.from_dict(text_run_dict, name="tex")
 
-        res_dict = {r["id"]: r for r in knn_res + text_res}
+        res_dict = {r.id_chunk: r for r in knn_res + text_res}
 
         combined_run = fuse(runs=[knn_run, text_run], method="rrf")
         sorted_results = sorted(
@@ -205,7 +218,7 @@ class ElasticIndicesHandler:
 
         # add replace score with rff score
         def update_score(elem, rff_score):
-            elem["score"] = rff_score
+            elem.score = rff_score
             return elem
 
         return [update_score(res_dict[id], score) for [id, score] in sorted_results[:k]]

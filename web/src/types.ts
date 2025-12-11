@@ -61,7 +61,6 @@ export interface ChunkMetadata {
   id: string;
   title: string;
   url: string;
-  document_id: number;
   source: string;
   idcc?: string;
 }

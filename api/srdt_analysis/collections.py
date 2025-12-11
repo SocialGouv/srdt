@@ -82,20 +82,24 @@ class AlbertCollectionHandler:
 
     def embeddings(
         self, chunks: list[str], timeout: int = ALBERT_SEARCH_TIMEOUT, retry=False
-    ):
-        response = httpx.post(
-            f"{self.base_url}/v1/embeddings",
-            headers=self.headers,
-            json={"model": self.model, "input": chunks},
-            timeout=timeout,
-        )
-        if response.status_code == 200:
-            result = response.json()
-            return [q["embedding"] for q in result["data"]]
-        elif not retry:
-            return self.embeddings(chunks=chunks, timeout=timeout, retry=True)
-        else:
-            response.raise_for_status()
+    ) -> list[float]:
+        try:
+            response = httpx.post(
+                f"{self.base_url}/v1/embeddings",
+                headers=self.headers,
+                json={"model": self.model, "input": chunks},
+                timeout=timeout,
+            )
+            if response.status_code == 200:
+                result = response.json()
+                return [q["embedding"] for q in result["data"]]
+            elif not retry:
+                return self.embeddings(chunks=chunks, timeout=timeout, retry=True)
+            else:
+                response.raise_for_status()
+                return []
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
+            raise ValueError(f"Error while getting embeddings: {str(e)}")
 
     def search(
         self,
