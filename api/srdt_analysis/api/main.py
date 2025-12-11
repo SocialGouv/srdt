@@ -36,7 +36,6 @@ from srdt_analysis.constants import BASE_API_URL
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
-from srdt_analysis.sparse import SparseRetriever
 from srdt_analysis.tokenizer import Tokenizer
 
 load_dotenv()
@@ -57,8 +56,6 @@ else:
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
-
-sparse_retriever = SparseRetriever()
 
 
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -209,72 +206,6 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
 
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
 async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
-    start_time = time.time()
-    collections = AlbertCollectionHandler()
-    try:
-        transformed_results: List[ChunkResult] = []
-
-        for prompt in request.prompts:
-            search_result = collections.search(
-                prompt=prompt,
-                id_collections=request.options.collections,
-                k=request.options.top_K,
-                score_threshold=request.options.threshold,
-            )
-
-            filtered_search_result = (
-                item
-                for item in search_result
-                if item["score"] >= request.options.threshold
-            )
-
-            transformed_chunks = []
-            for item in filtered_search_result:
-                chunk_data = item["chunk"]
-                metadata = chunk_data["metadata"]
-
-                transformed_chunk = ChunkResult(
-                    score=item["score"],
-                    content=chunk_data["content"],
-                    id_chunk=int(chunk_data["id"]),
-                    metadata=ChunkMetadata(
-                        document_id=metadata["document_id"],
-                        id=metadata["id"],
-                        source=(
-                            metadata["source"] if "source" in metadata else "internet"
-                        ),
-                        title=metadata["document_name"],
-                        url=(
-                            metadata["url"]
-                            if "url" in metadata
-                            else metadata["document_name"]
-                        ),
-                        idcc=metadata["idcc"] if "idcc" in metadata else None,
-                    ),
-                )
-                transformed_chunks.append(transformed_chunk)
-
-            if request.options.hybrid:
-                combined_results = sparse_retriever.combined_search(
-                    prompt, request.options.top_K, transformed_chunks
-                )
-                transformed_results.extend(combined_results)
-            else:
-                transformed_results.extend(transformed_chunks)
-
-        return SearchResponse(
-            time=time.time() - start_time,
-            top_chunks=transformed_results,
-        )
-    except Exception as e:
-        logger.error(
-            f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
-
-
-@app.post(f"{BASE_API_URL}/search_es", response_model=SearchResponse)
-async def search_es(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     es = ElasticIndicesHandler()
     try:

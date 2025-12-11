@@ -81,9 +81,7 @@ class AlbertCollectionHandler:
         return None
 
     def embeddings(
-        self,
-        chunks: list[str],
-        timeout: int = ALBERT_SEARCH_TIMEOUT,
+        self, chunks: list[str], timeout: int = ALBERT_SEARCH_TIMEOUT, retry=False
     ):
         response = httpx.post(
             f"{self.base_url}/v1/embeddings",
@@ -91,8 +89,13 @@ class AlbertCollectionHandler:
             json={"model": self.model, "input": chunks},
             timeout=timeout,
         )
-        result = response.json()
-        return [q["embedding"] for q in result["data"]]
+        if response.status_code == 200:
+            result = response.json()
+            return [q["embedding"] for q in result["data"]]
+        elif not retry:
+            return self.embeddings(chunks=chunks, timeout=timeout, retry=True)
+        else:
+            response.raise_for_status()
 
     def search(
         self,

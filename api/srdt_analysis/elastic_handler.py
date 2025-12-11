@@ -1,3 +1,4 @@
+import os
 from typing import List
 from elasticsearch import Elasticsearch
 import random
@@ -48,7 +49,13 @@ french_analyzer = {
 
 class ElasticIndicesHandler:
     def __init__(self):
-        self.client = Elasticsearch("http://localhost:9200")
+        self.client = Elasticsearch(
+            [os.getenv("ELASTIC_HOSTNAME")],
+            basic_auth=os.getenv("ELASTIC_API_KEY"),
+            verify_certs=False,
+            request_timeout=30,
+        )
+
         self.albert = AlbertCollectionHandler()
 
     def create_index_name(self, name):
@@ -131,6 +138,7 @@ class ElasticIndicesHandler:
                 "field": "embedding",
                 "query_vector": self.albert.embeddings([query])[0],
                 "num_candidates": k * 5,
+                "k": k,
             },
             size=k,
         )

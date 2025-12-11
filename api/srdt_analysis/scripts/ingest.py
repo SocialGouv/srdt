@@ -13,7 +13,6 @@ from srdt_analysis.data_exploiter_embed import (
 from srdt_analysis.legi_data import get_legi_data_chunked
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
-from srdt_analysis.sparse import preprocess
 
 load_dotenv()
 
@@ -57,73 +56,25 @@ def start():
         data["fiches_service_public"], "character_recursive"
     )
 
-    if os.getenv("INGEST", "False") == "True":
-        logger.info("Reingest corpus")
+    logger.info("Reingest corpus")
 
-        index = ElasticIndicesHandler()
+    index = ElasticIndicesHandler()
 
-        index_name = "chunks"
+    index_name = "chunks"
 
-        alias = index.init_index_default(index_name)
+    alias = index.init_index_default(index_name)
 
-        for docs in [
-            page_contribs,
-            page_contribs_idcc,
-            page_infos,
-            fiche_mt,
-            page_sp,
-            articles_code_du_travail,
-        ]:
-            index.add_items(alias, docs)
+    for docs in [
+        page_contribs,
+        page_contribs_idcc,
+        page_infos,
+        fiche_mt,
+        page_sp,
+        articles_code_du_travail,
+    ]:
+        index.add_items(alias, docs)
 
-        index.swap_aliases(index_name, alias)
-
-    if os.getenv("CREATE_PARQUET", "False") == "True":
-        logger.info("Create Parquet files")
-
-        all_docs = pd.DataFrame(
-            [
-                *page_contribs,
-                *page_contribs_idcc,
-                *page_infos,
-                *fiche_mt,
-                *articles_code_du_travail,
-                *page_sp,
-            ]
-        )
-
-        metadata = all_docs.rename({"cdtn_id": "document_id"}, axis="columns")[
-            ["url", "title", "document_id", "source", "idcc"]
-        ].to_dict(
-            "records"
-        )  # type: ignore
-
-        chunks_content = all_docs["content_chunked"].apply(
-            lambda x: [sd.page_content for sd in x]
-        )
-
-        chunks = pd.DataFrame(
-            {
-                "cdtn_id": all_docs.cdtn_id,
-                "metadata": metadata,
-                "content": chunks_content,
-                "idcc": all_docs["idcc"],
-            }
-        ).explode("content")
-
-        chunks["index_in_doc"] = chunks.groupby("cdtn_id").cumcount()
-        # reset index then set it as a column
-        chunks.reset_index(inplace=True, drop=True)
-        chunks.reset_index(inplace=True)
-        chunks.rename({"index": "id_chunk"}, axis="columns", inplace=True)
-
-        all_docs["content_chunked"] = chunks_content
-        all_docs["sparse_prepro"] = all_docs.apply(
-            lambda x: preprocess([x.title] + x.content_chunked), axis=1
-        )
-
-        all_docs.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/docs.parquet")
-        chunks.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/chunks.parquet")
+    index.swap_aliases(index_name, alias)
 
 
 if __name__ == "__main__":

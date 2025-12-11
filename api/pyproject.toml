@@ -24,7 +24,6 @@ tiktoken = "^0.8.0"
 sentry-sdk = {extras = ["fastapi"], version = "^2.30.0"}
 spacy = "^3.7"
 fr_core_news_md = {url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0.tar.gz"}
-bm25s = "^0.2.13"
 ranx = "^0.3.21"
 elasticsearch = "^8"
 
