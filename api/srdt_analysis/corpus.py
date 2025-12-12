@@ -1,7 +1,5 @@
-import os
 from typing import List, cast
 
-import pandas as pd
 from dotenv import load_dotenv
 
 from srdt_analysis.api.schemas import ChunkResult, ContentResult
@@ -9,14 +7,7 @@ from srdt_analysis.elastic_handler import ElasticIndicesHandler
 
 load_dotenv()
 
-docs = pd.read_parquet(cast(str, os.getenv("DOCS_PARQUET")))
-chunks = pd.read_parquet(cast(str, os.getenv("CHUNKS_PARQUET")))
-
 es_handler = ElasticIndicesHandler()
-
-
-def getDocs():
-    return docs
 
 
 def getChunksByIdcc(idcc: str, score: int = 1) -> List[ChunkResult]:
