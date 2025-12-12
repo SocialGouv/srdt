@@ -214,6 +214,11 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
 async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     es = ElasticIndicesHandler()
+
+    logger.info(os.getenv("ELASTIC_HOSTNAME"))
+    logger.info(os.getenv("ELASTIC_API_KEY")[:2])  # type: ignore
+    logger.info(es.check_connection())
+
     try:
         transformed_results: List[ChunkResult] = []
 

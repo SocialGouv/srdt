@@ -52,13 +52,13 @@ class ElasticIndicesHandler:
         self.api_key = os.getenv("ELASTIC_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "API key must be provided either in constructor or as environment variable"
+                "Elastic API key must be provided either in constructor or as environment variable"
             )
 
         self.base_url = os.getenv("ELASTIC_HOSTNAME")
         if not self.base_url:
             raise ValueError(
-                "Albert endpoint must be provided either in constructor or as environment variable"
+                "Elastic hostname must be provided either in constructor or as environment variable"
             )
 
         self.client = Elasticsearch(
