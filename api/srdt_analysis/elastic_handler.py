@@ -70,6 +70,9 @@ class ElasticIndicesHandler:
 
         self.albert = AlbertCollectionHandler()
 
+    def check_connection(self):
+        return self.client.ping()
+
     def create_index_name(self, name):
         suff = random.randint(0, 100000)  # nosec B311
         return f"{name}-{suff}"

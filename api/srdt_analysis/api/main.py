@@ -57,6 +57,13 @@ api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
 
 
+es_ok = ElasticIndicesHandler().check_connection()
+if es_ok:
+    logger.info("Elastic connection OK")
+else:
+    logger.error("Elastic connection KO")
+
+
 async def get_api_key(api_key: str = Security(api_key_header)):
     if not api_key.startswith("Bearer "):
         raise HTTPException(
