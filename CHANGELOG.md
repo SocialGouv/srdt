@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/SocialGouv/srdt/compare/v1.25.8...v1.26.0) (2025-12-12)
+
+
+### Features
+
+* **api:** move to Elastic [#237](https://github.com/SocialGouv/srdt/issues/237) [@38](https://github.com/38) [#239](https://github.com/SocialGouv/srdt/issues/239) ([b5c3ae0](https://github.com/SocialGouv/srdt/commit/b5c3ae0ed172121e4a8acbf11ba5d9fad5c3fc4b))
+
 ## [1.25.8](https://github.com/SocialGouv/srdt/compare/v1.25.7...v1.25.8) (2025-12-11)
 
 
