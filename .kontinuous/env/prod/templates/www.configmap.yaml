@@ -8,3 +8,4 @@ data:
   TIKTOKEN_TOKENIZER_MODEL: o200k_base
   ALBERT_VECTORISATION_MODEL: BAAI/bge-m3
   ALBERT_ENDPOINT: https://albert.api.etalab.gouv.fr
+  ELASTIC_HOSTNAME: https://srdt-es-es-internal-http.startup-srdt--elasticsearch-prod.svc.cluster.local:9200
