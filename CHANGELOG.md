@@ -1,3 +1,10 @@
+## [1.26.1](https://github.com/SocialGouv/srdt/compare/v1.26.0...v1.26.1) (2025-12-15)
+
+
+### Bug Fixes
+
+* update config version ([ce4eade](https://github.com/SocialGouv/srdt/commit/ce4eade8cd203cd502459a76ae9364648f21df0e))
+
 # [1.26.0](https://github.com/SocialGouv/srdt/compare/v1.25.8...v1.26.0) (2025-12-12)
 
 
