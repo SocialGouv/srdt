@@ -182,7 +182,7 @@ Une réponse très courte en français, avec :
 };
 
 export enum Config {
-  V2_0 = "v1.16",
+  V2_0 = "v2.0",
 }
 
 export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
