@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/SocialGouv/srdt/compare/v1.27.0...v1.28.0) (2025-12-16)
+
+
+### Features
+
+* pro-connect (step 1) ([#245](https://github.com/SocialGouv/srdt/issues/245)) ([5480b3b](https://github.com/SocialGouv/srdt/commit/5480b3b25b33f9540c9ff8e66eb7f825cb0c4166))
+
 # [1.27.0](https://github.com/SocialGouv/srdt/compare/v1.26.1...v1.27.0) (2025-12-16)
 
 
