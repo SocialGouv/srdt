@@ -27,6 +27,21 @@ function isEmailDomainAllowed(email: string | null | undefined): boolean {
   );
 }
 
+// Helper function to check if email is in beta testers list
+function isBetaTesterEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+
+  const betaTestersListEnv = process.env.BETA_TESTERS_LIST;
+  if (!betaTestersListEnv) return false;
+
+  const betaTestersList = betaTestersListEnv
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  return betaTestersList.includes(email.toLowerCase());
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     ProConnectProvider({
@@ -61,6 +76,9 @@ export const authOptions: NextAuthOptions = {
         if (!isEmailDomainAllowed(email)) {
           token.unauthorized = true;
         }
+
+        // Compute beta tester flag server-side (do not expose the list)
+        token.isBetaTester = isBetaTesterEmail(email);
       }
       return token;
     },
@@ -70,6 +88,7 @@ export const authOptions: NextAuthOptions = {
       session.idToken = token.idToken as string;
       session.profile = token.profile as ProConnectProfile | undefined;
       session.unauthorized = token.unauthorized as boolean | undefined;
+      session.isBetaTester = token.isBetaTester as boolean | undefined;
       return session;
     },
   },

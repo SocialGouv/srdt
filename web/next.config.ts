@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  env: {
-    BETA_TESTERS_LIST: process.env.BETA_TESTERS_LIST,
-  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.woff2$/,

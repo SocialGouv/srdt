@@ -18,25 +18,9 @@ type FeedbackSelectorProps = {
   isFollowupResponse?: boolean;
 };
 
-const isBetaTester = (email: string | null | undefined): boolean => {
-  if (!email) return false;
-
-  const betaTestersListEnv = process.env.BETA_TESTERS_LIST;
-  if (!betaTestersListEnv) return false;
-
-  const betaTestersList = betaTestersListEnv
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-
-  return betaTestersList.includes(email.toLowerCase());
-};
-
 export const FeedbackSelector = (props: FeedbackSelectorProps) => {
   const { data: session } = useSession();
-  const userEmail = session?.user?.email || session?.profile?.email;
-
-  const isRestrictedGroup = isBetaTester(userEmail);
+  const isRestrictedGroup = Boolean(session?.isBetaTester);
 
   // Beta testers (restricted group) see the Tally form
   if (isRestrictedGroup) {
