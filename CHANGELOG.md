@@ -1,3 +1,10 @@
+## [1.28.3](https://github.com/SocialGouv/srdt/compare/v1.28.2...v1.28.3) (2025-12-16)
+
+
+### Bug Fixes
+
+* **api:** add logs to trace perf issue ([e253d60](https://github.com/SocialGouv/srdt/commit/e253d609b79bd843c67621d8ad63155e7392b2c7))
+
 ## [1.28.2](https://github.com/SocialGouv/srdt/compare/v1.28.1...v1.28.2) (2025-12-16)
 
 
