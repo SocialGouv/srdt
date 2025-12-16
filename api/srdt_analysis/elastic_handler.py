@@ -4,7 +4,7 @@ from timeit import default_timer as timer
 from typing import List
 
 from elasticsearch import Elasticsearch
-from ranx import Run, fuse
+from ranx import Run, fuse, optimize_fusion
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.collections import AlbertCollectionHandler
@@ -234,13 +234,20 @@ class ElasticIndicesHandler:
 
         res_dict = {r.id_chunk: r for r in knn_res + text_res}
 
-        combined_run = fuse(runs=[knn_run, text_run], method="rrf")
+        combine_time = timer() - start
+        self.logger.info(f"Elapsed combine preprocessing {combine_time}s")
+
+        start = timer()
+        combined_run = fuse(runs=[knn_run, text_run], norm="min-max", method="rrf")
+        combine_fuse_time = timer() - start
+        self.logger.info(f"Elapsed combine fuse {combine_fuse_time}s")
+
+        start = timer()
         sorted_results = sorted(
             combined_run[query_id].items(), key=lambda item: item[1], reverse=True
         )
-
-        combine_time = timer() - start
-        self.logger.info(f"Elapsed combine {combine_time}s")
+        combine_sort_time = timer() - start
+        self.logger.info(f"Elapsed combine sort {combine_sort_time}s")
 
         # add replace score with rff score
         def update_score(elem, rff_score):
