@@ -1,3 +1,10 @@
+## [1.28.5](https://github.com/SocialGouv/srdt/compare/v1.28.4...v1.28.5) (2025-12-16)
+
+
+### Bug Fixes
+
+* **api:** replace ranx by rrf custom implementation ([a17f434](https://github.com/SocialGouv/srdt/commit/a17f434e7d1951704cc945091545ac58a660099f))
+
 ## [1.28.4](https://github.com/SocialGouv/srdt/compare/v1.28.3...v1.28.4) (2025-12-16)
 
 
