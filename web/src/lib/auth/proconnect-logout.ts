@@ -8,9 +8,9 @@
  */
 export function getProConnectLogoutUrl(): string {
   const PROCONNECT_DOMAIN =
-    process.env.NEXT_PUBLIC_PROCONNECT_ENV === "production"
-      ? "https://auth.agentconnect.gouv.fr/api/v2"
-      : "https://fca.integ01.dev-agentconnect.fr/api/v2";
+    process.env.NEXT_PUBLIC_PROCONNECT_ENV === "integration"
+      ? "https://fca.integ01.dev-agentconnect.fr/api/v2"
+      : "https://auth.agentconnect.gouv.fr/api/v2";
 
   // OpenID Connect standard logout endpoint
   return `${PROCONNECT_DOMAIN}/session/end`;
