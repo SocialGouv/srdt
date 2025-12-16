@@ -1,3 +1,15 @@
+# [1.29.0](https://github.com/SocialGouv/srdt/compare/v1.28.5...v1.29.0) (2025-12-16)
+
+
+### Bug Fixes
+
+* beta tester list in sealed secret ([#266](https://github.com/SocialGouv/srdt/issues/266)) ([4e55f8a](https://github.com/SocialGouv/srdt/commit/4e55f8a62416336cecb210b41509b1075f10aa31))
+
+
+### Features
+
+* new survey ([#259](https://github.com/SocialGouv/srdt/issues/259)) ([b1c2ea7](https://github.com/SocialGouv/srdt/commit/b1c2ea737f5854fcfd3af232eadd2dce72586406))
+
 ## [1.28.5](https://github.com/SocialGouv/srdt/compare/v1.28.4...v1.28.5) (2025-12-16)
 
 
