@@ -1,5 +1,6 @@
 import os
 import random
+from timeit import default_timer as timer
 from typing import List
 
 from elasticsearch import Elasticsearch
@@ -7,6 +8,7 @@ from ranx import Run, fuse
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.collections import AlbertCollectionHandler
+from srdt_analysis.logger import Logger
 
 french_analyzer = {
     "filter": {
@@ -49,6 +51,7 @@ french_analyzer = {
 
 class ElasticIndicesHandler:
     def __init__(self):
+        self.logger = Logger("Elastic")
         self.api_key = os.getenv("ELASTIC_API_KEY")
         if not self.api_key:
             raise ValueError(
@@ -194,19 +197,32 @@ class ElasticIndicesHandler:
         self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
     ) -> List[ChunkResult]:
         k_min = 64 if k < 64 else k
+
+        start = timer()
+
         knn_res = self.find_most_similar_knn(
             query=prompt, index_name=index_name, k=k_min, sources=sources
         )
 
+        knn_time = timer() - start
+        self.logger.info(f"Elapsed KNN {knn_time}s")
+
         if not hybrid:
             return knn_res[:k]
+
+        start = timer()
 
         text_res = self.find_most_similar_text(
             query=prompt, index_name=index_name, k=k_min, sources=sources
         )
 
+        text_time = timer() - start
+        self.logger.info(f"Elapsed Text {text_time}s")
+
         if len(text_res) == 0:
-            return []
+            return knn_res[:k]
+
+        start = timer()
 
         query_id = "q"
 
@@ -222,6 +238,9 @@ class ElasticIndicesHandler:
         sorted_results = sorted(
             combined_run[query_id].items(), key=lambda item: item[1], reverse=True
         )
+
+        combine_time = timer() - start
+        self.logger.info(f"Elapsed combine {combine_time}s")
 
         # add replace score with rff score
         def update_score(elem, rff_score):
