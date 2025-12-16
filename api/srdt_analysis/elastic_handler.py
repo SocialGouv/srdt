@@ -1,10 +1,10 @@
 import os
 import random
+from collections import defaultdict
 from timeit import default_timer as timer
 from typing import List
 
 from elasticsearch import Elasticsearch
-from ranx import Run, fuse, optimize_fusion
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.collections import AlbertCollectionHandler
@@ -205,7 +205,7 @@ class ElasticIndicesHandler:
         )
 
         knn_time = timer() - start
-        self.logger.info(f"Elapsed KNN {knn_time}s")
+        self.logger.debug(f"Elapsed KNN {knn_time}s")
 
         if not hybrid:
             return knn_res[:k]
@@ -217,39 +217,28 @@ class ElasticIndicesHandler:
         )
 
         text_time = timer() - start
-        self.logger.info(f"Elapsed Text {text_time}s")
+        self.logger.debug(f"Elapsed Text {text_time}s")
 
         if len(text_res) == 0:
             return knn_res[:k]
 
         start = timer()
 
-        query_id = "q"
-
-        knn_run_dict = {query_id: {r.id_chunk: r.score for r in knn_res}}
-        text_run_dict = {query_id: {r.id_chunk: r.score for r in text_res}}
-
-        knn_run = Run.from_dict(knn_run_dict, name="knn")
-        text_run = Run.from_dict(text_run_dict, name="tex")
-
         res_dict = {r.id_chunk: r for r in knn_res + text_res}
 
-        combine_time = timer() - start
-        self.logger.info(f"Elapsed combine preprocessing {combine_time}s")
+        # dictionary to store RRF mapping
+        rrf_map = defaultdict(float)
 
-        start = timer()
-        combined_run = fuse(runs=[knn_run, text_run], norm="min-max", method="rrf")
-        combine_fuse_time = timer() - start
-        self.logger.info(f"Elapsed combine fuse {combine_fuse_time}s")
+        # calculate RRF score for each result in each list
+        for rank_list in [r.id_chunk for r in knn_res], [r.id_chunk for r in text_res]:
+            for rank, item in enumerate(rank_list, 1):
+                # 60 : constant used in rrf
+                rrf_map[item] += 1 / (rank + 60)
 
-        start = timer()
-        sorted_results = sorted(
-            combined_run[query_id].items(), key=lambda item: item[1], reverse=True
-        )
-        combine_sort_time = timer() - start
-        self.logger.info(f"Elapsed combine sort {combine_sort_time}s")
+        # dort items based on their RRF scores in descending order
+        sorted_results = sorted(rrf_map.items(), key=lambda x: x[1], reverse=True)
 
-        # add replace score with rff score
+        # replace score with rff score
         def update_score(elem, rff_score):
             elem.score = rff_score
             return elem
