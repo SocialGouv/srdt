@@ -7,6 +7,7 @@ declare module "next-auth" {
     idToken?: string;
     profile?: ProConnectProfile;
     unauthorized?: boolean;
+    isBetaTester?: boolean;
     user: {
       id: string;
     } & DefaultSession["user"];
@@ -29,5 +30,6 @@ declare module "next-auth/jwt" {
     idToken?: string;
     profile?: ProConnectProfile;
     unauthorized?: boolean;
+    isBetaTester?: boolean;
   }
 }

@@ -12,6 +12,7 @@ export function getProConnectLogoutUrl(): string {
       ? "https://fca.integ01.dev-agentconnect.fr/api/v2"
       : "https://auth.agentconnect.gouv.fr/api/v2";
 
+
   // OpenID Connect standard logout endpoint
   return `${PROCONNECT_DOMAIN}/session/end`;
 }
