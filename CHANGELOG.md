@@ -1,3 +1,10 @@
+## [1.28.4](https://github.com/SocialGouv/srdt/compare/v1.28.3...v1.28.4) (2025-12-16)
+
+
+### Bug Fixes
+
+* **api:** more rank fusion logs ([e52f929](https://github.com/SocialGouv/srdt/commit/e52f929ace84c5dd64851c96ef1f5284a77e0ed2))
+
 ## [1.28.3](https://github.com/SocialGouv/srdt/compare/v1.28.2...v1.28.3) (2025-12-16)
 
 
