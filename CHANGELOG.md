@@ -1,3 +1,10 @@
+## [1.28.2](https://github.com/SocialGouv/srdt/compare/v1.28.1...v1.28.2) (2025-12-16)
+
+
+### Bug Fixes
+
+* logout proconnect ([9df8365](https://github.com/SocialGouv/srdt/commit/9df83657ef1cdbe353b504d66dcb95529e5bee8a))
+
 ## [1.28.1](https://github.com/SocialGouv/srdt/compare/v1.28.0...v1.28.1) (2025-12-16)
 
 
