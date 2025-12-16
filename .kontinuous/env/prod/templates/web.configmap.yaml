@@ -6,3 +6,6 @@ data:
   CHATGPT_MODEL_NAME: gpt-4o-2024-11-20
   MISTRAL_MODEL_NAME: mistral-large-latest
   ALBERT_MODEL_NAME: albert-large
+  NEXTAUTH_URL: https://web-srdt.fabrique.social.gouv.fr
+  PROCONNECT_ENV: production
+  NEXT_PUBLIC_PROCONNECT_ENV: production
