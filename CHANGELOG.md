@@ -1,3 +1,10 @@
+## [1.28.1](https://github.com/SocialGouv/srdt/compare/v1.28.0...v1.28.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* trailing slash ([dc98da9](https://github.com/SocialGouv/srdt/commit/dc98da9a39864a5b3e55fd794a592e32fd852f3b))
+
 # [1.28.0](https://github.com/SocialGouv/srdt/compare/v1.27.0...v1.28.0) (2025-12-16)
 
 
