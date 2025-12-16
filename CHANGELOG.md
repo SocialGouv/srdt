@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/SocialGouv/srdt/compare/v1.26.1...v1.27.0) (2025-12-16)
+
+
+### Features
+
+* add env var for pro-connect ([#265](https://github.com/SocialGouv/srdt/issues/265)) ([7dda6ce](https://github.com/SocialGouv/srdt/commit/7dda6cea73b908294254fce03bb71be612ea45e0))
+
 ## [1.26.1](https://github.com/SocialGouv/srdt/compare/v1.26.0...v1.26.1) (2025-12-15)
 
 
