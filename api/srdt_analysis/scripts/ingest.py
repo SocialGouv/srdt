@@ -1,19 +1,15 @@
-import os
-
-import pandas as pd
 from dotenv import load_dotenv
 
-from srdt_analysis.data_exploiter import (
-    ArticlesCodeDuTravailExploiter,
+from srdt_analysis.data_exploiter_embed import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
-from srdt_analysis.legi_data import get_legi_data
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.legi_data import get_legi_data_chunked
 from srdt_analysis.logger import Logger
 from srdt_analysis.postgresql_manager import get_data
-from srdt_analysis.sparse import preprocess
 
 load_dotenv()
 
@@ -50,74 +46,32 @@ def start():
         data["page_fiche_ministere_travail"], "html"
     )
 
-    article_code_du_travail_exploiter = ArticlesCodeDuTravailExploiter()
-    articles_code_du_travail = get_legi_data()
+    articles_code_du_travail = get_legi_data_chunked()
 
     page_sp_exploiter = FichesSPExploiter()
     page_sp = page_sp_exploiter.process_documents(
         data["fiches_service_public"], "character_recursive"
     )
 
-    if os.getenv("INGEST_ALBERT", "False") == "True":
-        logger.info("Reingest corpus in Albert")
+    logger.info("Reingest corpus")
 
-        page_contribs_exploiter.reset_collection_data(page_contribs, "contributions")
-        page_contribs_idcc_exploiter.reset_collection_data(
-            page_contribs_idcc, "contributions_idcc"
-        )
-        page_infos_exploiter.reset_collection_data(page_infos, "information")
-        fiche_mt_exploiter.reset_collection_data(
-            fiche_mt, "page_fiche_ministere_travail"
-        )
-        article_code_du_travail_exploiter.reset_collection_data(
-            articles_code_du_travail, "code_du_travail"
-        )
-        page_sp_exploiter.reset_collection_data(page_sp, "fiches_service_public")
+    index = ElasticIndicesHandler()
 
-    if os.getenv("CREATE_PARQUET", "False") == "True":
-        logger.info("Create Parquet files")
+    index_name = "chunks"
 
-        all_docs = pd.DataFrame(
-            [
-                *page_contribs,
-                *page_contribs_idcc,
-                *page_infos,
-                *fiche_mt,
-                *articles_code_du_travail,
-                *page_sp,
-            ]
-        )
+    alias = index.init_index_default(index_name)
 
-        metadata = all_docs.rename({"cdtn_id": "document_id"}, axis="columns")[
-            ["url", "title", "document_id", "source", "idcc"]
-        ].to_dict("records")  # type: ignore
+    for docs in [
+        page_contribs,
+        page_contribs_idcc,
+        page_infos,
+        fiche_mt,
+        page_sp,
+        articles_code_du_travail,
+    ]:
+        index.add_items(alias, docs)
 
-        chunks_content = all_docs["content_chunked"].apply(
-            lambda x: [sd.page_content for sd in x]
-        )
-
-        chunks = pd.DataFrame(
-            {
-                "cdtn_id": all_docs.cdtn_id,
-                "metadata": metadata,
-                "content": chunks_content,
-                "idcc": all_docs["idcc"],
-            }
-        ).explode("content")
-
-        chunks["index_in_doc"] = chunks.groupby("cdtn_id").cumcount()
-        # reset index then set it as a column
-        chunks.reset_index(inplace=True, drop=True)
-        chunks.reset_index(inplace=True)
-        chunks.rename({"index": "id_chunk"}, axis="columns", inplace=True)
-
-        all_docs["content_chunked"] = chunks_content
-        all_docs["sparse_prepro"] = all_docs.apply(
-            lambda x: preprocess([x.title] + x.content_chunked), axis=1
-        )
-
-        all_docs.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/docs.parquet")
-        chunks.to_parquet(f"{os.getenv('PARQUET_OUTPUT_PATH')}/chunks.parquet")
+    index.swap_aliases(index_name, alias)
 
 
 if __name__ == "__main__":

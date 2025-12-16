@@ -1,3 +1,73 @@
+## [1.28.4](https://github.com/SocialGouv/srdt/compare/v1.28.3...v1.28.4) (2025-12-16)
+
+
+### Bug Fixes
+
+* **api:** more rank fusion logs ([e52f929](https://github.com/SocialGouv/srdt/commit/e52f929ace84c5dd64851c96ef1f5284a77e0ed2))
+
+## [1.28.3](https://github.com/SocialGouv/srdt/compare/v1.28.2...v1.28.3) (2025-12-16)
+
+
+### Bug Fixes
+
+* **api:** add logs to trace perf issue ([e253d60](https://github.com/SocialGouv/srdt/commit/e253d609b79bd843c67621d8ad63155e7392b2c7))
+
+## [1.28.2](https://github.com/SocialGouv/srdt/compare/v1.28.1...v1.28.2) (2025-12-16)
+
+
+### Bug Fixes
+
+* logout proconnect ([9df8365](https://github.com/SocialGouv/srdt/commit/9df83657ef1cdbe353b504d66dcb95529e5bee8a))
+
+## [1.28.1](https://github.com/SocialGouv/srdt/compare/v1.28.0...v1.28.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* trailing slash ([dc98da9](https://github.com/SocialGouv/srdt/commit/dc98da9a39864a5b3e55fd794a592e32fd852f3b))
+
+# [1.28.0](https://github.com/SocialGouv/srdt/compare/v1.27.0...v1.28.0) (2025-12-16)
+
+
+### Features
+
+* pro-connect (step 1) ([#245](https://github.com/SocialGouv/srdt/issues/245)) ([5480b3b](https://github.com/SocialGouv/srdt/commit/5480b3b25b33f9540c9ff8e66eb7f825cb0c4166))
+
+# [1.27.0](https://github.com/SocialGouv/srdt/compare/v1.26.1...v1.27.0) (2025-12-16)
+
+
+### Features
+
+* add env var for pro-connect ([#265](https://github.com/SocialGouv/srdt/issues/265)) ([7dda6ce](https://github.com/SocialGouv/srdt/commit/7dda6cea73b908294254fce03bb71be612ea45e0))
+
+## [1.26.1](https://github.com/SocialGouv/srdt/compare/v1.26.0...v1.26.1) (2025-12-15)
+
+
+### Bug Fixes
+
+* update config version ([ce4eade](https://github.com/SocialGouv/srdt/commit/ce4eade8cd203cd502459a76ae9364648f21df0e))
+
+# [1.26.0](https://github.com/SocialGouv/srdt/compare/v1.25.8...v1.26.0) (2025-12-12)
+
+
+### Features
+
+* **api:** move to Elastic [#237](https://github.com/SocialGouv/srdt/issues/237) [@38](https://github.com/38) [#239](https://github.com/SocialGouv/srdt/issues/239) ([b5c3ae0](https://github.com/SocialGouv/srdt/commit/b5c3ae0ed172121e4a8acbf11ba5d9fad5c3fc4b))
+
+## [1.25.8](https://github.com/SocialGouv/srdt/compare/v1.25.7...v1.25.8) (2025-12-11)
+
+
+### Bug Fixes
+
+* improve prompt (only real link in response) ([#262](https://github.com/SocialGouv/srdt/issues/262)) ([55c4fce](https://github.com/SocialGouv/srdt/commit/55c4fcec8e706b90334db60325574a5f1396d67b))
+
+## [1.25.7](https://github.com/SocialGouv/srdt/compare/v1.25.6...v1.25.7) (2025-12-10)
+
+
+### Bug Fixes
+
+* **deps:** next CVE-2025-55182 ([7f98f55](https://github.com/SocialGouv/srdt/commit/7f98f55d24994ba0e9b39a4b6c9d3c222b99a1a9))
+
 ## [1.25.6](https://github.com/SocialGouv/srdt/compare/v1.25.5...v1.25.6) (2025-12-04)
 
 

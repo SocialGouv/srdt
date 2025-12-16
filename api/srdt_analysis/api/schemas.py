@@ -2,10 +2,9 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from srdt_analysis.constants import ALBERT_COLLECTION_IDS
+from srdt_analysis.constants import SOURCES
 from srdt_analysis.models import (
     CHUNK_ID,
-    ID,
     CollectionName,
     UserLLMMessage,
 )
@@ -45,20 +44,18 @@ class RephraseResponse(BaseModel):
 
 class SearchOptions(BaseModel):
     top_K: int = Field(default=20)
-    threshold: float = Field(default=0.7, ge=0.0, le=1.0)
-    collections: List[int] = Field(default=ALBERT_COLLECTION_IDS)
+    threshold: float = Field(default=0, ge=0.0, le=2.0)
+    collections: List[str] = Field(default=SOURCES)
     hybrid: Optional[bool] = False
 
     @field_validator("collections")
     @classmethod
     def validate_collections(cls, collections):
         if collections is not None:
-            invalid_collections = [
-                c for c in collections if c not in ALBERT_COLLECTION_IDS
-            ]
+            invalid_collections = [c for c in collections if c not in SOURCES]
             if invalid_collections:
                 raise ValueError(
-                    f"Invalid collection IDs: {invalid_collections}. Must be one of {ALBERT_COLLECTION_IDS}"
+                    f"Invalid collection IDs: {invalid_collections}. Must be one of {SOURCES}"
                 )
         return collections
 
@@ -88,7 +85,6 @@ class ChunkMetadata(BaseModel):
     title: str
     url: str
     id: str
-    document_id: ID
     source: CollectionName
     idcc: Optional[str] = None
 

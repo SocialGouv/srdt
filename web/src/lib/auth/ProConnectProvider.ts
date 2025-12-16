@@ -29,7 +29,7 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
 
   const PROCONNECT_DOMAIN =
     process.env.PROCONNECT_ENV === "production"
-      ? "https://auth.agentconnect.gouv.fr/api/v2/"
+      ? "https://auth.agentconnect.gouv.fr/api/v2"
       : "https://fca.integ01.dev-agentconnect.fr/api/v2";
 
   return {
