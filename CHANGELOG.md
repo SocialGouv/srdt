@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/SocialGouv/srdt/compare/v1.29.0...v1.30.0) (2025-12-18)
+
+
+### Features
+
+* update prompt ([#271](https://github.com/SocialGouv/srdt/issues/271)) ([ea45359](https://github.com/SocialGouv/srdt/commit/ea453593cfe698308983e3793b014e9291457a42))
+
 # [1.29.0](https://github.com/SocialGouv/srdt/compare/v1.28.5...v1.29.0) (2025-12-16)
 
 
