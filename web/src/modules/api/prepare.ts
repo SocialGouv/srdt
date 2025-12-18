@@ -36,9 +36,6 @@ export interface PreparedQuestionData {
   instructions: {
     generate_instruction: string;
     generate_instruction_idcc: string;
-    anonymisation?: string;
-    reformulation?: string;
-    split_multiple_queries?: string;
   };
   fichesOfficiellesChunks: ChunkResult[];
   codeDuTravailChunks: ChunkResult[];
