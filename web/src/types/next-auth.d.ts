@@ -8,6 +8,7 @@ declare module "next-auth" {
     profile?: ProConnectProfile;
     unauthorized?: boolean;
     isBetaTester?: boolean;
+    userHash?: string;
     user: {
       id: string;
     } & DefaultSession["user"];

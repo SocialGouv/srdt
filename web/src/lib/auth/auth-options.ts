@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import ProConnectProvider, { ProConnectProfile } from "./ProConnectProvider";
 import * as Sentry from "@sentry/nextjs";
+import { createHash } from "crypto";
 
 // Allowed email domains for access control
 const ALLOWED_EMAIL_DOMAINS = [
@@ -40,6 +41,24 @@ function isBetaTesterEmail(email: string | null | undefined): boolean {
     .filter(Boolean);
 
   return betaTestersList.includes(email.toLowerCase());
+}
+
+function computeUserHash(email: string | null | undefined): string | undefined {
+  if (!email) return undefined;
+
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return undefined;
+
+  // Pepper the hash to prevent trivial dictionary reversal.
+  // Prefer a dedicated pepper; fall back to NEXTAUTH_SECRET (already required in prod).
+  const pepper =
+    process.env.ANALYTICS_EMAIL_HASH_PEPPER ??
+    process.env.NEXTAUTH_SECRET ??
+    "";
+
+  return createHash("sha256")
+    .update(`${pepper}:${normalizedEmail}`)
+    .digest("hex");
 }
 
 export const authOptions: NextAuthOptions = {
@@ -89,6 +108,9 @@ export const authOptions: NextAuthOptions = {
       session.profile = token.profile as ProConnectProfile | undefined;
       session.unauthorized = token.unauthorized as boolean | undefined;
       session.isBetaTester = token.isBetaTester as boolean | undefined;
+      session.userHash = computeUserHash(
+        session.user?.email || session.profile?.email || undefined
+      );
       return session;
     },
   },

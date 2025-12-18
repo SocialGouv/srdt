@@ -12,6 +12,8 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
+import { useAuth } from "@/hooks/use-auth";
+import { trackAnswerReceived } from "@/modules/common/matomoQaTracking";
 
 const STORAGE_KEY = "chat-conversations";
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
@@ -22,6 +24,7 @@ const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
 
 export const Chat = () => {
+  const { session } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] =
     useState<string>("");
@@ -326,6 +329,7 @@ export const Chat = () => {
           // Handle completion for follow-up
           const endTime = performance.now();
           const responseTimeInSeconds = (endTime - startTime) / 1000;
+          const nowIso = new Date().toISOString();
 
           if (result.error || !result.success) {
             updateCurrentConversation({
@@ -341,12 +345,29 @@ export const Chat = () => {
               lastResponseTime: responseTimeInSeconds,
               hasFailed: true,
             });
+
+            trackAnswerReceived({
+              date: nowIso,
+              userHash: session?.userHash,
+              familyModel: undefined,
+              modelName: currentConversation.selectedModel,
+              scenarioVersion: undefined,
+              globalResponseTime: responseTimeInSeconds,
+              inputNbTokens: undefined,
+              outputNbTokens: undefined,
+              userQuestion: newMessage,
+              llmResponse: undefined,
+              errorMessage: result.error?.toString(),
+              idcc: selectedAgreement?.id,
+              isFollowupResponse: true,
+            });
           } else {
+            const llmResponseText =
+              result.data?.generated?.text ?? streamingMessageRef.current;
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content:
-                    result.data?.generated?.text ?? streamingMessageRef.current,
+                  content: llmResponseText,
                   role: "assistant",
                   isFollowup: true,
                 },
@@ -356,9 +377,24 @@ export const Chat = () => {
               lastApiError: undefined,
               hasFailed: false,
               isAwaitingFollowup: false, // Followup is complete, no more follow-ups
-              firstAssistantAnswer:
-                result.data?.generated?.text ?? streamingMessageRef.current,
+              firstAssistantAnswer: llmResponseText,
               selectedModel: result.data?.modelName,
+            });
+
+            trackAnswerReceived({
+              date: nowIso,
+              userHash: session?.userHash,
+              familyModel: result.data?.modelFamily?.toString(),
+              modelName: result.data?.modelName,
+              scenarioVersion: result.data?.config,
+              globalResponseTime: responseTimeInSeconds,
+              inputNbTokens: result.data?.generated?.nb_token_input,
+              outputNbTokens: result.data?.generated?.nb_token_output,
+              userQuestion: newMessage,
+              llmResponse: llmResponseText,
+              errorMessage: undefined,
+              idcc: selectedAgreement?.id,
+              isFollowupResponse: true,
             });
           }
           setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
@@ -388,6 +424,7 @@ export const Chat = () => {
           // Handle completion for initial question
           const endTime = performance.now();
           const responseTimeInSeconds = (endTime - startTime) / 1000;
+          const nowIso = new Date().toISOString();
 
           if (result.error || !result.success) {
             updateCurrentConversation({
@@ -402,12 +439,29 @@ export const Chat = () => {
               lastResponseTime: responseTimeInSeconds,
               hasFailed: true,
             });
+
+            trackAnswerReceived({
+              date: nowIso,
+              userHash: session?.userHash,
+              familyModel: undefined,
+              modelName: undefined,
+              scenarioVersion: undefined,
+              globalResponseTime: responseTimeInSeconds,
+              inputNbTokens: undefined,
+              outputNbTokens: undefined,
+              userQuestion: newMessage,
+              llmResponse: undefined,
+              errorMessage: result.error?.toString(),
+              idcc: selectedAgreement?.id,
+              isFollowupResponse: false,
+            });
           } else {
+            const llmResponseText =
+              result.data?.generated?.text ?? streamingMessageRef.current;
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content:
-                    result.data?.generated?.text ?? streamingMessageRef.current,
+                  content: llmResponseText,
                   role: "assistant",
                 },
               ]),
@@ -416,9 +470,27 @@ export const Chat = () => {
               lastApiError: undefined,
               hasFailed: false,
               isAwaitingFollowup: true, // Set flag to allow follow-up
-              firstAssistantAnswer:
-                result.data?.generated?.text ?? streamingMessageRef.current,
+              firstAssistantAnswer: llmResponseText,
               selectedModel: result.data?.modelName,
+            });
+
+            trackAnswerReceived({
+              date: nowIso,
+              userHash: session?.userHash,
+              familyModel: result.data?.modelFamily?.toString(),
+              modelName: result.data?.modelName,
+              scenarioVersion: result.data?.config,
+              globalResponseTime: responseTimeInSeconds,
+              inputNbTokens:
+                result.data?.anonymized?.nb_token_input ??
+                result.data?.generated?.nb_token_input,
+              outputNbTokens: result.data?.generated?.nb_token_output,
+              userQuestion:
+                result.data?.anonymized?.anonymized_question ?? newMessage,
+              llmResponse: llmResponseText,
+              errorMessage: undefined,
+              idcc: selectedAgreement?.id,
+              isFollowupResponse: false,
             });
           }
           setIsDisabled(false); // Re-enable for potential follow-up
