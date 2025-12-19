@@ -26,8 +26,6 @@ export interface AnonymizeResponse {
 export interface RephraseRequest {
   model: LLMModel;
   question: string;
-  rephrasing_prompt?: string;
-  queries_splitting_prompt?: string;
 }
 
 export interface RephraseResponse {
@@ -118,9 +116,6 @@ export interface GenerateResponse {
 }
 
 export interface InstructionPrompts {
-  anonymisation: string;
-  reformulation: string;
-  split_multiple_queries: string;
   generate_instruction: string;
   generate_instruction_idcc: string;
   generate_followup_instruction: string;
