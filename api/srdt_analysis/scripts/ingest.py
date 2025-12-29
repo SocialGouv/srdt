@@ -46,12 +46,12 @@ def start():
         data["page_fiche_ministere_travail"], "html"
     )
 
-    articles_code_du_travail = get_legi_data_chunked()
-
     page_sp_exploiter = FichesSPExploiter()
     page_sp = page_sp_exploiter.process_documents(
         data["fiches_service_public"], "character_recursive"
     )
+
+    articles_code_du_travail = get_legi_data_chunked()
 
     logger.info("Reingest corpus")
 
