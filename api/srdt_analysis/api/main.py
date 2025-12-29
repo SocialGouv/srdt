@@ -30,7 +30,7 @@ from srdt_analysis.api.schemas import (
     SearchResponse,
 )
 from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import BASE_API_URL
+from srdt_analysis.constants import BASE_API_URL, CHUNK_INDEX
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.llm_runner import LLMRunner
@@ -220,7 +220,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
 
         for prompt in request.prompts:
             search_result = es.search(
-                index_name="chunks",
+                index_name=CHUNK_INDEX,
                 prompt=prompt,
                 k=request.options.top_K,
                 hybrid=request.options.hybrid or False,

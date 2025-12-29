@@ -18,10 +18,14 @@ albert = AlbertCollectionHandler()
 def get_text_flat(node):
     content = []
     for c in node["children"]:
+        if "num" in c["data"]:
+            content.append(f"\nArticle {c['data']['num']}")
+
         if "texte" in c["data"]:
             content.append(c["data"]["texte"])
         else:
             content = content + get_text_flat(c)
+
     return content
 
 
