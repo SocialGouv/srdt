@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 
+from srdt_analysis.constants import CHUNK_INDEX
 from srdt_analysis.data_exploiter_embed import (
     FichesMTExploiter,
     FichesSPExploiter,
@@ -57,7 +58,7 @@ def start():
 
     index = ElasticIndicesHandler()
 
-    index_name = "chunks"
+    index_name = CHUNK_INDEX
 
     alias = index.init_index_default(index_name)
 

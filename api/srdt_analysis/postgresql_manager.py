@@ -49,7 +49,13 @@ class PostgreSQLManager:
             result = await conn.fetch(
                 query, "contributions" if source == "contributions_idcc" else source
             )
-            return [Document.from_record(r) for r in result]
+            results = [Document.from_record(r) for r in result]
+
+            if source == "contributions_idcc":
+                for r in results:
+                    r.source = source
+
+            return results
 
     async def fetch_sources(
         self, sources: Sequence[CollectionName]
