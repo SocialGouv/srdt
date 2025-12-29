@@ -1,3 +1,10 @@
+## [1.30.1](https://github.com/SocialGouv/srdt/compare/v1.30.0...v1.30.1) (2025-12-29)
+
+
+### Bug Fixes
+
+* **api:** article reference [#268](https://github.com/SocialGouv/srdt/issues/268) / contributions idcc  [#273](https://github.com/SocialGouv/srdt/issues/273) ([#274](https://github.com/SocialGouv/srdt/issues/274)) ([f4b18f4](https://github.com/SocialGouv/srdt/commit/f4b18f4ecbbba31ba31eed9d41442b652d7a8875))
+
 # [1.30.0](https://github.com/SocialGouv/srdt/compare/v1.29.0...v1.30.0) (2025-12-18)
 
 
