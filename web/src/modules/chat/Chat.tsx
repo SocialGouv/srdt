@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { Conversation } from "./types";
@@ -12,6 +12,12 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
+import { useSession } from "next-auth/react";
+import {
+  hashEmail,
+  setMatomoUserId,
+  trackResponseAnalytics,
+} from "@/lib/matomo-analytics";
 
 const STORAGE_KEY = "chat-conversations";
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
@@ -36,6 +42,19 @@ export const Chat = () => {
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(0);
+  const { data: session } = useSession();
+
+  // Set Matomo User ID when user is identified (privacy-preserving hash)
+  useEffect(() => {
+    const setUserIdForAnalytics = async () => {
+      const email = session?.user?.email;
+      if (email) {
+        const hash = await hashEmail(email);
+        setMatomoUserId(hash);
+      }
+    };
+    setUserIdForAnalytics();
+  }, [session?.user?.email]);
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
@@ -230,6 +249,40 @@ export const Chat = () => {
     );
   };
 
+  // Helper to track response analytics to Matomo
+  const trackResponse = useCallback(
+    (
+      result: {
+        modelFamily?: string;
+        modelName?: string;
+        config?: string;
+        anonymized?: {
+          nb_token_input?: number;
+          anonymized_question?: string;
+        } | null;
+        generated: { nb_token_output?: number; text?: string };
+      },
+      responseTime: number,
+      isFollowup: boolean,
+      error?: string
+    ) => {
+      trackResponseAnalytics({
+        familyModel: result.modelFamily,
+        modelName: result.modelName,
+        scenarioVersion: result.config,
+        globalResponseTime: responseTime,
+        inputNbTokens: result.anonymized?.nb_token_input,
+        outputNbTokens: result.generated?.nb_token_output,
+        userQuestion: result.anonymized?.anonymized_question,
+        llmResponse: result.generated?.text,
+        errorMessage: error,
+        idcc: selectedAgreement?.id,
+        isFollowupResponse: isFollowup,
+      });
+    },
+    [selectedAgreement?.id]
+  );
+
   const generateConversationTitle = (firstUserMessage: string): string => {
     // Take first 50 characters and add ellipsis if longer
     const title =
@@ -342,6 +395,11 @@ export const Chat = () => {
               hasFailed: true,
             });
           } else {
+            // Track response analytics to Matomo
+            if (result.data) {
+              trackResponse(result.data, responseTimeInSeconds, true);
+            }
+
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
@@ -403,6 +461,11 @@ export const Chat = () => {
               hasFailed: true,
             });
           } else {
+            // Track response analytics to Matomo
+            if (result.data) {
+              trackResponse(result.data, responseTimeInSeconds, false);
+            }
+
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
