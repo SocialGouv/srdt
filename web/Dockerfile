@@ -25,7 +25,9 @@ COPY . .
 
 # Build the application
 RUN --mount=type=secret,id=sentry_auth_token,required=false \
-    if [ -f /run/secrets/sentry_auth_token ]; then export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi; \
+    SENTRY_AUTH_TOKEN=; \
+    if [ -f /run/secrets/sentry_auth_token ]; then SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi; \
+    export SENTRY_AUTH_TOKEN; \
     export GENERATE_SOURCEMAP=true; \
     export SENTRY_ALLOW_FAILURE=true; \
     pnpm build:standalone && pnpm store prune
