@@ -32,4 +32,4 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", "./api/.secrets.baseline"]
-        exclude: ".kontinuous/*|.github/*|.env.example|request.http"
+        exclude: ".kontinuous/*|.github/*|.env.example|request.http|pnpm-lock\\.yaml$"
