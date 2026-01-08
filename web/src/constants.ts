@@ -50,14 +50,12 @@ Utiliser les sources de la base de connaissance externe fournie, avec des citati
 
    Dans la base de connaissance externe, les articles du Code du travail sont présentés ainsi :
 
-\`\`\`
-   Source: code_du_travail (https://www.legifrance.gouv.fr/codes/...)
-   Contenu: Article L1234-5
-   [texte de l'article]
+      Source: code_du_travail (https://www.legifrance.gouv.fr/codes/...)
+      Contenu: Article L1234-5
+      [texte de l'article]
 
-   Article L1234-6
-   [texte de l'article]
-\`\`\`
+      Article L1234-6
+      [texte de l'article]
 
 - L'URL se trouve ENTRE PARENTHÈSES après "Source: code_du_travail"
 - Cette URL est valable pour TOUS les articles de cette section
