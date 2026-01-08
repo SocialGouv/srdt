@@ -1,3 +1,10 @@
+## [1.30.3](https://github.com/SocialGouv/srdt/compare/v1.30.2...v1.30.3) (2026-01-08)
+
+
+### Bug Fixes
+
+* **api:** restore full document retrieval before generating answer ([e0d385b](https://github.com/SocialGouv/srdt/commit/e0d385b16608f4f16bcf780056a6805eb41dafe3))
+
 ## [1.30.2](https://github.com/SocialGouv/srdt/compare/v1.30.1...v1.30.2) (2026-01-08)
 
 
