@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/SocialGouv/srdt/compare/v1.30.3...v1.31.0) (2026-01-08)
+
+
+### Features
+
+* add a prompt instructions page ([#281](https://github.com/SocialGouv/srdt/issues/281)) ([8a3814c](https://github.com/SocialGouv/srdt/commit/8a3814c9dbaba5fc451bb0fde462f8f7334e2e20))
+
 ## [1.30.3](https://github.com/SocialGouv/srdt/compare/v1.30.2...v1.30.3) (2026-01-08)
 
 
