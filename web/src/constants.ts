@@ -27,6 +27,46 @@ En aucun cas, vous ne pouvez indiquer un lien ou une URL en dehors de celles fou
 
 En cas d'absence totale d'information pertinente dans les documents, vous devez d'abord indiquer cette limite et proposer de reformuler la question.`;
 
+const CITATION_SOURCES_TEXT = `### Citation des sources
+
+**Principe général :**
+Utiliser les sources de la base de connaissance externe fournie, avec des citations numérotées ([1], [2], [3]...) incluant titre, extrait pertinent et URL (si existant) dans une section "Références" à la fin de la réponse.
+
+**IMPORTANT - Citation des articles du Code du travail :**
+
+1. **Référence dans le corps de texte :** Chaque fois que vous mentionnez ou utilisez une disposition du Code du travail, vous DEVEZ citer explicitement le numéro de l'article en toutes lettres. Exemples :
+
+   - "Selon l'article L3261-2 du Code du travail [1]..."
+   - "L'article R8292-1 [2] précise que..."
+   - "En application de l'article L1134-1 du Code du travail [3]..."
+
+2. **Section Références pour le Code du travail :** Dans la section "Références" en fin de réponse, pour chaque article du Code du travail cité, vous devez impérativement indiquer :
+
+   - Le numéro complet de l'article (ex: "Article L3261-2 du Code du travail")
+   - Un extrait pertinent du contenu de l'article qui appuie votre réponse
+   - L'URL complète vers Légifrance
+
+   **⚠️ RÈGLE STRICTE pour trouver l'URL :**
+
+   Dans la base de connaissance externe, les articles du Code du travail sont présentés ainsi :
+
+\`\`\`
+   Source: code_du_travail (https://www.legifrance.gouv.fr/codes/...)
+   Contenu: Article L1234-5
+   [texte de l'article]
+
+   Article L1234-6
+   [texte de l'article]
+\`\`\`
+
+- L'URL se trouve ENTRE PARENTHÈSES après "Source: code_du_travail"
+- Cette URL est valable pour TOUS les articles de cette section
+- Vous DEVEZ copier cette URL exactement telle quelle
+- NE JAMAIS inventer ou modifier une URL
+- Si vous citez l'article L1234-5, utilisez l'URL qui apparaît au début de la section contenant cet article
+
+Si l'URL de la source n'est pas fournie, ne pas inventer une URL.`;
+
 const PROMPT_INSTRUCTIONS_V2_0: InstructionPrompts = {
   generate_instruction: `# Instructions
 
@@ -46,11 +86,7 @@ Identifier brièvement le contexte et les points juridiques de la question.
 
 Fournir une réponse directe claire et courte, en répondant simplement à la question juridique posée et identifiée, puis apporter les précisions nécessaires.
 
-### Citation des sources
-
-Utiliser les sources de la base de connaissance externe fournie, avec des citations numérotées ([1], [2]) incluant titre, extrait pertinent et URL (si existant) dans une section "Références" à la fin.
-
-Si l'URL de la source n'est pas fournie, ne pas inventer une URL.
+${CITATION_SOURCES_TEXT}
 
 ### Style et ton
 
@@ -79,11 +115,7 @@ Identifier brièvement le contexte et les points juridiques de la question.
 
 Fournir une réponse directe claire et courte, en répondant simplement à la question juridique posée et identifiée, puis apporter les précisions nécessaires.
 
-### Citation des sources
-
-Utiliser les sources de la base de connaissance externe fournie, avec des citations numérotées ([1], [2]) incluant titre, extrait pertinent et URL (si existant) dans une section "Références" à la fin.
-
-Si l'URL de la source n'est pas fournie, ne pas inventer une URL.
+${CITATION_SOURCES_TEXT}
 
 ### Style et ton
 
@@ -118,8 +150,7 @@ Vous répondez brièvement à une nouvelle question ou un retour de l'utilisateu
    - Répondre uniquement au point juridique précis soulevé dans la nouvelle question, en évitant de répéter les informations de la première réponse sauf si nécessaire pour la clarté.
    - Fournir une réponse directe claire et courte.
    - Citer le principe juridique pertinent et un détail clé, en s'appuyant sur les documents de la base de connaissance externe.
-   - Inclure des citations numérotées ([1], [2]) incluant titre, extrait pertinent et URL (si existant) dans une section « Références » à la fin.
-   - Si l'URL de la source n'est pas fournie, ne pas inventer une URL.
+   - Inclure des citations numérotées ([1], [2], [3]...) incluant titre, extrait pertinent et URL (si existant) dans une section « Références » à la fin.
 
 2. **Cas particulier de la convention collective** [À inclure uniquement si une convention collective est mentionnée] :
 
@@ -139,6 +170,8 @@ Vous répondez brièvement à une nouvelle question ou un retour de l'utilisateu
 ## Style et ton
 
 Utiliser un langage clair, accessible et professionnel, adapté à un public non expert. Éviter le jargon juridique complexe sans explication.
+
+${CITATION_SOURCES_TEXT}
 
 ## Réponse attendue
 
@@ -163,8 +196,7 @@ Vous répondez brièvement à une nouvelle question ou un retour de l'utilisateu
    - Répondre uniquement au point juridique précis soulevé dans la nouvelle question, en évitant de répéter les informations de la première réponse sauf si nécessaire pour la clarté.
    - Fournir une réponse directe claire et courte.
    - Citer le principe juridique pertinent et un détail clé, en s'appuyant sur les documents de la base de connaissance externe.
-   - Inclure des citations numérotées ([1], [2]) incluant titre, extrait pertinent et URL (si existant) dans une section « Références » à la fin.
-   - Si l'URL de la source n'est pas fournie, ne pas inventer une URL.
+   - Inclure des citations numérotées ([1], [2], [3]...) incluant titre, extrait pertinent et URL (si existant) dans une section « Références » à la fin.
 
 2. **Cas particulier de la convention collective** :
 
@@ -185,6 +217,8 @@ Vous répondez brièvement à une nouvelle question ou un retour de l'utilisateu
 ## Style et ton
 
 Utiliser un langage clair, accessible et professionnel, adapté à un public non expert. Éviter le jargon juridique complexe sans explication.
+
+${CITATION_SOURCES_TEXT}
 
 ## Réponse attendue
 
