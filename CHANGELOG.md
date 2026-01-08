@@ -1,3 +1,10 @@
+## [1.30.2](https://github.com/SocialGouv/srdt/compare/v1.30.1...v1.30.2) (2026-01-08)
+
+
+### Bug Fixes
+
+* new prompt with strict rules for citations ([#280](https://github.com/SocialGouv/srdt/issues/280)) ([74d21ee](https://github.com/SocialGouv/srdt/commit/74d21eefff6724ca05a7b3cef5408ef7d14cde9c))
+
 ## [1.30.1](https://github.com/SocialGouv/srdt/compare/v1.30.0...v1.30.1) (2025-12-29)
 
 
