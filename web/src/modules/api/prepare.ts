@@ -19,6 +19,7 @@ import {
   LLMModel,
   RerankResult,
   InstructionPrompts,
+  ContentResult,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 import {
@@ -27,6 +28,7 @@ import {
   getIdccChunks,
   search,
   rerank,
+  retrieveDocs,
 } from "./client";
 
 export interface PreparedQuestionData {
@@ -153,17 +155,31 @@ const searchTextContent = async (anonymized: string) => {
     ...(rerankBatch2.data?.results || []),
   ].sort((a, b) => b.rerank_score - a.rerank_score);
 
-  // console.log(
-  //   JSON.stringify(
-  //     mergedChunks
-  //       .slice(0, 10)
-  //       .map(({ score, metadata }) => ({ score, metadata })),
-  //     null,
-  //     2
-  //   )
-  // );
+  // get best (deduplicate by cdtn id)
+  const selectedDocumentsIds = allReranked.reduce(
+    (acc: Array<string>, curr) => {
+      if (acc.length < K_RERANK && !acc.includes(curr.chunk.metadata.id)) {
+        // todo keep original chunk score here to assignate to actual document
+        acc.push(curr.chunk.metadata.id);
+      }
+      return acc;
+    },
+    new Array<string>()
+  );
 
-  return allReranked.slice(0, K_RERANK).map(rerankedToChunk);
+  const retrieveResponse = await retrieveDocs(selectedDocumentsIds);
+  const selectedDocuments = retrieveResponse.data?.contents || [];
+
+  const fullContentToChunk = (fc: ContentResult): ChunkResult => {
+    return {
+      ...fc,
+      score: 1,
+      id_chunk: 1,
+    };
+  };
+
+  // take top k rerank for the generate step (keep general chunks separate)
+  return selectedDocuments.map(fullContentToChunk);
 };
 
 // get all idcc content and run rerank using user question
