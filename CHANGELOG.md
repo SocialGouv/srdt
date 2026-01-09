@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/SocialGouv/srdt/compare/v1.31.1...v1.32.0) (2026-01-09)
+
+
+### Features
+
+* **web:** New prompt v2.0 ([#284](https://github.com/SocialGouv/srdt/issues/284)) ([c05197e](https://github.com/SocialGouv/srdt/commit/c05197e1c3d52fa1703da2962a383e23cc39b48f))
+
 ## [1.31.1](https://github.com/SocialGouv/srdt/compare/v1.31.0...v1.31.1) (2026-01-09)
 
 
