@@ -30,7 +30,6 @@ const LIMITATIONS_TEXT = `## Limites importantes
 Si la base de connaissance ne contient aucune information pertinente sur la question, vous devez répondre :
 "Je ne dispose pas d'information sur ce point dans la base de connaissance fournie. Pouvez-vous reformuler votre question ou préciser [point spécifique] ?"`;
 
-
 const CITATION_SOURCES_TEXT = `## ⚠️ RÈGLE ABSOLUE - AUCUNE INVENTION D'URL
 
 **INTERDICTION STRICTE :**
@@ -114,7 +113,7 @@ Avant de finaliser votre réponse, vous DEVEZ répondre à ces questions :
 **Si vous ne pouvez pas répondre OUI à toutes ces questions → Recommencez votre réponse.**`;
 
 const PROMPT_INSTRUCTIONS_V2_0: InstructionPrompts = {
-generate_instruction: `# Instructions
+  generate_instruction: `# Instructions
 
 Vous êtes un assistant juridique spécialisé et expert dans le droit du travail français pour le secteur privé. Vous ne devez jamais proposer de faire vérifier les réponses auprès d'un expert ou d'un avocat puisque vous êtes cet expert. 
 
@@ -173,8 +172,7 @@ Utiliser un langage clair, accessible et professionnel, adapté à un public non
 
 ${LIMITATIONS_TEXT}`,
 
-  
-generate_instruction_idcc: `# Instructions
+  generate_instruction_idcc: `# Instructions
 
 Vous êtes un assistant juridique spécialisé et expert dans le droit du travail français pour le secteur privé. Vous ne devez jamais proposer de faire vérifier les réponses auprès d'un expert ou d'un avocat puisque vous êtes cet expert. 
 
@@ -235,7 +233,7 @@ Utiliser un langage clair, accessible et professionnel, adapté à un public non
 
 ${LIMITATIONS_TEXT}`,
 
-generate_followup_instruction: `# Instructions pour la réponse de suivi
+  generate_followup_instruction: `# Instructions pour la réponse de suivi
 
 Vous êtes un assistant juridique spécialisé et expert dans le droit du travail français pour le secteur privé. Vous ne devez jamais proposer de faire vérifier les réponses auprès d'un expert ou d'un avocat puisque vous êtes cet expert. 
 
@@ -296,8 +294,8 @@ Utiliser un langage clair, accessible et professionnel, adapté à un public non
 - En cas d'absence totale d'information pertinente dans la base de connaissance, indiquer cette limite et demander une précision : « Aucune information disponible. Pouvez-vous préciser [point] ? »
 - Ne jamais indiquer un lien ou une URL en dehors de celles fournies dans les documents de la base de connaissance
 - Ne pas répéter les informations déjà fournies dans la réponse précédente`,
-  
-generate_followup_instruction_idcc: `# Instructions pour la réponse de suivi avec convention collective
+
+  generate_followup_instruction_idcc: `# Instructions pour la réponse de suivi avec convention collective
 
 Vous êtes un assistant juridique spécialisé et expert dans le droit du travail français pour le secteur privé. Vous ne devez jamais proposer de faire vérifier les réponses auprès d'un expert ou d'un avocat puisque vous êtes cet expert. 
 
@@ -359,7 +357,6 @@ Utiliser un langage clair, accessible et professionnel, adapté à un public non
 - En cas d'absence totale d'information pertinente dans la base de connaissance, indiquer cette limite et demander une précision : « Aucune information disponible. Pouvez-vous préciser [point] ? »
 - Ne jamais indiquer un lien ou une URL en dehors de celles fournies dans les documents de la base de connaissance
 - Ne pas répéter les informations déjà fournies dans la réponse précédente`,
-  
 };
 
 export enum Config {
@@ -410,7 +407,7 @@ export const ALBERT_LLM: LLMModel = {
 };
 
 export const getRandomModel = (): LLMModel => {
-  // const models = [CHATGPT_LLM, MISTRAL_LLM, ALBERT_LLM];
+  // const models = [CHATGPT_LLM, ..., ALBERT_LLM];
   // return models[Math.floor(Math.random() * models.length)];
   return MISTRAL_LLM;
 };
