@@ -34,8 +34,6 @@ Sources : Sections entières du Code du travail.
 
 Caractéristiques : Textes légaux officiels.
 
-Utilisation : Citer explicitement la référence de l'article (ex. : « Article L. 1234-1 ») et l'extrait pertinent dans la réponse. Inclure la source dans la section « Références » avec le titre, l'extrait et l'URL.
-
 ${formatChunks(codeDuTravailChunks)}`;
 
   if (idccChunks && idccChunks.length > 0) {
