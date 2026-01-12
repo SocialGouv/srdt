@@ -6,6 +6,7 @@ import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { fr } from "@codegouvfr/react-dsfr";
 import { push } from "@socialgouv/matomo-next";
+import { useSession } from "next-auth/react";
 
 type SimpleFeedbackProps = {
   modelName?: string;
@@ -22,6 +23,7 @@ type SimpleFeedbackProps = {
 };
 
 export const SimpleFeedback = (props: SimpleFeedbackProps) => {
+  const { data: session } = useSession();
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [selectedReasons, setSelectedReasons] = useState<Set<string>>(
     new Set()
@@ -32,13 +34,16 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
   const handlePositiveFeedback = () => {
     setSubmitted(true);
 
-    // Track positive feedback in Matomo
-    push([
-      "trackEvent",
-      "feedback",
-      "positive",
-      props.isFollowupResponse ? "followup" : "initial",
-    ]);
+    const nowIso = new Date().toISOString();
+    const payload = {
+      date: nowIso,
+      userHash: session?.userHash,
+      feedbackVote: "positive",
+      ...props,
+    };
+
+    // Track positive feedback in Matomo (with full context)
+    push(["trackEvent", "feedback", "positive", JSON.stringify(payload)]);
   };
 
   const handleNegativeFeedback = () => {
@@ -65,7 +70,15 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
     // Track negative feedback with all reasons in Matomo
     // Join multiple reasons with a separator
     const reasonsString = finalReasons.join(" | ");
-    push(["trackEvent", "feedback", "negative", reasonsString]);
+    const nowIso = new Date().toISOString();
+    const payload = {
+      date: nowIso,
+      userHash: session?.userHash,
+      feedbackVote: "negative",
+      feedbackReasons: reasonsString,
+      ...props,
+    };
+    push(["trackEvent", "feedback", "negative", JSON.stringify(payload)]);
 
     setSubmitted(true);
   };
