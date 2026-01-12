@@ -33,6 +33,7 @@ Dans ce cas :
 - ❌ Aucune section "Références"
 - ❌ Aucune déduction ou raisonnement personnel`;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const CITATION_SOURCES_TEXT = `# 📑 Règles de citation des sources (SI elles existent dans la base)
 
 ⚠️ **Principe** : Vous ne citez une source QUE si elle existe dans la base. Pas de source dans la base = pas de citation.
