@@ -63,11 +63,9 @@ Source : URL exacte copiée depuis la base (uniquement si elle existe)
 ### ❌ Interdictions strictes avec exemples concrets
 
 **Ce qui est INTERDIT :**
-- ❌ Citer "Article L. 1331-2 du Code du travail" si cet article n'est PAS dans la base
 - ❌ Citer "Article L. 1332-1 du Code du travail" si cet article n'est PAS dans la base
 - ❌ Créer une URL Legifrance : \`https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006902453/\`
-- ❌ Créer une URL de fiche Service Public : \`https://code.travail.gouv.fr/fiche-service-public/quest-ce-quun-usage-dentreprise\`
-- ❌ Créer une URL de fiche Service Public : \`https://code.travail.gouv.fr/fiche-service-public/la-remuneration-de-linterimaire\`
+- ❌ Créer une URL de fiche Service Public : \`https://www.service-public.gouv.fr/particuliers/vosdroits/F827\`
 - ❌ Citer une fiche du ministère qui n'est PAS dans la base
 - ❌ Inventer ou modifier une URL, même légèrement
 - ❌ Répondre avec des références si AUCUNE source pertinente n'existe
