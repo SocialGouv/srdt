@@ -1,3 +1,10 @@
+## [1.32.2](https://github.com/SocialGouv/srdt/compare/v1.32.1...v1.32.2) (2026-01-12)
+
+
+### Bug Fixes
+
+* **web:** force release ([ce1a87f](https://github.com/SocialGouv/srdt/commit/ce1a87f754ef4d73e832b30b6ecfad936f58d4a2))
+
 ## [1.32.1](https://github.com/SocialGouv/srdt/compare/v1.32.0...v1.32.1) (2026-01-09)
 
 
