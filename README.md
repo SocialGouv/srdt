@@ -44,20 +44,32 @@ cp .env.example .env # and set your own env variable
 ### Commands
 
 ```sh
-yarn install --frozen-lockfile # for installing the dependencies
-yarn build # for building the web app
-yarn build:standalone # scripts used for building app for standalone usage
-yarn dev # for running the web app in development mode
-yarn start # for running the web app in production mode
-yarn start:standalone # scripts used for running app for standalone usage
+pnpm install --frozen-lockfile # for installing the dependencies
+pnpm build # for building the web app
+pnpm build:standalone # scripts used for building app for standalone usage
+pnpm dev # for running the web app in development mode
+pnpm start # for running the web app in production mode
+pnpm start:standalone # scripts used for running app for standalone usage
 ```
 
 ### Lint, format and type checking
 
 ```sh
-yarn type-check # for type-checking
-yarn lint # for linting
+pnpm type-check # for type-checking
+pnpm lint # for linting
 ```
+
+## Supply-chain hardening (pnpm)
+
+This repository enforces stricter install policies to reduce supply-chain risk:
+
+- Minimum package age: installs refuse packages published less than 72 hours ago.
+  - Configured via [`minimum-release-age`](.npmrc:1) (also applied in [`web/.npmrc`](web/.npmrc:1)).
+- Trust policy: pnpm will fail if trust evidence is downgraded.
+  - Configured via [`trust-policy`](.npmrc:4).
+- Dependency build scripts are blocked by default and must be explicitly approved.
+  - Configured via [`strict-dep-builds`](.npmrc:7).
+  - Approvals are recorded in [`web/pnpm-workspace.yaml`](web/pnpm-workspace.yaml:1) under [`onlyBuiltDependencies`](web/pnpm-workspace.yaml:1).
 
 ## Stats
 

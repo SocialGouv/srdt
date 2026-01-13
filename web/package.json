@@ -2,12 +2,13 @@
   "name": "srdt-web",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.27.0",
   "scripts": {
     "predev": "react-dsfr update-icons",
     "dev": "next dev --turbopack",
     "prebuild": "react-dsfr update-icons",
     "build": "next build",
-    "build:standalone": "yarn prebuild && next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
+    "build:standalone": "pnpm prebuild && next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
@@ -20,6 +21,7 @@
     "@types/debounce-promise": "^3.1.9",
     "debounce-promise": "^3.1.2",
     "downshift": "^9.0.9",
+    "jose": "^4.15.9",
     "next": "15.3.6",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
@@ -39,7 +41,7 @@
   },
   "devEngines": {
     "packageManager": {
-      "name": "yarn",
+      "name": "pnpm",
       "onFail": "error"
     }
   }

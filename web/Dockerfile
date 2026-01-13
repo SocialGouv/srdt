@@ -5,22 +5,32 @@ FROM node:$NODE_VERSION AS dist
 
 WORKDIR /dep
 
-# Copy package files first
-COPY package.json yarn.lock ./
+# Install pnpm (avoid Corepack signature/key mismatches in some base images)
+RUN npm install -g pnpm@10.27.0
 
-# Install packages
-RUN yarn --frozen-lockfile
+# Copy lock/config first so dependency fetch is cached unless the lockfile changes
+COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+
+# Pre-fetch packages into the pnpm store (no node_modules yet)
+RUN pnpm fetch
+
+# Copy manifest separately so changing package.json does not invalidate the fetch layer
+COPY package.json ./
+
+# Install using only the pre-fetched store
+RUN pnpm install --offline --frozen-lockfile
 
 # Copy rest of the application
 COPY . .
 
 # Build the application
-RUN --mount=type=secret,id=sentry_auth_token \
-    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; export SENTRY_AUTH_TOKEN; \
+RUN --mount=type=secret,id=sentry_auth_token,required=false \
+    SENTRY_AUTH_TOKEN=; \
+    if [ -f /run/secrets/sentry_auth_token ]; then SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi; \
+    export SENTRY_AUTH_TOKEN; \
     export GENERATE_SOURCEMAP=true; \
-    export SENTRY_ALLOW_FAILURE=true; \ 
-    yarn build:standalone && \
-    yarn cache clean
+    export SENTRY_ALLOW_FAILURE=true; \
+    pnpm build:standalone && pnpm store prune
 
 # app
 FROM node:$NODE_VERSION
