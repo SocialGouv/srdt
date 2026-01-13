@@ -4,6 +4,7 @@ import { ProConnectButton } from "@codegouvfr/react-dsfr/ProConnectButton";
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
 
 export const AuthVerification = () => {
   const searchParams = useSearchParams();
@@ -36,9 +37,8 @@ export const AuthVerification = () => {
             <ProConnectButton onClick={handleSignIn} />
           </div>
           <div className="fr-text--sm fr-mt-4w">
-            <strong>Domaines autorisés :</strong> pyrenees-atlantiques.gouv.fr,
-            seine-maritime.gouv.fr, correze.gouv.fr, dreets.gouv.fr,
-            travail.gouv.fr, fabrique.social.gouv.fr, sg.social.gouv.fr
+            <strong>Domaines autorisés :</strong>{" "}
+            {ALLOWED_EMAIL_DOMAINS.join(", ")}
           </div>
         </div>
       </div>

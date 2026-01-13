@@ -4,6 +4,7 @@ import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { signOut, useSession } from "next-auth/react";
 import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
+import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
 
 export const AccessDeniedContent = () => {
   const { data: session } = useSession();
@@ -50,13 +51,9 @@ export const AccessDeniedContent = () => {
           <div className="fr-callout fr-mb-4w">
             <h3 className="fr-callout__title">Domaines autorisés</h3>
             <ul>
-              <li>pyrenees-atlantiques.gouv.fr</li>
-              <li>seine-maritime.gouv.fr</li>
-              <li>correze.gouv.fr</li>
-              <li>dreets.gouv.fr</li>
-              <li>travail.gouv.fr</li>
-              <li>fabrique.social.gouv.fr</li>
-              <li>sg.social.gouv.fr</li>
+              {ALLOWED_EMAIL_DOMAINS.map((domain) => (
+                <li key={domain}>{domain}</li>
+              ))}
             </ul>
           </div>
 

@@ -9,6 +9,39 @@ const CHATGPT_BASE_URL = "https://api.openai.com";
 const MISTRAL_BASE_URL = "https://api.mistral.ai";
 const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
 
+// Allowed email domains for access control
+export const ALLOWED_EMAIL_DOMAINS = [
+  "bouches-du-rhone.gouv.fr",
+  "maine-et-loire.gouv.fr",
+  "creuse.gouv.fr",
+  "nord.gouv.fr",
+  "pas-de-calais.gouv.fr",
+  "aisne.gouv.fr",
+  "oise.gouv.fr",
+  "somme.gouv.fr",
+  "calvados.gouv.fr",
+  "manche.gouv.fr",
+  "orne.gouv.fr",
+  "eure.gouv.fr",
+  "seine-maritime.gouv.fr",
+  "charente.gouv.fr",
+  "charente-maritime.gouv.fr",
+  "correze.gouv.fr",
+  "dordogne.gouv.fr",
+  "gironde.gouv.fr",
+  "landes.gouv.fr",
+  "lot-et-garonne.gouv.fr",
+  "pyrenees-atlantiques.gouv.fr",
+  "deux-sevres.gouv.fr",
+  "vienne.gouv.fr",
+  "haute-vienne.gouv.fr",
+  "travail.gouv.fr",
+  "beta.gouv.fr",
+  "fabrique.social.gouv.fr",
+  "drieets.gouv.fr",
+  "sg.social.gouv.fr",
+];
+
 export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_CODE = 5;

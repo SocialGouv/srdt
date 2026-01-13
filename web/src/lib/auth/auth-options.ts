@@ -1,19 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import ProConnectProvider, { ProConnectProfile } from "./ProConnectProvider";
 import * as Sentry from "@sentry/nextjs";
-
-// Allowed email domains for access control
-const ALLOWED_EMAIL_DOMAINS = [
-  "pyrenees-atlantiques.gouv.fr",
-  "seine-maritime.gouv.fr",
-  "correze.gouv.fr",
-  "dreets.gouv.fr",
-  "travail.gouv.fr",
-  "fabrique.social.gouv.fr",
-  "sg.social.gouv.fr",
-  // Add beta.gouv.fr for local development
-  ...(process.env.NODE_ENV === "development" ? ["beta.gouv.fr"] : []),
-];
+import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
 
 // Helper function to check if email domain is allowed
 function isEmailDomainAllowed(email: string | null | undefined): boolean {
