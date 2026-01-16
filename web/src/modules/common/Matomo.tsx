@@ -3,46 +3,13 @@ import { init, push } from "@socialgouv/matomo-next";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
+import { ALLOWED_EMAIL_DOMAINS, DOMAIN_TO_DEPARTMENT } from "@/constants";
 
 const MATOMO_URL = "https://matomo.fabrique.social.gouv.fr/";
 const MATOMO_SITE_ID = "134";
 
 // Custom dimension ID for department tracking (configure this in Matomo admin)
 const DEPARTMENT_DIMENSION_ID = 1;
-
-// Map email domains to department names
-const DOMAIN_TO_DEPARTMENT: Record<string, string> = {
-  "bouches-du-rhone.gouv.fr": "Bouches-du-Rhône",
-  "maine-et-loire.gouv.fr": "Maine-et-Loire",
-  "creuse.gouv.fr": "Creuse",
-  "nord.gouv.fr": "Nord",
-  "pas-de-calais.gouv.fr": "Pas-de-Calais",
-  "aisne.gouv.fr": "Aisne",
-  "oise.gouv.fr": "Oise",
-  "somme.gouv.fr": "Somme",
-  "calvados.gouv.fr": "Calvados",
-  "manche.gouv.fr": "Manche",
-  "orne.gouv.fr": "Orne",
-  "eure.gouv.fr": "Eure",
-  "seine-maritime.gouv.fr": "Seine-Maritime",
-  "charente.gouv.fr": "Charente",
-  "charente-maritime.gouv.fr": "Charente-Maritime",
-  "correze.gouv.fr": "Corrèze",
-  "dordogne.gouv.fr": "Dordogne",
-  "gironde.gouv.fr": "Gironde",
-  "landes.gouv.fr": "Landes",
-  "lot-et-garonne.gouv.fr": "Lot-et-Garonne",
-  "pyrenees-atlantiques.gouv.fr": "Pyrénées-Atlantiques",
-  "deux-sevres.gouv.fr": "Deux-Sèvres",
-  "vienne.gouv.fr": "Vienne",
-  "haute-vienne.gouv.fr": "Haute-Vienne",
-  "travail.gouv.fr": "DGT",
-  "beta.gouv.fr": "Beta.gouv",
-  "fabrique.social.gouv.fr": "Fabrique Numérique",
-  "drieets.gouv.fr": "DRIEETS",
-  "sg.social.gouv.fr": "SG Social",
-};
 
 /**
  * Extract department from email address based on allowed domains
