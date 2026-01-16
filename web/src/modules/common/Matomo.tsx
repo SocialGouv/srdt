@@ -47,42 +47,44 @@ const DOMAIN_TO_DEPARTMENT: Record<string, string> = {
 /**
  * Extract department from email address based on allowed domains
  */
-function getDepartmentFromEmail(email: string | null | undefined): string | null {
+function getDepartmentFromEmail(
+  email: string | null | undefined
+): string | null {
   if (!email) return null;
-  
+
   const emailLower = email.toLowerCase();
-  const domain = ALLOWED_EMAIL_DOMAINS.find((d) => emailLower.endsWith(`@${d}`));
-  
+  const domain = ALLOWED_EMAIL_DOMAINS.find((d) =>
+    emailLower.endsWith(`@${d}`)
+  );
+
   if (domain) {
     return DOMAIN_TO_DEPARTMENT[domain] || domain;
   }
-  
+
   return null;
 }
 
 /**
- * Generate a short hash (24 chars) from an email for Matomo user ID
- * Uses a simple but effective hash based on the email string
+ * Generate a secure hash (24 chars) from an email for Matomo user ID
+ * Uses SHA-256 via Web Crypto API for proper anonymization
  */
-function hashEmail(email: string): string {
-  let hash = 0;
-  const str = email.toLowerCase();
-  
-  // Generate multiple hash values for better distribution
-  const hashes: number[] = [];
-  
-  for (let round = 0; round < 4; round++) {
-    hash = round * 31337;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash + char * (round + 1)) | 0;
-    }
-    hashes.push(Math.abs(hash));
-  }
-  
-  // Convert to base36 and concatenate for a 24-char string
-  const base36 = hashes.map((h) => h.toString(36)).join("");
-  return base36.slice(0, 24).padEnd(24, "0");
+async function hashEmail(email: string): Promise<string> {
+  const normalized = email.toLowerCase().trim();
+
+  // Add a salt prefix to protect against rainbow table attacks
+  const salted = `srdt-matomo:${normalized}`;
+
+  // Use Web Crypto API for secure hashing
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salted);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+  // Convert to hex and take first 24 chars
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex.slice(0, 24);
 }
 
 const MatomoComponent = () => {
@@ -103,21 +105,24 @@ const MatomoComponent = () => {
   // Set user ID and department when user is authenticated
   useEffect(() => {
     if (!initialised || userIdSet) return;
-    
-    if (isAuthenticated && user?.email) {
-      const hashedUserId = hashEmail(user.email);
+    if (!isAuthenticated || !user?.email) return;
+
+    const setupUserTracking = async () => {
+      const hashedUserId = await hashEmail(user.email!);
       const department = getDepartmentFromEmail(user.email);
-      
+
       // Set the hashed user ID
       push(["setUserId", hashedUserId]);
-      
+
       // Set department as custom dimension if available
       if (department) {
         push(["setCustomDimension", DEPARTMENT_DIMENSION_ID, department]);
       }
-      
+
       setUserIdSet(true);
-    }
+    };
+
+    setupUserTracking();
   }, [initialised, isAuthenticated, user?.email, userIdSet]);
 
   // Reset user ID tracking on logout
