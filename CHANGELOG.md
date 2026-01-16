@@ -1,3 +1,10 @@
+## [1.32.4](https://github.com/SocialGouv/srdt/compare/v1.32.3...v1.32.4) (2026-01-16)
+
+
+### Bug Fixes
+
+* add support button ([#296](https://github.com/SocialGouv/srdt/issues/296)) ([6c86dab](https://github.com/SocialGouv/srdt/commit/6c86dab5aa0e097c4e43a232ff301b16fbba5c30))
+
 ## [1.32.3](https://github.com/SocialGouv/srdt/compare/v1.32.2...v1.32.3) (2026-01-13)
 
 
