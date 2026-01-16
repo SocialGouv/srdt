@@ -1,7 +1,7 @@
 "use client";
 import { init, push } from "@socialgouv/matomo-next";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
 
@@ -89,8 +89,12 @@ async function hashEmail(email: string): Promise<string> {
 
 const MatomoComponent = () => {
   const [initialised, setInitialised] = useState(false);
-  const [userIdSet, setUserIdSet] = useState(false);
   const { user, isAuthenticated } = useAuth();
+
+  // Track the email that was successfully set to prevent duplicates and handle changes
+  const trackedEmailRef = useRef<string | null>(null);
+  // Track if an async operation is in progress to prevent race conditions
+  const isSettingUpRef = useRef(false);
 
   // Initialize Matomo
   useEffect(() => {
@@ -104,34 +108,51 @@ const MatomoComponent = () => {
 
   // Set user ID and department when user is authenticated
   useEffect(() => {
-    if (!initialised || userIdSet) return;
+    if (!initialised) return;
     if (!isAuthenticated || !user?.email) return;
 
+    // Skip if already tracking this email or if setup is in progress
+    if (trackedEmailRef.current === user.email || isSettingUpRef.current)
+      return;
+
+    const currentEmail = user.email;
+    isSettingUpRef.current = true;
+
     const setupUserTracking = async () => {
-      const hashedUserId = await hashEmail(user.email!);
-      const department = getDepartmentFromEmail(user.email);
+      try {
+        const hashedUserId = await hashEmail(currentEmail);
 
-      // Set the hashed user ID
-      push(["setUserId", hashedUserId]);
+        // Verify email hasn't changed during async operation
+        if (currentEmail !== user.email) {
+          isSettingUpRef.current = false;
+          return;
+        }
 
-      // Set department as custom dimension if available
-      if (department) {
-        push(["setCustomDimension", DEPARTMENT_DIMENSION_ID, department]);
+        // Set the hashed user ID
+        push(["setUserId", hashedUserId]);
+
+        // Set department as custom dimension if available
+        const department = getDepartmentFromEmail(currentEmail);
+        if (department) {
+          push(["setCustomDimension", DEPARTMENT_DIMENSION_ID, department]);
+        }
+
+        trackedEmailRef.current = currentEmail;
+      } finally {
+        isSettingUpRef.current = false;
       }
-
-      setUserIdSet(true);
     };
 
     setupUserTracking();
-  }, [initialised, isAuthenticated, user?.email, userIdSet]);
+  }, [initialised, isAuthenticated, user?.email]);
 
   // Reset user ID tracking on logout
   useEffect(() => {
-    if (!isAuthenticated && userIdSet) {
+    if (!isAuthenticated && trackedEmailRef.current) {
       push(["resetUserId"]);
-      setUserIdSet(false);
+      trackedEmailRef.current = null;
     }
-  }, [isAuthenticated, userIdSet]);
+  }, [isAuthenticated]);
 
   const searchParams = useSearchParams(),
     pathname = usePathname();
