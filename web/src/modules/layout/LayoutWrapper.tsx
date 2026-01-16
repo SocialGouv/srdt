@@ -78,6 +78,17 @@ export const LayoutWrapper = ({ children }: Props) => {
                     onClick: (e: React.MouseEvent) => e.preventDefault(),
                   },
                 },
+
+                {
+                  iconId: "fr-icon-questionnaire-line",
+                  text: "Support",
+                  linkProps: {
+                    href: "https://tally.so/r/jao5z4",
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  },
+                },
+                headerFooterDisplayItem,
                 {
                   iconId: "fr-icon-logout-box-r-line",
                   text: "Se déconnecter",
@@ -86,9 +97,19 @@ export const LayoutWrapper = ({ children }: Props) => {
                   },
                   linkProps: undefined,
                 },
+              ]
+            : [
+                {
+                  iconId: "fr-icon-questionnaire-line",
+                  text: "Support",
+                  linkProps: {
+                    href: "https://tally.so/r/jao5z4",
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  },
+                },
                 headerFooterDisplayItem,
               ]
-            : [headerFooterDisplayItem]
         }
       />
       <main className={fr.cx("fr-container", "fr-mb-5w")}>{children}</main>
