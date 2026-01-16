@@ -9,38 +9,49 @@ const CHATGPT_BASE_URL = "https://api.openai.com";
 const MISTRAL_BASE_URL = "https://api.mistral.ai";
 const ALBERT_BASE_URL = "https://albert.api.etalab.gouv.fr";
 
-// Allowed email domains for access control
-export const ALLOWED_EMAIL_DOMAINS = [
-  "bouches-du-rhone.gouv.fr",
-  "maine-et-loire.gouv.fr",
-  "creuse.gouv.fr",
-  "nord.gouv.fr",
-  "pas-de-calais.gouv.fr",
-  "aisne.gouv.fr",
-  "oise.gouv.fr",
-  "somme.gouv.fr",
-  "calvados.gouv.fr",
-  "manche.gouv.fr",
-  "orne.gouv.fr",
-  "eure.gouv.fr",
-  "seine-maritime.gouv.fr",
-  "charente.gouv.fr",
-  "charente-maritime.gouv.fr",
-  "correze.gouv.fr",
-  "dordogne.gouv.fr",
-  "gironde.gouv.fr",
-  "landes.gouv.fr",
-  "lot-et-garonne.gouv.fr",
-  "pyrenees-atlantiques.gouv.fr",
-  "deux-sevres.gouv.fr",
-  "vienne.gouv.fr",
-  "haute-vienne.gouv.fr",
-  "travail.gouv.fr",
-  "beta.gouv.fr",
-  "fabrique.social.gouv.fr",
-  "drieets.gouv.fr",
-  "sg.social.gouv.fr",
+// Email domain configuration - single source of truth for access control and department mapping
+export const EMAIL_DOMAIN_CONFIG: { domain: string; department: string }[] = [
+  { domain: "bouches-du-rhone.gouv.fr", department: "Bouches-du-Rhône" },
+  { domain: "maine-et-loire.gouv.fr", department: "Maine-et-Loire" },
+  { domain: "creuse.gouv.fr", department: "Creuse" },
+  { domain: "nord.gouv.fr", department: "Nord" },
+  { domain: "pas-de-calais.gouv.fr", department: "Pas-de-Calais" },
+  { domain: "aisne.gouv.fr", department: "Aisne" },
+  { domain: "oise.gouv.fr", department: "Oise" },
+  { domain: "somme.gouv.fr", department: "Somme" },
+  { domain: "calvados.gouv.fr", department: "Calvados" },
+  { domain: "manche.gouv.fr", department: "Manche" },
+  { domain: "orne.gouv.fr", department: "Orne" },
+  { domain: "eure.gouv.fr", department: "Eure" },
+  { domain: "seine-maritime.gouv.fr", department: "Seine-Maritime" },
+  { domain: "charente.gouv.fr", department: "Charente" },
+  { domain: "charente-maritime.gouv.fr", department: "Charente-Maritime" },
+  { domain: "correze.gouv.fr", department: "Corrèze" },
+  { domain: "dordogne.gouv.fr", department: "Dordogne" },
+  { domain: "gironde.gouv.fr", department: "Gironde" },
+  { domain: "landes.gouv.fr", department: "Landes" },
+  { domain: "lot-et-garonne.gouv.fr", department: "Lot-et-Garonne" },
+  {
+    domain: "pyrenees-atlantiques.gouv.fr",
+    department: "Pyrénées-Atlantiques",
+  },
+  { domain: "deux-sevres.gouv.fr", department: "Deux-Sèvres" },
+  { domain: "vienne.gouv.fr", department: "Vienne" },
+  { domain: "haute-vienne.gouv.fr", department: "Haute-Vienne" },
+  { domain: "travail.gouv.fr", department: "DGT" },
+  { domain: "beta.gouv.fr", department: "Beta.gouv" },
+  { domain: "fabrique.social.gouv.fr", department: "Fabrique Numérique" },
+  { domain: "drieets.gouv.fr", department: "DRIEETS" },
+  { domain: "sg.social.gouv.fr", department: "SG Social" },
 ];
+
+// Derived: list of allowed email domains for access control
+export const ALLOWED_EMAIL_DOMAINS = EMAIL_DOMAIN_CONFIG.map((c) => c.domain);
+
+// Derived: mapping from domain to department name for Matomo tracking
+export const DOMAIN_TO_DEPARTMENT: Record<string, string> = Object.fromEntries(
+  EMAIL_DOMAIN_CONFIG.map((c) => [c.domain, c.department])
+);
 
 export const MAX_RERANK = 64;
 export const K_RERANK = 10;
