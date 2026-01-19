@@ -22,7 +22,7 @@ export interface ConversationRecord {
 export async function saveConversation(
   conversation: Omit<ConversationRecord, "id" | "created_at" | "updated_at">
 ): Promise<string> {
-  const result = await sql`
+  const result = await sql<Array<{ id: string }>>`
     INSERT INTO conversations (
       user_id,
       department,
@@ -48,6 +48,10 @@ export async function saveConversation(
     )
     RETURNING id
   `;
+
+  if (!result[0]?.id) {
+    throw new Error('Failed to save conversation: no ID returned');
+  }
 
   return result[0].id;
 }
