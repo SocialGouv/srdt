@@ -1,3 +1,10 @@
+## [1.33.1](https://github.com/SocialGouv/srdt/compare/v1.33.0...v1.33.1) (2026-01-19)
+
+
+### Bug Fixes
+
+* pnpm migration ([#277](https://github.com/SocialGouv/srdt/issues/277)) ([f8f7fd7](https://github.com/SocialGouv/srdt/commit/f8f7fd71923465ad553a173a37b2f3b6b7ad50ea))
+
 # [1.33.0](https://github.com/SocialGouv/srdt/compare/v1.32.4...v1.33.0) (2026-01-19)
 
 
