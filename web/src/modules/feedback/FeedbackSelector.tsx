@@ -16,6 +16,8 @@ type FeedbackSelectorProps = {
   errorMessage?: string;
   idcc?: string;
   isFollowupResponse?: boolean;
+  /** Database conversation ID for saving feedback */
+  dbConversationId?: string;
 };
 
 export const FeedbackSelector = (props: FeedbackSelectorProps) => {

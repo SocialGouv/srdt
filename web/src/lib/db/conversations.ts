@@ -1,0 +1,102 @@
+import sql from "./postgres";
+
+export interface ConversationRecord {
+  id?: string;
+  user_id: string;
+  department: string | null;
+  question: string;
+  response: string;
+  followup_question: string | null;
+  followup_response: string | null;
+  feedback_type: "positive" | "negative" | null;
+  feedback_reasons: string | null;
+  idcc: string | null;
+  model_name: string | null;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+/**
+ * Save a new conversation (initial question + response)
+ */
+export async function saveConversation(
+  conversation: Omit<ConversationRecord, "id" | "created_at" | "updated_at">
+): Promise<string> {
+  const result = await sql`
+    INSERT INTO conversations (
+      user_id,
+      department,
+      question,
+      response,
+      followup_question,
+      followup_response,
+      feedback_type,
+      feedback_reasons,
+      idcc,
+      model_name
+    ) VALUES (
+      ${conversation.user_id},
+      ${conversation.department},
+      ${conversation.question},
+      ${conversation.response},
+      ${conversation.followup_question},
+      ${conversation.followup_response},
+      ${conversation.feedback_type},
+      ${conversation.feedback_reasons},
+      ${conversation.idcc},
+      ${conversation.model_name}
+    )
+    RETURNING id
+  `;
+
+  return result[0].id;
+}
+
+/**
+ * Update a conversation with followup Q&A
+ */
+export async function updateConversationFollowup(
+  id: string,
+  followupQuestion: string,
+  followupResponse: string
+): Promise<void> {
+  await sql`
+    UPDATE conversations
+    SET 
+      followup_question = ${followupQuestion},
+      followup_response = ${followupResponse},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+/**
+ * Update a conversation with feedback
+ */
+export async function updateConversationFeedback(
+  id: string,
+  feedbackType: "positive" | "negative",
+  feedbackReasons?: string
+): Promise<void> {
+  await sql`
+    UPDATE conversations
+    SET 
+      feedback_type = ${feedbackType},
+      feedback_reasons = ${feedbackReasons ?? null},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+/**
+ * Get a conversation by ID
+ */
+export async function getConversation(
+  id: string
+): Promise<ConversationRecord | null> {
+  const result = await sql<ConversationRecord[]>`
+    SELECT * FROM conversations WHERE id = ${id}
+  `;
+
+  return result[0] ?? null;
+}

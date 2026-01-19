@@ -25,6 +25,8 @@ interface ChatMessageProps {
   globalResponseTime: number;
   apiError?: string;
   selectedAgreement?: Agreement;
+  /** Database conversation ID for saving feedback */
+  dbConversationId?: string;
 }
 
 export const ChatMessage = ({
@@ -36,6 +38,7 @@ export const ChatMessage = ({
   globalResponseTime,
   apiError,
   selectedAgreement,
+  dbConversationId,
 }: ChatMessageProps) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -179,6 +182,7 @@ export const ChatMessage = ({
             errorMessage={apiError}
             idcc={selectedAgreement?.id}
             isFollowupResponse={message.isFollowup}
+            dbConversationId={dbConversationId}
           />
         </div>
       )}
