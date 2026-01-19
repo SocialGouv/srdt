@@ -17,11 +17,24 @@ export interface ConversationRecord {
 }
 
 /**
+ * Check if database is available
+ */
+export function isDatabaseAvailable(): boolean {
+  return sql !== null;
+}
+
+/**
  * Save a new conversation (initial question + response)
+ * Returns null if database is not available
  */
 export async function saveConversation(
   conversation: Omit<ConversationRecord, "id" | "created_at" | "updated_at">
-): Promise<string> {
+): Promise<string | null> {
+  if (!sql) {
+    console.warn("[conversations] Database not available, skipping save");
+    return null;
+  }
+
   const result = await sql<Array<{ id: string }>>`
     INSERT INTO conversations (
       user_id,
@@ -50,7 +63,7 @@ export async function saveConversation(
   `;
 
   if (!result[0]?.id) {
-    throw new Error('Failed to save conversation: no ID returned');
+    throw new Error("Failed to save conversation: no ID returned");
   }
 
   return result[0].id;
@@ -64,6 +77,11 @@ export async function updateConversationFollowup(
   followupQuestion: string,
   followupResponse: string
 ): Promise<void> {
+  if (!sql) {
+    console.warn("[conversations] Database not available, skipping update");
+    return;
+  }
+
   await sql`
     UPDATE conversations
     SET 
@@ -82,6 +100,11 @@ export async function updateConversationFeedback(
   feedbackType: "positive" | "negative",
   feedbackReasons?: string
 ): Promise<void> {
+  if (!sql) {
+    console.warn("[conversations] Database not available, skipping update");
+    return;
+  }
+
   await sql`
     UPDATE conversations
     SET 
@@ -98,6 +121,11 @@ export async function updateConversationFeedback(
 export async function getConversation(
   id: string
 ): Promise<ConversationRecord | null> {
+  if (!sql) {
+    console.warn("[conversations] Database not available");
+    return null;
+  }
+
   const result = await sql<ConversationRecord[]>`
     SELECT * FROM conversations WHERE id = ${id}
   `;

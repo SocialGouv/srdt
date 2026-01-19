@@ -1,18 +1,24 @@
-import postgres, { type Sql } from "postgres";
+import postgres from "postgres";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    'DATABASE_URL environment variable is required. Please set it in your .env file.'
+// PostgreSQL connection singleton
+// Returns null if DATABASE_URL is not configured
+let sql: ReturnType<typeof postgres> | null = null;
+
+if (process.env.DATABASE_URL) {
+  try {
+    sql = postgres(process.env.DATABASE_URL, {
+      max: 10, // Connection pool size
+      idle_timeout: 30,
+      connect_timeout: 10,
+      onnotice: () => {}, // Suppress PostgreSQL NOTICE messages
+    });
+  } catch (error) {
+    console.warn("[database] Failed to create PostgreSQL connection:", error);
+  }
+} else {
+  console.warn(
+    "[database] DATABASE_URL not set - database features will be disabled"
   );
 }
 
-// PostgreSQL connection singleton
-// Uses DATABASE_URL environment variable
-const sql = postgres(process.env.DATABASE_URL, {
-  max: 10, // Connection pool size
-  idle_timeout: 30,
-  connect_timeout: 10,
-});
-
 export default sql;
-export type { Sql };

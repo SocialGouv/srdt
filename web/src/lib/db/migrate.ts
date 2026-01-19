@@ -7,9 +7,9 @@ import * as path from "path";
  * Tracks applied migrations in a schema_migrations table.
  */
 export async function runMigrations() {
-  // Skip if DATABASE_URL is not configured
-  if (!process.env.DATABASE_URL) {
-    console.log("[migrations] DATABASE_URL not set, skipping migrations");
+  // Skip if database is not available
+  if (!sql) {
+    console.warn("[migrations] Database not available, skipping migrations");
     return;
   }
 

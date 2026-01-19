@@ -5,6 +5,7 @@ import {
   saveConversation,
   updateConversationFollowup,
   updateConversationFeedback,
+  isDatabaseAvailable,
 } from "@/lib/db/conversations";
 import { hashEmailForUserId } from "@/lib/db/hash-user";
 import { ALLOWED_EMAIL_DOMAINS, DOMAIN_TO_DEPARTMENT } from "@/constants";
@@ -55,6 +56,14 @@ interface SaveFeedbackRequest {
 type RequestBody = SaveInitialRequest | SaveFollowupRequest | SaveFeedbackRequest;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Return early if database is not available (non-blocking)
+  if (!isDatabaseAvailable()) {
+    return NextResponse.json({
+      success: false,
+      error: "Database not available",
+    });
+  }
+
   try {
     // Get the authenticated user's session
     const session = await getServerSession(authOptions);
