@@ -21,4 +21,24 @@ if (process.env.DATABASE_URL) {
   );
 }
 
+/**
+ * Gracefully close the database connection pool
+ */
+async function closeDatabase(): Promise<void> {
+  if (sql) {
+    console.log("[database] Closing connection pool...");
+    await sql.end({ timeout: 5 });
+    console.log("[database] Connection pool closed");
+  }
+}
+
+// Register shutdown handlers for graceful cleanup
+const shutdownHandler = async () => {
+  await closeDatabase();
+  process.exit(0);
+};
+
+process.on("SIGTERM", shutdownHandler);
+process.on("SIGINT", shutdownHandler);
+
 export default sql;
