@@ -34,8 +34,8 @@ export function ClientHtml({
       <body>
         <SessionProvider>
           <DsfrProvider lang={lang}>{children}</DsfrProvider>
-          <Matomo />
         </SessionProvider>
+        <Matomo />
       </body>
     </html>
   );

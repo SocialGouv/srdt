@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { signOut } from "next-auth/react";
 import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
 import { AuthorizationCheck } from "@/modules/auth/AuthorizationCheck";
+import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
 
 type Props = {
   children: ReactNode;
@@ -45,6 +46,7 @@ export const LayoutWrapper = ({ children }: Props) => {
   return (
     <>
       <AuthorizationCheck />
+      <MatomoUserTracking />
       <DsfrHeader
         brandTop={
           <>
