@@ -32,4 +32,5 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", "./api/.secrets.baseline"]
-        exclude: ".kontinuous/*|.github/*|.env.example|request.http"
+        # Note: `exclude` is a regex matched against the file path (not a glob).
+        exclude: "(^|/)(\\.kontinuous/|\\.github/)|\\.env\\.example$|request\\.http$|pnpm-lock\\.yaml$"
