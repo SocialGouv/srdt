@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/SocialGouv/srdt/compare/v1.32.4...v1.33.0) (2026-01-19)
+
+
+### Features
+
+* add department and email hash in matomo session ([#297](https://github.com/SocialGouv/srdt/issues/297)) ([82212f2](https://github.com/SocialGouv/srdt/commit/82212f29227a0d092211d36af2cb11fe3b22f248))
+
 ## [1.32.4](https://github.com/SocialGouv/srdt/compare/v1.32.3...v1.32.4) (2026-01-16)
 
 
