@@ -60,18 +60,11 @@ export async function runMigrations() {
       console.log(`[migrations] Applying: ${file}`);
 
       const filePath = path.join(migrationsDir, file);
-      const content = fs.readFileSync(filePath, "utf-8");
 
-      // Extract the "up" portion (before -- migrate:down if present)
-      const upSql = content
-        .split("-- migrate:down")[0]
-        .replace("-- migrate:up", "")
-        .trim();
-
-      // Run the migration in a transaction for atomicity
+      // Run the migration file and record it in a transaction
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await sql.begin(async (sql: any) => {
-        await sql.unsafe(upSql);
+        await sql.file(filePath);
         await sql`INSERT INTO schema_migrations (version) VALUES (${version})`;
       });
 
