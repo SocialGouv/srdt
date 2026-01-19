@@ -99,7 +99,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        try {
         const conversationId = await saveConversation({
           user_id: userId,
           department,
@@ -117,10 +116,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           success: true,
           conversationId,
         });
-        } catch (error) {
-          Sentry.captureException(error);
-          return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
-        }
       }
 
       case "save_followup": {
@@ -137,18 +132,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        try {
-          await updateConversationFollowup(
-            conversationId,
-            followupQuestion,
-            followupResponse
-          );
-  
-          return NextResponse.json({ success: true });
-        } catch (error) {
-          Sentry.captureException(error);
-          return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
-        }
+        await updateConversationFollowup(
+          conversationId,
+          followupQuestion,
+          followupResponse
+        );
+
+        return NextResponse.json({ success: true });
       }
 
       case "save_feedback": {
@@ -174,7 +164,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           );
         }
 
-        try {
         await updateConversationFeedback(
           conversationId,
           feedbackType,
@@ -182,10 +171,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
 
         return NextResponse.json({ success: true });
-        } catch (error) {
-          Sentry.captureException(error);
-          return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
-        }
+
       }
 
       default:
