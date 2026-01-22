@@ -90,3 +90,6 @@ web:
     oblik.socialgouv.io/min-request-memory: 512Mi
     oblik.socialgouv.io/min-limit-cpu: 400m
     oblik.socialgouv.io/min-limit-memory: 1024Mi
+
+pg:
+  ~chart: pg
