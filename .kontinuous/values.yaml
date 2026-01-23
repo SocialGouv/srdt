@@ -23,11 +23,6 @@ api:
         name: www-configmap
     - secretRef:
         name: www-secret
-    - secretRef:
-        name: "pg-app"
-  # env:
-    # - name: DATABASE_URL
-    #   value: "$(uri)"
   resources:
     limits:
       cpu: 800m
@@ -80,9 +75,13 @@ web:
         name: web-configmap
     - secretRef:
         name: web-secret
+    - secretRef:
+        name: pg-app
   env:
     - name: API_BASE_URL
       value: https://api-{{.Values.global.host}}
+    # - name: DATABASE_URL
+    #   value: "$(uri)"
   resources:
     limits:
       cpu: 400m
