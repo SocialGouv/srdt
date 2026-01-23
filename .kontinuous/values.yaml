@@ -23,6 +23,11 @@ api:
         name: www-configmap
     - secretRef:
         name: www-secret
+    - secretRef:
+        name: "pg-app"
+  # env:
+    # - name: DATABASE_URL
+    #   value: "$(uri)"
   resources:
     limits:
       cpu: 800m
