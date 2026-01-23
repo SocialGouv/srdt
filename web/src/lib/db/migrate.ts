@@ -32,11 +32,13 @@ export async function runMigrations() {
 
     // Read migration files from the migrations directory
     const migrationsDir = path.join(process.cwd(), "db", "migrations");
+    console.log("[migrations] Looking for migrations at:", migrationsDir);
 
     if (!fs.existsSync(migrationsDir)) {
       console.log("[migrations] No migrations directory found, skipping");
       return;
     }
+    console.log("[migrations] Migrations directory found");
 
     const files = fs
       .readdirSync(migrationsDir)
