@@ -19,6 +19,30 @@ type SimpleFeedbackProps = {
   errorMessage?: string;
   idcc?: string;
   isFollowupResponse?: boolean;
+  /** Database conversation ID for saving feedback */
+  dbConversationId?: string;
+};
+
+// Helper to save feedback to database
+const saveFeedbackToDb = async (
+  conversationId: string,
+  feedbackType: "positive" | "negative",
+  feedbackReasons?: string
+): Promise<void> => {
+  try {
+    await fetch("/api/conversations/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "save_feedback",
+        conversationId,
+        feedbackType,
+        feedbackReasons,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to save feedback to database:", error);
+  }
 };
 
 export const SimpleFeedback = (props: SimpleFeedbackProps) => {
@@ -39,6 +63,11 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
       "positive",
       props.isFollowupResponse ? "followup" : "initial",
     ]);
+
+    // Save feedback to database
+    if (props.dbConversationId) {
+      saveFeedbackToDb(props.dbConversationId, "positive");
+    }
   };
 
   const handleNegativeFeedback = () => {
@@ -66,6 +95,11 @@ export const SimpleFeedback = (props: SimpleFeedbackProps) => {
     // Join multiple reasons with a separator
     const reasonsString = finalReasons.join(" | ");
     push(["trackEvent", "feedback", "negative", reasonsString]);
+
+    // Save feedback to database
+    if (props.dbConversationId) {
+      saveFeedbackToDb(props.dbConversationId, "negative", reasonsString);
+    }
 
     setSubmitted(true);
   };

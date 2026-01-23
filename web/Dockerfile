@@ -46,6 +46,7 @@ COPY --from=dist --chown=1000:1000 /dep/.next/standalone /app/.next/standalone
 COPY --from=dist --chown=1000:1000 /dep/.next/static /app/.next/static
 COPY --from=dist --chown=1000:1000 /dep/package.json /app/package.json
 COPY --from=dist --chown=1000:1000 /dep/next.config.ts /app/next.config.ts
+COPY --from=dist --chown=1000:1000 /dep/db /app/.next/standalone/db
 
 RUN mkdir -p /app/.next/cache/images && chown -R 1000:1000 /app/.next
 

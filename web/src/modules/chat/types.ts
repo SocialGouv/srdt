@@ -21,4 +21,6 @@ export interface Conversation {
   firstUserQuestion?: string;
   firstAssistantAnswer?: string;
   selectedModel?: string;
+  /** Database conversation ID for tracking (saved to PostgreSQL) */
+  dbConversationId?: string;
 }

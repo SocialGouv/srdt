@@ -14,6 +14,24 @@ import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
 
 const STORAGE_KEY = "chat-conversations";
+
+// Helper to save conversation to database
+const saveConversationToDb = async (
+  action: string,
+  data: Record<string, unknown>
+): Promise<{ success: boolean; conversationId?: string }> => {
+  try {
+    const response = await fetch("/api/conversations/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...data }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to save conversation to database:", error);
+    return { success: false };
+  }
+};
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
 const MAX_CONVERSATIONS_TO_STORE = 30;
@@ -342,11 +360,22 @@ export const Chat = () => {
               hasFailed: true,
             });
           } else {
+            const followupResponseText =
+              result.data?.generated?.text ?? streamingMessageRef.current;
+
+            // Save followup to database if we have a DB conversation ID
+            if (currentConversation?.dbConversationId) {
+              saveConversationToDb("save_followup", {
+                conversationId: currentConversation.dbConversationId,
+                followupQuestion: newMessage,
+                followupResponse: followupResponseText,
+              });
+            }
+
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content:
-                    result.data?.generated?.text ?? streamingMessageRef.current,
+                  content: followupResponseText,
                   role: "assistant",
                   isFollowup: true,
                 },
@@ -356,8 +385,7 @@ export const Chat = () => {
               lastApiError: undefined,
               hasFailed: false,
               isAwaitingFollowup: false, // Followup is complete, no more follow-ups
-              firstAssistantAnswer:
-                result.data?.generated?.text ?? streamingMessageRef.current,
+              firstAssistantAnswer: followupResponseText,
               selectedModel: result.data?.modelName,
             });
           }
@@ -403,11 +431,28 @@ export const Chat = () => {
               hasFailed: true,
             });
           } else {
+            const responseText =
+              result.data?.generated?.text ?? streamingMessageRef.current;
+
+            // Save initial conversation to database
+            saveConversationToDb("save_initial", {
+              question: newMessage,
+              response: responseText,
+              idcc: selectedAgreement?.id,
+              modelName: result.data?.modelName,
+            }).then((saveResult) => {
+              if (saveResult.success && saveResult.conversationId) {
+                // Store the DB conversation ID for later updates (feedback, followup)
+                updateCurrentConversation({
+                  dbConversationId: saveResult.conversationId,
+                });
+              }
+            });
+
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
-                  content:
-                    result.data?.generated?.text ?? streamingMessageRef.current,
+                  content: responseText,
                   role: "assistant",
                 },
               ]),
@@ -416,8 +461,7 @@ export const Chat = () => {
               lastApiError: undefined,
               hasFailed: false,
               isAwaitingFollowup: true, // Set flag to allow follow-up
-              firstAssistantAnswer:
-                result.data?.generated?.text ?? streamingMessageRef.current,
+              firstAssistantAnswer: responseText,
               selectedModel: result.data?.modelName,
             });
           }
@@ -564,6 +608,7 @@ export const Chat = () => {
               globalResponseTime={globalResponseTime}
               apiError={apiError}
               selectedAgreement={selectedAgreement}
+              dbConversationId={currentConversation?.dbConversationId}
             />
           ))}
         </div>
