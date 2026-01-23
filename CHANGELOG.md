@@ -1,3 +1,10 @@
+## [1.34.1](https://github.com/SocialGouv/srdt/compare/v1.34.0...v1.34.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* allow dreets department ([#301](https://github.com/SocialGouv/srdt/issues/301)) ([b9344e6](https://github.com/SocialGouv/srdt/commit/b9344e63ec015018f6b134d45d8760902c159d36))
+
 # [1.34.0](https://github.com/SocialGouv/srdt/compare/v1.33.1...v1.34.0) (2026-01-23)
 
 
