@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/SocialGouv/srdt/compare/v1.33.1...v1.34.0) (2026-01-23)
+
+
+### Features
+
+* save discussion in DB ([#298](https://github.com/SocialGouv/srdt/issues/298)) ([8ca2218](https://github.com/SocialGouv/srdt/commit/8ca221811fbea0c6ad805dbbd002d08447967706))
+
 ## [1.33.1](https://github.com/SocialGouv/srdt/compare/v1.33.0...v1.33.1) (2026-01-19)
 
 
