@@ -42,6 +42,7 @@ export const EMAIL_DOMAIN_CONFIG: { domain: string; department: string }[] = [
   { domain: "beta.gouv.fr", department: "Beta.gouv" },
   { domain: "fabrique.social.gouv.fr", department: "Fabrique Numérique" },
   { domain: "drieets.gouv.fr", department: "DRIEETS" },
+  { domain: "dreets.gouv.fr", department: "DREETS" },
   { domain: "sg.social.gouv.fr", department: "SG Social" },
 ];
 
