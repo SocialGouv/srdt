@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/auth-options";
+import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
 import {
   saveConversation,
   updateConversationFollowup,
@@ -65,8 +64,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    // Get the authenticated user's session
-    const session = await getServerSession(authOptions);
+    // Get the authenticated and authorized user's session
+    const session = await getAuthorizedSession();
 
     if (!session?.user?.email) {
       return NextResponse.json(

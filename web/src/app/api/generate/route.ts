@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { generateAnswer } from "@/modules/api/process";
 import { ApiResponse, AnswerResponse } from "@/types";
 import { Config } from "@/constants";
+import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
 import * as Sentry from "@sentry/nextjs";
 
 interface RequestBody {
@@ -11,6 +12,14 @@ interface RequestBody {
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
+  const session = await getAuthorizedSession();
+  if (!session) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   let body: RequestBody | null = null;
   try {
     body = await request.json();
