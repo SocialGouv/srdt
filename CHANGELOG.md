@@ -1,3 +1,10 @@
+## [1.34.2](https://github.com/SocialGouv/srdt/compare/v1.34.1...v1.34.2) (2026-02-12)
+
+
+### Bug Fixes
+
+* add server-side authorization checks to unprotected API routes ([#302](https://github.com/SocialGouv/srdt/issues/302)) ([060fd93](https://github.com/SocialGouv/srdt/commit/060fd931f56d174e4ee09d926d02a24f92e936b6))
+
 ## [1.34.1](https://github.com/SocialGouv/srdt/compare/v1.34.0...v1.34.1) (2026-01-23)
 
 
