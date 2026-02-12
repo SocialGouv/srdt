@@ -6,6 +6,6 @@ data:
   API_PORT: "3000"
   API_HOST: "0.0.0.0"
   TIKTOKEN_TOKENIZER_MODEL: o200k_base
-  ALBERT_VECTORISATION_MODEL: BAAI/bge-m3
+  ALBERT_VECTORISATION_MODEL: openweight-embeddings
   ALBERT_ENDPOINT: https://albert.api.etalab.gouv.fr
   ELASTIC_HOSTNAME: https://srdt-es-es-internal-http.startup-srdt--elasticsearch-preprod.svc.cluster.local:9200
