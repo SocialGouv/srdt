@@ -1,3 +1,10 @@
+## [1.34.3](https://github.com/SocialGouv/srdt/compare/v1.34.2...v1.34.3) (2026-02-13)
+
+
+### Bug Fixes
+
+* **api:** update Albert model names ([134d375](https://github.com/SocialGouv/srdt/commit/134d375ffde86ef81c856640597440e96e098a71))
+
 ## [1.34.2](https://github.com/SocialGouv/srdt/compare/v1.34.1...v1.34.2) (2026-02-12)
 
 
