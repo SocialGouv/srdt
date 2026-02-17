@@ -20,16 +20,16 @@ def clean_urls(response: str):
             unknown.append(url)
             # case where link looks like ([Source](https://.....))
             if description.lower() in ["source", "lien", "ici"]:
-                # print(f"delete [{description}]({url})")
+                print(f"delete [{description}]({url})")
                 response = response.replace(f"[{description}]({url})", "").replace(
                     "()", ""
                 )
             # case where we want to keep the description in the text
             else:
-                # print(f"replace [{description}]({url}) -> {description}")
+                print(f"replace [{description}]({url}) -> {description}")
                 response = response.replace(f"[{description}]({url})", description)
 
-    # print([cdtn, legifrance, unknown])
+    print([cdtn, legifrance, unknown])
     # print(response)
 
     return response
