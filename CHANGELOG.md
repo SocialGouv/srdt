@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/SocialGouv/srdt/compare/v1.34.3...v1.35.0) (2026-02-17)
+
+
+### Features
+
+* **web:** info about link in progress during streaming ([#306](https://github.com/SocialGouv/srdt/issues/306)) ([9740e3b](https://github.com/SocialGouv/srdt/commit/9740e3b98d829279479acc4566729fe6999d290d))
+
 ## [1.34.3](https://github.com/SocialGouv/srdt/compare/v1.34.2...v1.34.3) (2026-02-13)
 
 
