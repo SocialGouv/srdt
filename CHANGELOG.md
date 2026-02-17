@@ -1,3 +1,10 @@
+## [1.35.1](https://github.com/SocialGouv/srdt/compare/v1.35.0...v1.35.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* **api:** parse urls in response and filter them [#293](https://github.com/SocialGouv/srdt/issues/293) ([a771e9a](https://github.com/SocialGouv/srdt/commit/a771e9a62b13eb151d408e3fa5e2a1ba60b48a14))
+
 # [1.35.0](https://github.com/SocialGouv/srdt/compare/v1.34.3...v1.35.0) (2026-02-17)
 
 
