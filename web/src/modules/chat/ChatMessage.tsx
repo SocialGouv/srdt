@@ -16,6 +16,52 @@ const markdownComponents = {
   ),
 };
 
+const LINK_PLACEHOLDER_TEXT = "Génération du lien en cours\u2026";
+
+/**
+ * During streaming, replaces complete and partial markdown links with a
+ * styled placeholder. This prevents showing incorrect/shifting links while
+ * the backend hasn't yet post-corrected them.
+ */
+function processStreamingLinks(content: string): string {
+  // 1. Replace complete markdown links [text](url)
+  let processed = content.replace(
+    /\[[^\]]*\]\([^)]*\)/g,
+    `*${LINK_PLACEHOLDER_TEXT}*`
+  );
+
+  // 2. Replace partial markdown link at end of streaming content
+  //    Matches: [text](partial…  |  [text](  |  [text]  |  [partial_text
+  processed = processed.replace(
+    /\[[^\]]*(?:\](?:\([^)]*)?)?$/,
+    `*${LINK_PLACEHOLDER_TEXT}*`
+  );
+
+  return processed;
+}
+
+// Markdown components used during streaming: adds special rendering for link placeholders
+const streamingMarkdownComponents = {
+  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props} target="_blank" rel="noopener noreferrer" />
+  ),
+  em: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) => {
+    const childArray = React.Children.toArray(children);
+    const isPlaceholder =
+      childArray.length === 1 &&
+      typeof childArray[0] === "string" &&
+      childArray[0] === LINK_PLACEHOLDER_TEXT;
+
+    if (isPlaceholder) {
+      return <span className={styles.linkPlaceholder}>{children}</span>;
+    }
+    return <em {...props}>{children}</em>;
+  },
+};
+
 interface ChatMessageProps {
   message: ChatMessageType;
   index: number;
@@ -120,9 +166,15 @@ export const ChatMessage = ({
           >
             <Markdown
               remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
+              components={
+                message.isStreaming
+                  ? streamingMarkdownComponents
+                  : markdownComponents
+              }
             >
-              {message.content}
+              {message.isStreaming
+                ? processStreamingLinks(message.content)
+                : message.content}
             </Markdown>
             {(message.isLoading || message.isStreaming) && (
               <div className={fr.cx("fr-mt-1w")}>

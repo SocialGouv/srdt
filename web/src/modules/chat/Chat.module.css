@@ -107,6 +107,27 @@
   border-left: 3px solid var(--border-action-high-blue-france);
 }
 
+.linkPlaceholder {
+  font-style: italic;
+  color: var(--text-mention-grey);
+  background-color: var(--background-alt-grey);
+  padding: 0.1rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  display: inline-block;
+  animation: linkPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes linkPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .copyButtonContainer {
   display: flex;
   justify-content: flex-end;
