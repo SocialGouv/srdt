@@ -235,7 +235,7 @@ class ElasticIndicesHandler:
                 # 60 : constant used in rrf
                 rrf_map[item] += 1 / (rank + 60)
 
-        # dort items based on their RRF scores in descending order
+        # sort items based on their RRF scores in descending order
         sorted_results = sorted(rrf_map.items(), key=lambda x: x[1], reverse=True)
 
         # replace score with rff score

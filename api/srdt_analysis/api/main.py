@@ -36,6 +36,7 @@ from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer
+from srdt_analysis.url_cleaner import clean_urls
 
 load_dotenv()
 
@@ -260,6 +261,8 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
             request.system_prompt,
         )
 
+        response = clean_urls(response)
+
         chat_history_str = " ".join(
             [msg.get("content", "") for msg in request.chat_history]
         )
@@ -318,15 +321,14 @@ async def generate_stream(
                     }
                     yield f"data: {json.dumps(chunk_data)}\n\n"
 
+                cleaned_accumulated = clean_urls(accumulated_response)
                 # Send final metadata
                 final_data = {
                     "type": "end",
                     "time": time.time() - start_time,
-                    "text": accumulated_response,
+                    "text": cleaned_accumulated,
                     "nb_token_input": nb_token_input,
-                    "nb_token_output": tokenizer.compute_nb_tokens(
-                        accumulated_response
-                    ),
+                    "nb_token_output": tokenizer.compute_nb_tokens(cleaned_accumulated),
                 }
                 yield f"data: {json.dumps(final_data)}\n\n"
 
