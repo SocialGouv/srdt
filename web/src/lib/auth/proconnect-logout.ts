@@ -9,7 +9,7 @@
 export function getProConnectLogoutUrl(): string {
   // When CHARON_URL is set (dev branches), route logout through Charon proxy
   if (process.env.NEXT_PUBLIC_CHARON_URL) {
-    return `${process.env.NEXT_PUBLIC_CHARON_URL}/moncompteprotest/oauth/logout`;
+    return `${process.env.NEXT_PUBLIC_CHARON_URL}/proconnecttest/oauth/logout`;
   }
 
   const PROCONNECT_DOMAIN =

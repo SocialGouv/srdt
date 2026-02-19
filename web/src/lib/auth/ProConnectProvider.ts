@@ -36,7 +36,7 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
   // to allow dynamic branch URLs without registering each one in ProConnect.
   // Charon rewrites authorization/token endpoints but keeps userinfo/jwks direct.
   const wellKnownUrl = process.env.CHARON_URL
-    ? `${process.env.CHARON_URL}/moncompteprotest/.well-known/openid-configuration`
+    ? `${process.env.CHARON_URL}/proconnecttest/.well-known/openid-configuration`
     : `${PROCONNECT_DOMAIN}/.well-known/openid-configuration`;
 
   return {
