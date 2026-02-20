@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { ApiResponse, AnswerResponse } from "@/types";
 import * as Sentry from "@sentry/nextjs";
 
 const useApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  }, []);
 
   const generateAnswer = async (
     userQuestion: string,
@@ -58,6 +67,10 @@ const useApi = () => {
     agreementId?: string,
     agreementTitle?: string
   ): Promise<void> => {
+    cancelStream();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate/stream", {
@@ -70,6 +83,7 @@ const useApi = () => {
           agreementId,
           agreementTitle,
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -151,6 +165,9 @@ const useApi = () => {
         reader.releaseLock();
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       setIsLoading(false);
       Sentry.captureException(error, {
         tags: {
@@ -233,6 +250,10 @@ const useApi = () => {
     agreementTitle?: string,
     modelName?: string
   ): Promise<void> => {
+    cancelStream();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate/followup/stream", {
@@ -248,6 +269,7 @@ const useApi = () => {
           agreementTitle,
           modelName,
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -331,6 +353,9 @@ const useApi = () => {
         reader.releaseLock();
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       setIsLoading(false);
       Sentry.captureException(error, {
         tags: {
@@ -359,6 +384,7 @@ const useApi = () => {
     generateFollowupAnswer,
     generateFollowupAnswerStream,
     isLoading,
+    cancelStream,
   };
 };
 

@@ -49,8 +49,12 @@ export const Chat = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-  const { generateAnswerStream, generateFollowupAnswerStream, isLoading } =
-    useApi();
+  const {
+    generateAnswerStream,
+    generateFollowupAnswerStream,
+    isLoading,
+    cancelStream,
+  } = useApi();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
   const [messagesLength, setMessagesLength] = useState(0);
@@ -481,6 +485,8 @@ export const Chat = () => {
   };
 
   const handleNewConversation = () => {
+    cancelStream();
+
     // Check if current conversation is already empty (only has the initial assistant message)
     const currentConv = conversations.find(
       (c) => c.id === currentConversationId
@@ -522,6 +528,7 @@ export const Chat = () => {
   };
 
   const handleConversationSelect = (conversationId: string) => {
+    cancelStream();
     setCurrentConversationId(conversationId);
     setNewMessage("");
     // Don't disable if the conversation is awaiting a follow-up
