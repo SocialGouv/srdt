@@ -1,3 +1,10 @@
+## [1.35.2](https://github.com/SocialGouv/srdt/compare/v1.35.1...v1.35.2) (2026-02-20)
+
+
+### Bug Fixes
+
+* cancel steam and response on new conversation ([#307](https://github.com/SocialGouv/srdt/issues/307)) ([b176f4b](https://github.com/SocialGouv/srdt/commit/b176f4b400e1f87d2ed27dba8ae0c337fab1924a))
+
 ## [1.35.1](https://github.com/SocialGouv/srdt/compare/v1.35.0...v1.35.1) (2026-02-17)
 
 
