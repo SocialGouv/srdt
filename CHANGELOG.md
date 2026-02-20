@@ -1,3 +1,10 @@
+## [1.35.3](https://github.com/SocialGouv/srdt/compare/v1.35.2...v1.35.3) (2026-02-20)
+
+
+### Bug Fixes
+
+* **api:** remove false cdtn references [#293](https://github.com/SocialGouv/srdt/issues/293) ([#309](https://github.com/SocialGouv/srdt/issues/309)) ([36d8e53](https://github.com/SocialGouv/srdt/commit/36d8e53c5693f767081b7d7daf196dfb0e3b3f9c))
+
 ## [1.35.2](https://github.com/SocialGouv/srdt/compare/v1.35.1...v1.35.2) (2026-02-20)
 
 
