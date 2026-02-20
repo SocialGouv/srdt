@@ -6,6 +6,8 @@ data:
   CHATGPT_MODEL_NAME: gpt-4o-2024-11-20
   MISTRAL_MODEL_NAME: mistral-large-latest
   ALBERT_MODEL_NAME: albert-large
-  NEXTAUTH_URL: https://web-srdt-preprod.ovh.fabrique.social.gouv.fr
+  NEXTAUTH_URL: https://web-{{ .Values.global.host }}
   PROCONNECT_ENV: integration
   NEXT_PUBLIC_PROCONNECT_ENV: integration
+  CHARON_URL: https://srdt-charon.ovh.fabrique.social.gouv.fr
+  NEXT_PUBLIC_CHARON_URL: https://srdt-charon.ovh.fabrique.social.gouv.fr
