@@ -244,3 +244,15 @@ class ElasticIndicesHandler:
             return elem
 
         return [update_score(res_dict[id], score) for [id, score] in sorted_results[:k]]
+
+    def check_urls(self, index_name: str, urls: list[str]) -> list[tuple[str, bool]]:
+        response = self.client.search(
+            index=index_name,
+            query={"terms": {"metadata.url.keyword": urls}},
+            size=0,
+            aggregations={"urls": {"terms": {"field": "metadata.url.keyword"}}},
+        )
+
+        buckets = [b["key"] for b in response["aggregations"]["urls"]["buckets"]]
+
+        return [(url, url in buckets) for url in urls]

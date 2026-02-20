@@ -1,5 +1,8 @@
 import regex
 
+from srdt_analysis.constants import CHUNK_INDEX
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
+
 whitelist = [
     "legifrance.gouv.fr",
     "travail-emploi.gouv.fr",
@@ -28,6 +31,8 @@ whitelist = [
     "francetravail.fr",
 ]
 
+es = ElasticIndicesHandler()
+
 
 def to_comparable_path(url: str):
     replaced = url.replace("https://", "").replace("www.", "")
@@ -44,9 +49,27 @@ def clean_urls(response: str):
     pattern = regex.compile(r"\[([^][]+)\](\(((?:[^()]+|(?2))+)\))")
 
     cdtn = []
+    cdtn_error = []
     legifrance = []
     unknown = []
     out_ok = []
+
+    def remove_from_response(resp: str, url: str, description: str):
+        # case where link looks like ([Source](https://.....))
+        if (
+            description.lower()
+            in [
+                "source",
+                "lien",
+                "ici",
+            ]
+            or description.startswith("www")
+            or description.startswith("http")
+        ):
+            return resp.replace(f"[{description}]({url})", "").replace("()", "")
+        # case where we want to keep the description in the text
+        else:
+            return resp.replace(f"[{description}]({url})", description)
 
     for match in pattern.finditer(response):
         description, _, url = match.groups()
@@ -54,7 +77,12 @@ def clean_urls(response: str):
         # print(f"{description}: {url}")
         path = to_comparable_path(url)
         if path.startswith("code.travail.gouv.fr"):
-            cdtn.append(url)
+            check = es.check_urls(CHUNK_INDEX, [url])
+            if url != "https://code.travail.gouv.fr/" and not check[0][1]:
+                cdtn_error.append(url)
+                response = remove_from_response(response, url, description)
+            else:
+                cdtn.append(url)
 
         elif path in whitelist:
             out_ok.append(url)
@@ -66,22 +94,6 @@ def clean_urls(response: str):
             else:
                 unknown.append(url)
 
-            # case where link looks like ([Source](https://.....))
-            if (
-                description.lower()
-                in [
-                    "source",
-                    "lien",
-                    "ici",
-                ]
-                or description.startswith("www")
-                or description.startswith("http")
-            ):
-                response = response.replace(f"[{description}]({url})", "").replace(
-                    "()", ""
-                )
-            # case where we want to keep the description in the text
-            else:
-                response = response.replace(f"[{description}]({url})", description)
+            response = remove_from_response(response, url, description)
 
     return response
