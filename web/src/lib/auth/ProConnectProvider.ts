@@ -32,11 +32,18 @@ export default function ProConnectProvider<P extends ProConnectProfile>(
       ? "https://auth.agentconnect.gouv.fr/api/v2"
       : "https://fca.integ01.dev-agentconnect.fr/api/v2";
 
+  // When CHARON_URL is set (dev branches), route OAuth discovery through Charon proxy
+  // to allow dynamic branch URLs without registering each one in ProConnect.
+  // Charon rewrites authorization/token endpoints but keeps userinfo/jwks direct.
+  const wellKnownUrl = process.env.CHARON_URL
+    ? `${process.env.CHARON_URL}/proconnecttest/.well-known/openid-configuration`
+    : `${PROCONNECT_DOMAIN}/.well-known/openid-configuration`;
+
   return {
     id: "proconnect",
     name: "ProConnect",
     type: "oauth",
-    wellKnown: `${PROCONNECT_DOMAIN}/.well-known/openid-configuration`,
+    wellKnown: wellKnownUrl,
     authorization: {
       params: {
         // ProConnect requires individual scopes for each claim
