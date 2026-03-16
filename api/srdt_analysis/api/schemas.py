@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -87,6 +87,7 @@ class ChunkMetadata(BaseModel):
     id: str
     source: CollectionName
     idcc: Optional[str] = None
+    articles: Optional[list[Dict[str, str]]]
 
 
 class ChunkResult(BaseModel):

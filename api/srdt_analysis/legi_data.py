@@ -1,18 +1,37 @@
 import json
 import os
+import pprint
+from typing import Optional
 
 from dotenv import load_dotenv
 
+from srdt_analysis.constants import CHUNK_INDEX
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.chunker import Chunker
 from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.data_exploiter_embed import make_batches
 from srdt_analysis.models import Chunk, DocumentData
 
 uri = "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050"
+
+articles_uri = "https://www.legifrance.gouv.fr/codes/article_lc"
+
 chunker = Chunker()
 
 load_dotenv()
 albert = AlbertCollectionHandler()
+
+elastic = ElasticIndicesHandler()
+
+
+def get_articles(node):
+    articles = []
+    for c in node["children"]:
+        if "num" in c["data"]:
+            articles.append(
+                {"num": c["data"]["num"], "url": f"{articles_uri}/{c["data"]["id"]}"}
+            )
+    return articles
 
 
 def get_text_flat(node):
@@ -45,8 +64,10 @@ def recursive_lookup(path, node) -> list[DocumentData]:
     # if any of its children is an article, we flatten them and select the node
     elif next(c["type"] == "article" for c in node["children"]):
         text = " \n ".join(get_text_flat(node))
+        articles = get_articles(node)
         return [
             {
+                "articles": articles,
                 # todo
                 "cdtn_id": data["cid"],
                 "initial_id": data["cid"],
@@ -85,6 +106,7 @@ def get_legi_data_chunked() -> list[Chunk]:
                     "id": doc["cdtn_id"],
                     "embedding": None,
                     "metadata": {
+                        "articles": doc["articles"],
                         "idx": idx,
                         "id": doc["cdtn_id"],
                         "initial_id": doc["initial_id"],
@@ -101,9 +123,23 @@ def get_legi_data_chunked() -> list[Chunk]:
 
     for docs in batches:
         contents = [doc["content"] for doc in docs]
-        embeddings = albert.embeddings(contents)
+        # embeddings = albert.embeddings(contents)
+        embeddings = []
 
         for doc, emb in zip(docs, embeddings):
             doc["embedding"] = emb  # type: ignore
 
     return chunk_list
+
+
+def get_article_url(num: str) -> Optional[str]:
+    node = elastic.get_article_node(CHUNK_INDEX, num)
+
+    pprint.pprint(node[0])
+
+    if len(node) < 1 or node[0]["metadata"]["articles"] == None:
+        return None
+
+    else:
+        res = list(filter(lambda a: a["num"] == num, node[0]["metadata"]["articles"]))
+        return res[0]["url"]

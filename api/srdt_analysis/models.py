@@ -51,6 +51,7 @@ class DocumentData(TypedDict):
     source: CollectionName
     content_chunked: list[SplitDocument]
     idcc: Optional[str]
+    articles: Optional[list[JSONDict]]
 
 
 ListOfDocumentData = list[DocumentData]
@@ -161,6 +162,7 @@ class ChunkMetadata(TypedDict):
     idcc: Optional[str]
     idx: int
     initial_id: Optional[str]
+    articles: Optional[list[JSONDict]]
 
 
 @dataclass

@@ -90,6 +90,12 @@ class ElasticIndicesHandler:
         return new_name
 
     def swap_aliases(self, index_name, alias):
+        print(
+            [
+                {"remove": {"alias": index_name, "index": f"{index_name}*"}},
+                {"add": {"alias": index_name, "index": alias}},
+            ]
+        )
         self.client.indices.update_aliases(
             actions=[
                 {"remove": {"alias": index_name, "index": f"{index_name}-*"}},
@@ -190,6 +196,15 @@ class ElasticIndicesHandler:
             query={"terms": {"metadata.id.keyword": doc_ids}},
             size=1000,
             source_includes=["content", "metadata"],
+        )
+        return [hit["_source"] for hit in response["hits"]["hits"]]
+
+    def get_article_node(self, index_name: str, num: str):
+        response = self.client.search(
+            index=index_name,
+            query={"term": {"metadata.articles.num.keyword": num}},
+            size=1,
+            source_includes=["metadata.articles"],
         )
         return [hit["_source"] for hit in response["hits"]["hits"]]
 
