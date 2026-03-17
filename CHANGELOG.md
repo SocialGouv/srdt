@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/SocialGouv/srdt/compare/v1.35.3...v1.36.0) (2026-03-17)
+
+
+### Features
+
+* **chat:** allow up to 5 follow-up questions per conversation ([#311](https://github.com/SocialGouv/srdt/issues/311)) ([9a7cc1f](https://github.com/SocialGouv/srdt/commit/9a7cc1f307ccd96920d8852c7d5c738fc532b9d2))
+
 ## [1.35.3](https://github.com/SocialGouv/srdt/compare/v1.35.2...v1.35.3) (2026-02-20)
 
 
