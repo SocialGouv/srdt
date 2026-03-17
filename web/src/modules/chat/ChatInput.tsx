@@ -6,7 +6,6 @@ import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
 import { Agreement } from "../convention-collective/search";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import { Conversation, ChatMessage } from "./types";
-import { MAX_FOLLOWUP_QUESTIONS } from "@/constants";
 import styles from "./Chat.module.css";
 
 interface ChatInputProps {
@@ -91,19 +90,14 @@ export const ChatInput = ({
           />
         </div>
       )}
-      {currentConversation?.isAwaitingFollowup && !isDisabled && (() => {
-        const remaining = MAX_FOLLOWUP_QUESTIONS - (currentConversation?.followupCount ?? 0);
-        const plural = remaining > 1;
-        return (
-          <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
-            <div className={styles.followupInfo}>
-              💡 Vous pouvez poser une question de suivi pour approfondir cette
-              réponse, ou démarrer une nouvelle conversation.
-              {` (${remaining} relance${plural ? "s" : ""} restante${plural ? "s" : ""})`}
-            </div>
+      {currentConversation?.isAwaitingFollowup && !isDisabled && (
+        <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
+          <div className={styles.followupInfo}>
+            💡 Vous pouvez poser une question de suivi pour approfondir cette
+            réponse, ou démarrer une nouvelle conversation.
           </div>
-        );
-      })()}
+        </div>
+      )}
     </form>
   );
 };
