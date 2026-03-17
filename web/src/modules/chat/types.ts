@@ -21,6 +21,8 @@ export interface Conversation {
   firstUserQuestion?: string;
   firstAssistantAnswer?: string;
   selectedModel?: string;
+  /** Number of follow-up questions asked in this conversation */
+  followupCount?: number;
   /** Database conversation ID for tracking (saved to PostgreSQL) */
   dbConversationId?: string;
 }

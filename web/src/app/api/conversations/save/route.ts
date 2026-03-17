@@ -105,6 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           response,
           followup_question: null,
           followup_response: null,
+          followup_exchanges: null,
           feedback_type: null,
           feedback_reasons: null,
           idcc: idcc ?? null,

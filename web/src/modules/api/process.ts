@@ -8,6 +8,7 @@ import {
   createFollowupChatHistory,
   createFollowupIdccChatHistory,
   createKnowledgeBaseContent,
+  ConversationHistoryEntry,
 } from "./prompt-builders";
 import {
   PreparedQuestionData,
@@ -104,16 +105,17 @@ async function getGenerateData(
 
 // Get generate data for follow-up questions
 async function getFollowupGenerateData(
-  query1: string,
-  answer1: string,
-  query2: string,
+  originalQuery: string,
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
   providedModel?: LLMModel
 ) {
+  // RAG search still uses only original query + new question (2 queries)
   const preparedData = await prepareFollowupQuestionData(
-    query1,
-    query2,
+    originalQuery,
+    newQuestion,
     requiredConfig,
     idcc,
     providedModel
@@ -143,9 +145,10 @@ async function getFollowupGenerateData(
   );
 
   // Determine system prompt based on whether IDCC is provided
+  // LLM receives the full conversation history for coherent responses
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createFollowupIdccChatHistory(query1, answer1, query2),
+        chatHistory: createFollowupIdccChatHistory(conversationHistory, newQuestion),
         systemPrompt:
           (preparedData.instructions.generate_followup_instruction_idcc?.replace(
             "[URL_convention_collective]",
@@ -155,7 +158,7 @@ async function getFollowupGenerateData(
           knowledgeBaseContent,
       }
     : {
-        chatHistory: createFollowupChatHistory(query1, answer1, query2),
+        chatHistory: createFollowupChatHistory(conversationHistory, newQuestion),
         systemPrompt:
           (preparedData.instructions.generate_followup_instruction || "") +
           "\n\n" +
@@ -273,9 +276,9 @@ export const generateAnswerStream = async (
 
 // Generate follow-up answer (non-streaming)
 export const generateFollowupAnswer = async (
-  query1: string,
-  answer1: string,
-  query2: string,
+  originalQuery: string,
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
   providedModel?: LLMModel
@@ -289,9 +292,9 @@ export const generateFollowupAnswer = async (
       allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
-      query1,
-      answer1,
-      query2,
+      originalQuery,
+      conversationHistory,
+      newQuestion,
       requiredConfig,
       idcc,
       providedModel
@@ -336,9 +339,9 @@ export const generateFollowupAnswer = async (
 
 // Generate follow-up answer (streaming)
 export const generateFollowupAnswerStream = async (
-  query1: string,
-  answer1: string,
-  query2: string,
+  originalQuery: string,
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string,
   onChunk: (chunk: string) => void,
   onComplete: (result: ApiResponse<AnswerResponse>) => void,
   requiredConfig?: Config,
@@ -354,9 +357,9 @@ export const generateFollowupAnswerStream = async (
       allCodeDuTravailChunks,
       allIdccChunks,
     } = await getFollowupGenerateData(
-      query1,
-      answer1,
-      query2,
+      originalQuery,
+      conversationHistory,
+      newQuestion,
       requiredConfig,
       idcc,
       providedModel

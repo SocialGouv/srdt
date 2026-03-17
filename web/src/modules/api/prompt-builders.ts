@@ -69,42 +69,50 @@ export const createIdccChatHistory = (query: string) => [
   },
 ];
 
-// Helper to create follow-up chat history with context from previous conversation
+export interface ConversationHistoryEntry {
+  question: string;
+  answer: string;
+}
+
+// Helper to create follow-up chat history with full conversation context
 export const createFollowupChatHistory = (
-  query1: string,
-  answer1: string,
-  query2: string
-) => [
-  {
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string
+) => {
+  const messages: { role: "user" | "assistant"; content: string }[] = [];
+
+  conversationHistory.forEach((entry, index) => {
+    if (index === 0) {
+      messages.push({
+        role: "user" as const,
+        content: `Contexte - Question initiale: "${entry.question}"`,
+      });
+      messages.push({
+        role: "assistant" as const,
+        content: `Première réponse: "${entry.answer}"`,
+      });
+    } else {
+      messages.push({
+        role: "user" as const,
+        content: `Question de suivi: "${entry.question}"`,
+      });
+      messages.push({
+        role: "assistant" as const,
+        content: `Réponse: "${entry.answer}"`,
+      });
+    }
+  });
+
+  messages.push({
     role: "user" as const,
-    content: `Contexte - Question initiale: "${query1}"`,
-  },
-  {
-    role: "assistant" as const,
-    content: `Première réponse: "${answer1}"`,
-  },
-  {
-    role: "user" as const,
-    content: `Nouvelle question ou retour: "${query2}"`,
-  },
-];
+    content: `Nouvelle question ou retour: "${newQuestion}"`,
+  });
+
+  return messages;
+};
 
 // Helper to create follow-up IDCC chat history
 export const createFollowupIdccChatHistory = (
-  query1: string,
-  answer1: string,
-  query2: string
-) => [
-  {
-    role: "user" as const,
-    content: `Contexte - Question initiale: "${query1}"`,
-  },
-  {
-    role: "assistant" as const,
-    content: `Première réponse: "${answer1}"`,
-  },
-  {
-    role: "user" as const,
-    content: `Nouvelle question ou retour: "${query2}"`,
-  },
-];
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string
+) => createFollowupChatHistory(conversationHistory, newQuestion);

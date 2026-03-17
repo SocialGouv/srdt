@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
-import { Conversation } from "./types";
+import { Conversation, ChatMessage as ChatMessageType } from "./types";
 import useApi from "@/hooks/use-api";
+import { MAX_FOLLOWUP_QUESTIONS } from "@/constants";
 import styles from "./Chat.module.css";
 import { Agreement } from "../convention-collective/search";
 import { ChatHistory } from "./ChatHistory";
@@ -32,6 +33,30 @@ const saveConversationToDb = async (
     return { success: false };
   }
 };
+// Build conversation history (Q&A pairs) from messages, filtering out greeting, loading, errors
+const buildConversationHistory = (
+  messages: ChatMessageType[]
+): { question: string; answer: string }[] => {
+  const history: { question: string; answer: string }[] = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (
+      msg.role === "user" &&
+      i + 1 < messages.length &&
+      messages[i + 1].role === "assistant" &&
+      !messages[i + 1].isError &&
+      !messages[i + 1].isLoading &&
+      !messages[i + 1].isStreaming
+    ) {
+      history.push({
+        question: msg.content,
+        answer: messages[i + 1].content,
+      });
+    }
+  }
+  return history;
+};
+
 const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
 const MAX_CONVERSATIONS_TO_STORE = 30;
@@ -93,6 +118,7 @@ export const Chat = () => {
           createdAt: new Date(),
           hasFailed: false,
           isAwaitingFollowup: false,
+          followupCount: 0,
           selectedModel: undefined,
         };
 
@@ -102,6 +128,7 @@ export const Chat = () => {
             ({
               ...conv,
               isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
+              followupCount: conv.followupCount ?? 0,
               firstUserQuestion: conv.firstUserQuestion ?? undefined,
               firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
               selectedModel: conv.selectedModel ?? undefined,
@@ -208,6 +235,7 @@ export const Chat = () => {
       createdAt: new Date(),
       hasFailed: false,
       isAwaitingFollowup: false,
+      followupCount: 0,
       selectedModel: undefined,
     };
     setConversations([defaultConversation]);
@@ -325,10 +353,13 @@ export const Chat = () => {
     streamingMessageRef.current = "";
 
     if (isFollowupQuestion) {
+      // Build conversation history from messages
+      const conversationHistory = buildConversationHistory(messages);
+
       // Use follow-up streaming
       await generateFollowupAnswerStream(
         currentConversation.firstUserQuestion!,
-        currentConversation.firstAssistantAnswer!,
+        conversationHistory,
         newMessage,
         (chunk: string) => {
           // Handle each streaming chunk
@@ -376,6 +407,11 @@ export const Chat = () => {
               });
             }
 
+            const newFollowupCount =
+              (currentConversation?.followupCount ?? 0) + 1;
+            const hasMoreFollowups =
+              newFollowupCount < MAX_FOLLOWUP_QUESTIONS;
+
             updateCurrentConversation({
               messages: currentMessages.concat([
                 {
@@ -388,12 +424,14 @@ export const Chat = () => {
               lastResponseTime: responseTimeInSeconds,
               lastApiError: undefined,
               hasFailed: false,
-              isAwaitingFollowup: false, // Followup is complete, no more follow-ups
-              firstAssistantAnswer: followupResponseText,
+              isAwaitingFollowup: hasMoreFollowups,
+              followupCount: newFollowupCount,
               selectedModel: result.data?.modelName,
             });
           }
-          setIsDisabled(true); // Disable after follow-up is complete (max 2 questions per conversation)
+          const newFollowupCountForDisable =
+            (currentConversation?.followupCount ?? 0) + 1;
+          setIsDisabled(newFollowupCountForDisable >= MAX_FOLLOWUP_QUESTIONS);
         },
         selectedAgreement?.id,
         selectedAgreement?.title,
@@ -507,7 +545,8 @@ export const Chat = () => {
       messages: [{ content: initialConversationText, role: "assistant" }],
       createdAt: new Date(),
       hasFailed: false,
-      isAwaitingFollowup: false, // Ensure new conversations are not awaiting follow-up
+      isAwaitingFollowup: false,
+      followupCount: 0,
       selectedModel: undefined,
     };
 
@@ -531,11 +570,20 @@ export const Chat = () => {
     cancelStream();
     setCurrentConversationId(conversationId);
     setNewMessage("");
-    // Don't disable if the conversation is awaiting a follow-up
     const selectedConversation = conversations.find(
       (c) => c.id === conversationId
     );
-    setIsDisabled(!selectedConversation?.isAwaitingFollowup);
+    // Disable only if conversation has started and either:
+    // - not awaiting followup (failed or completed), or
+    // - followup limit reached
+    const hasStarted = selectedConversation?.messages.some(
+      (m) => m.role === "user"
+    );
+    const atLimit =
+      hasStarted &&
+      (!selectedConversation?.isAwaitingFollowup ||
+        (selectedConversation?.followupCount ?? 0) >= MAX_FOLLOWUP_QUESTIONS);
+    setIsDisabled(!!atLimit);
     streamingMessageRef.current = "";
   };
 

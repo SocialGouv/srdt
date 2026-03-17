@@ -1,5 +1,11 @@
 import sql from "./postgres";
 
+export interface FollowupExchange {
+  question: string;
+  response: string;
+  created_at: string;
+}
+
 export interface ConversationRecord {
   id?: string;
   user_id: string;
@@ -8,6 +14,7 @@ export interface ConversationRecord {
   response: string;
   followup_question: string | null;
   followup_response: string | null;
+  followup_exchanges: FollowupExchange[] | null;
   feedback_type: "positive" | "negative" | null;
   feedback_reasons: string | null;
   idcc: string | null;
@@ -43,6 +50,7 @@ export async function saveConversation(
       response,
       followup_question,
       followup_response,
+      followup_exchanges,
       feedback_type,
       feedback_reasons,
       idcc,
@@ -54,6 +62,7 @@ export async function saveConversation(
       ${conversation.response},
       ${conversation.followup_question},
       ${conversation.followup_response},
+      ${conversation.followup_exchanges ? JSON.stringify(conversation.followup_exchanges) : null},
       ${conversation.feedback_type},
       ${conversation.feedback_reasons},
       ${conversation.idcc},
@@ -71,6 +80,7 @@ export async function saveConversation(
 
 /**
  * Update a conversation with followup Q&A
+ * Appends to the followup_exchanges JSONB array and also writes to legacy columns for compatibility
  */
 export async function updateConversationFollowup(
   id: string,
@@ -82,11 +92,18 @@ export async function updateConversationFollowup(
     return;
   }
 
+  const newExchange = JSON.stringify({
+    question: followupQuestion,
+    response: followupResponse,
+    created_at: new Date().toISOString(),
+  });
+
   await sql`
     UPDATE conversations
-    SET 
+    SET
       followup_question = ${followupQuestion},
       followup_response = ${followupResponse},
+      followup_exchanges = COALESCE(followup_exchanges, '[]'::jsonb) || ${newExchange}::jsonb,
       updated_at = NOW()
     WHERE id = ${id}
   `;
