@@ -189,9 +189,9 @@ const useApi = () => {
   };
 
   const generateFollowupAnswer = async (
-    query1: string,
-    answer1: string,
-    query2: string,
+    originalQuery: string,
+    conversationHistory: { question: string; answer: string }[],
+    newQuestion: string,
     agreementId?: string,
     agreementTitle?: string,
     modelName?: string
@@ -204,9 +204,9 @@ const useApi = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query1,
-          answer1,
-          query2,
+          originalQuery,
+          conversationHistory,
+          newQuestion,
           agreementId,
           agreementTitle,
           modelName,
@@ -215,7 +215,6 @@ const useApi = () => {
 
       const result: ApiResponse<AnswerResponse> = await response.json();
       setIsLoading(false);
-      // console.log(result);
       return result;
     } catch (error) {
       setIsLoading(false);
@@ -225,11 +224,11 @@ const useApi = () => {
           method: "generateFollowupAnswer",
         },
         extra: {
-          query1: query1,
-          query2: query2,
-          agreementId: agreementId,
-          agreementTitle: agreementTitle,
-          modelName: modelName,
+          originalQuery,
+          newQuestion,
+          agreementId,
+          agreementTitle,
+          modelName,
         },
       });
       return {
@@ -241,9 +240,9 @@ const useApi = () => {
   };
 
   const generateFollowupAnswerStream = async (
-    query1: string,
-    answer1: string,
-    query2: string,
+    originalQuery: string,
+    conversationHistory: { question: string; answer: string }[],
+    newQuestion: string,
     onChunk: (chunk: string) => void,
     onComplete: (result: ApiResponse<AnswerResponse>) => void,
     agreementId?: string,
@@ -262,9 +261,9 @@ const useApi = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query1,
-          answer1,
-          query2,
+          originalQuery,
+          conversationHistory,
+          newQuestion,
           agreementId,
           agreementTitle,
           modelName,
@@ -333,8 +332,8 @@ const useApi = () => {
                   },
                   extra: {
                     line: line,
-                    query1: query1,
-                    query2: query2,
+                    originalQuery,
+                    newQuestion,
                     streamingStep: "parse_streaming_data",
                     modelName: modelName,
                   },
@@ -363,11 +362,11 @@ const useApi = () => {
           method: "generateFollowupAnswerStream",
         },
         extra: {
-          query1: query1,
-          query2: query2,
-          agreementId: agreementId,
-          agreementTitle: agreementTitle,
-          modelName: modelName,
+          originalQuery,
+          newQuestion,
+          agreementId,
+          agreementTitle,
+          modelName,
         },
       });
       onComplete({

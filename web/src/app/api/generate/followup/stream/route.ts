@@ -2,12 +2,13 @@ import { NextRequest } from "next/server";
 import { generateFollowupAnswerStream } from "@/modules/api/process";
 import { Config, getModelByName } from "@/constants";
 import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
+import { ConversationHistoryEntry } from "@/modules/api/prompt-builders";
 import * as Sentry from "@sentry/nextjs";
 
 interface FollowupRequestBody {
-  query1: string;
-  answer1: string;
-  query2: string;
+  originalQuery: string;
+  conversationHistory: ConversationHistoryEntry[];
+  newQuestion: string;
   config?: Config;
   agreementId?: string;
   modelName?: string;
@@ -24,13 +25,28 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const body: FollowupRequestBody = await request.json();
-    const { query1, answer1, query2, config, agreementId, modelName } = body;
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, modelName } = body;
 
-    if (!query1 || !answer1 || !query2) {
+    if (!originalQuery || !conversationHistory || !newQuestion) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "query1, answer1, and query2 are required",
+          error: "originalQuery, conversationHistory, and newQuestion are required",
+        }),
+        {
+          status: 422,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    if (!Array.isArray(conversationHistory) || conversationHistory.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "conversationHistory must be a non-empty array",
         }),
         {
           status: 422,
@@ -80,9 +96,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     const stream = new ReadableStream({
       start(controller) {
         generateFollowupAnswerStream(
-          query1,
-          answer1,
-          query2,
+          originalQuery,
+          conversationHistory,
+          newQuestion,
           (chunk: string) => {
             // Send each chunk as Server-Sent Events
             const data = JSON.stringify({ type: "chunk", content: chunk });
@@ -117,9 +133,9 @@ export async function POST(request: NextRequest): Promise<Response> {
             },
             extra: {
               method: "POST",
-              hasQuery1: !!query1,
-              hasAnswer1: !!answer1,
-              hasQuery2: !!query2,
+              hasOriginalQuery: !!originalQuery,
+              hasConversationHistory: !!conversationHistory,
+              hasNewQuestion: !!newQuestion,
               config: config,
               agreementId: agreementId,
             },

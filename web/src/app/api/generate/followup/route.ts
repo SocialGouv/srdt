@@ -3,12 +3,13 @@ import { generateFollowupAnswer } from "@/modules/api/process";
 import { ApiResponse, AnswerResponse } from "@/types";
 import { Config, getModelByName } from "@/constants";
 import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
+import { ConversationHistoryEntry } from "@/modules/api/prompt-builders";
 import * as Sentry from "@sentry/nextjs";
 
 interface FollowupRequestBody {
-  query1: string;
-  answer1: string;
-  query2: string;
+  originalQuery: string;
+  conversationHistory: ConversationHistoryEntry[];
+  newQuestion: string;
   config?: Config;
   agreementId?: string;
   modelName?: string;
@@ -26,14 +27,29 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: FollowupRequestBody | null = null;
   try {
     body = await request.json();
-    const { query1, answer1, query2, config, agreementId, modelName } =
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, modelName } =
       body as FollowupRequestBody;
 
-    if (!query1 || !answer1 || !query2) {
+    if (!originalQuery || !conversationHistory || !newQuestion) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "query1, answer1, and query2 are required",
+          error: "originalQuery, conversationHistory, and newQuestion are required",
+        } as ApiResponse<never>),
+        {
+          status: 422,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    if (!Array.isArray(conversationHistory) || conversationHistory.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "conversationHistory must be a non-empty array",
         } as ApiResponse<never>),
         {
           status: 422,
@@ -80,9 +96,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     const result: ApiResponse<AnswerResponse> = await generateFollowupAnswer(
-      query1,
-      answer1,
-      query2,
+      originalQuery,
+      conversationHistory,
+      newQuestion,
       config,
       agreementId,
       providedModel
@@ -113,9 +129,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       },
       extra: {
         method: "POST",
-        hasQuery1: !!body?.query1,
-        hasAnswer1: !!body?.answer1,
-        hasQuery2: !!body?.query2,
+        hasOriginalQuery: !!body?.originalQuery,
+        hasConversationHistory: !!body?.conversationHistory,
+        hasNewQuestion: !!body?.newQuestion,
         config: body?.config,
         agreementId: body?.agreementId,
       },
