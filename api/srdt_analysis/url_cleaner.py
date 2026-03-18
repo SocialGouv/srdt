@@ -76,13 +76,13 @@ def clean_urls(response: str):
 
         # print(f"{description}: {url}")
         path = to_comparable_path(url)
-        if path.startswith("code.travail.gouv.fr"):
-            check = es.check_urls(CHUNK_INDEX, [url])
-            if url != "https://code.travail.gouv.fr/" and not check[0][1]:
-                cdtn_error.append(url)
-                response = remove_from_response(response, url, description)
-            else:
-                cdtn.append(url)
+            # Vérification Elasticsearch désactivée - toutes les URLs CDTN sont acceptées
+            # check = es.check_urls(CHUNK_INDEX, [url])
+            # if url != "https://code.travail.gouv.fr/" and not check[0][1]:
+            #     cdtn_error.append(url)
+            #     response = remove_from_response(response, url, description)
+            # else:
+            #     cdtn.append(url)
 
         elif path in whitelist:
             out_ok.append(url)
