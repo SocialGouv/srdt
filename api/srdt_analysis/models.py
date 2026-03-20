@@ -179,7 +179,7 @@ class RankedChunk(TypedDict):
 
 @dataclass
 class RerankedChunk(TypedDict):
-    score: float
+    relevance_score: float
     index: int
 
 

@@ -131,11 +131,11 @@ class AlbertCollectionHandler:
         response = httpx.post(
             f"{self.base_url}/v1/rerank",
             headers=self.headers,
-            json={"prompt": prompt, "input": input, "model": ALBERT_RERANK_MODEL},
+            json={"query": prompt, "documents": input, "model": ALBERT_RERANK_MODEL},
         )
         result = response.json()
 
-        return result.get("data", [])
+        return result.get("results", [])
 
     def upload(
         self,

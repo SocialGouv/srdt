@@ -194,7 +194,7 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
         zipped = list(
             zip(
                 [rr["index"] for rr in sorted_res],
-                [rr["score"] for rr in sorted_res],
+                [rr["relevance_score"] for rr in sorted_res],
                 request.inputs,
             )
         )
