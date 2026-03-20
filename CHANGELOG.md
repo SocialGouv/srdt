@@ -1,3 +1,10 @@
+## [1.36.1](https://github.com/SocialGouv/srdt/compare/v1.36.0...v1.36.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* **api:** adapt Albert rerank API to breaking change introduced in 0.4.1 ([ec5daf6](https://github.com/SocialGouv/srdt/commit/ec5daf60bed19d41bf66091f19951826b1c10c5a))
+
 # [1.36.0](https://github.com/SocialGouv/srdt/compare/v1.35.3...v1.36.0) (2026-03-17)
 
 
