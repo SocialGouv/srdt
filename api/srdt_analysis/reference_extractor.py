@@ -1,4 +1,5 @@
 import re
+from typing import Optional, TypedDict
 
 from nltk.tokenize import TreebankWordTokenizer
 
@@ -141,7 +142,12 @@ def identify_codes(tokens: list[str], predictions: list[str]) -> list[str]:
     return resolved
 
 
-def extract_references(text: str) -> list[dict]:
+class Reference(TypedDict):
+    code: Optional[dict]
+    text: str
+
+
+def extract_references(text: str) -> list[Reference]:
     tokens = treebank_tokenize(text)
     predictions = classify_tokens(tokens)
     predictions = identify_codes(tokens, predictions)

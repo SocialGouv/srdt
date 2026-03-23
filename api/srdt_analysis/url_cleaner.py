@@ -2,6 +2,7 @@ import regex
 
 from srdt_analysis.constants import CHUNK_INDEX
 from srdt_analysis.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.reference_extractor import CODE_TRAVAIL, extract_references
 
 whitelist = [
     "legifrance.gouv.fr",
@@ -95,5 +96,28 @@ def clean_urls(response: str):
                 unknown.append(url)
 
             response = remove_from_response(response, url, description)
+
+    # extract article references in plain text
+    references = extract_references(response)
+
+    for ref in filter(
+        lambda r: r["code"] is None or r["code"] == CODE_TRAVAIL, references
+    ):
+        text = ref["text"]
+        # reformat text, as references are stored in the simplest form, and we look for an exact match
+        f_text = text.replace(".", "").replace(" ", "")
+
+        # look for the reference in our index (stored as nodes)
+        nodes = es.get_article_node(CHUNK_INDEX, f_text)
+
+        if len(nodes) > 0:
+            # look for the actual reference in the node
+            found = next(
+                (n for n in nodes[0]["metadata"]["articles"] if n["num"] == f_text),
+                None,
+            )
+            if found is not None:
+                # replace the reference with an actual link
+                response = response.replace(text, f"[{text}]({found['url']})")
 
     return response

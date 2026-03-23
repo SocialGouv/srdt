@@ -1,15 +1,14 @@
 import json
 import os
-import pprint
 from typing import Optional
 
 from dotenv import load_dotenv
 
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.chunker import Chunker
 from srdt_analysis.collections import AlbertCollectionHandler
+from srdt_analysis.constants import CHUNK_INDEX
 from srdt_analysis.data_exploiter_embed import make_batches
+from srdt_analysis.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.models import Chunk, DocumentData
 
 uri = "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050"
@@ -29,7 +28,7 @@ def get_articles(node):
     for c in node["children"]:
         if "num" in c["data"]:
             articles.append(
-                {"num": c["data"]["num"], "url": f"{articles_uri}/{c["data"]["id"]}"}
+                {"num": c["data"]["num"], "url": f"{articles_uri}/{c['data']['id']}"}
             )
     return articles
 
@@ -123,8 +122,7 @@ def get_legi_data_chunked() -> list[Chunk]:
 
     for docs in batches:
         contents = [doc["content"] for doc in docs]
-        # embeddings = albert.embeddings(contents)
-        embeddings = []
+        embeddings = albert.embeddings(contents)
 
         for doc, emb in zip(docs, embeddings):
             doc["embedding"] = emb  # type: ignore
@@ -135,9 +133,7 @@ def get_legi_data_chunked() -> list[Chunk]:
 def get_article_url(num: str) -> Optional[str]:
     node = elastic.get_article_node(CHUNK_INDEX, num)
 
-    pprint.pprint(node[0])
-
-    if len(node) < 1 or node[0]["metadata"]["articles"] == None:
+    if len(node) < 1 or node[0]["metadata"]["articles"] is None:
         return None
 
     else:

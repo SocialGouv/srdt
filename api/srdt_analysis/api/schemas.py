@@ -87,7 +87,7 @@ class ChunkMetadata(BaseModel):
     id: str
     source: CollectionName
     idcc: Optional[str] = None
-    articles: Optional[list[Dict[str, str]]]
+    articles: Optional[list[Dict[str, str]]] = None
 
 
 class ChunkResult(BaseModel):
