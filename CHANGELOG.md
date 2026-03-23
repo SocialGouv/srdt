@@ -1,3 +1,10 @@
+## [1.36.2](https://github.com/SocialGouv/srdt/compare/v1.36.1...v1.36.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* new prompt with quotes ([47a6dac](https://github.com/SocialGouv/srdt/commit/47a6dac0335bdaef890cd947d86a4cccd6019b64))
+
 ## [1.36.1](https://github.com/SocialGouv/srdt/compare/v1.36.0...v1.36.1) (2026-03-20)
 
 
