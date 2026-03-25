@@ -1,3 +1,10 @@
+## [1.36.3](https://github.com/SocialGouv/srdt/compare/v1.36.2...v1.36.3) (2026-03-25)
+
+
+### Bug Fixes
+
+* **api:** recreate article urls ([#316](https://github.com/SocialGouv/srdt/issues/316)) ([dc62e41](https://github.com/SocialGouv/srdt/commit/dc62e412bd50ec4516c421406a47f2c8fb1c65d0))
+
 ## [1.36.2](https://github.com/SocialGouv/srdt/compare/v1.36.1...v1.36.2) (2026-03-23)
 
 
