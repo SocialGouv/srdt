@@ -90,12 +90,6 @@ class ElasticIndicesHandler:
         return new_name
 
     def swap_aliases(self, index_name, alias):
-        print(
-            [
-                {"remove": {"alias": index_name, "index": f"{index_name}*"}},
-                {"add": {"alias": index_name, "index": alias}},
-            ]
-        )
         self.client.indices.update_aliases(
             actions=[
                 {"remove": {"alias": index_name, "index": f"{index_name}-*"}},

@@ -100,6 +100,8 @@ def clean_urls(response: str):
     # extract article references in plain text
     references = extract_references(response)
 
+    replaced = []
+
     for ref in filter(
         lambda r: r["code"] is None or r["code"] == CODE_TRAVAIL, references
     ):
@@ -116,8 +118,9 @@ def clean_urls(response: str):
                 (n for n in nodes[0]["metadata"]["articles"] if n["num"] == f_text),
                 None,
             )
-            if found is not None:
+            if found is not None and text not in replaced:
                 # replace the reference with an actual link
                 response = response.replace(text, f"[{text}]({found['url']})")
+                replaced.append(text)
 
     return response
