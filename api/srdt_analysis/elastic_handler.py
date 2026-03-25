@@ -193,6 +193,15 @@ class ElasticIndicesHandler:
         )
         return [hit["_source"] for hit in response["hits"]["hits"]]
 
+    def get_article_node(self, index_name: str, num: str):
+        response = self.client.search(
+            index=index_name,
+            query={"term": {"metadata.articles.num.keyword": num}},
+            size=1,
+            source_includes=["metadata.articles"],
+        )
+        return [hit["_source"] for hit in response["hits"]["hits"]]
+
     def search(
         self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
     ) -> List[ChunkResult]:

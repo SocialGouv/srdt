@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 
+from srdt_analysis import legi_data
 from srdt_analysis.constants import CHUNK_INDEX
 from srdt_analysis.data_exploiter_embed import (
     FichesMTExploiter,
@@ -73,6 +74,8 @@ def start():
         index.add_items(alias, docs)
 
     index.swap_aliases(index_name, alias)
+
+    legi_data.get_article_url("L351-6")
 
 
 if __name__ == "__main__":

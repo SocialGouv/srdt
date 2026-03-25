@@ -25,6 +25,7 @@ sentry-sdk = {extras = ["fastapi"], version = "^2.30.0"}
 spacy = "^3.7"
 fr_core_news_md = {url = "https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0.tar.gz"}
 elasticsearch = "^8"
+nltk = "^3.9.3"
 
 [tool.poetry.group.dev.dependencies]
 pyright = "^1.1.389"

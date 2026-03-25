@@ -6,7 +6,7 @@ BASE_API_URL = "/api/v1"
 API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
-CHUNK_INDEX = "chunks"
+CHUNK_INDEX = "chunks-test"
 SOURCES = [
     "contributions",
     "code_du_travail",
