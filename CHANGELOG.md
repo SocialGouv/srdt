@@ -1,3 +1,10 @@
+# [1.37.0](https://github.com/SocialGouv/srdt/compare/v1.36.3...v1.37.0) (2026-03-26)
+
+
+### Features
+
+* **db:** add followup_count column for Metabase tracking ([#326](https://github.com/SocialGouv/srdt/issues/326)) ([547d842](https://github.com/SocialGouv/srdt/commit/547d842629e2d134c9fb7104b72e6b86cb479d66))
+
 ## [1.36.3](https://github.com/SocialGouv/srdt/compare/v1.36.2...v1.36.3) (2026-03-25)
 
 
