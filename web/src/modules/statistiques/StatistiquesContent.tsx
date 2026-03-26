@@ -15,8 +15,8 @@ export function StatistiquesContent() {
           src={METABASE_DASHBOARD_URL}
           width="100%"
           height="1000"
-          frameBorder="0"
           title="Statistiques SRDT"
+          sandbox="allow-scripts allow-same-origin"
           style={{ minHeight: "800px", border: "none" }}
         />
       </div>
