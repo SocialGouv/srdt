@@ -15,6 +15,7 @@ export interface ConversationRecord {
   followup_question: string | null;
   followup_response: string | null;
   followup_exchanges: FollowupExchange[] | null;
+  followup_count?: number;
   feedback_type: "positive" | "negative" | null;
   feedback_reasons: string | null;
   idcc: string | null;
@@ -104,6 +105,7 @@ export async function updateConversationFollowup(
       followup_question = ${followupQuestion},
       followup_response = ${followupResponse},
       followup_exchanges = COALESCE(followup_exchanges, '[]'::jsonb) || ${newExchange}::jsonb,
+      followup_count = COALESCE(followup_count, 0) + 1,
       updated_at = NOW()
     WHERE id = ${id}
   `;
