@@ -117,7 +117,15 @@ export const LayoutWrapper = ({ children }: Props) => {
       <main className={fr.cx("fr-container", "fr-mb-5w")}>{children}</main>
       <DsfrFooter
         accessibility="non compliant"
-        bottomItems={[headerFooterDisplayItem]}
+        bottomItems={[
+          {
+            text: "Statistiques",
+            linkProps: {
+              href: "/statistiques",
+            },
+          },
+          headerFooterDisplayItem,
+        ]}
       />
     </>
   );
