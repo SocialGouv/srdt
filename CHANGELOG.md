@@ -1,3 +1,10 @@
+# [1.38.0](https://github.com/SocialGouv/srdt/compare/v1.37.0...v1.38.0) (2026-03-31)
+
+
+### Features
+
+* add public statistics page with embedded Metabase dashboard ([#327](https://github.com/SocialGouv/srdt/issues/327)) ([3999326](https://github.com/SocialGouv/srdt/commit/39993269b4ed8b69c60dd6a40e4c6630a71c5a6c))
+
 # [1.37.0](https://github.com/SocialGouv/srdt/compare/v1.36.3...v1.37.0) (2026-03-26)
 
 
