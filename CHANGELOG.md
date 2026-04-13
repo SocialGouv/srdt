@@ -1,3 +1,10 @@
+## [1.38.1](https://github.com/SocialGouv/srdt/compare/v1.38.0...v1.38.1) (2026-04-13)
+
+
+### Bug Fixes
+
+* **prompt:** update prompt ([923a088](https://github.com/SocialGouv/srdt/commit/923a0880187660584abcf0385cf2035ce8e44668))
+
 # [1.38.0](https://github.com/SocialGouv/srdt/compare/v1.37.0...v1.38.0) (2026-03-31)
 
 
