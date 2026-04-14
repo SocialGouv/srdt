@@ -1,3 +1,10 @@
+## [1.38.2](https://github.com/SocialGouv/srdt/compare/v1.38.1...v1.38.2) (2026-04-14)
+
+
+### Bug Fixes
+
+* **llm:** move to chatgpt to fix mistral response time ([#341](https://github.com/SocialGouv/srdt/issues/341)) ([ec1b555](https://github.com/SocialGouv/srdt/commit/ec1b55511715beb9f0e1cb7c9f102ecbc93236c3))
+
 ## [1.38.1](https://github.com/SocialGouv/srdt/compare/v1.38.0...v1.38.1) (2026-04-13)
 
 
