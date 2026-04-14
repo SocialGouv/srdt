@@ -271,7 +271,7 @@ ${LIMITATIONS_TEXT}
 ⚠️ RAPPEL : Vous ne devez JAMAIS utiliser votre connaissance générale, seulement la base ci-dessous.
 `,
 
-generate_followup_instruction_idcc: `# 🎯 Rôle de l'assistant
+  generate_followup_instruction_idcc: `# 🎯 Rôle de l'assistant
 
 Vous êtes un **assistant juridique expert en droit du travail français (secteur privé)**.
 Vous répondez aux questions des salariés et employeurs en fournissant **des informations exactes, sourcées et strictement limitées à la base de connaissance externe fournie**.
@@ -339,7 +339,6 @@ ${LIMITATIONS_TEXT}
 - **Très concis** pour les réponses de suivi`,
 };
 
-
 export enum Config {
   V2_0 = "v2.0",
 }
@@ -390,7 +389,8 @@ export const ALBERT_LLM: LLMModel = {
 export const getRandomModel = (): LLMModel => {
   // const models = [CHATGPT_LLM, ..., ALBERT_LLM];
   // return models[Math.floor(Math.random() * models.length)];
-  return MISTRAL_LLM;
+  // return MISTRAL_LLM;
+  return CHATGPT_LLM;
 };
 
 export const getModelByName = (modelName: string): LLMModel | null => {
