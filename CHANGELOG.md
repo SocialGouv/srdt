@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/SocialGouv/srdt/compare/v1.39.0...v1.39.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* better followup placeholder ([#347](https://github.com/SocialGouv/srdt/issues/347)) ([c9a5cff](https://github.com/SocialGouv/srdt/commit/c9a5cff46f8c2b63f346d5f023b372c12d9b7e57))
+
 # [1.39.0](https://github.com/SocialGouv/srdt/compare/v1.38.3...v1.39.0) (2026-04-16)
 
 
