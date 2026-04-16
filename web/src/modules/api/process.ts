@@ -184,7 +184,7 @@ export const generateAnswer = async (
   idcc?: string,
   debug?: boolean
 ): Promise<ApiResponse<AnswerResponse>> => {
-  const startedAt = debug ? Date.now() : 0;
+  const startedAt = Date.now();
   try {
     const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
