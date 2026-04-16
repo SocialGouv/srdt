@@ -52,7 +52,7 @@ export const ChatInput = ({
                 ? "Génération de la réponse en cours...\nVous pourrez ensuite poser une question de suivi ou démarrer une nouvelle conversation."
                 : "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
               : currentConversation?.isAwaitingFollowup
-              ? "Posez une question de suivi ou démarrez une nouvelle conversation..."
+              ? "Posez une question de suivi ou démarrez une nouvelle conversation...\nEx. : « Fais-en un mail », « Cite tous les textes applicables », « Synthétise la réponse »..."
               : "Saisissez votre message"
           }
           disabled={isDisabled}
