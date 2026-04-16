@@ -20,7 +20,8 @@ import {
 // Build answer response
 const buildAnswer = (
   preparedData: PreparedQuestionData,
-  generatedData: GenerateResponse
+  generatedData: GenerateResponse,
+  debugInfo?: { systemPrompt: string; idcc?: string; totalTime: number }
 ): AnswerResponse => ({
   config: preparedData.config.toString(),
   anonymized: preparedData.anonymizeResult?.data || null,
@@ -33,6 +34,7 @@ const buildAnswer = (
   generated: generatedData,
   modelName: preparedData.model.name,
   modelFamily: getFamilyModel(preparedData.model),
+  ...(debugInfo ? { debug: debugInfo } : {}),
 });
 
 // Build follow-up answer response
@@ -179,8 +181,10 @@ async function getFollowupGenerateData(
 export const generateAnswer = async (
   userQuestion: string,
   requiredConfig?: Config,
-  idcc?: string
+  idcc?: string,
+  debug?: boolean
 ): Promise<ApiResponse<AnswerResponse>> => {
+  const startedAt = debug ? Date.now() : 0;
   try {
     const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
@@ -206,9 +210,17 @@ export const generateAnswer = async (
       );
     }
 
+    const debugInfo = debug
+      ? {
+          systemPrompt,
+          idcc,
+          totalTime: (Date.now() - startedAt) / 1000,
+        }
+      : undefined;
+
     return {
       success: true,
-      data: buildAnswer(preparedData, generateResult.data),
+      data: buildAnswer(preparedData, generateResult.data, debugInfo),
     };
   } catch (error) {
     return {

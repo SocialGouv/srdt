@@ -122,6 +122,12 @@ export interface InstructionPrompts {
   generate_followup_instruction_idcc: string;
 }
 
+export interface AnswerResponseDebug {
+  systemPrompt: string;
+  idcc?: string;
+  totalTime: number;
+}
+
 export interface AnswerResponse {
   config: string;
   anonymized: AnonymizeResponse | null;
@@ -130,6 +136,7 @@ export interface AnswerResponse {
   generated: GenerateResponse;
   modelName: string;
   modelFamily: LLMFamily;
+  debug?: AnswerResponseDebug;
 }
 
 export interface ApiResponse<T> {

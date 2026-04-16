@@ -3,6 +3,7 @@ import { generateAnswer } from "@/modules/api/process";
 import { ApiResponse, AnswerResponse } from "@/types";
 import { Config } from "@/constants";
 import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
+import { timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 
 interface RequestBody {
@@ -11,13 +12,32 @@ interface RequestBody {
   agreementId?: string;
 }
 
+function hasValidDebugToken(request: NextRequest): boolean {
+  const expected = process.env.DEBUG_API_KEY;
+  if (!expected) return false;
+
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return false;
+  const provided = header.slice("Bearer ".length).trim();
+  if (!provided) return false;
+
+  const providedBuf = Buffer.from(provided);
+  const expectedBuf = Buffer.from(expected);
+  if (providedBuf.length !== expectedBuf.length) return false;
+  return timingSafeEqual(providedBuf, expectedBuf);
+}
+
 export async function POST(request: NextRequest): Promise<Response> {
-  const session = await getAuthorizedSession();
-  if (!session) {
-    return new Response(
-      JSON.stringify({ success: false, error: "Unauthorized" }),
-      { status: 401, headers: { "Content-Type": "application/json" } }
-    );
+  const debugMode = hasValidDebugToken(request);
+
+  if (!debugMode) {
+    const session = await getAuthorizedSession();
+    if (!session) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
   }
 
   let body: RequestBody | null = null;
@@ -58,7 +78,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     const result: ApiResponse<AnswerResponse> = await generateAnswer(
       question,
       config,
-      agreementId
+      agreementId,
+      debugMode
     );
 
     if (!result.success) {
@@ -89,6 +110,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         hasQuestion: !!body?.question,
         config: body?.config,
         agreementId: body?.agreementId,
+        debugMode,
       },
     });
     return new Response(
