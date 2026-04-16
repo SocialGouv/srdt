@@ -1,3 +1,11 @@
+# [1.39.0](https://github.com/SocialGouv/srdt/compare/v1.38.3...v1.39.0) (2026-04-16)
+
+
+### Features
+
+* **api:** allow debug calls on /api/generate with bearer token ([#346](https://github.com/SocialGouv/srdt/issues/346)) ([92bade6](https://github.com/SocialGouv/srdt/commit/92bade68c291a815b4c25db63798cbb4c975aaa9))
+* **chat:** add convention collective badge on assistant messages ([#344](https://github.com/SocialGouv/srdt/issues/344)) ([8640a9c](https://github.com/SocialGouv/srdt/commit/8640a9c2651ec2e94b3207cace2d6c0276614415))
+
 ## [1.38.3](https://github.com/SocialGouv/srdt/compare/v1.38.2...v1.38.3) (2026-04-16)
 
 
