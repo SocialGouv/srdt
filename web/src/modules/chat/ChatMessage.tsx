@@ -8,6 +8,7 @@ import { Agreement } from "../convention-collective/search";
 import { AnswerResponse } from "@/types";
 import React, { useState, useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
@@ -156,6 +157,27 @@ export const ChatMessage = ({
         )} ${styles.messageWrapper}`}
       >
         <div className={bubbleClasses}>
+          {message.role === "assistant" && selectedAgreement && (
+            <div className={styles.conventionBadgeContainer}>
+              <Badge
+                as="span"
+                noIcon
+                severity="info"
+                className={styles.conventionBadge}
+              >
+                <span
+                  className={styles.conventionBadgeTitle}
+                  title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
+                >
+                  Convention collective&nbsp;:{" "}
+                  {selectedAgreement.shortTitle}
+                </span>
+                <span className={styles.conventionBadgeIdcc}>
+                  &nbsp;(IDCC {selectedAgreement.num})
+                </span>
+              </Badge>
+            </div>
+          )}
           <div
             ref={contentRef}
             className={

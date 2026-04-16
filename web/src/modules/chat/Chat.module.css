@@ -137,3 +137,24 @@
 .copyButton {
   font-size: 0.875rem;
 }
+
+.conventionBadgeContainer {
+  margin-bottom: 0.5rem;
+  max-width: 100%;
+}
+
+.conventionBadge {
+  max-width: 100%;
+}
+
+.conventionBadgeTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.conventionBadgeIdcc {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
