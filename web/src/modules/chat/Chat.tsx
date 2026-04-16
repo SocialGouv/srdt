@@ -404,6 +404,7 @@ export const Chat = () => {
                 conversationId: currentConversation.dbConversationId,
                 followupQuestion: newMessage,
                 followupResponse: followupResponseText,
+                generationTimeMs: Math.round(endTime - startTime),
               });
             }
 
@@ -482,6 +483,7 @@ export const Chat = () => {
               response: responseText,
               idcc: selectedAgreement?.id,
               modelName: result.data?.modelName,
+              generationTimeMs: Math.round(endTime - startTime),
             }).then((saveResult) => {
               if (saveResult.success && saveResult.conversationId) {
                 // Store the DB conversation ID for later updates (feedback, followup)

@@ -4,6 +4,7 @@ export interface FollowupExchange {
   question: string;
   response: string;
   created_at: string;
+  generation_time_ms: number | null;
 }
 
 export interface ConversationRecord {
@@ -20,6 +21,7 @@ export interface ConversationRecord {
   feedback_reasons: string | null;
   idcc: string | null;
   model_name: string | null;
+  generation_time_ms: number | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -55,7 +57,8 @@ export async function saveConversation(
       feedback_type,
       feedback_reasons,
       idcc,
-      model_name
+      model_name,
+      generation_time_ms
     ) VALUES (
       ${conversation.user_id},
       ${conversation.department},
@@ -67,7 +70,8 @@ export async function saveConversation(
       ${conversation.feedback_type},
       ${conversation.feedback_reasons},
       ${conversation.idcc},
-      ${conversation.model_name}
+      ${conversation.model_name},
+      ${conversation.generation_time_ms}
     )
     RETURNING id
   `;
@@ -86,7 +90,8 @@ export async function saveConversation(
 export async function updateConversationFollowup(
   id: string,
   followupQuestion: string,
-  followupResponse: string
+  followupResponse: string,
+  generationTimeMs: number | null
 ): Promise<void> {
   if (!sql) {
     console.warn("[conversations] Database not available, skipping update");
@@ -97,6 +102,7 @@ export async function updateConversationFollowup(
     question: followupQuestion,
     response: followupResponse,
     created_at: new Date().toISOString(),
+    generation_time_ms: generationTimeMs,
   });
 
   await sql`
