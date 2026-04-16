@@ -32,6 +32,8 @@ whitelist = [
     "francetravail.fr",
 ]
 
+cdtn_url = "https://code.travail.gouv.fr/"
+
 es = ElasticIndicesHandler()
 
 
@@ -79,7 +81,14 @@ def clean_urls(response: str):
         path = to_comparable_path(url)
         if path.startswith("code.travail.gouv.fr"):
             check = es.check_urls(CHUNK_INDEX, [url])
-            if url != "https://code.travail.gouv.fr/" and not check[0][1]:
+            if (
+                # allow route site
+                url != cdtn_url
+                # allow valid url in our index
+                and not check[0][1]
+                # allow main CC pages
+                and not url.startswith(cdtn_url + "convention-collective")
+            ):
                 cdtn_error.append(url)
                 response = remove_from_response(response, url, description)
             else:
