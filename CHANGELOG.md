@@ -1,3 +1,10 @@
+## [1.38.3](https://github.com/SocialGouv/srdt/compare/v1.38.2...v1.38.3) (2026-04-16)
+
+
+### Bug Fixes
+
+* **api:** keep direct links to CC [#319](https://github.com/SocialGouv/srdt/issues/319) ([bf15e6b](https://github.com/SocialGouv/srdt/commit/bf15e6bd665fa92eae4f68a6fcad91db480dfa63))
+
 ## [1.38.2](https://github.com/SocialGouv/srdt/compare/v1.38.1...v1.38.2) (2026-04-14)
 
 
