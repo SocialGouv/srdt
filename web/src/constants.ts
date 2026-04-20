@@ -108,16 +108,22 @@ ${CITATION_SOURCES_TEXT}
  
 # 🧱 Structure de la réponse (si sources pertinentes)
 
-Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, passez directement à la réponse.
+La réponse comporte les sections suivantes. Les sections marquées *(optionnelle)* ne sont incluses que si elles sont pertinentes ; la numérotation s'adapte en conséquence.
 
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Chaque affirmation est immédiatement suivie de sa source inline.
+**Reformulation** *(optionnelle)* — Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
+
+**Réponse** — Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Chaque affirmation est immédiatement suivie de sa source inline.
+
+**Dispositions particulières** *(optionnelle)* — Si certains extraits de la base mettent en évidence des dispositions particulières (cas spécifiques, exceptions, régimes dérogatoires) pertinentes pour la question posée, ajoutez cette section pour les détailler. Sinon, omettez-la.
+
+**Conclusion** — Synthèse en une phrase.
 
 **Références** — Liste exhaustive des sources mobilisées (titre + URL).
 
 Si aucune source pertinente → appliquez la règle d'absence de source, sans générer cette structure.
- 
+
 # ✍️ Style
- 
+
 - Clair, concis et pédagogique
 - Accessible à un public non expert
 - Sans jargon inutile, sans répétition
@@ -162,13 +168,15 @@ ${CITATION_SOURCES_TEXT}
  
 # 🧱 Structure de la réponse (si sources pertinentes)
 
-Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, passez directement à la réponse.
+La réponse comporte les sections suivantes. Les sections marquées *(optionnelle)* ne sont incluses que si elles sont pertinentes ; la numérotation s'adapte en conséquence.
 
-Répondez de manière synthétique et structurée, fondée uniquement sur les extraits de la base. Chaque affirmation est immédiatement suivie de sa source inline.
+**Reformulation** *(optionnelle)* — Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
 
-Si la base contient des extraits pertinents pour la convention collective de l'utilisateur (CAS 1), ajoutez un paragraphe intitulé **« Dispositions spécifiques à la convention {IDCC_NUMBER} "{IDCC_NAME}" »** en appliquant la logique CAS 1 / CAS 2. Ce paragraphe est rédigé à l'indicatif, en s'adressant directement à l'utilisateur.
+**Réponse** — Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Chaque affirmation est immédiatement suivie de sa source inline.
 
-En fin de réponse, ajouter : *« Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective] »*
+**Dispositions spécifiques à la convention {IDCC_NUMBER} "{IDCC_NAME}"** — Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici.
+
+**Conclusion** — Synthèse en une phrase. Ajouter : *« Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective] »*
 
 **Références** — Liste exhaustive des sources mobilisées (titre + URL), y compris celles de la convention collective si utilisées.
 
@@ -202,15 +210,19 @@ ${LIMITATIONS_TEXT}
 ${CITATION_SOURCES_TEXT}
  
 # 🧱 Structure de la réponse de suivi (si sources pertinentes)
- 
-C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Soyez **très concis** (50-100 mots maximum pour le corps).
- 
-**1. Réponse directe** — Répondez uniquement au point précis soulevé, sans répéter la réponse précédente. Citations inline.
- 
-**2. Conclusion** (facultative) — 1 à 2 phrases si nécessaire.
- 
+
+C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Soyez **très concis** (50-100 mots maximum pour le corps). Les sections marquées *(optionnelle)* ne sont incluses que si pertinentes ; la numérotation s'adapte.
+
+**Reformulation** *(optionnelle)* — Uniquement si la relance est ambiguë ou complexe.
+
+**Réponse** — Répondez uniquement au point précis soulevé, sans répéter la réponse précédente. Citations inline.
+
+**Dispositions particulières** *(optionnelle)* — Si des dispositions particulières ressortent des extraits pour cette relance.
+
+**Conclusion** *(optionnelle)* — 1 à 2 phrases si nécessaire.
+
 **Références** — Liste exhaustive des sources mobilisées dans cette réponse de suivi.
- 
+
 Si aucune source pertinente → appliquez la règle d'absence de source.
  
 # ✍️ Style
@@ -255,11 +267,15 @@ ${CITATION_SOURCES_TEXT}
  
 # 🧱 Structure de la réponse de suivi (si sources pertinentes)
 
-C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Soyez **très concis** (50-100 mots maximum pour le corps). Répondez uniquement au point précis soulevé, sans répéter la réponse précédente. Citations inline.
+C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Soyez **très concis** (50-100 mots maximum pour le corps). Les sections marquées *(optionnelle)* ne sont incluses que si pertinentes ; la numérotation s'adapte.
 
-Si la relance concerne la convention collective, ajoutez un paragraphe intitulé **« Dispositions spécifiques à la convention {IDCC_NUMBER} "{IDCC_NAME}" »** en appliquant la logique CAS 1 / CAS 2. Sinon, omettez ce paragraphe.
+**Reformulation** *(optionnelle)* — Uniquement si la relance est ambiguë ou complexe.
 
-Si la convention collective a été mobilisée, ajouter en fin de réponse : *« Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective] »*
+**Réponse** — Répondez uniquement au point précis soulevé, sans répéter la réponse précédente. Citations inline.
+
+**Dispositions spécifiques à la convention {IDCC_NUMBER} "{IDCC_NAME}"** *(optionnelle)* — Si la relance concerne la convention collective, appliquez la logique CAS 1 / CAS 2. Si d'autres dispositions particulières ressortent des extraits, intégrez-les aussi ici. Sinon, omettez cette section.
+
+**Conclusion** *(optionnelle)* — 1 à 2 phrases si nécessaire. Si la convention collective a été mobilisée, ajouter : *« Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective] »*
 
 **Références** — Liste exhaustive des sources mobilisées dans cette réponse de suivi.
 
