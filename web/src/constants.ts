@@ -57,7 +57,7 @@ export const DOMAIN_TO_DEPARTMENT: Record<string, string> = Object.fromEntries(
 export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_CODE = 5;
-export const K_RERANK_IDCC = 5;
+export const K_RERANK_IDCC = 10;
 
 // Follow-up question limits
 export const MAX_FOLLOWUP_QUESTIONS = 5;
@@ -65,7 +65,7 @@ export const MAX_FOLLOWUP_QUESTIONS = 5;
 // Follow-up question constants
 export const K_RERANK_FOLLOWUP_QUERY1 = 5; // Top 5 chunks for query_1
 export const K_RERANK_FOLLOWUP_QUERY2 = 10; // Top 10 chunks for query_2
-export const K_RERANK_IDCC_FOLLOWUP = 5; // Top 5 chunks for IDCC per query
+export const K_RERANK_IDCC_FOLLOWUP = 10; // Top 5 chunks for IDCC per query
 
 const LIMITATIONS_TEXT = `# ⛔ Absence de source pertinente (RÈGLE CRITIQUE)
  
