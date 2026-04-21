@@ -8,6 +8,7 @@ interface RequestBody {
   question: string;
   config?: Config;
   agreementId?: string;
+  agreementTitle?: string;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const body: RequestBody = await request.json();
-    const { question, config, agreementId } = body;
+    const { question, config, agreementId, agreementTitle } = body;
 
     if (!question) {
       return new Response(
@@ -83,7 +84,8 @@ export async function POST(request: NextRequest): Promise<Response> {
             controller.close();
           },
           config,
-          agreementId
+          agreementId,
+          agreementTitle
         ).catch((error) => {
           Sentry.captureException(error, {
             tags: {

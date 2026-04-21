@@ -11,6 +11,7 @@ interface FollowupRequestBody {
   newQuestion: string;
   config?: Config;
   agreementId?: string;
+  agreementTitle?: string;
   modelName?: string;
 }
 
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const body: FollowupRequestBody = await request.json();
-    const { originalQuery, conversationHistory, newQuestion, config, agreementId, modelName } = body;
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName } = body;
 
     if (!originalQuery || !conversationHistory || !newQuestion) {
       return new Response(
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           },
           config,
           agreementId,
+          agreementTitle,
           providedModel
         ).catch((error) => {
           Sentry.captureException(error, {
