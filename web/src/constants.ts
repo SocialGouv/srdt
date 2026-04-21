@@ -103,7 +103,22 @@ Exemple : si la "Reformulation" est omise, la "Réponse générale" devient la s
 
 const FEWSHOT_EXAMPLE = `# 🧪 Exemples de réponses attendues
 
-## Exemple 1 — Question simple
+## Exemple 1 — Question courte et directe (réponse proportionnée)
+
+**Question utilisateur** : "Quelle est la durée légale du travail ?"
+
+**Réponse attendue** :
+
+### 1. Réponse générale
+
+La durée légale du travail est fixée à **35 heures par semaine** — *Fiche service-public "Durée du travail du salarié à temps plein" — https://www.service-public.fr/particuliers/vosdroits/F1911*.
+
+**Références**
+- *Fiche service-public "Durée du travail du salarié à temps plein"* — https://www.service-public.fr/particuliers/vosdroits/F1911
+
+---
+
+## Exemple 2 — Question simple
 
 **Question utilisateur** : "Mon employeur peut-il me licencier pendant ma période d'essai sans motif ?"
 
@@ -128,7 +143,7 @@ Votre employeur peut donc mettre fin à votre période d'essai sans motiver sa d
 
 ---
 
-## Exemple 2 — Question complexe avec reformulation
+## Exemple 3 — Question complexe avec reformulation
 
 **Question utilisateur** : "Bonjour, je travaille 39h par semaine en CDI dans une PME et mon patron me demande régulièrement de venir travailler le dimanche, parfois jusqu'à 6h supplémentaires. Il me dit qu'il va me donner des jours de récupération à la place de me payer ces heures, et qu'il choisit lui-même les dates. Est-ce qu'il a le droit de faire ça et est-ce que les dimanches sont mieux payés ?"
 
@@ -158,7 +173,7 @@ Votre employeur peut vous demander d'effectuer des heures supplémentaires, mais
 
 ---
 
-## Exemple 3 — Absence de source pertinente (refus complet)
+## Exemple 4 — Absence de source pertinente (refus complet)
 
 **Question utilisateur** : "Quel est le régime fiscal des stock-options attribuées aux dirigeants d'une SAS cotée sur Euronext Growth ?"
 
@@ -168,7 +183,7 @@ Je ne dispose pas d'information sur ce point dans la base de connaissance fourni
 
 ---
 
-## Exemple 4 — ❌ Comportement INCORRECT à éviter
+## Exemple 5 — ❌ Comportement INCORRECT à éviter
 
 **Question utilisateur** : "Quelle est la durée maximale d'une période d'essai pour un cadre ?"
 
@@ -193,7 +208,32 @@ const FEWSHOT_EXAMPLE_IDCC = `# 🧪 Exemples de réponses attendues (avec conve
 
 > **Note** : les URLs et sources citées dans ces exemples sont données à titre d'illustration du format attendu. Ne les réutilisez pas dans vos réponses : citez uniquement les sources effectivement présentes dans la base de connaissance fournie.
 
-## Exemple 1 — CAS 1 : la base contient des dispositions spécifiques pour cette convention
+## Exemple 1 — Question courte et directe avec convention collective (réponse proportionnée)
+
+**Contexte** : l'utilisateur est soumis à la convention collective **Bureaux d'études techniques, cabinets d'ingénieurs-conseils et sociétés de conseils (SYNTEC)** (IDCC 1486).
+
+**Question utilisateur** : "Combien de jours de congés payés par an ?"
+
+**Réponse attendue** :
+
+### 1. Réponse générale
+
+Tout salarié a droit à **2,5 jours ouvrables de congés payés par mois de travail effectif**, soit 30 jours ouvrables (5 semaines) pour une année complète — *Fiche service-public "Congés payés" — https://www.service-public.fr/particuliers/vosdroits/F2258*.
+
+### 2. Dispositions spécifiques à la convention 1486 "SYNTEC"
+
+Je ne dispose pas d'information spécifique sur des jours de congés supplémentaires prévus par votre convention collective dans la base de connaissance fournie.
+
+### 3. Conclusion
+
+Vous bénéficiez de 30 jours ouvrables de congés payés par an au titre du Code du travail. Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective]
+
+**Références**
+- *Fiche service-public "Congés payés"* — https://www.service-public.fr/particuliers/vosdroits/F2258
+
+---
+
+## Exemple 2 — CAS 1 : la base contient des dispositions spécifiques pour cette convention
 
 **Contexte** : l'utilisateur est soumis à la convention collective **Bureaux d'études techniques, cabinets d'ingénieurs-conseils et sociétés de conseils (SYNTEC)** (IDCC 1486).
 
@@ -221,7 +261,7 @@ Votre préavis de démission est donc de 3 mois, sauf accord avec votre employeu
 
 ---
 
-## Exemple 2 — CAS 2 : la base ne contient aucune disposition spécifique pour cette convention (mais répond sur le général)
+## Exemple 3 — CAS 2 : la base ne contient aucune disposition spécifique pour cette convention (mais répond sur le général)
 
 **Contexte** : l'utilisateur est soumis à une convention collective pour laquelle la base de connaissance ne contient pas d'extrait pertinent à la question posée. La base contient en revanche des dispositions générales applicables.
 
@@ -247,7 +287,7 @@ Au titre du Code du travail, vous bénéficiez de 3 ou 5 jours selon votre situa
 
 ---
 
-## Exemple 3 — Refus complet : la question est purement conventionnelle et la base est vide sur ce point
+## Exemple 4 — Refus complet : la question est purement conventionnelle et la base est vide sur ce point
 
 **Contexte** : l'utilisateur est soumis à une convention collective. La question porte exclusivement sur une disposition conventionnelle, et la base de connaissance ne contient aucun extrait pertinent (ni général, ni conventionnel).
 
@@ -259,7 +299,7 @@ Je ne dispose pas d'information sur ce point dans la base de connaissance fourni
 
 ---
 
-## Exemple 4 — ❌ Comportement INCORRECT à éviter
+## Exemple 5 — ❌ Comportement INCORRECT à éviter
 
 **Contexte** : l'utilisateur est soumis à une convention collective. La base contient des dispositions générales sur les congés payés, mais **aucun extrait** spécifique à la convention de l'utilisateur.
 
