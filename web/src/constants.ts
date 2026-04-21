@@ -111,10 +111,10 @@ const FEWSHOT_EXAMPLE = `# 🧪 Exemples de réponses attendues
 
 ### 1. Réponse générale
 
-La durée légale du travail est fixée à **35 heures par semaine** — [Fiche service-public "Durée du travail du salarié à temps plein"](https://code.travail.gouv.fr/fiche-service-public/duree-du-travail-dun-salarie-a-temps-plein).
+La durée légale du travail est fixée à **35 heures par semaine** — [Fiche "Durée du travail du salarié à temps plein"](https://code.travail.gouv.fr/fiche-service-public/duree-du-travail-dun-salarie-a-temps-plein).
 
 **Références**
-- [Fiche service-public "Durée du travail du salarié à temps plein"](https://code.travail.gouv.fr/fiche-service-public/duree-du-travail-dun-salarie-a-temps-plein)
+- [Fiche "Durée du travail du salarié à temps plein"](https://code.travail.gouv.fr/fiche-service-public/duree-du-travail-dun-salarie-a-temps-plein)
 
 ---
 
@@ -126,20 +126,20 @@ La durée légale du travail est fixée à **35 heures par semaine** — [Fiche 
 
 ### 1. Réponse générale
 
-Pendant la période d'essai, l'employeur peut rompre le contrat de travail sans avoir à justifier d'un motif, sous réserve de respecter un délai de prévenance — [Fiche service-public "La période d'essai du CDI"](https://code.travail.gouv.fr/fiche-service-public/periode-dessai-pour-un-salarie). Ce délai varie selon le temps de présence du salarié dans l'entreprise — *Article L1221-25 du Code du travail*.
+Pendant la période d'essai, l'employeur peut rompre le contrat de travail sans avoir à justifier d'un motif, sous réserve de respecter un délai de prévenance — [Fiche "La période d'essai du CDI"](https://code.travail.gouv.fr/fiche-service-public/periode-dessai-pour-un-salarie). Ce délai varie selon le temps de présence du salarié dans l'entreprise — *Article L1221-25 du Code du travail*.
 
 ### 2. Dispositions particulières
 
-La rupture ne doit pas reposer sur un motif discriminatoire ni sur un motif lié à la vie personnelle du salarié, sous peine de nullité — *Page Ministère du travail "Rupture de la période d'essai"*.
+La rupture ne doit pas reposer sur un motif discriminatoire ni sur un motif lié à la vie personnelle du salarié, sous peine de nullité — *Fiche "Rupture de la période d'essai"*.
 
 ### 3. Conclusion
 
 Votre employeur peut donc mettre fin à votre période d'essai sans motiver sa décision, à condition de respecter le délai de prévenance applicable. Pouvez-vous me préciser depuis combien de temps vous êtes en poste, afin que je puisse vous indiquer le délai applicable ?
 
 **Références**
-- [Fiche service-public "La période d'essai du CDI"](https://code.travail.gouv.fr/fiche-service-public/periode-dessai-pour-un-salarie)
+- [Fiche "La période d'essai du CDI"](https://code.travail.gouv.fr/fiche-service-public/periode-dessai-pour-un-salarie)
 - *Article L1221-25 du Code du travail*
-- *Page Ministère du travail "Rupture de la période d'essai"*
+- *Fiche "Rupture de la période d'essai"*
 
 ---
 
@@ -155,21 +155,21 @@ Votre question soulève trois points juridiques distincts : (i) le régime des h
 
 ### 2. Réponse générale
 
-Toute heure de travail accomplie à la demande de l'employeur au-delà de la durée légale hebdomadaire de 35 heures constitue une heure supplémentaire — [Fiche service-public "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites). Ces heures ouvrent droit soit à une majoration de salaire, soit à un repos compensateur de remplacement équivalent — [Page Ministère du travail "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties).
+Toute heure de travail accomplie à la demande de l'employeur au-delà de la durée légale hebdomadaire de 35 heures constitue une heure supplémentaire — [Fiche "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites). Ces heures ouvrent droit soit à une majoration de salaire, soit à un repos compensateur de remplacement équivalent — [Fiche "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties).
 
-En l'absence d'accord ou de convention collective, les taux de majoration sont fixés à 25 % pour les huit premières heures supplémentaires hebdomadaires (de la 36e à la 43e) et 50 % au-delà — [Fiche service-public "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites).
+En l'absence d'accord ou de convention collective, les taux de majoration sont fixés à 25 % pour les huit premières heures supplémentaires hebdomadaires (de la 36e à la 43e) et 50 % au-delà — [Fiche "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites).
 
 ### 3. Dispositions particulières
 
-Le remplacement du paiement des heures supplémentaires par un repos compensateur de remplacement (RCR) doit être prévu par un accord collectif ou, à défaut, par décision de l'employeur après avis du CSE — [Page Ministère du travail "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties). L'employeur ne peut donc pas imposer unilatéralement ce remplacement sans cadre conventionnel.
+Le remplacement du paiement des heures supplémentaires par un repos compensateur de remplacement (RCR) doit être prévu par un accord collectif ou, à défaut, par décision de l'employeur après avis du CSE — [Fiche "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties). L'employeur ne peut donc pas imposer unilatéralement ce remplacement sans cadre conventionnel.
 
 ### 4. Conclusion
 
 Votre employeur peut vous demander d'effectuer des heures supplémentaires, mais le remplacement du paiement par du repos compensateur suppose un cadre conventionnel ou collectif. Pouvez-vous me préciser si un accord collectif ou une convention collective s'applique dans votre entreprise, et si un repos compensateur de remplacement y est prévu ?
 
 **Références**
-- [Fiche service-public "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites)
-- [Page Ministère du travail "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties)
+- [Fiche "Heures supplémentaires d'un salarié du secteur privé"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-definition-et-limites)
+- [Fiche "Les heures supplémentaires : contreparties"](https://code.travail.gouv.fr/fiche-ministere-travail/les-heures-supplementaires-contreparties)
 
 ---
 
@@ -218,7 +218,7 @@ const FEWSHOT_EXAMPLE_IDCC = `# 🧪 Exemples de réponses attendues (avec conve
 
 ### 1. Réponse générale
 
-Tout salarié a droit à **2,5 jours ouvrables de congés payés par mois de travail effectif**, soit 30 jours ouvrables (5 semaines) pour une année complète — [Fiche service-public "Congés payés"](https://code.travail.gouv.fr/fiche-service-public/conges-payes).
+Tout salarié a droit à **2,5 jours ouvrables de congés payés par mois de travail effectif**, soit 30 jours ouvrables (5 semaines) pour une année complète — [Fiche "Congés payés"](https://code.travail.gouv.fr/fiche-service-public/conges-payes).
 
 ### 2. Dispositions spécifiques à la convention 1486 "SYNTEC"
 
@@ -229,7 +229,7 @@ Je ne dispose pas d'information spécifique sur des jours de congés supplément
 Vous bénéficiez de 30 jours ouvrables de congés payés par an au titre du Code du travail. Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective]
 
 **Références**
-- [Fiche service-public "Congés payés"](https://code.travail.gouv.fr/fiche-service-public/conges-payes)
+- [Fiche "Congés payés"](https://code.travail.gouv.fr/fiche-service-public/conges-payes)
 
 ---
 
@@ -243,7 +243,7 @@ Vous bénéficiez de 30 jours ouvrables de congés payés par an au titre du Cod
 
 ### 1. Réponse générale
 
-Le Code du travail ne fixe pas de durée légale de préavis en cas de démission d'un salarié en CDI. La durée applicable est déterminée par la convention collective, le contrat de travail, ou les usages — [Fiche service-public "La démission"](https://code.travail.gouv.fr/fiche-service-public/demission-dun-salarie).
+Le Code du travail ne fixe pas de durée légale de préavis en cas de démission d'un salarié en CDI. La durée applicable est déterminée par la convention collective, le contrat de travail, ou les usages — [Fiche "La démission"](https://code.travail.gouv.fr/fiche-service-public/demission-dun-salarie).
 
 ### 2. Dispositions spécifiques à la convention 1486 "SYNTEC"
 
@@ -256,7 +256,7 @@ Vous pouvez convenir d'un commun accord avec votre employeur d'une durée de pr�
 Votre préavis de démission est donc de 3 mois, sauf accord avec votre employeur pour le réduire. Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective]
 
 **Références**
-- [Fiche service-public "La démission"](https://code.travail.gouv.fr/fiche-service-public/demission-dun-salarie)
+- [Fiche "La démission"](https://code.travail.gouv.fr/fiche-service-public/demission-dun-salarie)
 - [Convention collective Bureaux d'études techniques, cabinets d'ingénieurs-conseils et sociétés de conseils, "Quelle est la durée du préavis en cas de démission ?"](https://code.travail.gouv.fr/contribution/1486-quelle-est-la-duree-du-preavis-en-cas-de-demission)
 
 ---
@@ -271,7 +271,7 @@ Votre préavis de démission est donc de 3 mois, sauf accord avec votre employeu
 
 ### 1. Réponse générale
 
-Tout salarié a droit à un congé non rémunéré en cas de maladie ou d'accident, constaté par certificat médical, d'un enfant de moins de 16 ans dont il assume la charge — *Article L1225-61 du Code du travail*. La durée de ce congé est de 3 jours par an, portée à 5 jours si l'enfant a moins d'un an ou si le salarié assume la charge de trois enfants ou plus de moins de 16 ans — [Fiche service-public "Congé pour enfant malade"](https://code.travail.gouv.fr/fiche-service-public/conge-pour-enfant-malade-dans-le-secteur-prive).
+Tout salarié a droit à un congé non rémunéré en cas de maladie ou d'accident, constaté par certificat médical, d'un enfant de moins de 16 ans dont il assume la charge — *Article L1225-61 du Code du travail*. La durée de ce congé est de 3 jours par an, portée à 5 jours si l'enfant a moins d'un an ou si le salarié assume la charge de trois enfants ou plus de moins de 16 ans — [Fiche "Congé pour enfant malade"](https://code.travail.gouv.fr/fiche-service-public/conge-pour-enfant-malade-dans-le-secteur-prive).
 
 ### 2. Dispositions spécifiques à la convention XXXX "Nom de la convention collective"
 
@@ -283,7 +283,7 @@ Au titre du Code du travail, vous bénéficiez de 3 ou 5 jours selon votre situa
 
 **Références**
 - *Article L1225-61 du Code du travail*
-- [Fiche service-public "Congé pour enfant malade"](https://code.travail.gouv.fr/fiche-service-public/conge-pour-enfant-malade-dans-le-secteur-prive)
+- [Fiche "Congé pour enfant malade"](https://code.travail.gouv.fr/fiche-service-public/conge-pour-enfant-malade-dans-le-secteur-prive)
 
 ---
 
