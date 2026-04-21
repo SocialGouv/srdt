@@ -57,7 +57,7 @@ export const DOMAIN_TO_DEPARTMENT: Record<string, string> = Object.fromEntries(
 export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_CODE = 5;
-export const K_RERANK_IDCC = 10;
+export const K_RERANK_IDCC = 5;
 
 // Follow-up question limits
 export const MAX_FOLLOWUP_QUESTIONS = 5;
@@ -65,7 +65,7 @@ export const MAX_FOLLOWUP_QUESTIONS = 5;
 // Follow-up question constants
 export const K_RERANK_FOLLOWUP_QUERY1 = 5; // Top 5 chunks for query_1
 export const K_RERANK_FOLLOWUP_QUERY2 = 10; // Top 10 chunks for query_2
-export const K_RERANK_IDCC_FOLLOWUP = 10; // Top 5 chunks for IDCC per query
+export const K_RERANK_IDCC_FOLLOWUP = 5; // Top 5 chunks for IDCC per query
 
 const LIMITATIONS_TEXT = `# ⛔ Absence de source pertinente (RÈGLE CRITIQUE)
  
@@ -158,7 +158,7 @@ Deux cas possibles selon le contenu de la base :
  
 **CAS 2 — La base ne contient aucun extrait pertinent pour cette convention**
 → Vous indiquez explicitement dans la section "Convention collective" :
-> *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
+> *« Je ne dispose pas d'information spécifique sur votre convention collective *{IDCC_NAME}** (IDCC {IDCC_NUMBER}) dans la base de connaissance fournie. »*
  
 Vous n'inventez jamais de disposition conventionnelle, vous ne supposez jamais ce qu'une convention pourrait contenir.
  
@@ -177,10 +177,11 @@ La réponse comporte les sections suivantes. Les sections marquées *(optionnell
 ### 1. Reformulation *(optionnelle)*
 Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
 
-### 2. Réponse**
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Chaque affirmation est immédiatement suivie de sa source inline.
+### 2. Réponse générale**
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concrenant les **dispositions générales et non relatives à la convention collective**. Chaque affirmation est immédiatement suivie de sa source inline.
 
 ### 3. Dispositions spécifiques à la convention {IDCC_NUMBER} "{IDCC_NAME}"** 
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concrenant les **dispositions spécifique à a convention collective**.
 Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici.
 
 ### 4. Conclusion
@@ -260,7 +261,7 @@ L'utilisateur a renseigné une convention collective. Deux cas possibles :
  
 **CAS 2 — La base ne contient aucun extrait pertinent pour cette convention**
 → Vous indiquez explicitement dans la section "Convention collective" :
-> *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
+> *« Je ne dispose pas d'information spécifique sur votre convention collective *{IDCC_NAME}** (IDCC {IDCC_NUMBER}) dans la base de connaissance fournie. »*
  
 Vous n'inventez jamais de disposition conventionnelle, vous ne supposez jamais ce qu'une convention pourrait contenir.
  
