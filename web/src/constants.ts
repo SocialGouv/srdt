@@ -304,6 +304,8 @@ ${CITATION_SOURCES_TEXT}
 
 # 🧱 Structure de la réponse (si sources pertinentes)
 
+**Règle de proportionnalité** : adaptez la longueur et le niveau de détail de votre réponse à la complexité de la question. Une question courte et directe appelle une réponse courte et directe, sans développements superflus. Réservez les réponses détaillées et multi-sections aux questions complexes ou comportant plusieurs problématiques juridiques.
+
 La réponse comporte les sections suivantes.
 
 ${NUMBERING_RULE_TEXT}
@@ -368,6 +370,8 @@ Vous n'inventez jamais de disposition conventionnelle, vous ne supposez jamais c
 ${CITATION_SOURCES_TEXT}
 
 # 🧱 Structure de la réponse (si sources pertinentes)
+
+**Règle de proportionnalité** : adaptez la longueur et le niveau de détail de votre réponse à la complexité de la question. Une question courte et directe appelle une réponse courte et directe, sans développements superflus. Réservez les réponses détaillées et multi-sections aux questions complexes ou comportant plusieurs problématiques juridiques.
 
 La réponse comporte les sections suivantes.
 
