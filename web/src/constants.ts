@@ -203,7 +203,6 @@ Je ne dispose pas d'information sur ce point dans la base de connaissance fourni
 > Je ne dispose pas d'information sur la durée maximale de la période d'essai pour les cadres dans la base de connaissance fournie. Je ne suis pas en mesure de répondre à cette question avec les documents disponibles. Pouvez-vous reformuler votre question ou préciser le contexte ?
 `;
 
-
 const FEWSHOT_EXAMPLE_IDCC = `# 🧪 Exemples de réponses attendues (avec convention collective)
 
 > **Note** : les URLs et sources citées dans ces exemples sont données à titre d'illustration du format attendu. Ne les réutilisez pas dans vos réponses : citez uniquement les sources effectivement présentes dans la base de connaissance fournie.
@@ -421,7 +420,7 @@ ${NUMBERING_RULE_TEXT}
 Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
 
 ### 2. Réponse générale
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaisance externe). Chaque affirmation est immédiatement suivie de sa source.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaissance externe). Chaque affirmation est immédiatement suivie de sa source.
 
 ### 3. Dispositions spécifiques à la convention \${IDCC_NUMBER} "\${IDCC_NAME}" *(partie obligatoire)*
 Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions spécifiques à la convention collective** (section "Conventions collectives" de la base de connaissance externe). Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici.
