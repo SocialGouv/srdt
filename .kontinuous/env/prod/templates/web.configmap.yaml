@@ -4,7 +4,7 @@ metadata:
   name: web-configmap
 data:
   CHATGPT_MODEL_NAME: gpt-4o-2024-11-20
-  MISTRAL_MODEL_NAME: mistral-large-latest
+  MISTRAL_MODEL_NAME: mistral-large-2512
   ALBERT_MODEL_NAME: albert-large
   NEXTAUTH_URL: https://web-srdt.fabrique.social.gouv.fr
   PROCONNECT_ENV: production
