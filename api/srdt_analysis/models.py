@@ -20,7 +20,7 @@ CollectionName = Literal[
     "contributions_idcc",
 ]
 
-ChunkerContentType = Literal["markdown", "html", "character_recursive"]
+ChunkerContentType = Literal["markdown", "html", "character_recursive", "html_contribs"]
 
 
 CHUNK_ID = str
