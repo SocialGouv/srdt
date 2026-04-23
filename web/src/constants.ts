@@ -599,7 +599,8 @@ export const ALBERT_LLM: LLMModel = {
 export const getRandomModel = (): LLMModel => {
   // const models = [CHATGPT_LLM, ..., ALBERT_LLM];
   // return models[Math.floor(Math.random() * models.length)];
-  return MISTRAL_LLM;
+  // return MISTRAL_LLM;
+  return CHATGPT_LLM;
 };
 
 export const getModelByName = (modelName: string): LLMModel | null => {
