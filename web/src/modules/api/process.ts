@@ -62,7 +62,8 @@ const buildFollowupAnswer = (
 async function getGenerateData(
   userQuestion: string,
   requiredConfig?: Config,
-  idcc?: string
+  idcc?: string,
+  idccName?: string
 ) {
   const preparedData = await prepareQuestionData(
     userQuestion,
@@ -82,10 +83,10 @@ async function getGenerateData(
     ? {
         chatHistory: createIdccChatHistory(preparedData.query),
         systemPrompt:
-          (preparedData.instructions.generate_instruction_idcc?.replace(
-            "[URL_convention_collective]",
-            `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ) || "") +
+          (preparedData.instructions.generate_instruction_idcc
+            ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
+            .replace(/\$\{IDCC_NAME\}/g, idccName || "")
+            .replace(/\$\{IDCC_NUMBER\}/g, idcc || "") || "") +
           "\n\n" +
           knowledgeBaseContent,
       }
@@ -112,6 +113,7 @@ async function getFollowupGenerateData(
   newQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
+  idccName?: string,
   providedModel?: LLMModel
 ) {
   // RAG search still uses only original query + new question (2 queries)
@@ -152,10 +154,10 @@ async function getFollowupGenerateData(
     ? {
         chatHistory: createFollowupIdccChatHistory(conversationHistory, newQuestion),
         systemPrompt:
-          (preparedData.instructions.generate_followup_instruction_idcc?.replace(
-            "[URL_convention_collective]",
-            `https://code.travail.gouv.fr/convention-collective/${idcc}`
-          ) || "") +
+          (preparedData.instructions.generate_followup_instruction_idcc
+            ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
+            .replace(/\$\{IDCC_NAME\}/g, idccName || "")
+            .replace(/\$\{IDCC_NUMBER\}/g, idcc || "") || "") +
           "\n\n" +
           knowledgeBaseContent,
       }
@@ -182,6 +184,7 @@ export const generateAnswer = async (
   userQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
+  idccName?: string,
   debug?: boolean
 ): Promise<ApiResponse<AnswerResponse>> => {
   const startedAt = Date.now();
@@ -189,7 +192,8 @@ export const generateAnswer = async (
     const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
       requiredConfig,
-      idcc
+      idcc,
+      idccName
     );
 
     const generateResult = await generate({
@@ -237,13 +241,15 @@ export const generateAnswerStream = async (
   onChunk: (chunk: string) => void,
   onComplete: (result: ApiResponse<AnswerResponse>) => void,
   requiredConfig?: Config,
-  idcc?: string
+  idcc?: string,
+  idccName?: string
 ): Promise<void> => {
   try {
     const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
       requiredConfig,
-      idcc
+      idcc,
+      idccName
     );
 
     await generateStream(
@@ -293,6 +299,7 @@ export const generateFollowupAnswer = async (
   newQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
+  idccName?: string,
   providedModel?: LLMModel
 ): Promise<ApiResponse<AnswerResponse>> => {
   try {
@@ -309,6 +316,7 @@ export const generateFollowupAnswer = async (
       newQuestion,
       requiredConfig,
       idcc,
+      idccName,
       providedModel
     );
 
@@ -358,6 +366,7 @@ export const generateFollowupAnswerStream = async (
   onComplete: (result: ApiResponse<AnswerResponse>) => void,
   requiredConfig?: Config,
   idcc?: string,
+  idccName?: string,
   providedModel?: LLMModel
 ): Promise<void> => {
   try {
@@ -374,6 +383,7 @@ export const generateFollowupAnswerStream = async (
       newQuestion,
       requiredConfig,
       idcc,
+      idccName,
       providedModel
     );
 

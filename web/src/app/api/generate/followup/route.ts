@@ -12,6 +12,7 @@ interface FollowupRequestBody {
   newQuestion: string;
   config?: Config;
   agreementId?: string;
+  agreementTitle?: string;
   modelName?: string;
 }
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: FollowupRequestBody | null = null;
   try {
     body = await request.json();
-    const { originalQuery, conversationHistory, newQuestion, config, agreementId, modelName } =
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName } =
       body as FollowupRequestBody;
 
     if (!originalQuery || !conversationHistory || !newQuestion) {
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       newQuestion,
       config,
       agreementId,
+      agreementTitle,
       providedModel
     );
 

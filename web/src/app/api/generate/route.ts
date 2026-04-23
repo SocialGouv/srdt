@@ -10,6 +10,7 @@ interface RequestBody {
   question: string;
   config?: Config;
   agreementId?: string;
+  agreementTitle?: string;
 }
 
 function hasValidDebugToken(request: NextRequest): boolean {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: RequestBody | null = null;
   try {
     body = await request.json();
-    const { question, config, agreementId } = body as RequestBody;
+    const { question, config, agreementId, agreementTitle } = body as RequestBody;
 
     if (!question) {
       return new Response(
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       question,
       config,
       agreementId,
+      agreementTitle,
       debugMode
     );
 
