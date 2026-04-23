@@ -1,3 +1,10 @@
+## [1.39.2](https://github.com/SocialGouv/srdt/compare/v1.39.1...v1.39.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* **llm:** restore Mistral LLM ([b6f7ce0](https://github.com/SocialGouv/srdt/commit/b6f7ce04444c61d90cf1091003db124d23ecbb9f))
+
 ## [1.39.1](https://github.com/SocialGouv/srdt/compare/v1.39.0...v1.39.1) (2026-04-16)
 
 
