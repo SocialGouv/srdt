@@ -344,11 +344,11 @@ async def generate_stream(
 
         return StreamingResponse(
             generate_chunks(),
-            media_type="text/plain",
+            media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "Content-Type": "text/plain; charset=utf-8",
+                "Content-Type": "text/event-stream; charset=utf-8",
             },
         )
     except Exception as e:
