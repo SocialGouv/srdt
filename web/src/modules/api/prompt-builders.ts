@@ -5,6 +5,7 @@ export const formatChunks = (chunks: ChunkResult[]) => {
   return chunks
     .map(
       (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
+Titre: ${chunk.metadata.title}
 Contenu: ${chunk.content}
 ---`
     )
