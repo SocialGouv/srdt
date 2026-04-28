@@ -1,3 +1,10 @@
+## [1.39.5](https://github.com/SocialGouv/srdt/compare/v1.39.4...v1.39.5) (2026-04-28)
+
+
+### Bug Fixes
+
+* **api:** fix contribs & more [#351](https://github.com/SocialGouv/srdt/issues/351) [#352](https://github.com/SocialGouv/srdt/issues/352) [#357](https://github.com/SocialGouv/srdt/issues/357) ([#359](https://github.com/SocialGouv/srdt/issues/359)) ([62e7c53](https://github.com/SocialGouv/srdt/commit/62e7c533669d3cf07b3aa0f3640dcd2c05e4ba7d))
+
 ## [1.39.4](https://github.com/SocialGouv/srdt/compare/v1.39.3...v1.39.4) (2026-04-23)
 
 
