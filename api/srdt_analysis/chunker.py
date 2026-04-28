@@ -2,6 +2,7 @@ import re
 import unicodedata
 from typing import Callable, Dict
 
+from bs4 import BeautifulSoup
 from langchain_text_splitters import (
     HTMLHeaderTextSplitter,
     MarkdownHeaderTextSplitter,
@@ -68,6 +69,12 @@ class Chunker:
         text_splits = self._character_recursive_splitter.split_text(content)
         return [SplitDocument(self.normalize(text), {}) for text in text_splits]
 
+    def split_html_contribs(self, content: str) -> list[SplitDocument]:
+        # specific case for contributions, we parse html first then run standard text split
+        soup = BeautifulSoup(content, "html.parser")
+        text = soup.get_text(separator=" ")
+        return self.split_character_recursive(text)
+
     def split(
         self,
         content: str,
@@ -79,6 +86,7 @@ class Chunker:
             "markdown": self.split_markdown,
             "html": self.split_html,
             "character_recursive": self.split_character_recursive,
+            "html_contribs": self.split_html_contribs,
         }
         splitter_func = content_type_to_splitters.get(content_type)
         if splitter_func is None:

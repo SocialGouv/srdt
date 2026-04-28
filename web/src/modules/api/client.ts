@@ -137,6 +137,13 @@ export const generate = async (
   request: GenerateRequest
 ): Promise<UseApiResponse<GenerateResponse>> => {
   try {
+    // kept to ease debugging search
+    // return {
+    //   data: { time: 10, text: "text", nb_token_input: 1, nb_token_output: 2 },
+    //   error: null,
+    //   loading: false,
+    // };
+
     const data = await fetchApi<GenerateResponse>("/api/v1/generate", {
       method: "POST",
       body: JSON.stringify(request),

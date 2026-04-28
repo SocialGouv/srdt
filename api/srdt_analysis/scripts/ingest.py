@@ -37,7 +37,7 @@ def start():
 
     page_contribs_idcc_exploiter = PagesContributionsExploiter()
     page_contribs_idcc = page_contribs_idcc_exploiter.process_documents(
-        data["contributions_idcc"], "html"
+        data["contributions_idcc"], "html_contribs"
     )
 
     page_infos_exploiter = PageInfosExploiter()
