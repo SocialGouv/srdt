@@ -2,6 +2,7 @@ import re
 import unicodedata
 from typing import Callable, Dict
 
+from bs4 import BeautifulSoup
 from langchain_text_splitters import (
     HTMLHeaderTextSplitter,
     MarkdownHeaderTextSplitter,
@@ -10,8 +11,6 @@ from langchain_text_splitters import (
 
 from srdt_analysis.constants import CHUNK_OVERLAP, CHUNK_SIZE
 from srdt_analysis.models import ChunkerContentType, SplitDocument
-
-from bs4 import BeautifulSoup
 
 
 class Chunker:
@@ -71,9 +70,10 @@ class Chunker:
         return [SplitDocument(self.normalize(text), {}) for text in text_splits]
 
     def split_html_contribs(self, content: str) -> list[SplitDocument]:
+        # specific case for contributions, we parse html first then run standard text split
         soup = BeautifulSoup(content, "html.parser")
         text = soup.get_text(separator=" ")
-        return [SplitDocument(self.normalize(text), {})]
+        return self.split_character_recursive(text)
 
     def split(
         self,

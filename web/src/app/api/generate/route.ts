@@ -44,7 +44,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: RequestBody | null = null;
   try {
     body = await request.json();
-    const { question, config, agreementId, agreementTitle } = body as RequestBody;
+    const { question, config, agreementId, agreementTitle } =
+      body as RequestBody;
 
     if (!question) {
       return new Response(

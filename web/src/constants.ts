@@ -553,6 +553,14 @@ export enum Config {
   V2_0 = "v2.0",
 }
 
+export enum Collection {
+  CONTRIBUTIONS = "contributions",
+  PAGE_FICHE_MINISTERE_TRAVAIL = "page_fiche_ministere_travail",
+  FICHES_SERVICE_PUBLIC = "fiches_service_public",
+  INFORMATION = "information",
+  CODE_DU_TRAVAIL = "code_du_travail",
+}
+
 export const PROMPT_INSTRUCTIONS: Record<Config, InstructionPrompts> = {
   [Config.V2_0]: PROMPT_INSTRUCTIONS_V2_0,
 };
@@ -565,17 +573,17 @@ export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
   hybrid: true,
   top_K: 200,
   collections: [
-    "contributions",
-    "page_fiche_ministere_travail",
-    "fiches_service_public",
-    "information",
+    Collection.CONTRIBUTIONS,
+    Collection.PAGE_FICHE_MINISTERE_TRAVAIL,
+    Collection.FICHES_SERVICE_PUBLIC,
+    Collection.INFORMATION,
   ],
 };
 
 export const SEARCH_OPTIONS_CODE: SearchOptions = {
   hybrid: true,
   top_K: 64,
-  collections: ["code_du_travail"],
+  collections: [Collection.CODE_DU_TRAVAIL],
 };
 
 export const CHATGPT_LLM: LLMModel = {

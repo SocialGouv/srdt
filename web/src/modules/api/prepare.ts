@@ -11,6 +11,7 @@ import {
   K_RERANK_IDCC_FOLLOWUP,
   SEARCH_OPTIONS_CODE,
   K_RERANK_CODE,
+  Collection,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -85,16 +86,27 @@ const rerankedToChunk = ({
   rerank_score,
 });
 
-const searchTextContent = async (anonymized: string) => {
+const searchTextContent = async (
+  anonymized: string,
+  withGenericContributions: boolean = true
+) => {
   // call search for 256 chunks
   // merge them by source document
   // run rerank on two 64 batches of these merged chunks
   // merge results and take 10 best
   // return full content for these 10
 
+  const options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
+
+  if (!withGenericContributions) {
+    options.collections = options.collections?.filter(
+      (c) => c != Collection.CONTRIBUTIONS
+    );
+  }
+
   const localSearchResult = await search({
     prompts: [anonymized],
-    options: SEARCH_OPTIONS_CONTENT,
+    options,
   });
 
   if (localSearchResult.error) {
@@ -104,7 +116,7 @@ const searchTextContent = async (anonymized: string) => {
     Sentry.captureException(localSearchError, {
       extra: {
         query: anonymized,
-        searchOptions: SEARCH_OPTIONS_CONTENT,
+        searchOptions: options,
       },
     });
     console.error(`Erreur lors de la recherche: ${localSearchResult.error}`);
@@ -155,17 +167,21 @@ const searchTextContent = async (anonymized: string) => {
     ...(rerankBatch2.data?.results || []),
   ].sort((a, b) => b.rerank_score - a.rerank_score);
 
+  return getFullContentFromReranked(allReranked, K_RERANK);
+};
+
+const getFullContentFromReranked = async (
+  reranked: RerankResult[],
+  k: number
+) => {
   // get best (deduplicate by cdtn id)
-  const selectedDocumentsIds = allReranked.reduce(
-    (acc: Array<string>, curr) => {
-      if (acc.length < K_RERANK && !acc.includes(curr.chunk.metadata.id)) {
-        // todo keep original chunk score here to assignate to actual document
-        acc.push(curr.chunk.metadata.id);
-      }
-      return acc;
-    },
-    new Array<string>()
-  );
+  const selectedDocumentsIds = reranked.reduce((acc: Array<string>, curr) => {
+    if (acc.length < k && !acc.includes(curr.chunk.metadata.id)) {
+      // todo keep original chunk score here to assignate to actual document
+      acc.push(curr.chunk.metadata.id);
+    }
+    return acc;
+  }, new Array<string>());
 
   const retrieveResponse = await retrieveDocs(selectedDocumentsIds);
   const selectedDocuments = retrieveResponse.data?.contents || [];
@@ -208,9 +224,10 @@ const searchIDCC = async (idcc: string, anonymized: string) => {
       });
 
       if (idccRerankResults.data) {
-        return idccRerankResults.data.results
-          .slice(0, K_RERANK_IDCC)
-          .map(rerankedToChunk);
+        return getFullContentFromReranked(
+          idccRerankResults.data.results,
+          K_RERANK_IDCC
+        );
       }
     }
   }
@@ -274,7 +291,10 @@ export const prepareQuestionData = async (
     selectedIdccChunks = await searchIDCC(idcc, anonymized);
   }
 
-  const selectedFichesOfficiellesChunks = await searchTextContent(anonymized);
+  const selectedFichesOfficiellesChunks = await searchTextContent(
+    anonymized,
+    selectedIdccChunks.length < 1
+  );
 
   const selectedCodeDuTravailChunks = await searchArticles(anonymized);
 
