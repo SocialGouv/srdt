@@ -36,6 +36,7 @@ interface SaveInitialRequest {
   response: string;
   idcc?: string;
   modelName?: string;
+  generationTimeMs?: number;
 }
 
 interface SaveFollowupRequest {
@@ -43,6 +44,7 @@ interface SaveFollowupRequest {
   conversationId: string;
   followupQuestion: string;
   followupResponse: string;
+  generationTimeMs?: number;
 }
 
 interface SaveFeedbackRequest {
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     switch (body.action) {
       case "save_initial": {
-        const { question, response, idcc, modelName } = body;
+        const { question, response, idcc, modelName, generationTimeMs } = body;
 
         if (!question || !response) {
           return NextResponse.json(
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           feedback_reasons: null,
           idcc: idcc ?? null,
           model_name: modelName ?? null,
+          generation_time_ms: generationTimeMs ?? null,
         });
 
         return NextResponse.json({
@@ -119,7 +122,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       case "save_followup": {
-        const { conversationId, followupQuestion, followupResponse } = body;
+        const {
+          conversationId,
+          followupQuestion,
+          followupResponse,
+          generationTimeMs,
+        } = body;
 
         if (!conversationId || !followupQuestion || !followupResponse) {
           return NextResponse.json(
@@ -135,7 +143,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await updateConversationFollowup(
           conversationId,
           followupQuestion,
-          followupResponse
+          followupResponse,
+          generationTimeMs ?? null
         );
 
         return NextResponse.json({ success: true });
