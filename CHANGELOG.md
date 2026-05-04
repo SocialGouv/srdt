@@ -1,3 +1,10 @@
+## [1.39.6](https://github.com/SocialGouv/srdt/compare/v1.39.5...v1.39.6) (2026-05-04)
+
+
+### Bug Fixes
+
+* **prompt:** prompt plus permissif ([#363](https://github.com/SocialGouv/srdt/issues/363)) ([4fdf3ec](https://github.com/SocialGouv/srdt/commit/4fdf3ec9de9db9d5e48bf27eb1f9e37ccda23113))
+
 ## [1.39.5](https://github.com/SocialGouv/srdt/compare/v1.39.4...v1.39.5) (2026-04-28)
 
 
