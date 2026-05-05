@@ -157,24 +157,32 @@ export const ChatMessage = ({
         )} ${styles.messageWrapper}`}
       >
         <div className={bubbleClasses}>
-          {message.role === "assistant" && selectedAgreement && (
+          {message.role === "assistant" && (
             <div className={styles.conventionBadgeContainer}>
               <Badge
                 as="span"
                 noIcon
-                severity="info"
+                severity={selectedAgreement ? "info" : "warning"}
                 className={styles.conventionBadge}
               >
-                <span
-                  className={styles.conventionBadgeTitle}
-                  title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
-                >
-                  Convention collective&nbsp;:{" "}
-                  {selectedAgreement.shortTitle}
-                </span>
-                <span className={styles.conventionBadgeIdcc}>
-                  &nbsp;(IDCC {selectedAgreement.num})
-                </span>
+                {selectedAgreement ? (
+                  <>
+                    <span
+                      className={styles.conventionBadgeTitle}
+                      title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
+                    >
+                      Convention collective&nbsp;:{" "}
+                      {selectedAgreement.shortTitle}
+                    </span>
+                    <span className={styles.conventionBadgeIdcc}>
+                      &nbsp;(IDCC {selectedAgreement.num})
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.conventionBadgeTitle}>
+                    Convention collective&nbsp;: non renseignée
+                  </span>
+                )}
               </Badge>
             </div>
           )}
