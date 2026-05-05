@@ -1,3 +1,10 @@
+## [1.39.7](https://github.com/SocialGouv/srdt/compare/v1.39.6...v1.39.7) (2026-05-05)
+
+
+### Bug Fixes
+
+* **web:** swap hintText and label for idcc ([#364](https://github.com/SocialGouv/srdt/issues/364)) ([db4f699](https://github.com/SocialGouv/srdt/commit/db4f699877c10be13c18633767d942e7bb45f4d2))
+
 ## [1.39.6](https://github.com/SocialGouv/srdt/compare/v1.39.5...v1.39.6) (2026-05-04)
 
 
