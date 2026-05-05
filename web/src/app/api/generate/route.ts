@@ -3,7 +3,7 @@ import { generateAnswer } from "@/modules/api/process";
 import { ApiResponse, AnswerResponse } from "@/types";
 import { Config } from "@/constants";
 import { getAuthorizedSession } from "@/lib/auth/get-authorized-session";
-import { timingSafeEqual } from "crypto";
+import { hasValidDebugToken } from "@/lib/auth/has-valid-debug-token";
 import * as Sentry from "@sentry/nextjs";
 
 interface RequestBody {
@@ -11,21 +11,6 @@ interface RequestBody {
   config?: Config;
   agreementId?: string;
   agreementTitle?: string;
-}
-
-function hasValidDebugToken(request: NextRequest): boolean {
-  const expected = process.env.DEBUG_API_KEY;
-  if (!expected) return false;
-
-  const header = request.headers.get("authorization");
-  if (!header?.startsWith("Bearer ")) return false;
-  const provided = header.slice("Bearer ".length).trim();
-  if (!provided) return false;
-
-  const providedBuf = Buffer.from(provided);
-  const expectedBuf = Buffer.from(expected);
-  if (providedBuf.length !== expectedBuf.length) return false;
-  return timingSafeEqual(providedBuf, expectedBuf);
 }
 
 export async function POST(request: NextRequest): Promise<Response> {

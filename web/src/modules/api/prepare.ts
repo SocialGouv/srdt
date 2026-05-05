@@ -1,6 +1,7 @@
 import {
   Config,
-  getRandomModel,
+  getModelByFamily,
+  MISTRAL_LLM,
   PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_CONTENT,
   MAX_RERANK,
@@ -17,11 +18,24 @@ import {
   AnonymizeResponse,
   RephraseResponse,
   ChunkResult,
+  LLMFamily,
   LLMModel,
   RerankResult,
   InstructionPrompts,
   ContentResult,
 } from "../../types";
+
+const getDefaultModel = () => {
+  const family = process.env.DEFAULT_MODEL_FAMILY as LLMFamily;
+  if (!family)
+    console.warn(
+      "DEFAULT_MODEL_FAMILY is not defined, falling back to mistral"
+    );
+  return Object.values(LLMFamily).includes(family)
+    ? getModelByFamily(family)
+    : MISTRAL_LLM;
+};
+
 import * as Sentry from "@sentry/nextjs";
 import {
   UseApiResponse,
@@ -261,7 +275,7 @@ export const prepareQuestionData = async (
 ): Promise<PreparedQuestionData> => {
   const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
-  const model = getRandomModel();
+  const model = getDefaultModel();
 
   let anonymizeResult: UseApiResponse<AnonymizeResponse> | undefined =
     undefined;
@@ -338,7 +352,7 @@ export const prepareFollowupQuestionData = async (
 ): Promise<PreparedFollowupQuestionData> => {
   const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
-  const model = providedModel || getRandomModel(); // Use provided model or fallback to random
+  const model = providedModel ?? getDefaultModel();
 
   // Search for query1 (top 5)
   const searchResultQuery1 = await search({

@@ -9,3 +9,4 @@ data:
   NEXTAUTH_URL: https://web-srdt-preprod.ovh.fabrique.social.gouv.fr
   PROCONNECT_ENV: integration
   NEXT_PUBLIC_PROCONNECT_ENV: integration
+  DEFAULT_MODEL_FAMILY: mistral
