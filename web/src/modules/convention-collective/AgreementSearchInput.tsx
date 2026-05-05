@@ -64,11 +64,16 @@ export const AgreementSearchInput = ({
           <Autocomplete<Agreement>
             defaultValue={selectedAgreement}
             dataTestId="AgreementSearchAutocomplete"
-            hintText="Indiquez une convention collective pour améliorer la qualité de la réponse. Ex : transport routier ou 1486"
-            label={
+            hintText={
               <>
                 Nom de la convention collective ou son numéro d’identification
                 IDCC (4&nbsp;chiffres)
+              </>
+            }
+            label={
+              <>
+                Indiquez une convention collective pour améliorer la qualité de
+                la réponse. Ex&nbsp;: transport routier ou 1486
               </>
             }
             state={getInputState()}
