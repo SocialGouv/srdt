@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/SocialGouv/srdt/compare/v1.39.7...v1.40.0) (2026-05-05)
+
+
+### Features
+
+* **web:** always display convention collective badge ([#365](https://github.com/SocialGouv/srdt/issues/365)) ([e35292d](https://github.com/SocialGouv/srdt/commit/e35292dfbc961931a1cf9f96c823e9956372e390))
+
 ## [1.39.7](https://github.com/SocialGouv/srdt/compare/v1.39.6...v1.39.7) (2026-05-05)
 
 
