@@ -624,11 +624,17 @@ export const ALBERT_LLM: LLMModel = {
   base_url: ALBERT_BASE_URL,
 };
 
-export const getRandomModel = (): LLMModel => {
-  // const models = [CHATGPT_LLM, ..., ALBERT_LLM];
-  // return models[Math.floor(Math.random() * models.length)];
-  // return MISTRAL_LLM;
-  return CHATGPT_LLM;
+export const getModelByFamily = (family: LLMFamily): LLMModel => {
+  switch (family) {
+    case LLMFamily.MISTRAL:
+      return MISTRAL_LLM;
+    case LLMFamily.CHATGPT:
+      return CHATGPT_LLM;
+    case LLMFamily.ALBERT:
+      return ALBERT_LLM;
+    default:
+      throw new Error(`Unknown family ${family}`);
+  }
 };
 
 export const getModelByName = (modelName: string): LLMModel | null => {

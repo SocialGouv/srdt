@@ -143,6 +143,7 @@ export const generate = async (
     //   error: null,
     //   loading: false,
     // };
+    console.log(JSON.stringify(request, null, 2));
 
     const data = await fetchApi<GenerateResponse>("/api/v1/generate", {
       method: "POST",
