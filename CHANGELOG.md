@@ -1,3 +1,10 @@
+## [1.40.1](https://github.com/SocialGouv/srdt/compare/v1.40.0...v1.40.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* **web:** allow to swap models from kube config map ([#366](https://github.com/SocialGouv/srdt/issues/366)) ([f206b4b](https://github.com/SocialGouv/srdt/commit/f206b4b56ea3f982fe7ffa612d0a728faf6899a3))
+
 # [1.40.0](https://github.com/SocialGouv/srdt/compare/v1.39.7...v1.40.0) (2026-05-05)
 
 
