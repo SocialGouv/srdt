@@ -1,3 +1,10 @@
+## [1.40.3](https://github.com/SocialGouv/srdt/compare/v1.40.2...v1.40.3) (2026-05-07)
+
+
+### Bug Fixes
+
+* **api:** use chatgpt for prod default model family ([1c6eb9f](https://github.com/SocialGouv/srdt/commit/1c6eb9f3993341c7101d06249a4c6f11adfa2480))
+
 ## [1.40.2](https://github.com/SocialGouv/srdt/compare/v1.40.1...v1.40.2) (2026-05-07)
 
 
