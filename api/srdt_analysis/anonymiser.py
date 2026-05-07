@@ -5,7 +5,7 @@ nlp = spacy.load(
     disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"],
 )
 
-entities_fr = {"ORG": "ENTREPRISE", "PER": "PERSONNE", "LOC": "LIEU"}
+entities_fr = {"ORG": "ENTREPRISE", "PER": "PERSONNE"}
 
 
 # we don't want to replace those tokens
