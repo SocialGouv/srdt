@@ -1,3 +1,10 @@
+## [1.40.2](https://github.com/SocialGouv/srdt/compare/v1.40.1...v1.40.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* **api:** remove anonymization of locations ([#370](https://github.com/SocialGouv/srdt/issues/370)) ([c00c7e3](https://github.com/SocialGouv/srdt/commit/c00c7e3b6fe84a060ab344e72a123f49d7c15580))
+
 ## [1.40.1](https://github.com/SocialGouv/srdt/compare/v1.40.0...v1.40.1) (2026-05-06)
 
 
