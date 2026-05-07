@@ -7,6 +7,10 @@ from srdt_analysis.constants import (
     ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
 )
+from srdt_analysis.exceptions import (
+    ConfigurationError,
+    ExternalServiceError,
+)
 from srdt_analysis.models import (
     COLLECTION_ID,
     COLLECTIONS_ID,
@@ -23,18 +27,19 @@ class AlbertCollectionHandler:
     def __init__(self):
         self.api_key = os.getenv("ALBERT_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "API key must be provided either in constructor or as environment variable"
+            raise ConfigurationError(
+                "ALBERT_API_KEY environment variable is not set", service="Albert"
             )
         self.base_url = os.getenv("ALBERT_ENDPOINT")
         if not self.base_url:
-            raise ValueError(
-                "Albert endpoint must be provided either in constructor or as environment variable"
+            raise ConfigurationError(
+                "ALBERT_ENDPOINT environment variable is not set", service="Albert"
             )
         self.model = os.getenv("ALBERT_VECTORISATION_MODEL")
         if not self.model:
-            raise ValueError(
-                "Albert model must be provided either in constructor or as environment variable"
+            raise ConfigurationError(
+                "ALBERT_VECTORISATION_MODEL environment variable is not set",
+                service="Albert",
             )
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -65,7 +70,9 @@ class AlbertCollectionHandler:
             response_data = response.json()
             return response_data.get("data", [])
         except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
-            raise ValueError(f"Error while listing collections: {str(e)}")
+            raise ExternalServiceError(
+                f"Albert service error listing collections: {str(e)}", service="Albert"
+            ) from e
 
     def delete(self, id_collection: str) -> None:
         response = httpx.delete(
@@ -99,7 +106,9 @@ class AlbertCollectionHandler:
                 response.raise_for_status()
                 return []
         except (httpx.HTTPError, json.JSONDecodeError, KeyError) as e:
-            raise ValueError(f"Error while getting embeddings: {str(e)}")
+            raise ExternalServiceError(
+                f"Albert embedding service error: {str(e)}", service="Albert"
+            ) from e
 
     def search(
         self,
@@ -109,33 +118,65 @@ class AlbertCollectionHandler:
         score_threshold: float = 0,
         timeout: int = ALBERT_SEARCH_TIMEOUT,
     ) -> list[RankedChunk]:
-        response = httpx.post(
-            f"{self.base_url}/v1/search",
-            headers=self.headers,
-            json={
-                "prompt": prompt,
-                "collections": id_collections,
-                "k": k,
-                "score_threshold": score_threshold,
-            },
-            timeout=timeout,
-        )
-        result = response.json()
-        return result.get("data", [])
+        try:
+            response = httpx.post(
+                f"{self.base_url}/v1/search",
+                headers=self.headers,
+                json={
+                    "prompt": prompt,
+                    "collections": id_collections,
+                    "k": k,
+                    "score_threshold": score_threshold,
+                },
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result.get("data", [])
+        except httpx.HTTPStatusError as e:
+            raise ExternalServiceError(
+                f"Albert search error (HTTP {e.response.status_code})", service="Albert"
+            ) from e
+        except (httpx.RequestError, json.JSONDecodeError) as e:
+            raise ExternalServiceError(
+                f"Albert search error: {str(e)}", service="Albert"
+            ) from e
 
     def rerank(
         self,
         prompt: str,
         input: list[str],
     ) -> list[RerankedChunk]:
-        response = httpx.post(
-            f"{self.base_url}/v1/rerank",
-            headers=self.headers,
-            json={"query": prompt, "documents": input, "model": ALBERT_RERANK_MODEL},
-        )
-        result = response.json()
+        try:
+            response = httpx.post(
+                f"{self.base_url}/v1/rerank",
+                headers=self.headers,
+                json={
+                    "query": prompt,
+                    "documents": input,
+                    "model": ALBERT_RERANK_MODEL,
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
 
-        return result.get("results", [])
+            chunks = result.get("results", [])
+
+            if len(chunks) == 0 and len(input) > 0:
+                raise ExternalServiceError(
+                    "Albert rerank error : no chunked received",
+                    service="Albert",
+                )
+            else:
+                return chunks
+        except httpx.HTTPStatusError as e:
+            raise ExternalServiceError(
+                f"Albert rerank error (HTTP {e.response.status_code})", service="Albert"
+            ) from e
+        except (httpx.RequestError, json.JSONDecodeError) as e:
+            raise ExternalServiceError(
+                f"Albert rerank error: {str(e)}", service="Albert"
+            ) from e
 
     def upload(
         self,
