@@ -9,4 +9,4 @@ data:
   NEXTAUTH_URL: https://web-srdt.fabrique.social.gouv.fr
   PROCONNECT_ENV: production
   NEXT_PUBLIC_PROCONNECT_ENV: production
-  DEFAULT_MODEL_FAMILY: mistral
+  DEFAULT_MODEL_FAMILY: chatgpt
