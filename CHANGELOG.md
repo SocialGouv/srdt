@@ -1,3 +1,10 @@
+# [1.41.0](https://github.com/SocialGouv/srdt/compare/v1.40.3...v1.41.0) (2026-05-12)
+
+
+### Features
+
+* **web:** add link to evaluation questionnaire on home page ([#372](https://github.com/SocialGouv/srdt/issues/372)) ([bf77991](https://github.com/SocialGouv/srdt/commit/bf7799137b560de608ce6439303564f4ef0806e8))
+
 ## [1.40.3](https://github.com/SocialGouv/srdt/compare/v1.40.2...v1.40.3) (2026-05-07)
 
 
