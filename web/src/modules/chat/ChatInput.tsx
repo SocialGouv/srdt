@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { fr } from "@codegouvfr/react-dsfr";
 import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
 import { Agreement } from "../convention-collective/search";
@@ -88,6 +89,36 @@ export const ChatInput = ({
             defaultAgreement={selectedAgreement}
             trackingActionName="chat"
           />
+          <div
+            className={`${styles.conventionBadgeContainer} ${fr.cx(
+              "fr-mt-2w"
+            )}`}
+          >
+            <Badge
+              as="span"
+              noIcon
+              severity={selectedAgreement ? "info" : "new"}
+              className={styles.conventionBadge}
+            >
+              {selectedAgreement ? (
+                <>
+                  <span
+                    className={styles.conventionBadgeTitle}
+                    title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
+                  >
+                    Convention collective&nbsp;: {selectedAgreement.shortTitle}
+                  </span>
+                  <span className={styles.conventionBadgeIdcc}>
+                    &nbsp;(IDCC {selectedAgreement.num})
+                  </span>
+                </>
+              ) : (
+                <span className={styles.conventionBadgeTitle}>
+                  Convention collective&nbsp;: non renseignée
+                </span>
+              )}
+            </Badge>
+          </div>
         </div>
       )}
       {currentConversation?.isAwaitingFollowup && !isDisabled && (

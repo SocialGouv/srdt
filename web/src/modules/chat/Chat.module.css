@@ -17,6 +17,7 @@
 .chatContainer {
   display: flex;
   height: 80vh;
+  max-height: calc(100dvh - 240px);
 }
 
 .chatMainContent {
