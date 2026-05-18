@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/SocialGouv/srdt/compare/v1.41.0...v1.42.0) (2026-05-18)
+
+
+### Features
+
+* **web:** redesign convention collective status badge ([#374](https://github.com/SocialGouv/srdt/issues/374)) ([71d8c1e](https://github.com/SocialGouv/srdt/commit/71d8c1e3e0bd99fbd326a01c49c28bd8ba602915))
+
 # [1.41.0](https://github.com/SocialGouv/srdt/compare/v1.40.3...v1.41.0) (2026-05-12)
 
 
