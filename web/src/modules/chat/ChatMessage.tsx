@@ -157,12 +157,12 @@ export const ChatMessage = ({
         )} ${styles.messageWrapper}`}
       >
         <div className={bubbleClasses}>
-          {message.role === "assistant" && (
+          {message.role === "assistant" && index !== 0 && (
             <div className={styles.conventionBadgeContainer}>
               <Badge
                 as="span"
                 noIcon
-                severity={selectedAgreement ? "info" : "warning"}
+                severity="info"
                 className={styles.conventionBadge}
               >
                 {selectedAgreement ? (
