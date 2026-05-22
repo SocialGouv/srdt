@@ -14,10 +14,9 @@ import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
 
 type Props = {
   children: ReactNode;
-  notice?: ReactNode;
 };
 
-export const LayoutWrapper = ({ children, notice }: Props) => {
+export const LayoutWrapper = ({ children }: Props) => {
   const { isAuthenticated, user, session } = useAuth();
 
   const handleSignOut = async () => {
@@ -115,7 +114,6 @@ export const LayoutWrapper = ({ children, notice }: Props) => {
               ]
         }
       />
-      {notice}
       <main className={fr.cx("fr-container", "fr-mb-5w")}>{children}</main>
       <DsfrFooter
         accessibility="non compliant"
