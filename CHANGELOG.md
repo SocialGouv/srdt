@@ -1,3 +1,10 @@
+## [1.42.1](https://github.com/SocialGouv/srdt/compare/v1.42.0...v1.42.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* remove tally ([#376](https://github.com/SocialGouv/srdt/issues/376)) ([fb57fb9](https://github.com/SocialGouv/srdt/commit/fb57fb98fcd7299a3c287fa98903932424bb9d72))
+
 # [1.42.0](https://github.com/SocialGouv/srdt/compare/v1.41.0...v1.42.0) (2026-05-18)
 
 
