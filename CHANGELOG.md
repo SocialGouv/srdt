@@ -1,3 +1,10 @@
+# [1.43.0](https://github.com/SocialGouv/srdt/compare/v1.42.1...v1.43.0) (2026-05-22)
+
+
+### Features
+
+* **stats:** track response generation time for metabase ([#348](https://github.com/SocialGouv/srdt/issues/348)) ([7afd0e3](https://github.com/SocialGouv/srdt/commit/7afd0e3b0f5fcaba57e61ddea85d35c29c01b2df))
+
 ## [1.42.1](https://github.com/SocialGouv/srdt/compare/v1.42.0...v1.42.1) (2026-05-22)
 
 
