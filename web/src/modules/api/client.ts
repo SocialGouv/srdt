@@ -46,7 +46,11 @@ const fetchApi = async <T>(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || "Une erreur est survenue");
+    // The Python API returns `message` for handled errors and `detail` for
+    // auth/HTTPException errors. Keep both so this stays backward-compatible.
+    throw new Error(
+      error.message || error.detail || "Une erreur est survenue"
+    );
   }
 
   return response.json();
@@ -179,7 +183,9 @@ export const generateStream = async (
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || "Une erreur est survenue");
+      throw new Error(
+        error.message || error.detail || "Une erreur est survenue"
+      );
     }
 
     if (!response.body) {

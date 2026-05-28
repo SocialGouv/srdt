@@ -115,6 +115,23 @@ export async function POST(request: NextRequest): Promise<Response> {
               });
               controller.enqueue(`data: ${data}\n\n`);
             } else {
+              Sentry.captureException(
+                new Error(result.error || "Stream generation failed"),
+                {
+                  tags: {
+                    endpoint: "/api/generate/followup/stream",
+                  },
+                  extra: {
+                    method: "POST",
+                    source: "python_api",
+                    hasOriginalQuery: !!originalQuery,
+                    hasConversationHistory: !!conversationHistory,
+                    hasNewQuestion: !!newQuestion,
+                    config: config,
+                    agreementId: agreementId,
+                  },
+                }
+              );
               const data = JSON.stringify({
                 type: "error",
                 success: false,
