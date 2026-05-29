@@ -1,3 +1,11 @@
+## [1.43.1](https://github.com/SocialGouv/srdt/compare/v1.43.0...v1.43.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* **api:** improve error handling ([#367](https://github.com/SocialGouv/srdt/issues/367)) ([d042e6c](https://github.com/SocialGouv/srdt/commit/d042e6c79d8c8a8a8be610cbe844849157216b3b))
+* **web:** report Python API errors to Sentry and read new error format ([#378](https://github.com/SocialGouv/srdt/issues/378)) ([60ad7d6](https://github.com/SocialGouv/srdt/commit/60ad7d6c886a0b28b37faf37614349ce3fe7e914))
+
 # [1.43.0](https://github.com/SocialGouv/srdt/compare/v1.42.1...v1.43.0) (2026-05-22)
 
 
