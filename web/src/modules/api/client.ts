@@ -31,6 +31,26 @@ export interface StreamChunk {
   error?: string;
 }
 
+// Extract an error message from a failed response. The Python API returns
+// `message` for handled errors and `detail` for auth/HTTPException errors, but
+// upstream infra (proxy/gateway timeouts) can return non-JSON bodies, so we
+// fall back to the raw text / status instead of throwing on parse.
+const parseErrorMessage = async (response: Response): Promise<string> => {
+  const fallback = `Une erreur est survenue (HTTP ${response.status})`;
+  try {
+    const text = await response.text();
+    if (!text) return fallback;
+    try {
+      const error = JSON.parse(text);
+      return error.message || error.detail || text;
+    } catch {
+      return text;
+    }
+  } catch {
+    return fallback;
+  }
+};
+
 const fetchApi = async <T>(
   endpoint: string,
   options: RequestInit
@@ -45,8 +65,7 @@ const fetchApi = async <T>(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || "Une erreur est survenue");
+    throw new Error(await parseErrorMessage(response));
   }
 
   return response.json();
@@ -178,8 +197,7 @@ export const generateStream = async (
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || "Une erreur est survenue");
+      throw new Error(await parseErrorMessage(response));
     }
 
     if (!response.body) {

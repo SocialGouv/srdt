@@ -107,6 +107,20 @@ export async function POST(request: NextRequest): Promise<Response> {
     );
 
     if (!result.success) {
+      Sentry.captureException(new Error(result.error || "Generation failed"), {
+        tags: {
+          endpoint: "/api/generate/followup",
+        },
+        extra: {
+          method: "POST",
+          source: "python_api",
+          hasOriginalQuery: !!body?.originalQuery,
+          hasConversationHistory: !!body?.conversationHistory,
+          hasNewQuestion: !!body?.newQuestion,
+          config: body?.config,
+          agreementId: body?.agreementId,
+        },
+      });
       return new Response(
         JSON.stringify({ success: false, error: result.error }),
         {
