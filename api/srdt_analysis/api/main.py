@@ -5,12 +5,12 @@ import traceback
 from operator import itemgetter
 from typing import List
 
-import sentry_sdk
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
+from tenacity import RetryError
 
 from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
@@ -33,6 +33,7 @@ from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL, CHUNK_INDEX
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.exceptions import SRDTException
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer
@@ -40,22 +41,45 @@ from srdt_analysis.url_cleaner import clean_urls
 
 load_dotenv()
 
-# Only initialize Sentry if not running locally
-api_host = os.getenv("API_HOST", "localhost")
-if api_host not in ["localhost", "127.0.0.1"]:
-    sentry_sdk.init(
-        dsn="https://cf211345d704b74ef78cab4e59ea73ea@sentry2.fabrique.social.gouv.fr/47",
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
-        traces_sample_rate=1.0,
-    )
-    print("Sentry initialized for production environment")
-else:
-    print("Sentry disabled for local development")
-
 app = FastAPI()
 api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
+
+
+@app.exception_handler(Exception)
+async def srdt_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    if isinstance(exc, SRDTException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": type(exc).__name__,
+                "message": str(exc),
+                "service": exc.service,
+            },
+        )
+    else:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal Error",
+                "message": f"Unhandled error: {str(exc)}",
+            },
+        )
+
+
+@app.exception_handler(RetryError)
+async def retry_error_handler(request: Request, exc: RetryError) -> JSONResponse:
+    cause = exc.last_attempt.exception()
+    if isinstance(cause, SRDTException):
+        return await srdt_exception_handler(request, cause)
+    else:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal Error",
+                "message": f"Service failed after retries: {str(cause)}",
+            },
+        )
 
 
 es_ok = ElasticIndicesHandler().check_connection()
@@ -101,22 +125,13 @@ async def health():
 async def anonymize(request: AnonymizeRequest):
     start_time = time.time()
     tokenizer = Tokenizer()
-    try:
-        anonymized_question = anonymise_spacy(request.user_question)
-        return AnonymizeResponse(
-            time=time.time() - start_time,
-            anonymized_question=anonymized_question,
-            nb_token_input=tokenizer.compute_nb_tokens(request.user_question),
-            nb_token_output=tokenizer.compute_nb_tokens(anonymized_question),
-        )
-    except ValueError as ve:
-        logger.error(f"Anonymize validation error: {str(ve)}")
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(
-            f"Anonymize unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Anonymization failed: {str(e)}")
+    anonymized_question = anonymise_spacy(request.user_question)
+    return AnonymizeResponse(
+        time=time.time() - start_time,
+        anonymized_question=anonymized_question,
+        nb_token_input=tokenizer.compute_nb_tokens(request.user_question),
+        nb_token_output=tokenizer.compute_nb_tokens(anonymized_question),
+    )
 
 
 @app.post(f"{BASE_API_URL}/rephrase", response_model=RephraseResponse)
@@ -129,50 +144,37 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
         llm_url=request.model.base_url,
     )
 
-    try:
-        rephrased, queries = await llm_runner.rephrase_and_split(
-            request.question,
-            request.rephrasing_prompt,
-            request.queries_splitting_prompt,
-        )
+    rephrased, queries = await llm_runner.rephrase_and_split(
+        request.question,
+        request.rephrasing_prompt,
+        request.queries_splitting_prompt,
+    )
 
-        return RephraseResponse(
-            time=time.time() - start_time,
-            rephrased_question=rephrased,
-            queries=queries,
-            nb_token_input=tokenizer.compute_nb_tokens(request.question),
-            nb_token_output=tokenizer.compute_nb_tokens(rephrased),
-        )
-    except Exception as e:
-        logger.error(
-            f"Rephrase unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Rephrasing failed: {str(e)}")
+    return RephraseResponse(
+        time=time.time() - start_time,
+        rephrased_question=rephrased,
+        queries=queries,
+        nb_token_input=tokenizer.compute_nb_tokens(request.question),
+        nb_token_output=tokenizer.compute_nb_tokens(rephrased),
+    )
 
 
 @app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
 async def get_contributions_idcc(idcc: str, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    try:
-        idcc_chunks = getChunksByIdcc(idcc)
-        return SearchResponse(
-            time=time.time() - start_time,
-            top_chunks=idcc_chunks,
-        )
-    except Exception as e:
-        logger.error(f"IDCC get error :  {str(e)}, traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=str(e))
+    idcc_chunks = getChunksByIdcc(idcc)
+    return SearchResponse(
+        time=time.time() - start_time,
+        top_chunks=idcc_chunks,
+    )
 
 
 @app.post(f"{BASE_API_URL}/docs/retrieve", response_model=RetrieveResponse)
 async def get_docs(request: RetrieveRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     ids = request.ids
-    try:
-        contents = getDocsContent(ids)
-        return RetrieveResponse(time=time.time() - start_time, contents=contents)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    contents = getDocsContent(ids)
+    return RetrieveResponse(time=time.time() - start_time, contents=contents)
 
 
 @app.post(f"{BASE_API_URL}/rerank", response_model=RerankResponse)
@@ -180,35 +182,29 @@ async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     collections = AlbertCollectionHandler()
 
-    # tokenizer = Tokenizer()
+    # Albert seemd to be using bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit / not documented
+    # inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
+    # TODO dunno why but hard limit seemd to perform better than token selection, we should build chunks based on this limitation if it actually exists
+    inputs = [input.content[:8192] for input in request.inputs]
+    res = collections.rerank(request.prompt, inputs)
 
-    try:
-        # Albert seemd to be using bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit / not documented
-        # inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
-        # TODO dunno why but hard limit seemd to perform better than token selection, we should build chunks based on this limitation if it actually exists
-        inputs = [input.content[:8192] for input in request.inputs]
-        res = collections.rerank(request.prompt, inputs)
-
-        # reorder results based on rerank indices to map chunks and results
-        sorted_res = sorted(res, key=lambda res: res["index"])
-        zipped = list(
-            zip(
-                [rr["index"] for rr in sorted_res],
-                [rr["relevance_score"] for rr in sorted_res],
-                request.inputs,
-            )
+    # reorder results based on rerank indices to map chunks and results
+    sorted_res = sorted(res, key=lambda res: res["index"])
+    zipped = list(
+        zip(
+            [rr["index"] for rr in sorted_res],
+            [rr["relevance_score"] for rr in sorted_res],
+            request.inputs,
         )
+    )
 
-        # reorder using rerank score
-        reordered = [
-            RerankedChunk(chunk=r[2], rerank_score=r[1])
-            for r in sorted(zipped, key=itemgetter(1), reverse=True)
-        ]
+    # reorder using rerank score
+    reordered = [
+        RerankedChunk(chunk=r[2], rerank_score=r[1])
+        for r in sorted(zipped, key=itemgetter(1), reverse=True)
+    ]
 
-        return RerankResponse(time=time.time() - start_time, results=reordered)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return RerankResponse(time=time.time() - start_time, results=reordered)
 
 
 @app.post(f"{BASE_API_URL}/search", response_model=SearchResponse)
@@ -216,33 +212,25 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
     es = ElasticIndicesHandler()
 
-    try:
-        transformed_results: List[ChunkResult] = []
+    transformed_results: List[ChunkResult] = []
 
-        for prompt in request.prompts:
-            search_result = es.search(
-                index_name=CHUNK_INDEX,
-                prompt=prompt,
-                k=request.options.top_K,
-                hybrid=request.options.hybrid or False,
-                sources=request.options.collections,
-            )
-
-            transformed_results = [
-                item
-                for item in search_result
-                if item.score >= request.options.threshold
-            ]
-
-        return SearchResponse(
-            time=time.time() - start_time,
-            top_chunks=transformed_results,
+    for prompt in request.prompts:
+        search_result = es.search(
+            index_name=CHUNK_INDEX,
+            prompt=prompt,
+            k=request.options.top_K,
+            hybrid=request.options.hybrid or False,
+            sources=request.options.collections,
         )
-    except Exception as e:
-        logger.error(
-            f"Search unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+        transformed_results = [
+            item for item in search_result if item.score >= request.options.threshold
+        ]
+
+    return SearchResponse(
+        time=time.time() - start_time,
+        top_chunks=transformed_results,
+    )
 
 
 @app.post(f"{BASE_API_URL}/generate", response_model=GenerateResponse)
@@ -255,29 +243,23 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
         llm_url=request.model.base_url,
     )
 
-    try:
-        response = await llm_runner.chat_with_full_document(
-            request.chat_history,
-            request.system_prompt,
-        )
+    response = await llm_runner.chat_with_full_document(
+        request.chat_history,
+        request.system_prompt,
+    )
 
-        response = clean_urls(response)
+    response = clean_urls(response)
 
-        chat_history_str = " ".join(
-            [msg.get("content", "") for msg in request.chat_history]
-        )
+    chat_history_str = " ".join(
+        [msg.get("content", "") for msg in request.chat_history]
+    )
 
-        return GenerateResponse(
-            time=time.time() - start_time,
-            text=response,
-            nb_token_input=tokenizer.compute_nb_tokens(chat_history_str),
-            nb_token_output=tokenizer.compute_nb_tokens(response),
-        )
-    except Exception as e:
-        logger.error(
-            f"Generate unexpected error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+    return GenerateResponse(
+        time=time.time() - start_time,
+        text=response,
+        nb_token_input=tokenizer.compute_nb_tokens(chat_history_str),
+        nb_token_output=tokenizer.compute_nb_tokens(response),
+    )
 
 
 @app.post(f"{BASE_API_URL}/generate/stream")
@@ -292,67 +274,61 @@ async def generate_stream(
         llm_url=request.model.base_url,
     )
 
-    try:
-        chat_history_str = " ".join(
-            [msg.get("content", "") for msg in request.chat_history]
-        )
-        nb_token_input = tokenizer.compute_nb_tokens(chat_history_str)
+    chat_history_str = " ".join(
+        [msg.get("content", "") for msg in request.chat_history]
+    )
+    nb_token_input = tokenizer.compute_nb_tokens(chat_history_str)
 
-        async def generate_chunks():
-            accumulated_response = ""
-            try:
-                # Send initial metadata
-                initial_data = {
-                    "type": "start",
-                    "time": time.time() - start_time,
-                    "nb_token_input": nb_token_input,
+    async def generate_chunks():
+        accumulated_response = ""
+        try:
+            # Send initial metadata
+            initial_data = {
+                "type": "start",
+                "time": time.time() - start_time,
+                "nb_token_input": nb_token_input,
+            }
+            yield f"data: {json.dumps(initial_data)}\n\n"
+
+            # Stream the response chunks
+            async for chunk in llm_runner.chat_with_full_document_stream(
+                request.chat_history,
+                request.system_prompt,
+            ):
+                accumulated_response += chunk
+                chunk_data = {
+                    "type": "chunk",
+                    "content": chunk,
                 }
-                yield f"data: {json.dumps(initial_data)}\n\n"
+                yield f"data: {json.dumps(chunk_data)}\n\n"
 
-                # Stream the response chunks
-                async for chunk in llm_runner.chat_with_full_document_stream(
-                    request.chat_history,
-                    request.system_prompt,
-                ):
-                    accumulated_response += chunk
-                    chunk_data = {
-                        "type": "chunk",
-                        "content": chunk,
-                    }
-                    yield f"data: {json.dumps(chunk_data)}\n\n"
+            cleaned_accumulated = clean_urls(accumulated_response)
+            # Send final metadata
+            final_data = {
+                "type": "end",
+                "time": time.time() - start_time,
+                "text": cleaned_accumulated,
+                "nb_token_input": nb_token_input,
+                "nb_token_output": tokenizer.compute_nb_tokens(cleaned_accumulated),
+            }
+            yield f"data: {json.dumps(final_data)}\n\n"
 
-                cleaned_accumulated = clean_urls(accumulated_response)
-                # Send final metadata
-                final_data = {
-                    "type": "end",
-                    "time": time.time() - start_time,
-                    "text": cleaned_accumulated,
-                    "nb_token_input": nb_token_input,
-                    "nb_token_output": tokenizer.compute_nb_tokens(cleaned_accumulated),
-                }
-                yield f"data: {json.dumps(final_data)}\n\n"
+        except Exception as e:
+            logger.error(
+                f"Stream generation error: {str(e)}, traceback: {traceback.format_exc()}"
+            )
+            error_data = {
+                "type": "error",
+                "error": "Stream generation failed",
+            }
+            yield f"data: {json.dumps(error_data)}\n\n"
 
-            except Exception as e:
-                logger.error(
-                    f"Stream generation error: {str(e)}, traceback: {traceback.format_exc()}"
-                )
-                error_data = {
-                    "type": "error",
-                    "error": f"Stream generation failed: {str(e)}",
-                }
-                yield f"data: {json.dumps(error_data)}\n\n"
-
-        return StreamingResponse(
-            generate_chunks(),
-            media_type="text/plain",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "Content-Type": "text/plain; charset=utf-8",
-            },
-        )
-    except Exception as e:
-        logger.error(
-            f"Stream generate setup error: {str(e)}, traceback: {traceback.format_exc()}"
-        )
-        raise HTTPException(status_code=500, detail=f"Stream setup failed: {str(e)}")
+    return StreamingResponse(
+        generate_chunks(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "text/plain; charset=utf-8",
+        },
+    )

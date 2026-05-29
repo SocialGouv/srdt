@@ -14,10 +14,12 @@ from srdt_analysis.models import (
 
 class LLMRunner:
     collections: AlbertCollectionHandler
+    # llm_processor: MistralClient
     llm_processor: LLMClient
 
     def __init__(self, llm_url: str, llm_api_token: str, llm_model: str):
         self.collections = AlbertCollectionHandler()
+        # self.llm_processor = MistralClient(llm_url, llm_api_token, llm_model)
         self.llm_processor = LLMClient(llm_url, llm_api_token, llm_model)
 
     async def rephrase_and_split(

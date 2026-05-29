@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import AsyncIterator, Sequence, Union
+from typing import AsyncIterator, NoReturn, Sequence, Union
 
 import httpx
 from tenacity import (
@@ -11,6 +11,10 @@ from tenacity import (
 )
 
 from srdt_analysis.constants import API_TIMEOUT
+from srdt_analysis.exceptions import (
+    ExternalServiceError,
+    ServiceUnavailableError,
+)
 from srdt_analysis.logger import Logger
 from srdt_analysis.models import (
     LLMChatPayload,
@@ -31,10 +35,35 @@ class LLMClient:
         }
         self.model = model
 
+    def _raise_for_status(self, e: httpx.HTTPStatusError) -> NoReturn:
+        self.logger.error(
+            f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
+        )
+        status = e.response.status_code
+        if status == 401:
+            raise ExternalServiceError(
+                "LLM API key rejected (HTTP 401)", service="LLM"
+            ) from e
+        elif status in (404, 422):
+            raise ExternalServiceError(
+                f"LLM model '{self.model}' not found or unprocessable (HTTP {status})",
+                service="LLM",
+            ) from e
+        elif status == 429:
+            raise ExternalServiceError(
+                "LLM rate limit exceeded (HTTP 429)", service="LLM"
+            ) from e
+        else:
+            raise ExternalServiceError(
+                f"LLM service error (HTTP {status})", service="LLM"
+            ) from e
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=retry_if_exception_type((httpx.HTTPError, ValueError)),
+        retry=retry_if_exception_type(
+            (httpx.HTTPError, ValueError, ExternalServiceError)
+        ),
     )
     async def _make_chat_completions_async(
         self,
@@ -67,16 +96,12 @@ class LLMClient:
                 return response_json["choices"][0]["message"]["content"]
 
             except httpx.HTTPStatusError as e:
-                self.logger.error(
-                    f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
-                )
-                raise
+                self._raise_for_status(e)
             except httpx.RequestError as e:
                 self.logger.error(f"Request error occurred: {str(e)}")
-                raise
-            except Exception as e:
-                self.logger.error(f"Unexpected error: {str(e)}")
-                raise
+                raise ServiceUnavailableError(
+                    f"LLM service unreachable: {str(e)}", service="LLM"
+                ) from e
 
     async def _make_chat_completions_stream_async(
         self,
@@ -127,16 +152,12 @@ class LLMClient:
                                     continue
 
             except httpx.HTTPStatusError as e:
-                self.logger.error(
-                    f"HTTP error occurred: {e.response.status_code} - {e.response.text}"
-                )
-                raise
+                self._raise_for_status(e)
             except httpx.RequestError as e:
                 self.logger.error(f"Request error occurred: {str(e)}")
-                raise
-            except Exception as e:
-                self.logger.error(f"Unexpected error: {str(e)}")
-                raise
+                raise ServiceUnavailableError(
+                    f"LLM service unreachable: {str(e)}", service="LLM"
+                ) from e
 
     async def generate_completions_async(
         self,

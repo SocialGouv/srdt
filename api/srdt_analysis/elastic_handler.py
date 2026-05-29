@@ -8,6 +8,11 @@ from elasticsearch import Elasticsearch
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.collections import AlbertCollectionHandler
+from srdt_analysis.exceptions import (
+    ConfigurationError,
+    ExternalServiceError,
+    ServiceUnavailableError,
+)
 from srdt_analysis.logger import Logger
 
 french_analyzer = {
@@ -54,14 +59,16 @@ class ElasticIndicesHandler:
         self.logger = Logger("Elastic")
         self.api_key = os.getenv("ELASTIC_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "Elastic API key must be provided either in constructor or as environment variable"
+            raise ConfigurationError(
+                "ELASTIC_API_KEY environment variable is not set",
+                service="Elasticsearch",
             )
 
         self.base_url = os.getenv("ELASTIC_HOSTNAME")
         if not self.base_url:
-            raise ValueError(
-                "Elastic hostname must be provided either in constructor or as environment variable"
+            raise ConfigurationError(
+                "ELASTIC_HOSTNAME environment variable is not set",
+                service="Elasticsearch",
             )
 
         self.client = Elasticsearch(
@@ -74,7 +81,12 @@ class ElasticIndicesHandler:
         self.albert = AlbertCollectionHandler()
 
     def check_connection(self):
-        return self.client.info()
+        try:
+            return self.client.info()
+        except Exception as e:
+            raise ServiceUnavailableError(
+                f"Elasticsearch unreachable: {str(e)}", service="Elasticsearch"
+            ) from e
 
     def create_index_name(self, name):
         suff = random.randint(0, 100000)  # nosec B311
@@ -143,64 +155,89 @@ class ElasticIndicesHandler:
     def find_most_similar_text(
         self, index_name, query, k, sources: list[str]
     ) -> list[ChunkResult]:
-        response = self.client.search(
-            index=index_name,
-            size=k,
-            query={
-                "bool": {
-                    "must": [{"match": {"content": query}}],
-                    "filter": [{"terms": {"metadata.source": sources}}],
-                }
-            },
-            source_includes=["content", "metadata"],
-        )
-        return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+        try:
+            response = self.client.search(
+                index=index_name,
+                size=k,
+                query={
+                    "bool": {
+                        "must": [{"match": {"content": query}}],
+                        "filter": [{"terms": {"metadata.source": sources}}],
+                    }
+                },
+                source_includes=["content", "metadata"],
+            )
+            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch error - text search : {str(e)}", service="Elasticsearch"
+            ) from e
 
     def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
         embeddings = self.albert.embeddings([query])[0]
 
         # sources filter do not work properly if not every sources has been ingested
         # i.e. if the there are no results for the required source, it will return results for other sources
-        response = self.client.search(
-            query={"terms": {"metadata.source": sources}},
-            index=index_name,
-            knn={
-                "field": "embedding",
-                "query_vector": embeddings,
-                "num_candidates": k * 1.5,
-                "k": k,
-            },
-            size=k,
-        )
-
-        return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+        try:
+            response = self.client.search(
+                query={"terms": {"metadata.source": sources}},
+                index=index_name,
+                knn={
+                    "field": "embedding",
+                    "query_vector": embeddings,
+                    "num_candidates": k * 1.5,
+                    "k": k,
+                },
+                size=k,
+            )
+            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch error - vector search : {str(e)}",
+                service="Elasticsearch",
+            ) from e
 
     def get_idcc(self, index_name: str, idcc: str):
-        response = self.client.search(
-            index=index_name,
-            query={"term": {"metadata.idcc.keyword": idcc}},
-            size=1000,
-            source_includes=["content", "metadata"],
-        )
-        return [hit["_source"] for hit in response["hits"]["hits"]]
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={"term": {"metadata.idcc.keyword": idcc}},
+                size=1000,
+                source_includes=["content", "metadata"],
+            )
+            return [hit["_source"] for hit in response["hits"]["hits"]]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
 
     def get_chunks(self, index_name: str, doc_ids: List[str]):
-        response = self.client.search(
-            index=index_name,
-            query={"terms": {"metadata.id.keyword": doc_ids}},
-            size=1000,
-            source_includes=["content", "metadata"],
-        )
-        return [hit["_source"] for hit in response["hits"]["hits"]]
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={"terms": {"metadata.id.keyword": doc_ids}},
+                size=1000,
+                source_includes=["content", "metadata"],
+            )
+            return [hit["_source"] for hit in response["hits"]["hits"]]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
 
     def get_article_node(self, index_name: str, num: str):
-        response = self.client.search(
-            index=index_name,
-            query={"term": {"metadata.articles.num.keyword": num}},
-            size=1,
-            source_includes=["metadata.articles"],
-        )
-        return [hit["_source"] for hit in response["hits"]["hits"]]
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={"term": {"metadata.articles.num.keyword": num}},
+                size=1,
+                source_includes=["metadata.articles"],
+            )
+            return [hit["_source"] for hit in response["hits"]["hits"]]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
 
     def search(
         self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
@@ -255,13 +292,16 @@ class ElasticIndicesHandler:
         return [update_score(res_dict[id], score) for [id, score] in sorted_results[:k]]
 
     def check_urls(self, index_name: str, urls: list[str]) -> list[tuple[str, bool]]:
-        response = self.client.search(
-            index=index_name,
-            query={"terms": {"metadata.url.keyword": urls}},
-            size=0,
-            aggregations={"urls": {"terms": {"field": "metadata.url.keyword"}}},
-        )
-
-        buckets = [b["key"] for b in response["aggregations"]["urls"]["buckets"]]
-
-        return [(url, url in buckets) for url in urls]
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={"terms": {"metadata.url.keyword": urls}},
+                size=0,
+                aggregations={"urls": {"terms": {"field": "metadata.url.keyword"}}},
+            )
+            buckets = [b["key"] for b in response["aggregations"]["urls"]["buckets"]]
+            return [(url, url in buckets) for url in urls]
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
