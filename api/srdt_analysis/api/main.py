@@ -33,7 +33,7 @@ from srdt_analysis.collections import AlbertCollectionHandler
 from srdt_analysis.constants import BASE_API_URL, CHUNK_INDEX
 from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
 from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.exceptions import ExternalServiceError, SRDTException
+from srdt_analysis.exceptions import SRDTException
 from srdt_analysis.llm_runner import LLMRunner
 from srdt_analysis.logger import Logger
 from srdt_analysis.tokenizer import Tokenizer
@@ -48,7 +48,7 @@ logger = Logger("API")
 
 @app.exception_handler(Exception)
 async def srdt_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    if isinstance(exc, SRDTException) or isinstance(exc, ExternalServiceError):
+    if isinstance(exc, SRDTException):
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -70,7 +70,7 @@ async def srdt_exception_handler(request: Request, exc: Exception) -> JSONRespon
 @app.exception_handler(RetryError)
 async def retry_error_handler(request: Request, exc: RetryError) -> JSONResponse:
     cause = exc.last_attempt.exception()
-    if isinstance(cause, SRDTException) or isinstance(cause, ExternalServiceError):
+    if isinstance(cause, SRDTException):
         return await srdt_exception_handler(request, cause)
     else:
         return JSONResponse(
@@ -319,7 +319,7 @@ async def generate_stream(
             )
             error_data = {
                 "type": "error",
-                "error": f"Stream generation failed: {str(e)}",
+                "error": "Stream generation failed",
             }
             yield f"data: {json.dumps(error_data)}\n\n"
 
