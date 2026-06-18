@@ -1,0 +1,8 @@
+apiVersion: v2
+name: api
+description: srdt — API RAG (FastAPI/Python, recherche ElasticSearch + Albert) — platform-agnostic application chart
+type: application
+# Chart version is bumped/overwritten by CI at publish time (snapshot 0.0.0-sha.<sha> or release tag).
+version: 0.1.0
+# appVersion = image tag by default (see templates/_helpers.tpl "api.image").
+appVersion: "0.1.0"
