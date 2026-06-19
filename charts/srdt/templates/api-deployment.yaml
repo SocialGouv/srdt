@@ -1,24 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "web.fullname" . }}
+  name: {{ include "srdt.fullname" . }}-api
   labels:
-    {{- include "web.labels" . | nindent 4 }}
+    {{- include "srdt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
   {{- if .Values.reloader.auto }}
   annotations:
     reloader.stakater.com/auto: "true"
   {{- end }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: {{ .Values.api.replicaCount }}
   selector:
     matchLabels:
-      {{- include "web.selectorLabels" . | nindent 6 }}
+      {{- include "srdt.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
   template:
     metadata:
       labels:
-        {{- include "web.labels" . | nindent 8 }}
+        {{- include "srdt.labels" . | nindent 8 }}
+        app.kubernetes.io/component: api
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
@@ -28,64 +29,58 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "web.serviceAccountName" . }}
-      {{- with .Values.podSecurityContext }}
+      serviceAccountName: {{ include "srdt.serviceAccountName" . }}
+      {{- with .Values.api.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: app
-          image: {{ include "web.image" . | quote }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.containerSecurityContext }}
+        - name: api
+          image: {{ include "srdt.apiImage" . | quote }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          {{- with .Values.api.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.probes.port }}
+              containerPort: {{ .Values.api.probes.port }}
           envFrom:
             - configMapRef:
-                name: {{ include "web.fullname" . }}
-            {{- range $key, $secretName := .Values.secrets }}
+                name: {{ include "srdt.fullname" . }}-api
+            {{- range $key, $secretName := .Values.api.secrets }}
             {{- if $secretName }}
             - secretRef:
                 name: {{ $secretName }}
             {{- end }}
             {{- end }}
-          {{- if or .Values.env .Values.extraEnv }}
+          {{- with .Values.api.extraEnv }}
           env:
-            {{- range $k, $v := .Values.env }}
-            - name: {{ $k }}
-              value: {{ $v | quote }}
-            {{- end }}
-            {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}
           {{- end }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.probes.path }}
-              port: {{ .Values.probes.port }}
+              path: {{ .Values.api.probes.path }}
+              port: {{ .Values.api.probes.port }}
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 10
             failureThreshold: 15
           readinessProbe:
             httpGet:
-              path: {{ .Values.probes.path }}
-              port: {{ .Values.probes.port }}
+              path: {{ .Values.api.probes.path }}
+              port: {{ .Values.api.probes.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 10
             failureThreshold: 3
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- with .Values.api.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+      {{- with .Values.api.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}

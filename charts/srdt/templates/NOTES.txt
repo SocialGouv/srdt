@@ -1,0 +1,12 @@
+srdt déployé.
+
+  web (front)  : {{ include "srdt.webImage" . }}  (port {{ .Values.web.probes.port }}, {{ .Values.web.probes.path }})
+                 {{ if .Values.ingress.web.host }}https://{{ .Values.ingress.web.host }}{{ else }}(ingress web désactivé){{ end }}
+  api (RAG)    : {{ include "srdt.apiImage" . }}  (port {{ .Values.api.probes.port }}, {{ .Values.api.probes.path }})
+                 {{ if .Values.ingress.api.host }}https://{{ .Values.ingress.api.host }}{{ else }}(ingress api désactivé){{ end }}
+
+Le web appelle l'api via API_BASE_URL (= https://<api host>, dérivé du host si non fourni).
+Secrets attendus (par nom, créés par ExternalSecrets côté gitops) :
+  api : {{ .Values.api.secrets | toJson }}
+  web : {{ .Values.web.secrets | toJson }}
+DB (web) : DATABASE_URL fourni via web.extraEnv (secret CNPG <cluster>-app, clé `uri`).

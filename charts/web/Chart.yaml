@@ -1,8 +1,0 @@
-apiVersion: v2
-name: web
-description: srdt — front Next.js (SPA + auth ProConnect/NextAuth, multi-LLM) — platform-agnostic application chart
-type: application
-# Chart version is bumped/overwritten by CI at publish time (snapshot 0.0.0-sha.<sha> or release tag).
-version: 0.1.0
-# appVersion = image tag by default (see templates/_helpers.tpl "web.image").
-appVersion: "0.1.0"

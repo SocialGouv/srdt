@@ -1,8 +1,8 @@
-{{- define "web.name" -}}
+{{- define "srdt.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "web.fullname" -}}
+{{- define "srdt.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -15,18 +15,18 @@
 {{- end -}}
 {{- end -}}
 
-{{- define "web.chart" -}}
+{{- define "srdt.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "web.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "web.name" . }}
+{{- define "srdt.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "srdt.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "web.labels" -}}
-helm.sh/chart: {{ include "web.chart" . }}
-{{ include "web.selectorLabels" . }}
+{{- define "srdt.labels" -}}
+helm.sh/chart: {{ include "srdt.chart" . }}
+{{ include "srdt.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- with .Values.global.extraLabels }}
@@ -34,21 +34,31 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 {{- end -}}
 
-{{- define "web.serviceAccountName" -}}
+{{- define "srdt.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-{{- default (include "web.fullname" .) .Values.serviceAccount.name -}}
+{{- default (include "srdt.fullname" .) .Values.serviceAccount.name -}}
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
 
-{{/* Full image reference: <global.imageRegistry>/<image.repository>:<tag|appVersion> */}}
-{{- define "web.image" -}}
+{{/* Références d'image complètes : <global.imageRegistry>/<repository>:<tag|appVersion> */}}
+{{- define "srdt.apiImage" -}}
 {{- $reg := .Values.global.imageRegistry | trimSuffix "/" -}}
-{{- $tag := .Values.image.tag | default .Chart.AppVersion -}}
+{{- $tag := .Values.api.image.tag | default .Chart.AppVersion -}}
 {{- if $reg -}}
-{{- printf "%s/%s:%s" $reg .Values.image.repository $tag -}}
+{{- printf "%s/%s:%s" $reg .Values.api.image.repository $tag -}}
 {{- else -}}
-{{- printf "%s:%s" .Values.image.repository $tag -}}
+{{- printf "%s:%s" .Values.api.image.repository $tag -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "srdt.webImage" -}}
+{{- $reg := .Values.global.imageRegistry | trimSuffix "/" -}}
+{{- $tag := .Values.web.image.tag | default .Chart.AppVersion -}}
+{{- if $reg -}}
+{{- printf "%s/%s:%s" $reg .Values.web.image.repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .Values.web.image.repository $tag -}}
 {{- end -}}
 {{- end -}}

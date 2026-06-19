@@ -1,0 +1,8 @@
+apiVersion: v2
+name: srdt
+description: SRDT (assistant IA des Services de Renseignement en Droit du Travail) — chart applicatif plateforme-agnostique (api FastAPI/RAG + web Next.js).
+type: application
+# version & appVersion sont écrasées par la CI au publish (snapshot 0.0.0-sha.<sha> ou tag sémver).
+version: 0.1.0
+# appVersion = tag d'image par défaut des 2 images (cf. _helpers.tpl "srdt.apiImage"/"srdt.webImage").
+appVersion: "1.43.1"

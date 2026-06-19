@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "srdt.fullname" . }}-web
+  labels:
+    {{- include "srdt.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "srdt.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: {{ .Values.web.service.port }}
+      targetPort: {{ .Values.web.service.targetPort }}
+      protocol: TCP
