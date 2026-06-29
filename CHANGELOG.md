@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/SocialGouv/srdt/compare/v1.43.1...v1.44.0) (2026-06-29)
+
+
+### Features
+
+* new intro screen ([a1d01a6](https://github.com/SocialGouv/srdt/commit/a1d01a6f95f8eb8b8371ca70178a5e43239aa21b))
+
 ## [1.43.1](https://github.com/SocialGouv/srdt/compare/v1.43.0...v1.43.1) (2026-05-29)
 
 
