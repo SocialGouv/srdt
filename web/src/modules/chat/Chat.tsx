@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Button } from "@codegouvfr/react-dsfr/Button";
-import { fr } from "@codegouvfr/react-dsfr";
 import { Conversation, ChatMessage as ChatMessageType } from "./types";
 import useApi from "@/hooks/use-api";
 import { MAX_FOLLOWUP_QUESTIONS } from "@/constants";
@@ -11,6 +9,7 @@ import { Agreement } from "../convention-collective/search";
 import { ChatHistory } from "./ChatHistory";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
+import { NewConversationView } from "./NewConversationView";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
 
@@ -71,7 +70,7 @@ export const Chat = () => {
   const [selectedAgreement, setSelectedAgreement] = useState<
     Agreement | undefined
   >(undefined);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const {
@@ -612,8 +611,15 @@ export const Chat = () => {
     }
   };
 
+  // Empty state: a fresh conversation where no question has been asked yet.
+  const isEmptyState = !messages.some((m) => m.role === "user");
+
   return (
-    <div className={styles.chatContainer}>
+    <div
+      className={`${styles.chatContainer} ${
+        isEmptyState ? styles.chatContainerEmpty : styles.chatContainerResponse
+      }`}
+    >
       <ChatHistory
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -621,66 +627,56 @@ export const Chat = () => {
         onShowHistoryChange={setShowHistory}
         onConversationSelect={handleConversationSelect}
         onDeleteConversation={handleDeleteConversation}
+        onNewConversation={handleNewConversation}
       />
 
       <div className={styles.chatMainContent}>
-        {/* Fixed header with buttons - always visible */}
-        <div className={`${fr.cx("fr-mt-2w")} ${styles.chatHeader}`}>
-          <Button
-            onClick={() => {
-              if (!showHistory) {
-                push(["trackEvent", "history", "show history"]);
-              }
-              setShowHistory(!showHistory);
-            }}
-            iconId={"fr-icon-menu-fill"}
-            priority="tertiary no outline"
-            title={
-              showHistory ? "Masquer l'historique" : "Afficher l'historique"
-            }
+        {isEmptyState ? (
+          <NewConversationView
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            onSubmit={handleSubmit}
+            onKeyDown={handleKeyDown}
+            isDisabled={isDisabled}
+            selectedAgreement={selectedAgreement}
+            setSelectedAgreement={setSelectedAgreement}
           />
+        ) : (
+          <>
+            {/* Scrollable messages area */}
+            <div
+              ref={chatMessagesRef}
+              className={`chat-messages ${styles.chatMessagesContainer}`}
+            >
+              {messages.map((message, index) => (
+                <ChatMessage
+                  key={index}
+                  message={message}
+                  index={index}
+                  isLastMessage={index === messages.length - 1}
+                  isLoading={isLoading}
+                  apiResult={apiResult}
+                  globalResponseTime={globalResponseTime}
+                  apiError={apiError}
+                  selectedAgreement={selectedAgreement}
+                  dbConversationId={currentConversation?.dbConversationId}
+                />
+              ))}
+            </div>
 
-          <Button
-            onClick={handleNewConversation}
-            iconId="fr-icon-add-line"
-            priority="secondary"
-          >
-            Nouvelle conversation
-          </Button>
-        </div>
-
-        {/* Scrollable messages area */}
-        <div
-          ref={chatMessagesRef}
-          className={`chat-messages ${styles.chatMessagesContainer}`}
-        >
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              message={message}
-              index={index}
-              isLastMessage={index === messages.length - 1}
-              isLoading={isLoading}
-              apiResult={apiResult}
-              globalResponseTime={globalResponseTime}
-              apiError={apiError}
+            <ChatInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              onSubmit={handleSubmit}
+              onKeyDown={handleKeyDown}
+              isDisabled={isDisabled}
+              messages={messages}
+              currentConversation={currentConversation}
               selectedAgreement={selectedAgreement}
-              dbConversationId={currentConversation?.dbConversationId}
+              setSelectedAgreement={setSelectedAgreement}
             />
-          ))}
-        </div>
-
-        <ChatInput
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          onSubmit={handleSubmit}
-          onKeyDown={handleKeyDown}
-          isDisabled={isDisabled}
-          messages={messages}
-          currentConversation={currentConversation}
-          selectedAgreement={selectedAgreement}
-          setSelectedAgreement={setSelectedAgreement}
-        />
+          </>
+        )}
       </div>
     </div>
   );

@@ -16,14 +16,155 @@
 
 .chatContainer {
   display: flex;
+}
+
+/* Conversation/response screen: app-shell with a fixed-height, internally
+   scrolling messages area. */
+.chatContainerResponse {
   height: 80vh;
   max-height: calc(100dvh - 240px);
+}
+
+/* Empty / new-conversation screen: normal document flow, single page scroll.
+   `min-height` keeps the panel reaching down so the footer sits below it. */
+.chatContainerEmpty {
+  min-height: calc(100dvh - 200px);
 }
 
 .chatMainContent {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+}
+
+/* ---- Sidebar (history) ---- */
+.sidebar {
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  background-color: var(--background-alt-grey);
+  border-right: 1px solid var(--border-default-grey);
+  margin-right: 1rem;
+}
+
+.sidebarOpen {
+  width: 300px;
+}
+
+.sidebarCollapsed {
+  width: 3rem;
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+.sidebarInner {
+  width: 300px;
+  height: 100%;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebarToggleRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+/* Shared row for "Nouvelle conversation" and the "Historique" label so their
+   icons and text line up exactly. */
+.sidebarRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-action-high-blue-france);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button.sidebarRow:hover {
+  background-color: var(--background-default-grey-hover);
+}
+
+.sidebarRowStatic {
+  cursor: default;
+}
+
+.sidebarList {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+}
+
+/* ---- New conversation composer ---- */
+.composerScreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.5rem;
+}
+
+.composerHero {
+  text-align: center;
+  margin-bottom: 2rem;
+  max-width: 720px;
+}
+
+/* Balance the wrapping so headings don't leave a single orphan word on a line. */
+.composerHero h1,
+.composerHero p {
+  text-wrap: balance;
+}
+
+.composerHeroIcon {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.composerCard {
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+  padding: 2rem;
+  background-color: var(--background-default-grey);
+}
+
+.composerFieldLabel {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-title-grey);
+}
+
+.composerField {
+  margin-top: 1.5rem;
+}
+
+.composerActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.composerNotice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  color: var(--text-action-high-blue-france);
 }
 
 .chatHeader {
@@ -39,9 +180,11 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 1rem;
   overflow-y: auto;
   gap: 1rem;
-  margin-bottom: 1rem;
   padding-top: 1rem;
 }
 
@@ -88,6 +231,9 @@
 }
 
 .chatForm {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   background-color: var(--background-default-grey);
   border-top: 1px solid var(--background-alt-blue-france);
 }

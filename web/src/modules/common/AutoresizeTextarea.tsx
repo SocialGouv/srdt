@@ -18,6 +18,7 @@ interface AutoresizeTextareaProps {
   maxLines?: number;
   className?: string;
   style?: React.CSSProperties;
+  id?: string;
 }
 
 export interface AutoresizeTextareaRef {

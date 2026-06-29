@@ -14,9 +14,11 @@ import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
 
 type Props = {
   children: ReactNode;
+  /** When true, `main` spans the full width instead of the centered DSFR container. */
+  fullWidth?: boolean;
 };
 
-export const LayoutWrapper = ({ children }: Props) => {
+export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
   const { isAuthenticated, user, session } = useAuth();
 
   const handleSignOut = async () => {
@@ -114,7 +116,9 @@ export const LayoutWrapper = ({ children }: Props) => {
               ]
         }
       />
-      <main className={fr.cx("fr-container", "fr-mb-5w")}>{children}</main>
+      <main className={fullWidth ? "" : fr.cx("fr-container", "fr-mb-5w")}>
+        {children}
+      </main>
       <DsfrFooter
         accessibility="non compliant"
         bottomItems={[

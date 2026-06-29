@@ -23,7 +23,7 @@ export function HomeContent() {
   }
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper fullWidth={isAuthenticated}>
       {isAuthenticated ? <Chat /> : <AuthVerification />}
     </LayoutWrapper>
   );

@@ -14,6 +14,12 @@ type Props = {
   ) => NonNullable<ReactNode> | undefined;
   defaultAgreement?: Agreement;
   trackingActionName: string;
+  /** Field label, defaults to the historical wording. */
+  label?: ReactNode;
+  /** Hint shown below the label, defaults to the historical wording. */
+  hintText?: ReactNode;
+  /** Input placeholder. */
+  placeholder?: string;
 };
 
 export const AgreementSearchInput = ({
@@ -21,6 +27,19 @@ export const AgreementSearchInput = ({
   onAgreementSelect,
   selectedAgreementAlert,
   defaultAgreement,
+  label = (
+    <>
+      Indiquez une convention collective pour améliorer la qualité de la
+      réponse. Ex&nbsp;: transport routier ou 1486
+    </>
+  ),
+  hintText = (
+    <>
+      Nom de la convention collective ou son numéro d’identification IDCC
+      (4&nbsp;chiffres)
+    </>
+  ),
+  placeholder,
 }: Props) => {
   const [selectedAgreement, setSelectedAgreement] = useState(defaultAgreement);
   const [searchState, setSearchState] = useState<
@@ -64,18 +83,9 @@ export const AgreementSearchInput = ({
           <Autocomplete<Agreement>
             defaultValue={selectedAgreement}
             dataTestId="AgreementSearchAutocomplete"
-            hintText={
-              <>
-                Nom de la convention collective ou son numéro d’identification
-                IDCC (4&nbsp;chiffres)
-              </>
-            }
-            label={
-              <>
-                Indiquez une convention collective pour améliorer la qualité de
-                la réponse. Ex&nbsp;: transport routier ou 1486
-              </>
-            }
+            hintText={hintText}
+            label={label}
+            placeholder={placeholder}
             state={getInputState()}
             stateRelatedMessage={getStateMessage()}
             onChange={(agreement) => {
