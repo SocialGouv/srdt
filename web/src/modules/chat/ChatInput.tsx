@@ -1,11 +1,8 @@
 "use client";
 
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { fr } from "@codegouvfr/react-dsfr";
 import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
-import { Agreement } from "../convention-collective/search";
-import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
 import { Conversation, ChatMessage } from "./types";
 import styles from "./Chat.module.css";
 
@@ -17,9 +14,23 @@ interface ChatInputProps {
   isDisabled: boolean;
   messages: ChatMessage[];
   currentConversation: Conversation | undefined;
-  selectedAgreement: Agreement | undefined;
-  setSelectedAgreement: (agreement: Agreement | undefined) => void;
+  onNewConversation: () => void;
+  onSuggestion: (text: string) => void;
 }
+
+// One-click follow-up suggestions. `label` is shown on the chip, `message` is
+// the follow-up actually sent to the assistant.
+const FOLLOWUP_SUGGESTIONS = [
+  { label: "Résumer la réponse", message: "Résume la réponse de façon concise." },
+  {
+    label: "Rédiger un mail prêt à envoyer",
+    message: "Rédige un mail prêt à envoyer à partir de cette réponse.",
+  },
+  {
+    label: "Citer les textes de référence",
+    message: "Cite les textes de référence applicables.",
+  },
+];
 
 export const ChatInput = ({
   newMessage,
@@ -29,106 +40,75 @@ export const ChatInput = ({
   isDisabled,
   messages,
   currentConversation,
-  selectedAgreement,
-  setSelectedAgreement,
+  onNewConversation,
+  onSuggestion,
 }: ChatInputProps) => {
+  const isGenerating =
+    messages.length > 0 &&
+    (messages[messages.length - 1].isLoading ||
+      messages[messages.length - 1].isStreaming);
+
+  const canFollowup = !!currentConversation?.isAwaitingFollowup && !isDisabled;
+
+  const placeholder = isDisabled
+    ? isGenerating
+      ? "Génération de la réponse en cours…"
+      : "Veuillez démarrer une nouvelle conversation pour poser une autre question."
+    : "Posez une question de suivi ou démarrez une nouvelle conversation…";
+
   return (
-    <form
-      onSubmit={onSubmit}
-      className={`${fr.cx("fr-grid-row", "fr-grid-row--gutters")} ${
-        styles.chatForm
-      }`}
-    >
-      <div className={fr.cx("fr-col-11")}>
-        <AutoresizeTextarea
-          value={newMessage}
-          onChange={setNewMessage}
-          onKeyDown={onKeyDown}
-          placeholder={
-            isDisabled
-              ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
-                messages.length > 0 &&
-                (messages[messages.length - 1].isLoading ||
-                  messages[messages.length - 1].isStreaming)
-                ? "Génération de la réponse en cours...\nVous pourrez ensuite poser une question de suivi ou démarrer une nouvelle conversation."
-                : "Veuillez démarrer une nouvelle conversation pour poser une autre question.\nPour cela, remontez en haut de la page et cliquez sur le bouton « Nouvelle conversation »."
-              : currentConversation?.isAwaitingFollowup
-              ? "Posez une question de suivi ou démarrez une nouvelle conversation...\nEx. : « Fais-en un mail », « Cite tous les textes applicables », « Synthétise la réponse »..."
-              : "Saisissez votre message"
-          }
-          disabled={isDisabled}
-          maxLines={10}
-        />
+    <div className={styles.followupCard}>
+      <div className={styles.followupHeader}>
+        <h2 className={fr.cx("fr-h5", "fr-m-0")}>Poursuivre l’échange</h2>
+        <Button
+          iconId="fr-icon-add-line"
+          priority="secondary"
+          size="small"
+          onClick={onNewConversation}
+        >
+          Nouvelle conversation
+        </Button>
       </div>
-      <div className={`${fr.cx("fr-col-1")} ${styles.submitButtonContainer}`}>
+
+      {canFollowup && (
+        <>
+          <p className={styles.followupHint}>
+            💡 Utilisez une suggestion ou posez une question complémentaire.
+          </p>
+          <div className={styles.suggestionChips}>
+            {FOLLOWUP_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion.label}
+                type="button"
+                className={styles.suggestionChip}
+                onClick={() => onSuggestion(suggestion.message)}
+              >
+                {suggestion.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <form onSubmit={onSubmit} className={styles.followupInputRow}>
+        <div className={styles.followupTextareaWrap}>
+          <AutoresizeTextarea
+            value={newMessage}
+            onChange={setNewMessage}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
+            disabled={isDisabled}
+            maxLines={10}
+          />
+        </div>
         <Button
           iconId="fr-icon-send-plane-fill"
-          title={
-            isDisabled
-              ? // Check if we're actively generating (last message is loading/streaming) vs conversation is complete
-                messages.length > 0 &&
-                (messages[messages.length - 1].isLoading ||
-                  messages[messages.length - 1].isStreaming)
-                ? "Génération en cours, patientez..."
-                : "Démarrez une nouvelle conversation pour poser une autre question"
-              : currentConversation?.isAwaitingFollowup
-              ? "Envoyer votre question de suivi"
-              : "Envoyer votre message"
-          }
           type="submit"
-          className={fr.cx("fr-cell--center")}
-          disabled={isDisabled}
-        />
-      </div>
-      {!isDisabled && !currentConversation?.firstUserQuestion && (
-        <div className={fr.cx("fr-col-11")}>
-          <AgreementSearchInput
-            onAgreementSelect={(agreement) => {
-              setSelectedAgreement(agreement);
-            }}
-            defaultAgreement={selectedAgreement}
-            trackingActionName="chat"
-          />
-          <div
-            className={`${styles.conventionBadgeContainer} ${fr.cx(
-              "fr-mt-2w"
-            )}`}
-          >
-            <Badge
-              as="span"
-              noIcon
-              severity={selectedAgreement ? "info" : "new"}
-              className={styles.conventionBadge}
-            >
-              {selectedAgreement ? (
-                <>
-                  <span
-                    className={styles.conventionBadgeTitle}
-                    title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
-                  >
-                    Convention collective&nbsp;: {selectedAgreement.shortTitle}
-                  </span>
-                  <span className={styles.conventionBadgeIdcc}>
-                    &nbsp;(IDCC {selectedAgreement.num})
-                  </span>
-                </>
-              ) : (
-                <span className={styles.conventionBadgeTitle}>
-                  Convention collective&nbsp;: non renseignée
-                </span>
-              )}
-            </Badge>
-          </div>
-        </div>
-      )}
-      {currentConversation?.isAwaitingFollowup && !isDisabled && (
-        <div className={fr.cx("fr-col-12", "fr-mt-1w")}>
-          <div className={styles.followupInfo}>
-            💡 Vous pouvez poser une question de suivi pour approfondir cette
-            réponse, ou démarrer une nouvelle conversation.
-          </div>
-        </div>
-      )}
-    </form>
+          disabled={isDisabled || !newMessage.trim()}
+        >
+          Envoyer
+        </Button>
+      </form>
+    </div>
   );
 };
