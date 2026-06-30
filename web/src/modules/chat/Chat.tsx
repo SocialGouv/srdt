@@ -288,15 +288,16 @@ export const Chat = () => {
     return title;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent, messageOverride?: string) => {
+    if (e) e.preventDefault();
 
-    if (!newMessage.trim() || isDisabled) return;
+    const messageToSend = messageOverride ?? newMessage;
+    if (!messageToSend.trim() || isDisabled) return;
 
     setIsDisabled(true);
 
     const userMessage = {
-      content: newMessage,
+      content: messageToSend,
       role: "user" as const,
       isFollowup: currentConversation?.isAwaitingFollowup || false,
     };
@@ -319,13 +320,13 @@ export const Chat = () => {
       messages.length === 1 && messages[0].role === "assistant";
     const conversationUpdates: Partial<Conversation> = {
       messages: currentMessages,
-      lastUserQuestion: newMessage,
+      lastUserQuestion: messageToSend,
     };
 
     if (shouldUpdateTitle) {
-      conversationUpdates.title = generateConversationTitle(newMessage);
+      conversationUpdates.title = generateConversationTitle(messageToSend);
       // Store the first question for potential follow-up
-      conversationUpdates.firstUserQuestion = newMessage;
+      conversationUpdates.firstUserQuestion = messageToSend;
     }
 
     // If this is a follow-up, clear the awaiting state
@@ -359,7 +360,7 @@ export const Chat = () => {
       await generateFollowupAnswerStream(
         currentConversation.firstUserQuestion!,
         conversationHistory,
-        newMessage,
+        messageToSend,
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
@@ -401,7 +402,7 @@ export const Chat = () => {
             if (currentConversation?.dbConversationId) {
               saveConversationToDb("save_followup", {
                 conversationId: currentConversation.dbConversationId,
-                followupQuestion: newMessage,
+                followupQuestion: messageToSend,
                 followupResponse: followupResponseText,
                 generationTimeMs: Math.round(endTime - startTime),
               });
@@ -440,7 +441,7 @@ export const Chat = () => {
     } else {
       // Use regular streaming for initial question
       await generateAnswerStream(
-        newMessage,
+        messageToSend,
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
@@ -478,7 +479,7 @@ export const Chat = () => {
 
             // Save initial conversation to database
             saveConversationToDb("save_initial", {
-              question: newMessage,
+              question: messageToSend,
               response: responseText,
               idcc: selectedAgreement?.id,
               modelName: result.data?.modelName,
@@ -672,8 +673,8 @@ export const Chat = () => {
               isDisabled={isDisabled}
               messages={messages}
               currentConversation={currentConversation}
-              selectedAgreement={selectedAgreement}
-              setSelectedAgreement={setSelectedAgreement}
+              onNewConversation={handleNewConversation}
+              onSuggestion={(text) => handleSubmit(undefined, text)}
             />
           </>
         )}

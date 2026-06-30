@@ -230,28 +230,68 @@ button.sidebarRow:hover {
   margin-bottom: -1.5rem;
 }
 
-.chatForm {
+/* ---- "Poursuivre l'échange" (follow-up) card ---- */
+.followupCard {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+  padding: 1.5rem;
   background-color: var(--background-default-grey);
-  border-top: 1px solid var(--background-alt-blue-france);
 }
 
-.submitButtonContainer {
+.followupHeader {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
-.followupInfo {
+.followupHint {
   font-size: 0.875rem;
   color: var(--text-mention-grey);
-  padding: 0.5rem;
-  background-color: var(--background-alt-grey);
-  border-radius: 4px;
-  border-left: 3px solid var(--border-action-high-blue-france);
+  margin: 0 0 0.75rem;
+}
+
+.suggestionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.suggestionChip {
+  border: 1px solid var(--border-action-high-blue-france);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--text-action-high-blue-france);
+  padding: 0.25rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.suggestionChip:hover:not(:disabled) {
+  background-color: var(--background-action-low-blue-france);
+}
+
+.suggestionChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.followupInputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.followupTextareaWrap {
+  flex: 1;
+  min-width: 0;
 }
 
 .linkPlaceholder {
