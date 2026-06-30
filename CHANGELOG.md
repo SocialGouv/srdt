@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/SocialGouv/srdt/compare/v1.45.0...v1.46.0) (2026-06-30)
+
+
+### Features
+
+* footer and scroll bars ([#383](https://github.com/SocialGouv/srdt/issues/383)) ([02bc05a](https://github.com/SocialGouv/srdt/commit/02bc05afba94d78330de424e7110e6646c81d37d))
+
 # [1.45.0](https://github.com/SocialGouv/srdt/compare/v1.44.0...v1.45.0) (2026-06-30)
 
 
