@@ -1,0 +1,20 @@
+/* App-shell used on the conversation screen: header + main fill the viewport,
+   so the footer is pushed just below the fold instead of eating reading space. */
+.appShell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.appMain {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Transparent wrapper: header / main / footer lay out as if there were no
+   wrapper at all (used when we don't need the app-shell). */
+.contents {
+  display: contents;
+}

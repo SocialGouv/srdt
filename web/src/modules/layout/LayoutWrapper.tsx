@@ -11,15 +11,31 @@ import { signOut } from "next-auth/react";
 import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
 import { AuthorizationCheck } from "@/modules/auth/AuthorizationCheck";
 import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
+import styles from "./LayoutWrapper.module.css";
 
 type Props = {
   children: ReactNode;
   /** When true, `main` spans the full width instead of the centered DSFR container. */
   fullWidth?: boolean;
+  /**
+   * When true, header + main fill the viewport (app-shell) and the footer is
+   * pushed below the fold — used on the conversation screen to free reading space.
+   */
+  fillViewport?: boolean;
 };
 
-export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
+export const LayoutWrapper = ({
+  children,
+  fullWidth = false,
+  fillViewport = false,
+}: Props) => {
   const { isAuthenticated, user, session } = useAuth();
+
+  const mainClassName = fillViewport
+    ? styles.appMain
+    : fullWidth
+    ? ""
+    : fr.cx("fr-container", "fr-mb-5w");
 
   const handleSignOut = async () => {
     try {
@@ -49,7 +65,8 @@ export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
     <>
       <AuthorizationCheck />
       <MatomoUserTracking />
-      <DsfrHeader
+      <div className={fillViewport ? styles.appShell : styles.contents}>
+        <DsfrHeader
         brandTop={
           <>
             RÉPUBLIQUE
@@ -116,9 +133,8 @@ export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
               ]
         }
       />
-      <main className={fullWidth ? "" : fr.cx("fr-container", "fr-mb-5w")}>
-        {children}
-      </main>
+        <main className={mainClassName}>{children}</main>
+      </div>
       <DsfrFooter
         accessibility="non compliant"
         bottomItems={[
