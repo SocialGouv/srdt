@@ -36,6 +36,8 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  padding: 0 2rem;
+  background-color: var(--background-alt-blue-france);
 }
 
 /* ---- Sidebar (history) ---- */
@@ -45,7 +47,6 @@
   overflow: hidden;
   background-color: var(--background-alt-grey);
   border-right: 1px solid var(--border-default-grey);
-  margin-right: 1rem;
 }
 
 .sidebarOpen {
@@ -113,13 +114,13 @@ button.sidebarRow:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 0;
 }
 
 .composerHero {
   text-align: center;
   margin-bottom: 2rem;
-  max-width: 720px;
+  max-width: none;
 }
 
 /* Balance the wrapping so headings don't leave a single orphan word on a line. */
@@ -135,7 +136,7 @@ button.sidebarRow:hover {
 
 .composerCard {
   width: 100%;
-  max-width: 720px;
+  max-width: none;
   border: 1px solid var(--border-default-grey);
   border-radius: 8px;
   padding: 2rem;
@@ -181,16 +182,24 @@ button.sidebarRow:hover {
   flex-direction: column;
   flex: 1;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto 1rem;
+  margin: 0 0 1rem;
   overflow-y: auto;
   gap: 1rem;
   padding-top: 1rem;
 }
 
 .messageWrapper {
-  max-width: 70%;
   min-width: 200px;
+}
+
+/* User question: a blue bubble that doesn't take the full width. */
+.messageWrapperUser {
+  max-width: 70%;
+}
+
+/* Assistant answer: a full-width white card on the blue background. */
+.messageWrapperAssistant {
+  width: 100%;
 }
 
 .messageBubble {
@@ -206,15 +215,17 @@ button.sidebarRow:hover {
 }
 
 .messageBubbleAssistant {
-  /* Use pseudo-element for background to prevent it from being copied */
+  /* White card on the blue background. The pseudo-element below carries the
+     fill so it never ends up in the copied HTML. */
   background: transparent;
+  border: 1px solid var(--border-default-grey);
 }
 
 .messageBubbleAssistant::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--background-default-grey-hover);
+  background-color: var(--background-default-grey);
   border-radius: 8px;
   z-index: -1;
   /* Prevent this pseudo-element from being selected/copied */
@@ -233,8 +244,8 @@ button.sidebarRow:hover {
 /* ---- "Poursuivre l'échange" (follow-up) card ---- */
 .followupCard {
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
+  margin: 0;
+  margin-bottom: 1rem;
   border: 1px solid var(--border-default-grey);
   border-radius: 8px;
   padding: 1.5rem;

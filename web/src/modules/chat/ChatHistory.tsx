@@ -69,7 +69,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           onClick={onNewConversation}
         >
           <span
-            className={fr.cx("fr-icon-add-line", "fr-icon--sm")}
+            className={fr.cx("fr-icon-add-circle-fill", "fr-icon--sm")}
             aria-hidden="true"
           />
           Nouvelle conversation

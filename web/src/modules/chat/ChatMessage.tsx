@@ -154,7 +154,11 @@ export const ChatMessage = ({
         className={`${fr.cx(
           "fr-my-1w",
           message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
-        )} ${styles.messageWrapper}`}
+        )} ${styles.messageWrapper} ${
+          message.role === "user"
+            ? styles.messageWrapperUser
+            : styles.messageWrapperAssistant
+        }`}
       >
         <div className={bubbleClasses}>
           {message.role === "assistant" && index !== 0 && (
@@ -249,7 +253,7 @@ export const ChatMessage = ({
         <div
           className={`${styles.messageBubble} ${styles.messageBubbleAssistant}`}
         >
-          <p className={fr.cx("fr-m-0", "fr-h1")}>
+          <p className={fr.cx("fr-m-0", "fr-h3")}>
             Donnez votre avis sur cette réponse
           </p>
           <FeedbackSelector

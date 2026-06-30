@@ -22,12 +22,15 @@ type Props = {
    * pushed below the fold — used on the conversation screen to free reading space.
    */
   fillViewport?: boolean;
+  /** When set, clicking the header brand resets to the home screen instead of navigating. */
+  onGoHome?: () => void;
 };
 
 export const LayoutWrapper = ({
   children,
   fullWidth = false,
   fillViewport = false,
+  onGoHome,
 }: Props) => {
   const { isAuthenticated, user, session } = useAuth();
 
@@ -76,11 +79,21 @@ export const LayoutWrapper = ({
           }
           homeLinkProps={{
             href: "/",
-            title: "Accueil - Experimentation SRDT IA",
+            title: "Accueil - L’assistant IA des SRDT",
+            ...(onGoHome
+              ? {
+                  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // Let the browser handle modifier-clicks (open in a new tab/window).
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    e.preventDefault();
+                    onGoHome();
+                  },
+                }
+              : {}),
           }}
           serviceTitle={
             <>
-              Experimentation SRDT IA{" "}
+              L’assistant IA des SRDT{" "}
               <Badge as="span" noIcon severity="success">
                 Beta
               </Badge>
