@@ -1,3 +1,10 @@
+## [1.46.1](https://github.com/SocialGouv/srdt/compare/v1.46.0...v1.46.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* various display fix new display ([#384](https://github.com/SocialGouv/srdt/issues/384)) ([9f3f641](https://github.com/SocialGouv/srdt/commit/9f3f64160eded513e6288e84bb1f127e10f65777))
+
 # [1.46.0](https://github.com/SocialGouv/srdt/compare/v1.45.0...v1.46.0) (2026-06-30)
 
 
