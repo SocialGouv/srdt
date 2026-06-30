@@ -67,72 +67,72 @@ export const LayoutWrapper = ({
       <MatomoUserTracking />
       <div className={fillViewport ? styles.appShell : styles.contents}>
         <DsfrHeader
-        brandTop={
-          <>
-            RÉPUBLIQUE
-            <br />
-            FRANÇAISE
-          </>
-        }
-        homeLinkProps={{
-          href: "/",
-          title: "Accueil - Experimentation SRDT IA",
-        }}
-        serviceTitle={
-          <>
-            Experimentation SRDT IA{" "}
-            <Badge as="span" noIcon severity="success">
-              Beta
-            </Badge>
-          </>
-        }
-        serviceTagline="Direction générale du travail"
-        quickAccessItems={
-          isAuthenticated
-            ? [
-                {
-                  iconId: "fr-icon-account-circle-line",
-                  text: user?.name || user?.email || "Mon compte",
-                  buttonProps: undefined,
-                  linkProps: {
-                    href: "#",
-                    onClick: (e: React.MouseEvent) => e.preventDefault(),
+          brandTop={
+            <>
+              RÉPUBLIQUE
+              <br />
+              FRANÇAISE
+            </>
+          }
+          homeLinkProps={{
+            href: "/",
+            title: "Accueil - Experimentation SRDT IA",
+          }}
+          serviceTitle={
+            <>
+              Experimentation SRDT IA{" "}
+              <Badge as="span" noIcon severity="success">
+                Beta
+              </Badge>
+            </>
+          }
+          serviceTagline="Direction générale du travail"
+          quickAccessItems={
+            isAuthenticated
+              ? [
+                  {
+                    iconId: "fr-icon-account-circle-line",
+                    text: user?.name || user?.email || "Mon compte",
+                    buttonProps: undefined,
+                    linkProps: {
+                      href: "#",
+                      onClick: (e: React.MouseEvent) => e.preventDefault(),
+                    },
                   },
-                },
 
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                  {
+                    iconId: "fr-icon-questionnaire-line",
+                    text: "Support",
+                    linkProps: {
+                      href: "https://tally.so/r/jao5z4",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
                   },
-                },
-                headerFooterDisplayItem,
-                {
-                  iconId: "fr-icon-logout-box-r-line",
-                  text: "Se déconnecter",
-                  buttonProps: {
-                    onClick: handleSignOut,
+                  headerFooterDisplayItem,
+                  {
+                    iconId: "fr-icon-logout-box-r-line",
+                    text: "Se déconnecter",
+                    buttonProps: {
+                      onClick: handleSignOut,
+                    },
+                    linkProps: undefined,
                   },
-                  linkProps: undefined,
-                },
-              ]
-            : [
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                ]
+              : [
+                  {
+                    iconId: "fr-icon-questionnaire-line",
+                    text: "Support",
+                    linkProps: {
+                      href: "https://tally.so/r/jao5z4",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
                   },
-                },
-                headerFooterDisplayItem,
-              ]
-        }
-      />
+                  headerFooterDisplayItem,
+                ]
+          }
+        />
         <main className={mainClassName}>{children}</main>
       </div>
       <DsfrFooter
