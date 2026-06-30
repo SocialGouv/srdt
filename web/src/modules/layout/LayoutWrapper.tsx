@@ -83,6 +83,8 @@ export const LayoutWrapper = ({
             ...(onGoHome
               ? {
                   onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // Let the browser handle modifier-clicks (open in a new tab/window).
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                     e.preventDefault();
                     onGoHome();
                   },

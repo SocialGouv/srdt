@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthVerification } from "@/modules/auth/AuthVerification";
 import { Chat } from "@/modules/chat/Chat";
@@ -12,10 +12,10 @@ export function HomeContent() {
   const [chatKey, setChatKey] = useState(0);
 
   // Reset to a fresh home screen (used when clicking the header brand).
-  const goHome = () => {
+  const goHome = useCallback(() => {
     setConversationActive(false);
     setChatKey((k) => k + 1);
-  };
+  }, []);
 
   if (isLoading) {
     return (
