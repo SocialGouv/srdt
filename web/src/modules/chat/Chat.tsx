@@ -63,7 +63,12 @@ const MAX_CONVERSATIONS_TO_STORE = 30;
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
 
-export const Chat = () => {
+type ChatProps = {
+  /** Notifies the parent when a conversation becomes active (a question was asked). */
+  onConversationActiveChange?: (active: boolean) => void;
+};
+
+export const Chat = ({ onConversationActiveChange }: ChatProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] =
     useState<string>("");
@@ -249,6 +254,14 @@ export const Chat = () => {
     () => currentConversation?.messages || [],
     [currentConversation?.messages]
   );
+
+  // Empty state: a fresh conversation where no question has been asked yet.
+  const isEmptyState = !messages.some((m) => m.role === "user");
+
+  // Let the layout know whether a conversation is active (drives footer behavior).
+  useEffect(() => {
+    onConversationActiveChange?.(!isEmptyState);
+  }, [isEmptyState, onConversationActiveChange]);
 
   // Get conversation-specific state
   const apiResult = currentConversation?.lastApiResult || null;
@@ -611,9 +624,6 @@ export const Chat = () => {
       setCurrentConversationId(filteredConversations[0].id);
     }
   };
-
-  // Empty state: a fresh conversation where no question has been asked yet.
-  const isEmptyState = !messages.some((m) => m.role === "user");
 
   return (
     <div

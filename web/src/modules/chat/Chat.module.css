@@ -18,11 +18,11 @@
   display: flex;
 }
 
-/* Conversation/response screen: app-shell with a fixed-height, internally
-   scrolling messages area. */
+/* Conversation/response screen: fills the app-shell height (LayoutWrapper),
+   with an internally scrolling messages area. The footer sits below the fold. */
 .chatContainerResponse {
-  height: 80vh;
-  max-height: calc(100dvh - 240px);
+  flex: 1;
+  min-height: 0;
 }
 
 /* Empty / new-conversation screen: normal document flow, single page scroll.

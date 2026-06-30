@@ -11,15 +11,31 @@ import { signOut } from "next-auth/react";
 import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
 import { AuthorizationCheck } from "@/modules/auth/AuthorizationCheck";
 import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
+import styles from "./LayoutWrapper.module.css";
 
 type Props = {
   children: ReactNode;
   /** When true, `main` spans the full width instead of the centered DSFR container. */
   fullWidth?: boolean;
+  /**
+   * When true, header + main fill the viewport (app-shell) and the footer is
+   * pushed below the fold — used on the conversation screen to free reading space.
+   */
+  fillViewport?: boolean;
 };
 
-export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
+export const LayoutWrapper = ({
+  children,
+  fullWidth = false,
+  fillViewport = false,
+}: Props) => {
   const { isAuthenticated, user, session } = useAuth();
+
+  const mainClassName = fillViewport
+    ? styles.appMain
+    : fullWidth
+    ? ""
+    : fr.cx("fr-container", "fr-mb-5w");
 
   const handleSignOut = async () => {
     try {
@@ -49,76 +65,76 @@ export const LayoutWrapper = ({ children, fullWidth = false }: Props) => {
     <>
       <AuthorizationCheck />
       <MatomoUserTracking />
-      <DsfrHeader
-        brandTop={
-          <>
-            RÉPUBLIQUE
-            <br />
-            FRANÇAISE
-          </>
-        }
-        homeLinkProps={{
-          href: "/",
-          title: "Accueil - Experimentation SRDT IA",
-        }}
-        serviceTitle={
-          <>
-            Experimentation SRDT IA{" "}
-            <Badge as="span" noIcon severity="success">
-              Beta
-            </Badge>
-          </>
-        }
-        serviceTagline="Direction générale du travail"
-        quickAccessItems={
-          isAuthenticated
-            ? [
-                {
-                  iconId: "fr-icon-account-circle-line",
-                  text: user?.name || user?.email || "Mon compte",
-                  buttonProps: undefined,
-                  linkProps: {
-                    href: "#",
-                    onClick: (e: React.MouseEvent) => e.preventDefault(),
+      <div className={fillViewport ? styles.appShell : styles.contents}>
+        <DsfrHeader
+          brandTop={
+            <>
+              RÉPUBLIQUE
+              <br />
+              FRANÇAISE
+            </>
+          }
+          homeLinkProps={{
+            href: "/",
+            title: "Accueil - Experimentation SRDT IA",
+          }}
+          serviceTitle={
+            <>
+              Experimentation SRDT IA{" "}
+              <Badge as="span" noIcon severity="success">
+                Beta
+              </Badge>
+            </>
+          }
+          serviceTagline="Direction générale du travail"
+          quickAccessItems={
+            isAuthenticated
+              ? [
+                  {
+                    iconId: "fr-icon-account-circle-line",
+                    text: user?.name || user?.email || "Mon compte",
+                    buttonProps: undefined,
+                    linkProps: {
+                      href: "#",
+                      onClick: (e: React.MouseEvent) => e.preventDefault(),
+                    },
                   },
-                },
 
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                  {
+                    iconId: "fr-icon-questionnaire-line",
+                    text: "Support",
+                    linkProps: {
+                      href: "https://tally.so/r/jao5z4",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
                   },
-                },
-                headerFooterDisplayItem,
-                {
-                  iconId: "fr-icon-logout-box-r-line",
-                  text: "Se déconnecter",
-                  buttonProps: {
-                    onClick: handleSignOut,
+                  headerFooterDisplayItem,
+                  {
+                    iconId: "fr-icon-logout-box-r-line",
+                    text: "Se déconnecter",
+                    buttonProps: {
+                      onClick: handleSignOut,
+                    },
+                    linkProps: undefined,
                   },
-                  linkProps: undefined,
-                },
-              ]
-            : [
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                ]
+              : [
+                  {
+                    iconId: "fr-icon-questionnaire-line",
+                    text: "Support",
+                    linkProps: {
+                      href: "https://tally.so/r/jao5z4",
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
                   },
-                },
-                headerFooterDisplayItem,
-              ]
-        }
-      />
-      <main className={fullWidth ? "" : fr.cx("fr-container", "fr-mb-5w")}>
-        {children}
-      </main>
+                  headerFooterDisplayItem,
+                ]
+          }
+        />
+        <main className={mainClassName}>{children}</main>
+      </div>
       <DsfrFooter
         accessibility="non compliant"
         bottomItems={[
