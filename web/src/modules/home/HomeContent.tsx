@@ -9,6 +9,13 @@ import { LayoutWrapper } from "@/modules/layout/LayoutWrapper";
 export function HomeContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const [conversationActive, setConversationActive] = useState(false);
+  const [chatKey, setChatKey] = useState(0);
+
+  // Reset to a fresh home screen (used when clicking the header brand).
+  const goHome = () => {
+    setConversationActive(false);
+    setChatKey((k) => k + 1);
+  };
 
   if (isLoading) {
     return (
@@ -28,9 +35,10 @@ export function HomeContent() {
     <LayoutWrapper
       fullWidth={isAuthenticated}
       fillViewport={isAuthenticated && conversationActive}
+      onGoHome={isAuthenticated ? goHome : undefined}
     >
       {isAuthenticated ? (
-        <Chat onConversationActiveChange={setConversationActive} />
+        <Chat key={chatKey} onConversationActiveChange={setConversationActive} />
       ) : (
         <AuthVerification />
       )}
