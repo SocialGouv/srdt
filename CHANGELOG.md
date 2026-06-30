@@ -1,3 +1,10 @@
+# [1.45.0](https://github.com/SocialGouv/srdt/compare/v1.44.0...v1.45.0) (2026-06-30)
+
+
+### Features
+
+* continue chat box ([#382](https://github.com/SocialGouv/srdt/issues/382)) ([c469598](https://github.com/SocialGouv/srdt/commit/c469598c6b7ea244a6ebdc04adb4b70a0d590c6d))
+
 # [1.44.0](https://github.com/SocialGouv/srdt/compare/v1.43.1...v1.44.0) (2026-06-29)
 
 
