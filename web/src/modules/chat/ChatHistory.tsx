@@ -35,6 +35,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     push(["trackEvent", "history", "select conversation"]);
   };
 
+  // Expand the collapsed sidebar (shared by the expand chevron and History icon).
+  const handleExpand = () => {
+    push(["trackEvent", "history", "show history"]);
+    onShowHistoryChange(true);
+  };
+
   if (!showHistory) {
     return (
       <div className={`${styles.sidebar} ${styles.sidebarCollapsed}`}>
@@ -42,10 +48,19 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           iconId="fr-icon-arrow-right-s-line"
           priority="tertiary no outline"
           title="Afficher le panneau"
-          onClick={() => {
-            push(["trackEvent", "history", "show history"]);
-            onShowHistoryChange(true);
-          }}
+          onClick={handleExpand}
+        />
+        <Button
+          iconId="fr-icon-add-circle-fill"
+          priority="tertiary no outline"
+          title="Nouvelle conversation"
+          onClick={onNewConversation}
+        />
+        <Button
+          iconId="fr-icon-time-line"
+          priority="tertiary no outline"
+          title="Historique"
+          onClick={handleExpand}
         />
       </div>
     );
