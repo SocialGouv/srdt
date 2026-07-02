@@ -1,3 +1,10 @@
+## [1.46.2](https://github.com/SocialGouv/srdt/compare/v1.46.1...v1.46.2) (2026-07-02)
+
+
+### Bug Fixes
+
+* ux sidebar header ([#385](https://github.com/SocialGouv/srdt/issues/385)) ([64627b7](https://github.com/SocialGouv/srdt/commit/64627b7a9019f8736dd81eb159f79c8d07a96c8f))
+
 ## [1.46.1](https://github.com/SocialGouv/srdt/compare/v1.46.0...v1.46.1) (2026-06-30)
 
 
