@@ -47,6 +47,21 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             onShowHistoryChange(true);
           }}
         />
+        <Button
+          iconId="fr-icon-add-circle-fill"
+          priority="tertiary no outline"
+          title="Nouvelle conversation"
+          onClick={onNewConversation}
+        />
+        <Button
+          iconId="fr-icon-time-line"
+          priority="tertiary no outline"
+          title="Historique"
+          onClick={() => {
+            push(["trackEvent", "history", "show history"]);
+            onShowHistoryChange(true);
+          }}
+        />
       </div>
     );
   }

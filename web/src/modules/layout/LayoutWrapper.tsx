@@ -32,7 +32,7 @@ export const LayoutWrapper = ({
   fillViewport = false,
   onGoHome,
 }: Props) => {
-  const { isAuthenticated, user, session } = useAuth();
+  const { isAuthenticated, session } = useAuth();
 
   const mainClassName = fillViewport
     ? styles.appMain
@@ -84,7 +84,8 @@ export const LayoutWrapper = ({
               ? {
                   onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
                     // Let the browser handle modifier-clicks (open in a new tab/window).
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+                      return;
                     e.preventDefault();
                     onGoHome();
                   },
@@ -103,16 +104,6 @@ export const LayoutWrapper = ({
           quickAccessItems={
             isAuthenticated
               ? [
-                  {
-                    iconId: "fr-icon-account-circle-line",
-                    text: user?.name || user?.email || "Mon compte",
-                    buttonProps: undefined,
-                    linkProps: {
-                      href: "#",
-                      onClick: (e: React.MouseEvent) => e.preventDefault(),
-                    },
-                  },
-
                   {
                     iconId: "fr-icon-questionnaire-line",
                     text: "Support",
