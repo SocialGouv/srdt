@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { push } from "@socialgouv/matomo-next";
@@ -13,6 +14,8 @@ interface ChatHistoryProps {
   onConversationSelect: (conversationId: string) => void;
   onDeleteConversation: (conversationId: string, e: React.MouseEvent) => void;
   onNewConversation: () => void;
+  /** Highlights a nav entry when the sidebar is shown on its own page. */
+  activeItem?: "nouveautes";
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -23,6 +26,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   onConversationSelect,
   onDeleteConversation,
   onNewConversation,
+  activeItem,
 }) => {
   // Get conversations that have actual user messages (not just the welcome message) and haven't failed
   const conversationsWithMessages = conversations.filter(
@@ -62,6 +66,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           title="Historique"
           onClick={handleExpand}
         />
+        <Button
+          iconId="fr-icon-star-line"
+          priority="tertiary no outline"
+          title="Nouveautés"
+          linkProps={{ href: "/nouveautes" }}
+        />
       </div>
     );
   }
@@ -98,7 +108,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           Historique
         </div>
 
-        <div className={styles.sidebarList}>
+        <div className={styles.sidebarScroll}>
+          <div className={styles.sidebarList}>
           {conversationsWithMessages.length === 0 && (
             <div className={fr.cx("fr-mt-2v", "fr-px-1v")}>
               <p className={fr.cx("fr-text--sm")}>
@@ -171,6 +182,23 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
               />
             </div>
           ))}
+          </div>
+
+          <div className={styles.sidebarDivider} />
+
+          <Link
+            href="/nouveautes"
+            className={`${styles.sidebarRow} ${
+              activeItem === "nouveautes" ? styles.sidebarRowActive : ""
+            }`}
+            onClick={() => push(["trackEvent", "nouveautes", "open"])}
+          >
+            <span
+              className={fr.cx("fr-icon-star-line", "fr-icon--sm")}
+              aria-hidden="true"
+            />
+            Nouveautés
+          </Link>
         </div>
       </div>
     </div>

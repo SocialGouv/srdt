@@ -10,10 +10,13 @@ import { ChatHistory } from "./ChatHistory";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
+import {
+  STORAGE_KEY,
+  CURRENT_CONVERSATION_KEY,
+  OPEN_CONVERSATION_KEY,
+} from "./conversation-storage";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
-
-const STORAGE_KEY = "chat-conversations";
 
 // Helper to save conversation to database
 const saveConversationToDb = async (
@@ -55,8 +58,6 @@ const buildConversationHistory = (
   }
   return history;
 };
-
-const CURRENT_CONVERSATION_KEY = "current-conversation-id";
 
 const MAX_CONVERSATIONS_TO_STORE = 30;
 
@@ -140,7 +141,30 @@ export const Chat = ({ onConversationActiveChange }: ChatProps) => {
         );
 
         setConversations([newConversation, ...compatibleParsed]);
-        setCurrentConversationId(newId);
+
+        // Another screen (e.g. Nouveautés) may have asked us to open a
+        // specific conversation instead of starting a fresh one.
+        const pendingOpenId = sessionStorage.getItem(OPEN_CONVERSATION_KEY);
+        if (pendingOpenId) sessionStorage.removeItem(OPEN_CONVERSATION_KEY);
+        const pendingConv: Conversation | undefined = pendingOpenId
+          ? compatibleParsed.find(
+              (c: Conversation) => c.id === pendingOpenId
+            )
+          : undefined;
+
+        if (pendingConv) {
+          setCurrentConversationId(pendingConv.id);
+          const hasStarted = pendingConv.messages.some(
+            (m) => m.role === "user"
+          );
+          const atLimit =
+            hasStarted &&
+            (!pendingConv.isAwaitingFollowup ||
+              (pendingConv.followupCount ?? 0) >= MAX_FOLLOWUP_QUESTIONS);
+          setIsDisabled(!!atLimit);
+        } else {
+          setCurrentConversationId(newId);
+        }
       } catch (error) {
         Sentry.captureException(error, {
           tags: {

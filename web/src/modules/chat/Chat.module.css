@@ -94,20 +94,46 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
+  background-image: none;
 }
 
-button.sidebarRow:hover {
+button.sidebarRow:hover,
+a.sidebarRow:hover {
   background-color: var(--background-default-grey-hover);
+}
+
+.sidebarDivider {
+  height: 1px;
+  margin: 0.25rem 0;
+  background-color: var(--border-default-grey);
+}
+
+.sidebarRowActive {
+  background-color: var(--background-action-low-blue-france);
+  font-weight: 700;
+}
+
+a.sidebarRowActive:hover {
+  background-color: var(--background-action-low-blue-france-hover);
 }
 
 .sidebarRowStatic {
   cursor: default;
 }
 
-.sidebarList {
+/* Scrolls the history list together with the "Nouveautés" entry that sits
+   directly beneath it (so the entry is not pinned to the viewport bottom). */
+.sidebarScroll {
   flex: 1;
   overflow-y: auto;
   margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarList {
+  flex-shrink: 0;
 }
 
 /* ---- New conversation composer ---- */
