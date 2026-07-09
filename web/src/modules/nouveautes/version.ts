@@ -1,5 +1,7 @@
-// Server-only: reads the markdown from disk at build time. Must never be
-// imported from a client component (it pulls in node:fs / node:crypto).
+// Server-only: reads the markdown from disk at build time. The `server-only`
+// import makes the build fail with a clear message if a client component ever
+// imports this file (it pulls in node:fs / node:crypto).
+import "server-only";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

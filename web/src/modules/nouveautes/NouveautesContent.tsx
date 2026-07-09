@@ -29,7 +29,13 @@ const BADGES: Record<string, BadgeSeverity> = {
 
 const markdownComponents = {
   // Only external links open in a new tab; internal/relative links behave normally.
-  a: ({ href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+  // `node` is react-markdown's AST node — drop it so it isn't forwarded to the DOM.
+  a: ({
+    href,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => {
     const isExternal = typeof href === "string" && /^https?:\/\//.test(href);
     return (
       <a
@@ -45,8 +51,13 @@ const markdownComponents = {
   code: ({
     className,
     children,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
     ...props
-  }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) => {
+  }: React.HTMLAttributes<HTMLElement> & {
+    children?: React.ReactNode;
+    node?: unknown;
+  }) => {
     const text = typeof children === "string" ? children.trim() : "";
     const severity = !className ? BADGES[text.toUpperCase()] : undefined;
 
@@ -76,12 +87,16 @@ export function NouveautesContent({ markdown, version }: Props) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(true);
 
+  // One-time mount actions.
   useEffect(() => {
     setConversations(loadStoredConversations());
-    // Opening the page counts as reading the latest updates: clear the dot.
-    markNouveautesSeen(version);
     // Land at the top of the page (the previous screen's scroll can carry over).
     window.scrollTo(0, 0);
+  }, []);
+
+  // Opening the page counts as reading the latest updates: clear the dot.
+  useEffect(() => {
+    markNouveautesSeen(version);
   }, [version]);
 
   // The sidebar actions live on the chat screen — route back to it, asking it

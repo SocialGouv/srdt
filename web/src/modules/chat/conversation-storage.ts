@@ -29,5 +29,13 @@ export function loadStoredConversations(): Conversation[] {
 
 export function persistConversations(conversations: Conversation[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  // Strip heavy search chunks before writing, mirroring Chat.tsx, so a caller
+  // can't accidentally bloat localStorage and trigger a QuotaExceededError.
+  const sanitized = conversations.map((conv) => ({
+    ...conv,
+    lastApiResult: conv.lastApiResult
+      ? { ...conv.lastApiResult, localSearchChunks: [] }
+      : conv.lastApiResult,
+  }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
 }
