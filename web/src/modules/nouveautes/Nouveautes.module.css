@@ -1,0 +1,65 @@
+/* White content card sitting on the light-blue app background. */
+.card {
+  max-width: 880px;
+  margin: 2rem auto;
+  padding: 2.5rem 3rem;
+  background-color: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+}
+
+/* Constrain the changelog text to a comfortable reading column. */
+.markdownBody,
+.intro {
+  max-width: 720px;
+}
+
+/* Page title — "Quoi de neuf dans l'outil ?" */
+.title {
+  margin-bottom: 0.5rem;
+}
+
+/* Intro line right under the title. */
+.intro {
+  color: var(--text-mention-grey);
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+/* Month heading — "Septembre 2026". A divider above separates each month. */
+.markdownBody h2 {
+  margin: 0 0 1.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border-default-grey);
+}
+
+/* Nouveauté title (optional ### headings). */
+.markdownBody h3 {
+  margin: 2rem 0 0.25rem;
+}
+
+.markdownBody p {
+  margin-bottom: 1rem;
+}
+
+/* Badge sits tight above the text it introduces. */
+.markdownBody p:has(> .badge) {
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  vertical-align: middle;
+}
+
+.markdownBody ul,
+.markdownBody ol {
+  margin-bottom: 1.5rem;
+}
+
+.markdownBody li {
+  margin-bottom: 0.5rem;
+}
+
+.markdownBody li:last-child {
+  margin-bottom: 0;
+}

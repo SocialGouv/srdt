@@ -1,6 +1,6 @@
 import { HomeContent } from "@/modules/home/HomeContent";
+import { getNouveautesVersion } from "@/modules/nouveautes/version";
 
-// test
 export default function Home() {
-  return <HomeContent />;
+  return <HomeContent nouveautesVersion={getNouveautesVersion()} />;
 }

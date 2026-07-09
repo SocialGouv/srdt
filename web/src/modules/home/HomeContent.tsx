@@ -6,7 +6,12 @@ import { AuthVerification } from "@/modules/auth/AuthVerification";
 import { Chat } from "@/modules/chat/Chat";
 import { LayoutWrapper } from "@/modules/layout/LayoutWrapper";
 
-export function HomeContent() {
+type HomeContentProps = {
+  /** Fingerprint of the Nouveautés content, used to show the "unread" dot. */
+  nouveautesVersion?: string;
+};
+
+export function HomeContent({ nouveautesVersion }: HomeContentProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const [conversationActive, setConversationActive] = useState(false);
   const [chatKey, setChatKey] = useState(0);
@@ -38,7 +43,11 @@ export function HomeContent() {
       onGoHome={isAuthenticated ? goHome : undefined}
     >
       {isAuthenticated ? (
-        <Chat key={chatKey} onConversationActiveChange={setConversationActive} />
+        <Chat
+          key={chatKey}
+          onConversationActiveChange={setConversationActive}
+          nouveautesVersion={nouveautesVersion}
+        />
       ) : (
         <AuthVerification />
       )}

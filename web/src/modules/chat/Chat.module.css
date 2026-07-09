@@ -94,10 +94,49 @@
   text-align: left;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
+  background-image: none;
 }
 
-button.sidebarRow:hover {
+button.sidebarRow:hover,
+a.sidebarRow:hover {
   background-color: var(--background-default-grey-hover);
+}
+
+/* "Unread" dot next to the Nouveautés entry (expanded sidebar). */
+.sidebarDot {
+  width: 8px;
+  height: 8px;
+  margin-left: 0.375rem;
+  border-radius: 50%;
+  background-color: var(--background-flat-error);
+  flex-shrink: 0;
+}
+
+/* Same dot, floated over the icon-only button (collapsed sidebar). */
+.sidebarDotAnchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.sidebarDotFloating {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--background-flat-error);
+  pointer-events: none;
+}
+
+.sidebarRowActive {
+  background-color: var(--background-action-low-blue-france);
+  font-weight: 700;
+}
+
+a.sidebarRowActive:hover {
+  background-color: var(--background-action-low-blue-france-hover);
 }
 
 .sidebarRowStatic {
