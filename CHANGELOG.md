@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/SocialGouv/srdt/compare/v1.46.2...v1.47.0) (2026-07-09)
+
+
+### Features
+
+* add nouveautes section ([#396](https://github.com/SocialGouv/srdt/issues/396)) ([5431bc9](https://github.com/SocialGouv/srdt/commit/5431bc95cd773c24391cc98bdd216b8769d5002a))
+
 ## [1.46.2](https://github.com/SocialGouv/srdt/compare/v1.46.1...v1.46.2) (2026-07-02)
 
 
