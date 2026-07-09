@@ -6,6 +6,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+// Next.js runs `next build` / the server with the app root (web/) as the cwd,
+// so process.cwd() reliably points at the package root here.
 const CONTENT_PATH = join(process.cwd(), "src", "content", "nouveautes.md");
 
 /** Remove HTML comments, repeating until stable so no `<!--` can survive
@@ -24,7 +26,10 @@ function stripHtmlComments(input: string): string {
 export function getNouveautesContent(): string {
   try {
     return stripHtmlComments(readFileSync(CONTENT_PATH, "utf-8"));
-  } catch {
+  } catch (error) {
+    // Degrade gracefully (empty page) but make the failure visible in build /
+    // server logs rather than silently shipping no content.
+    console.error(`[nouveautes] Could not read ${CONTENT_PATH}:`, error);
     return "";
   }
 }

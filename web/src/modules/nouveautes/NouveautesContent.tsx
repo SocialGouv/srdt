@@ -101,7 +101,11 @@ export function NouveautesContent({ markdown, version }: Props) {
 
   // The sidebar actions live on the chat screen — route back to it, asking it
   // to open the requested conversation when relevant.
-  const handleNewConversation = () => router.push("/");
+  const handleNewConversation = () => {
+    // Drop any stale "open this conversation" request so we really start fresh.
+    sessionStorage.removeItem(OPEN_CONVERSATION_KEY);
+    router.push("/");
+  };
 
   const handleConversationSelect = (conversationId: string) => {
     sessionStorage.setItem(OPEN_CONVERSATION_KEY, conversationId);
