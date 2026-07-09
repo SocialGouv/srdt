@@ -28,10 +28,19 @@ const BADGES: Record<string, BadgeSeverity> = {
 };
 
 const markdownComponents = {
-  // Open external links in a new tab, like the chat does.
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a {...props} target="_blank" rel="noopener noreferrer" />
-  ),
+  // Only external links open in a new tab; internal/relative links behave normally.
+  a: ({ href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+    const isExternal = typeof href === "string" && /^https?:\/\//.test(href);
+    return (
+      <a
+        href={href}
+        {...props}
+        {...(isExternal
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      />
+    );
+  },
   // Inline code whose text matches a keyword becomes a DSFR badge.
   code: ({
     className,

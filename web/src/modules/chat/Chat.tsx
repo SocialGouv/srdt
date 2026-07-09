@@ -145,8 +145,6 @@ export const Chat = ({
             } as Conversation)
         );
 
-        setConversations([newConversation, ...compatibleParsed]);
-
         // Another screen (e.g. Nouveautés) may have asked us to open a
         // specific conversation instead of starting a fresh one.
         const pendingOpenId = sessionStorage.getItem(OPEN_CONVERSATION_KEY);
@@ -158,6 +156,8 @@ export const Chat = ({
           : undefined;
 
         if (pendingConv) {
+          // Restoring an existing conversation: no fresh empty one on top.
+          setConversations(compatibleParsed);
           setCurrentConversationId(pendingConv.id);
           const hasStarted = pendingConv.messages.some(
             (m) => m.role === "user"
@@ -168,6 +168,7 @@ export const Chat = ({
               (pendingConv.followupCount ?? 0) >= MAX_FOLLOWUP_QUESTIONS);
           setIsDisabled(!!atLimit);
         } else {
+          setConversations([newConversation, ...compatibleParsed]);
           setCurrentConversationId(newId);
         }
       } catch (error) {

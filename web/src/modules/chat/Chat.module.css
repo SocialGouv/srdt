@@ -103,12 +103,6 @@ a.sidebarRow:hover {
   background-color: var(--background-default-grey-hover);
 }
 
-.sidebarDivider {
-  height: 1px;
-  margin: 0.25rem 0;
-  background-color: var(--border-default-grey);
-}
-
 /* "Unread" dot next to the Nouveautés entry (expanded sidebar). */
 .sidebarDot {
   width: 8px;
@@ -149,18 +143,10 @@ a.sidebarRowActive:hover {
   cursor: default;
 }
 
-/* Scrolls the history list together with the "Nouveautés" entry that sits
-   directly beneath it (so the entry is not pinned to the viewport bottom). */
-.sidebarScroll {
+.sidebarList {
   flex: 1;
   overflow-y: auto;
   margin-top: 0.25rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebarList {
-  flex-shrink: 0;
 }
 
 /* ---- New conversation composer ---- */

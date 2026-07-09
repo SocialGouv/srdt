@@ -80,12 +80,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           title="Nouvelle conversation"
           onClick={onNewConversation}
         />
-        <Button
-          iconId="fr-icon-time-line"
-          priority="tertiary no outline"
-          title="Historique"
-          onClick={handleExpand}
-        />
         <span className={styles.sidebarDotAnchor}>
           <Button
             iconId="fr-icon-star-line"
@@ -99,6 +93,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             <span className={styles.sidebarDotFloating} aria-hidden="true" />
           )}
         </span>
+        <Button
+          iconId="fr-icon-time-line"
+          priority="tertiary no outline"
+          title="Historique"
+          onClick={handleExpand}
+        />
       </div>
     );
   }
@@ -127,6 +127,26 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           Nouvelle conversation
         </button>
 
+        <Link
+          href="/nouveautes"
+          className={`${styles.sidebarRow} ${
+            activeItem === "nouveautes" ? styles.sidebarRowActive : ""
+          }`}
+          onClick={() => push(["trackEvent", "nouveautes", "open"])}
+        >
+          <span
+            className={fr.cx("fr-icon-star-line", "fr-icon--sm")}
+            aria-hidden="true"
+          />
+          Nouveautés
+          {hasUnseenNouveautes && (
+            <>
+              <span className={styles.sidebarDot} aria-hidden="true" />
+              <span className="fr-sr-only">(nouveautés non lues)</span>
+            </>
+          )}
+        </Link>
+
         <div className={`${styles.sidebarRow} ${styles.sidebarRowStatic}`}>
           <span
             className={fr.cx("fr-icon-time-line", "fr-icon--sm")}
@@ -135,8 +155,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           Historique
         </div>
 
-        <div className={styles.sidebarScroll}>
-          <div className={styles.sidebarList}>
+        <div className={styles.sidebarList}>
           {conversationsWithMessages.length === 0 && (
             <div className={fr.cx("fr-mt-2v", "fr-px-1v")}>
               <p className={fr.cx("fr-text--sm")}>
@@ -209,29 +228,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
               />
             </div>
           ))}
-          </div>
-
-          <div className={styles.sidebarDivider} />
-
-          <Link
-            href="/nouveautes"
-            className={`${styles.sidebarRow} ${
-              activeItem === "nouveautes" ? styles.sidebarRowActive : ""
-            }`}
-            onClick={() => push(["trackEvent", "nouveautes", "open"])}
-          >
-            <span
-              className={fr.cx("fr-icon-star-line", "fr-icon--sm")}
-              aria-hidden="true"
-            />
-            Nouveautés
-            {hasUnseenNouveautes && (
-              <>
-                <span className={styles.sidebarDot} aria-hidden="true" />
-                <span className="fr-sr-only">(nouveautés non lues)</span>
-              </>
-            )}
-          </Link>
         </div>
       </div>
     </div>

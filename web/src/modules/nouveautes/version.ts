@@ -6,10 +6,22 @@ import { join } from "node:path";
 
 const CONTENT_PATH = join(process.cwd(), "src", "content", "nouveautes.md");
 
+/** Remove HTML comments, repeating until stable so no `<!--` can survive
+ *  interleaved/nested markers (satisfies CodeQL's incomplete-sanitization check). */
+function stripHtmlComments(input: string): string {
+  let previous;
+  let output = input;
+  do {
+    previous = output;
+    output = output.replace(/<!--[\s\S]*?-->/g, "");
+  } while (output !== previous);
+  return output;
+}
+
 /** The rendered markdown, with author-guidance HTML comments stripped. */
 export function getNouveautesContent(): string {
   try {
-    return readFileSync(CONTENT_PATH, "utf-8").replace(/<!--[\s\S]*?-->/g, "");
+    return stripHtmlComments(readFileSync(CONTENT_PATH, "utf-8"));
   } catch {
     return "";
   }
