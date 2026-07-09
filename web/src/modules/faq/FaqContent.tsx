@@ -68,7 +68,7 @@ export function FaqContent({ markdown }: Props) {
             <div className={`${styles.accordions} ${fr.cx("fr-accordions-group")}`}>
               {entries.map((entry, index) => (
                 <Accordion
-                  key={index}
+                  key={entry.question}
                   label={entry.question}
                   defaultExpanded={index === 0}
                 >
