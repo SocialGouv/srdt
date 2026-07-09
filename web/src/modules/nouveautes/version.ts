@@ -1,0 +1,27 @@
+// Server-only: reads the markdown from disk at build time. Must never be
+// imported from a client component (it pulls in node:fs / node:crypto).
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const CONTENT_PATH = join(process.cwd(), "src", "content", "nouveautes.md");
+
+/** The rendered markdown, with author-guidance HTML comments stripped. */
+export function getNouveautesContent(): string {
+  try {
+    return readFileSync(CONTENT_PATH, "utf-8").replace(/<!--[\s\S]*?-->/g, "");
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * A short fingerprint of the visible content. It changes whenever the writer
+ * edits `nouveautes.md`, which is how the "unread" dot knows there is something
+ * new to show. Comment-only edits don't change it (comments are stripped first).
+ */
+export function getNouveautesVersion(): string {
+  const content = getNouveautesContent();
+  if (!content) return "";
+  return createHash("sha256").update(content).digest("hex").slice(0, 12);
+}

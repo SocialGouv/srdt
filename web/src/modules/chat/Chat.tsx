@@ -67,9 +67,14 @@ const initialConversationText =
 type ChatProps = {
   /** Notifies the parent when a conversation becomes active (a question was asked). */
   onConversationActiveChange?: (active: boolean) => void;
+  /** Fingerprint of the Nouveautés content, used to show the "unread" dot. */
+  nouveautesVersion?: string;
 };
 
-export const Chat = ({ onConversationActiveChange }: ChatProps) => {
+export const Chat = ({
+  onConversationActiveChange,
+  nouveautesVersion,
+}: ChatProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] =
     useState<string>("");
@@ -663,6 +668,7 @@ export const Chat = ({ onConversationActiveChange }: ChatProps) => {
         onConversationSelect={handleConversationSelect}
         onDeleteConversation={handleDeleteConversation}
         onNewConversation={handleNewConversation}
+        nouveautesVersion={nouveautesVersion}
       />
 
       <div className={styles.chatMainContent}>

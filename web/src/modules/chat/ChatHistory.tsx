@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { push } from "@socialgouv/matomo-next";
 import { Conversation } from "./types";
+import { getSeenNouveautesVersion } from "@/modules/nouveautes/seen";
 import styles from "./Chat.module.css";
 
 interface ChatHistoryProps {
@@ -16,6 +17,8 @@ interface ChatHistoryProps {
   onNewConversation: () => void;
   /** Highlights a nav entry when the sidebar is shown on its own page. */
   activeItem?: "nouveautes";
+  /** Fingerprint of the Nouveautés content; drives the "unread" dot. */
+  nouveautesVersion?: string;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -27,12 +30,29 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   onDeleteConversation,
   onNewConversation,
   activeItem,
+  nouveautesVersion,
 }) => {
   // Get conversations that have actual user messages (not just the welcome message) and haven't failed
   const conversationsWithMessages = conversations.filter(
     (conv) =>
       conv.messages.some((msg) => msg.role === "user") && !conv.hasFailed
   );
+
+  // Show a dot when the current content version differs from the last one the
+  // user opened. Read from localStorage only after mount to avoid a hydration
+  // mismatch (the server can't know what this browser has seen).
+  const [seenVersion, setSeenVersion] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setSeenVersion(getSeenNouveautesVersion());
+    setMounted(true);
+  }, []);
+
+  const hasUnseenNouveautes =
+    mounted &&
+    activeItem !== "nouveautes" &&
+    !!nouveautesVersion &&
+    seenVersion !== nouveautesVersion;
 
   const handleConversationClick = (conversationId: string) => {
     onConversationSelect(conversationId);
@@ -66,12 +86,19 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           title="Historique"
           onClick={handleExpand}
         />
-        <Button
-          iconId="fr-icon-star-line"
-          priority="tertiary no outline"
-          title="Nouveautés"
-          linkProps={{ href: "/nouveautes" }}
-        />
+        <span className={styles.sidebarDotAnchor}>
+          <Button
+            iconId="fr-icon-star-line"
+            priority="tertiary no outline"
+            title={
+              hasUnseenNouveautes ? "Nouveautés (non lues)" : "Nouveautés"
+            }
+            linkProps={{ href: "/nouveautes" }}
+          />
+          {hasUnseenNouveautes && (
+            <span className={styles.sidebarDotFloating} aria-hidden="true" />
+          )}
+        </span>
       </div>
     );
   }
@@ -198,6 +225,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
               aria-hidden="true"
             />
             Nouveautés
+            {hasUnseenNouveautes && (
+              <>
+                <span className={styles.sidebarDot} aria-hidden="true" />
+                <span className="fr-sr-only">(nouveautés non lues)</span>
+              </>
+            )}
           </Link>
         </div>
       </div>

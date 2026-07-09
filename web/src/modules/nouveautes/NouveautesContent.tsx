@@ -13,6 +13,7 @@ import {
   persistConversations,
   OPEN_CONVERSATION_KEY,
 } from "@/modules/chat/conversation-storage";
+import { markNouveautesSeen } from "./seen";
 import chatStyles from "@/modules/chat/Chat.module.css";
 import styles from "./Nouveautes.module.css";
 
@@ -57,18 +58,22 @@ const markdownComponents = {
 
 type Props = {
   markdown: string;
+  /** Fingerprint of this content; recorded as "seen" when the page opens. */
+  version: string;
 };
 
-export function NouveautesContent({ markdown }: Props) {
+export function NouveautesContent({ markdown, version }: Props) {
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(true);
 
   useEffect(() => {
     setConversations(loadStoredConversations());
+    // Opening the page counts as reading the latest updates: clear the dot.
+    markNouveautesSeen(version);
     // Land at the top of the page (the previous screen's scroll can carry over).
     window.scrollTo(0, 0);
-  }, []);
+  }, [version]);
 
   // The sidebar actions live on the chat screen — route back to it, asking it
   // to open the requested conversation when relevant.
@@ -103,6 +108,7 @@ export function NouveautesContent({ markdown }: Props) {
           onDeleteConversation={handleDeleteConversation}
           onNewConversation={handleNewConversation}
           activeItem="nouveautes"
+          nouveautesVersion={version}
         />
 
         <div className={chatStyles.chatMainContent}>
