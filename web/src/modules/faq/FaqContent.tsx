@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -48,7 +48,7 @@ export function FaqContent({ markdown }: Props) {
     window.scrollTo(0, 0);
   }, []);
 
-  const entries = parseFaq(markdown);
+  const entries = useMemo(() => parseFaq(markdown), [markdown]);
 
   return (
     <LayoutWrapper fullWidth>
@@ -68,7 +68,7 @@ export function FaqContent({ markdown }: Props) {
             <div className={`${styles.accordions} ${fr.cx("fr-accordions-group")}`}>
               {entries.map((entry, index) => (
                 <Accordion
-                  key={entry.question}
+                  key={index}
                   label={entry.question}
                   defaultExpanded={index === 0}
                 >
@@ -90,7 +90,6 @@ export function FaqContent({ markdown }: Props) {
                 alt=""
                 width={56}
                 height={56}
-                aria-hidden="true"
                 className={styles.supportIllustration}
               />
               <p className={styles.supportTitle}>

@@ -20,7 +20,7 @@ Le projet est porté par un « intrapreneur » (David Rive, responsable du servi
 
 L'objectif identifié pendant la phase d'investigation de 2024 est d'améliorer la qualité des réponses écrites des Services de Renseignement en Droit du Travail, à l'aide d'une IA dédiée et co-construite avec les agents de ces services qui sont les principaux utilisateurs (plus d'infos ici).
 
-Aujourd'hui le service est déployé dans 24 départements (125 utilisateurs). Les statistiques d'usage sont consultables ici.
+Aujourd'hui le service est déployé dans 24 départements (125 utilisateurs). Les statistiques d'usage sont consultables [ici](/statistiques).
 
 ## Quelle IA a été utilisée pour construire ce service ? Avec quelles sources de données ?
 
