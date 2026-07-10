@@ -9,8 +9,8 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )
 
-from srdt_analysis.constants import CHUNK_OVERLAP, CHUNK_SIZE
-from srdt_analysis.models import ChunkerContentType, SplitDocument
+from srdt_analysis.core.constants import CHUNK_OVERLAP, CHUNK_SIZE
+from srdt_analysis.core.models import ChunkerContentType, SplitDocument
 
 
 class Chunker:

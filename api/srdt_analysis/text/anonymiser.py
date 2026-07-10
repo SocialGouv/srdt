@@ -1,7 +1,7 @@
 import spacy
 
-from srdt_analysis.exceptions import SRDTException
-from srdt_analysis.logger import Logger
+from srdt_analysis.core.exceptions import SRDTException
+from srdt_analysis.core.logger import Logger
 
 nlp = spacy.load(
     "fr_core_news_md",

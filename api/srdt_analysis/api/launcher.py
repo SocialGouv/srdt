@@ -3,7 +3,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 
-from srdt_analysis.constants import API_TIMEOUT
+from srdt_analysis.core.constants import API_TIMEOUT
 
 load_dotenv()
 

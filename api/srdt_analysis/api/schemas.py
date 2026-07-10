@@ -2,8 +2,8 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from srdt_analysis.constants import SOURCES
-from srdt_analysis.models import (
+from srdt_analysis.core.constants import SOURCES
+from srdt_analysis.core.models import (
     CHUNK_ID,
     CollectionName,
     UserLLMMessage,
