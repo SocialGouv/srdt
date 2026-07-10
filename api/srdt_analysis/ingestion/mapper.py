@@ -1,16 +1,16 @@
-from srdt_analysis.data_exploiter import (
+from srdt_analysis.core.models import (
+    CollectionName,
+    DocumentsList,
+    EnrichedRankedChunk,
+    RankedChunk,
+)
+from srdt_analysis.ingestion.data_exploiter import (
     ArticlesCodeDuTravailExploiter,
     BaseDataExploiter,
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
     PagesContributionsExploiter,
-)
-from srdt_analysis.models import (
-    CollectionName,
-    DocumentsList,
-    EnrichedRankedChunk,
-    RankedChunk,
 )
 
 

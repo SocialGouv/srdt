@@ -13,6 +13,7 @@ import {
   SEARCH_OPTIONS_CODE,
   K_RERANK_CODE,
   Collection,
+  SEARCH_OPTIONS_IDCC,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -215,7 +216,11 @@ const getFullContentFromReranked = async (
 // get all idcc content and run rerank using user question
 // return best 5
 const searchIDCC = async (idcc: string, anonymized: string) => {
-  const idccSearchResult = await getIdccChunks(idcc);
+  const idccSearchResult = await getIdccChunks({
+    prompts: [anonymized],
+    idcc,
+    options: SEARCH_OPTIONS_IDCC,
+  });
 
   if (idccSearchResult.error) {
     const searchError = new Error(
@@ -435,8 +440,13 @@ export const prepareFollowupQuestionData = async (
   let selectedIdccChunksQuery2: ChunkResult[] = [];
 
   if (idcc) {
-    // Get all IDCC content
-    const idccSearchResult = await getIdccChunks(idcc);
+    // Get IDCC content
+    // TODO confirm how we handle followup question when searching for idcc content
+    const idccSearchResult = await getIdccChunks({
+      prompts: [query1, query2],
+      idcc,
+      options: SEARCH_OPTIONS_IDCC,
+    });
 
     if (idccSearchResult.error) {
       console.error(

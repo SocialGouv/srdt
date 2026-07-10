@@ -1,5 +1,6 @@
 import json
 import os
+from pickletools import read_uint1
 import time
 import traceback
 from operator import itemgetter
@@ -12,7 +13,6 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 from tenacity import RetryError
 
-from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
@@ -29,15 +29,16 @@ from srdt_analysis.api.schemas import (
     SearchRequest,
     SearchResponse,
 )
-from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import BASE_API_URL, CHUNK_INDEX
-from srdt_analysis.corpus import getChunksByIdcc, getDocsContent
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.exceptions import SRDTException
-from srdt_analysis.llm_runner import LLMRunner
-from srdt_analysis.logger import Logger
-from srdt_analysis.tokenizer import Tokenizer
-from srdt_analysis.url_cleaner import clean_urls
+from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.core.constants import BASE_API_URL, CHUNK_INDEX
+from srdt_analysis.core.exceptions import SRDTException
+from srdt_analysis.core.logger import Logger
+from srdt_analysis.services.corpus import getChunksByIdcc, getDocsContent
+from srdt_analysis.services.llm_runner import LLMRunner
+from srdt_analysis.text.anonymiser import anonymise_spacy
+from srdt_analysis.text.tokenizer import Tokenizer
+from srdt_analysis.text.url_cleaner import clean_urls
 
 load_dotenv()
 
@@ -159,14 +160,17 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
     )
 
 
-@app.get(f"{BASE_API_URL}/idcc/" + "{idcc}", response_model=SearchResponse)
-async def get_contributions_idcc(idcc: str, _api_key: str = Depends(get_api_key)):
+@app.post(f"{BASE_API_URL}/idcc/search" + "{idcc}", response_model=SearchResponse)
+async def get_contributions_idcc(request: SearchRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    idcc_chunks = getChunksByIdcc(idcc)
-    return SearchResponse(
-        time=time.time() - start_time,
-        top_chunks=idcc_chunks,
-    )
+    if request.idcc != None :
+        idcc_chunks = getChunksByIdcc(request.idcc)
+        return SearchResponse(
+            time=time.time() - start_time,
+            top_chunks=idcc_chunks,
+        )
+    else: 
+        raise SRDTException("Idcc is missing")
 
 
 @app.post(f"{BASE_API_URL}/docs/retrieve", response_model=RetrieveResponse)
@@ -221,6 +225,7 @@ async def search(request: SearchRequest, _api_key: str = Depends(get_api_key)):
             k=request.options.top_K,
             hybrid=request.options.hybrid or False,
             sources=request.options.collections,
+            idcc=request.idcc
         )
 
         transformed_results = [

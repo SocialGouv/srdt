@@ -356,6 +356,7 @@ export enum Config {
 }
 
 export enum Collection {
+  CONVENTIONS = "conventions",
   CONTRIBUTIONS = "contributions",
   PAGE_FICHE_MINISTERE_TRAVAIL = "page_fiche_ministere_travail",
   FICHES_SERVICE_PUBLIC = "fiches_service_public",
@@ -380,6 +381,12 @@ export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
     Collection.FICHES_SERVICE_PUBLIC,
     Collection.INFORMATION,
   ],
+};
+
+export const SEARCH_OPTIONS_IDCC: SearchOptions = {
+  hybrid: true,
+  top_K: 64,
+  collections: [Collection.CONTRIBUTIONS, Collection.CONVENTIONS],
 };
 
 export const SEARCH_OPTIONS_CODE: SearchOptions = {

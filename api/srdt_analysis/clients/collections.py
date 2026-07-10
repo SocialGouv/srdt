@@ -3,15 +3,15 @@ import os
 
 import httpx
 
-from srdt_analysis.constants import (
+from srdt_analysis.core.constants import (
     ALBERT_RERANK_MODEL,
     ALBERT_SEARCH_TIMEOUT,
 )
-from srdt_analysis.exceptions import (
+from srdt_analysis.core.exceptions import (
     ConfigurationError,
     ExternalServiceError,
 )
-from srdt_analysis.models import (
+from srdt_analysis.core.models import (
     COLLECTION_ID,
     COLLECTIONS_ID,
     AlbertCollectionsList,
