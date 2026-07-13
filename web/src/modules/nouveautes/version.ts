@@ -5,22 +5,11 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { stripHtmlComments } from "@/modules/common/markdown";
 
 // Next.js runs `next build` / the server with the app root (web/) as the cwd,
 // so process.cwd() reliably points at the package root here.
 const CONTENT_PATH = join(process.cwd(), "src", "content", "nouveautes.md");
-
-/** Remove HTML comments, repeating until stable so no `<!--` can survive
- *  interleaved/nested markers (satisfies CodeQL's incomplete-sanitization check). */
-function stripHtmlComments(input: string): string {
-  let previous;
-  let output = input;
-  do {
-    previous = output;
-    output = output.replace(/<!--[\s\S]*?-->/g, "");
-  } while (output !== previous);
-  return output;
-}
 
 /** The rendered markdown, with author-guidance HTML comments stripped. */
 export function getNouveautesContent(): string {

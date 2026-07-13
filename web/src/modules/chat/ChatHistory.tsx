@@ -16,7 +16,7 @@ interface ChatHistoryProps {
   onDeleteConversation: (conversationId: string, e: React.MouseEvent) => void;
   onNewConversation: () => void;
   /** Highlights a nav entry when the sidebar is shown on its own page. */
-  activeItem?: "nouveautes";
+  activeItem?: "nouveautes" | "faq";
   /** Fingerprint of the Nouveautés content; drives the "unread" dot. */
   nouveautesVersion?: string;
 }
@@ -94,6 +94,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           )}
         </span>
         <Button
+          iconId="fr-icon-question-line"
+          priority="tertiary no outline"
+          title="Aide / FAQ"
+          linkProps={{ href: "/faq" }}
+        />
+        <Button
           iconId="fr-icon-time-line"
           priority="tertiary no outline"
           title="Historique"
@@ -145,6 +151,20 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
               <span className="fr-sr-only">(nouveautés non lues)</span>
             </>
           )}
+        </Link>
+
+        <Link
+          href="/faq"
+          className={`${styles.sidebarRow} ${
+            activeItem === "faq" ? styles.sidebarRowActive : ""
+          }`}
+          onClick={() => push(["trackEvent", "faq", "open"])}
+        >
+          <span
+            className={fr.cx("fr-icon-question-line", "fr-icon--sm")}
+            aria-hidden="true"
+          />
+          Aide / FAQ
         </Link>
 
         <div className={`${styles.sidebarRow} ${styles.sidebarRowStatic}`}>

@@ -1,18 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { LayoutWrapper } from "@/modules/layout/LayoutWrapper";
 import { ChatHistory } from "@/modules/chat/ChatHistory";
-import { Conversation } from "@/modules/chat/types";
-import {
-  loadStoredConversations,
-  persistConversations,
-  OPEN_CONVERSATION_KEY,
-} from "@/modules/chat/conversation-storage";
+import { useSidebarNav } from "@/modules/chat/useSidebarNav";
+import { externalLinkComponents } from "@/modules/common/markdownComponents";
 import { markNouveautesSeen } from "./seen";
 import chatStyles from "@/modules/chat/Chat.module.css";
 import styles from "./Nouveautes.module.css";
@@ -28,25 +23,7 @@ const BADGES: Record<string, BadgeSeverity> = {
 };
 
 const markdownComponents = {
-  // Only external links open in a new tab; internal/relative links behave normally.
-  // `node` is react-markdown's AST node — drop it so it isn't forwarded to the DOM.
-  a: ({
-    href,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    node: _node,
-    ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => {
-    const isExternal = typeof href === "string" && /^https?:\/\//.test(href);
-    return (
-      <a
-        href={href}
-        {...props}
-        {...(isExternal
-          ? { target: "_blank", rel: "noopener noreferrer" }
-          : {})}
-      />
-    );
-  },
+  ...externalLinkComponents,
   // Inline code whose text matches a keyword becomes a DSFR badge.
   code: ({
     className,
@@ -83,14 +60,10 @@ type Props = {
 };
 
 export function NouveautesContent({ markdown, version }: Props) {
-  const router = useRouter();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [showHistory, setShowHistory] = useState(true);
+  const sidebar = useSidebarNav();
 
-  // One-time mount actions.
+  // Land at the top of the page (the previous screen's scroll can carry over).
   useEffect(() => {
-    setConversations(loadStoredConversations());
-    // Land at the top of the page (the previous screen's scroll can carry over).
     window.scrollTo(0, 0);
   }, []);
 
@@ -99,42 +72,14 @@ export function NouveautesContent({ markdown, version }: Props) {
     markNouveautesSeen(version);
   }, [version]);
 
-  // The sidebar actions live on the chat screen — route back to it, asking it
-  // to open the requested conversation when relevant.
-  const handleNewConversation = () => {
-    // Drop any stale "open this conversation" request so we really start fresh.
-    sessionStorage.removeItem(OPEN_CONVERSATION_KEY);
-    router.push("/");
-  };
-
-  const handleConversationSelect = (conversationId: string) => {
-    sessionStorage.setItem(OPEN_CONVERSATION_KEY, conversationId);
-    router.push("/");
-  };
-
-  const handleDeleteConversation = (
-    conversationId: string,
-    e: React.MouseEvent
-  ) => {
-    e.stopPropagation();
-    const next = conversations.filter((c) => c.id !== conversationId);
-    setConversations(next);
-    persistConversations(next);
-  };
-
   return (
     <LayoutWrapper fullWidth>
       <div
         className={`${chatStyles.chatContainer} ${chatStyles.chatContainerEmpty}`}
       >
         <ChatHistory
-          conversations={conversations}
+          {...sidebar}
           currentConversationId=""
-          showHistory={showHistory}
-          onShowHistoryChange={setShowHistory}
-          onConversationSelect={handleConversationSelect}
-          onDeleteConversation={handleDeleteConversation}
-          onNewConversation={handleNewConversation}
           activeItem="nouveautes"
           nouveautesVersion={version}
         />

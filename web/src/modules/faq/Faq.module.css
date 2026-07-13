@@ -1,0 +1,67 @@
+/* White content card sitting on the light-blue app background. */
+.card {
+  max-width: 880px;
+  margin: 2rem auto;
+  padding: 2.5rem 3rem;
+  background-color: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+}
+
+.title {
+  margin-bottom: 0.5rem;
+}
+
+.intro {
+  color: var(--text-mention-grey);
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.accordions {
+  margin-bottom: 2.5rem;
+}
+
+/* Tighten the default markdown spacing inside an answer. */
+.answer p {
+  margin-bottom: 0.75rem;
+}
+
+.answer p:last-child {
+  margin-bottom: 0;
+}
+
+.answer ul,
+.answer ol {
+  margin-bottom: 0.75rem;
+}
+
+.answer li {
+  margin-bottom: 0.25rem;
+}
+
+/* "Vous n'avez pas trouvé votre réponse ?" card. */
+.supportCard {
+  max-width: 420px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 8px;
+  background-color: var(--background-alt-grey);
+}
+
+.supportIllustration {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 1rem;
+}
+
+.supportTitle {
+  color: var(--text-action-high-blue-france);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.supportText {
+  margin-bottom: 1rem;
+}

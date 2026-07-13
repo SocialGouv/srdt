@@ -92,10 +92,18 @@ export const Chat = ({
   } = useApi();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
+  const hasInitializedRef = useRef(false);
   const [messagesLength, setMessagesLength] = useState(0);
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
+    // Run this once per mount. Under React StrictMode (dev) effects fire twice;
+    // without this guard the second pass reads an already-consumed
+    // OPEN_CONVERSATION_KEY and falls back to a new conversation, so a
+    // conversation opened from another page (Nouveautés/FAQ) would be lost.
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const savedConversations = localStorage.getItem(STORAGE_KEY);
 
     if (savedConversations) {
