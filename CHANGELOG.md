@@ -1,3 +1,10 @@
+# [1.48.0](https://github.com/SocialGouv/srdt/compare/v1.47.0...v1.48.0) (2026-07-13)
+
+
+### Features
+
+* add FAQ section ([#397](https://github.com/SocialGouv/srdt/issues/397)) ([d2c2fde](https://github.com/SocialGouv/srdt/commit/d2c2fde583183f13113e3927ad185d0a2754c669))
+
 # [1.47.0](https://github.com/SocialGouv/srdt/compare/v1.46.2...v1.47.0) (2026-07-09)
 
 
