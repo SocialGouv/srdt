@@ -10,13 +10,14 @@ load_dotenv()
 
 es_handler = ElasticIndicesHandler()
 
-def idcc_with_contribs(idcc: str) -> bool :
-    hits = es_handler.get_idcc(CHUNK_INDEX, idcc, 1)
-    return len(hits) > 0 and hits[0]['metadata.source'] == 'contributions'
-    
 
-def getChunksByIdcc(idcc: str, score: int = 1) -> List[ChunkResult]:
-    hits = es_handler.get_idcc(CHUNK_INDEX, idcc, 1000)
+def idcc_with_contribs(idcc: str) -> bool:
+    hits = es_handler.get_idcc_contributions(CHUNK_INDEX, idcc, 1)
+    return len(hits) > 0
+
+
+def get_contributions_chunks_by_idcc(idcc: str, score: int = 1) -> List[ChunkResult]:
+    hits = es_handler.get_idcc_contributions(CHUNK_INDEX, idcc, 1000)
 
     def to_chunk(source):
         metadata = source["metadata"]
@@ -32,7 +33,7 @@ def getChunksByIdcc(idcc: str, score: int = 1) -> List[ChunkResult]:
     return cast(List[ChunkResult], chunks)
 
 
-def getDocsContent(ids: List[str]) -> List[ContentResult]:
+def get_docs_content(ids: List[str]) -> List[ContentResult]:
     hits = es_handler.get_chunks(CHUNK_INDEX, ids)
 
     doc_chunks = {}

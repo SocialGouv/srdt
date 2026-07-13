@@ -113,10 +113,8 @@ const searchTextContent = async (
 
   const options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
 
-  if (!withGenericContributions) {
-    options.collections = options.collections?.filter(
-      (c) => c != Collection.CONTRIBUTIONS
-    );
+  if (withGenericContributions) {
+    options.collections?.push(Collection.CONTRIBUTIONS);
   }
 
   const localSearchResult = await search({
@@ -243,9 +241,10 @@ const searchIDCC = async (idcc: string, anonymized: string) => {
       });
 
       if (idccRerankResults.data) {
-        return getFullContentFromReranked(
-          idccRerankResults.data.results,
-          K_RERANK_IDCC
+        return (
+          idccRerankResults.data?.results
+            ?.slice(0, K_RERANK_IDCC)
+            .map(rerankedToChunk) || []
         );
       }
     }
@@ -359,10 +358,16 @@ export const prepareFollowupQuestionData = async (
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = providedModel ?? getDefaultModel();
 
+  const search_options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
+
+  if (!idcc) {
+    search_options.collections?.push(Collection.CONTRIBUTIONS);
+  }
+
   // Search for query1 (top 5)
   const searchResultQuery1 = await search({
     prompts: [query1],
-    options: SEARCH_OPTIONS_CONTENT,
+    options: search_options,
   });
 
   if (searchResultQuery1.error) {
@@ -389,7 +394,7 @@ export const prepareFollowupQuestionData = async (
   // Search for query2 (top 10)
   const searchResultQuery2 = await search({
     prompts: [query2],
-    options: SEARCH_OPTIONS_CONTENT,
+    options: search_options,
   });
 
   if (searchResultQuery2.error) {

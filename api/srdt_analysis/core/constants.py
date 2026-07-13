@@ -8,7 +8,7 @@ ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
 CHUNK_INDEX = "chunks-test"
 SOURCES = [
-	"conventions",
+    "conventions",
     "contributions",
     "code_du_travail",
     "page_fiche_ministere_travail",
