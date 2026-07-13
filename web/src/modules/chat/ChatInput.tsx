@@ -24,7 +24,8 @@ const FOLLOWUP_SUGGESTIONS = [
   { label: "Résumer la réponse", message: "Résume la réponse de façon concise." },
   {
     label: "Rédiger un mail prêt à envoyer",
-    message: "Rédige un mail prêt à envoyer à partir de cette réponse.",
+    message:
+      "Rédige un mail synthétique reprenant les principaux points de la réponse. Le mail est à destination de l'usager qui a envoyé la question et répond à sa demande.",
   },
   {
     label: "Citer les textes de référence",
