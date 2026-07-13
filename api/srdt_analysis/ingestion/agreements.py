@@ -145,7 +145,7 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
                     # 'breadcrumb': chunk['breadcrumb'],
                     # 'article_num': chunk['article_num'],
                     "idx": chunk["idx"],
-                    "idcc": chunk["idcc"],
+                    "idcc": str(chunk["idcc"]),
                     "articles": [],
                 },
             }
@@ -161,7 +161,6 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
 
 
 def parse_all_agreements(data_dir=DATA_DIR):
-    aggregated = []
     for filename in os.listdir(data_dir):
         if not filename.endswith(".json") or filename == "index.json":
             continue
@@ -169,7 +168,7 @@ def parse_all_agreements(data_dir=DATA_DIR):
             data = json.load(f)
         res = chunk_cc(data)
 
-        print(json.dumps(res[:4]))
+        # print(json.dumps(res[:4]))
 
         if len(res) > 0:
             break
@@ -196,8 +195,8 @@ def get_conventions_chunked(data_dir=DATA_DIR):
 
         aggregated.extend(with_embeddings)
 
-        if len(res) > 0:
-            break
+        # if len(res) > 0:
+        # break
 
     return aggregated
 

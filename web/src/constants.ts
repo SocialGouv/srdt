@@ -376,7 +376,6 @@ export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
   hybrid: true,
   top_K: 200,
   collections: [
-    Collection.CONTRIBUTIONS,
     Collection.PAGE_FICHE_MINISTERE_TRAVAIL,
     Collection.FICHES_SERVICE_PUBLIC,
     Collection.INFORMATION,
@@ -386,7 +385,7 @@ export const SEARCH_OPTIONS_CONTENT: SearchOptions = {
 export const SEARCH_OPTIONS_IDCC: SearchOptions = {
   hybrid: true,
   top_K: 64,
-  collections: [Collection.CONTRIBUTIONS, Collection.CONVENTIONS],
+  collections: [Collection.CONVENTIONS],
 };
 
 export const SEARCH_OPTIONS_CODE: SearchOptions = {

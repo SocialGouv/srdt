@@ -132,7 +132,8 @@ class ElasticIndicesHandler:
                 "name": index_name,
                 "mappings": {
                     "properties": {
-                        "content": {"type": "text", "analyzer": "ascii_french"}
+                        "content": {"type": "text", "analyzer": "ascii_french"},
+                        "metadata.idcc": {"type": "keyword"},
                     }
                 },
                 "settings": {"analysis": french_analyzer},
@@ -171,7 +172,23 @@ class ElasticIndicesHandler:
                 query={
                     "bool": {
                         "must": [{"match": {"content": query}}],
-                        "filter": [{"bool": {"must":[{"terms": {"metadata.source": sources}}]}}]
+                        "filter": [
+                            {
+                                "bool": {
+                                    "must": list(
+                                        filter(
+                                            None,
+                                            [
+                                                {"terms": {"metadata.source": sources}},
+                                                {"term": {"metadata.idcc": idcc}}
+                                                if idcc is not None
+                                                else None,
+                                            ],
+                                        )
+                                    )
+                                }
+                            }
+                        ],
                     }
                 },
                 source_includes=["content", "metadata"],
@@ -182,17 +199,31 @@ class ElasticIndicesHandler:
                 f"Elasticsearch error - text search : {str(e)}", service="Elasticsearch"
             ) from e
 
-    def find_most_similar_knn(self, index_name, query, k, sources: list[str], idcc: Optional[str]):
+    def find_most_similar_knn(
+        self, index_name, query, k, sources: list[str], idcc: Optional[str]
+    ):
         embeddings = self.albert.embeddings([query])[0]
 
         # query = {"terms": {"metadata" : {"source": sources, "idcc": idcc}}}
-        query = {"bool": {"must":[{"terms": {"metadata.source": sources}}, {'term': {'metadata.idcc': idcc}} if idcc != None else None]}}
+        query = {
+            "bool": {
+                "must": list(
+                    filter(
+                        None,
+                        [
+                            {"terms": {"metadata.source": sources}},
+                            {"term": {"metadata.idcc": idcc}}
+                            if idcc is not None
+                            else None,
+                        ],
+                    )
+                )
+            }
+        }
 
-        # sources filter do not work properly if not every sources has been ingested
-        # i.e. if the there are no results for the required source, it will return results for other sources
         try:
             response = self.client.search(
-                query={"terms": {"metadata.source": sources}},
+                query=query,
                 index=index_name,
                 knn={
                     "field": "embedding",
@@ -202,19 +233,49 @@ class ElasticIndicesHandler:
                 },
                 size=k,
             )
-            print(response)
-            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+
+            # sources filter do not work properly if not every sources has been ingested
+            # i.e. if the there are no results for the required source, it will return results for other sources
+            # hence we need to manually filter the results
+
+            def check_hit(r):
+                metadata = r["_source"]["metadata"]
+                source_ok = metadata["source"] in sources
+                r_idcc = metadata["idcc"]
+                idcc_ok = (
+                    True if idcc is None or r_idcc is None else metadata["idcc"] == idcc
+                )
+                return source_ok and idcc_ok
+
+            filtered = [h for h in response["hits"]["hits"] if check_hit(h)]
+
+            # print(response)
+            return [self.to_chunk_result(hit) for hit in filtered]
         except Exception as e:
             raise ExternalServiceError(
                 f"Elasticsearch error - vector search : {str(e)}",
                 service="Elasticsearch",
             ) from e
 
-    def get_idcc(self, index_name: str, idcc: str, size: int):
+    def get_idcc_contributions(self, index_name: str, idcc: str, size: int):
         try:
             response = self.client.search(
                 index=index_name,
-                query={"term": {"metadata.idcc.keyword": idcc}},
+                query={
+                    "bool": {
+                        "must": list(
+                            filter(
+                                None,
+                                [
+                                    {"term": {"metadata.source": "contributions_idcc"}},
+                                    {"term": {"metadata.idcc": idcc}}
+                                    if idcc is not None
+                                    else None,
+                                ],
+                            )
+                        )
+                    }
+                },
                 size=size,
                 source_includes=["content", "metadata"],
             )
@@ -253,7 +314,13 @@ class ElasticIndicesHandler:
             ) from e
 
     def search(
-        self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str], idcc: Optional[str]
+        self,
+        index_name: str,
+        prompt: str,
+        k: int,
+        hybrid: bool,
+        sources: list[str],
+        idcc: Optional[str],
     ) -> List[ChunkResult]:
         k_min = 64 if k < 64 else k
 
