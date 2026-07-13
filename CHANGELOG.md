@@ -1,3 +1,10 @@
+## [1.48.1](https://github.com/SocialGouv/srdt/compare/v1.48.0...v1.48.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* write mail following answer ([#398](https://github.com/SocialGouv/srdt/issues/398)) ([bfed8c2](https://github.com/SocialGouv/srdt/commit/bfed8c25aa4d4147a35b3f6f01b266e134ead81f))
+
 # [1.48.0](https://github.com/SocialGouv/srdt/compare/v1.47.0...v1.48.0) (2026-07-13)
 
 
