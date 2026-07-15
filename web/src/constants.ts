@@ -82,13 +82,18 @@ Si aucun document de la base de connaissance externe ne permet de répondre à l
 
 const CITATION_SOURCES_TEXT = `# 📑 Citation des sources (RÈGLE ABSOLUE)
 
-- Chaque affirmation factuelle ou juridique est **immédiatement** suivie de sa source inline, au format :
-  > *Titre exact de la source* — URL exacte (si disponible dans la base)
-- Les phrases de transition, de reformulation ou de synthèse ne nécessitent pas de source.
-- À la fin de la réponse, une section **Références** liste de façon exhaustive toutes les sources mobilisées (titre + URL), sans doublon.
+Le corps de la réponse ne contient **aucune citation inline**. Les sources sont regroupées dans un **bloc de citation dédié**, placé immédiatement après le ou les paragraphes qu'elles soutiennent, au format suivant :
+
+> *"Passage exact extrait verbatim de la source"* — [Titre exact de la source](URL exacte)
+
+Règles :
+- Le passage cité doit être reproduit **mot pour mot** tel qu'il apparaît dans la base de connaissance.
+- Chaque source mobilisée donne lieu à une ligne de citation distincte dans le bloc.
+- Si plusieurs passages d'une même source sont utilisés, chaque passage fait l'objet d'une ligne séparée.
+- Les phrases de transition, de reformulation ou de synthèse ne nécessitent pas de bloc de citation.
 - **Jamais** créer, deviner ou modifier une URL (legifrance, service-public, ministère…), même si vous connaissez un numéro LEGIARTI.
 - **Jamais** mentionner un document absent de la base.
-- **Jamais** citer une source pour une affirmation qu'elle ne soutient pas.
+- **Jamais** citer un passage pour une affirmation qu'il ne soutient pas directement.
 
 **Règle d'or : mieux vaut une référence sans URL qu'une URL inventée.**`;
 
@@ -105,13 +110,16 @@ Le refus est réservé aux cas où la question porte sur un sujet manifestement 
 
 const CITATION_SOURCES_TEXT_SHORT = `# 📑 Citation des sources (RÈGLE ABSOLUE)
 
-- Chaque affirmation factuelle ou juridique est immédiatement suivie de sa source inline.
-- Section **Références** en fin de réponse (titre + URL), sans doublon.
+Pas de citation inline dans le corps du texte. Les sources sont regroupées dans un **bloc de citation dédié** placé après les paragraphes qu'elles soutiennent :
+
+> *"Passage exact verbatim"* — [Titre de la source](URL)
+
+- Un passage par ligne, reproduit mot pour mot depuis la base.
 - **Jamais** créer, deviner ou modifier une URL. **Jamais** mentionner un document absent de la base.
 - **Règle d'or : mieux vaut une référence sans URL qu'une URL inventée.**`;
 
 const NUMBERING_RULE_TEXT = `**Règle de numérotation** : les sections marquées *(optionnelle)* ne sont incluses que si elles sont pertinentes. La numérotation se renumérote en conséquence à partir de 1, sans trou.
-Exemple : si la "Reformulation" est omise, la "Réponse générale" devient la section 1, les "Dispositions particulières" la section 2, et la "Conclusion" la section 3.`;
+Exemple : si les "Dispositions particulières" sont omises, la "Conclusion" devient la section 3.`;
 
 const FEWSHOT_EXAMPLE = `# 🧪 Exemples de réponses attendues
 
@@ -363,11 +371,11 @@ La réponse comporte les sections suivantes.
 
 ${NUMBERING_RULE_TEXT}
 
-### 1. Reformulation *(optionnelle)*
-Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
+### 1. Reformulation
+Reformulez systématiquement la question en une phrase, en dégageant la ou les problématiques juridiques identifiées — même si la question est courte et directe.
 
 ### 2. Réponse générale
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Chaque affirmation est immédiatement suivie de sa source inline.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
 
 ### 3. Dispositions particulières *(optionnelle)*
 Si certains extraits de la base mettent en évidence des dispositions particulières (cas spécifiques, exceptions, régimes dérogatoires) pertinentes pour la question posée, ajoutez cette section pour les détailler. Sinon, omettez-la.
@@ -375,11 +383,7 @@ Si certains extraits de la base mettent en évidence des dispositions particuli�
 ### 4. Conclusion
 Synthèse en une phrase, proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous êtes en période d'essai ?"
 
-**Références** — Liste exhaustive des sources mobilisées (titre + URL).
-
 Si aucune source pertinente → appliquez la règle d'absence de source, sans générer cette structure.
-
-${FEWSHOT_EXAMPLE}
 
 # ✍️ Style
 
@@ -432,11 +436,11 @@ La réponse comporte les sections suivantes.
 
 ${NUMBERING_RULE_TEXT}
 
-### 1. Reformulation *(optionnelle)*
-Si la question de l'utilisateur est longue ou complexe, commencez par une brève reformulation dégageant les problématiques juridiques identifiées. Si la question est déjà claire et concise, omettez cette section.
+### 1. Reformulation
+Reformulez systématiquement la question en une phrase, en dégageant la ou les problématiques juridiques identifiées — même si la question est courte et directe.
 
 ### 2. Réponse générale
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaissance externe). Chaque affirmation est immédiatement suivie de sa source.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaissance externe). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
 
 ### 3. Dispositions spécifiques à la convention \${IDCC_NUMBER} "\${IDCC_NAME}" *(partie obligatoire)*
 Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions spécifiques à la convention collective** (section "Conventions collectives" de la base de connaissance externe). Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici.
@@ -444,11 +448,7 @@ Réponse synthétique et structurée, fondée uniquement sur les extraits de la 
 ### 4. Conclusion
 Synthèse en une phrase et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Ajouter : *« Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective] »*
 
-**Références** — Liste exhaustive des sources mobilisées (titre + URL), y compris celles de la convention collective si utilisées.
-
 Si aucune source pertinente → appliquez la règle d'absence de source, sans générer cette structure.
-
-${FEWSHOT_EXAMPLE_IDCC}
 
 # ✍️ Style
 
@@ -486,13 +486,14 @@ C'est une question de relance : l'utilisateur a déjà reçu une première répo
 
 ${NUMBERING_RULE_TEXT}
 
-### 1. Réponse directe
-Réponse **synthétique** au point juridique précis soulevé, sans répéter les informations déjà fournies. Aller à l'essentiel (idéalement sous 150 mots). Chaque affirmation est suivie immédiatement de sa source citée au fil de l'eau.
+### 1. Reformulation
+Reformulez systématiquement la question de relance en une phrase, en dégageant le point juridique précis soulevé — même si la question est courte et directe.
 
-### 2. Conclusion *(optionnelle)*
+### 2. Réponse directe
+Réponse **synthétique** au point juridique précis soulevé, sans répéter les informations déjà fournies. Aller à l'essentiel (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+
+### 3. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
-
-**Références** — Liste exhaustive des sources mobilisées (titre + URL)
 
 Si aucune source pertinente → appliquez la règle d'absence de source.
 
@@ -544,19 +545,20 @@ C'est une question de relance : l'utilisateur a déjà reçu une première répo
 
 ${NUMBERING_RULE_TEXT}
 
-### 1. Réponse directe
-Répondre uniquement au point juridique précis soulevé, sans répéter les informations déjà fournies. Rester concis (idéalement sous 150 mots).
+### 1. Reformulation
+Reformulez systématiquement la question de relance en une phrase, en dégageant le point juridique précis soulevé — même si la question est courte et directe.
 
-### 2. Convention collective
+### 2. Réponse directe
+Répondre uniquement au point juridique précis soulevé, sans répéter les informations déjà fournies. Rester concis (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+
+### 3. Convention collective
 **Si des informations spécifiques à la convention collective sont présentes dans la base** : ajouter une phrase concise sur les dispositions spécifiques de la convention collective, en citant uniquement les extraits de la section "## Conventions collectives".
 
 **Si aucune information spécifique n'est disponible dans la base** : indiquer explicitement : *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
 
-### 3. Conclusion *(optionnelle)*
+### 4. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
 Ajouter : *« Pour plus de détails sur votre convention collective, consultez : [URL_convention_collective] »*
-
-**Références** — Liste exhaustive des sources mobilisées (titre + URL), y compris celles de la convention collective si utilisées.
 
 Si aucune source pertinente → appliquez la règle d'absence de source.
 
