@@ -1,3 +1,10 @@
+## [1.48.2](https://github.com/SocialGouv/srdt/compare/v1.48.1...v1.48.2) (2026-07-16)
+
+
+### Bug Fixes
+
+* scroll and size of screen ([#401](https://github.com/SocialGouv/srdt/issues/401)) ([4b720fb](https://github.com/SocialGouv/srdt/commit/4b720fb7f2f3188365e200a23b2a9b2ab5d2517c))
+
 ## [1.48.1](https://github.com/SocialGouv/srdt/compare/v1.48.0...v1.48.1) (2026-07-13)
 
 
