@@ -3,7 +3,7 @@
 import { Header as DsfrHeader } from "@codegouvfr/react-dsfr/Header";
 import { Footer as DsfrFooter } from "@codegouvfr/react-dsfr/Footer";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { headerFooterDisplayItem } from "@codegouvfr/react-dsfr/Display";
 import { fr } from "@codegouvfr/react-dsfr";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,6 +33,14 @@ export const LayoutWrapper = ({
   onGoHome,
 }: Props) => {
   const { isAuthenticated, session } = useAuth();
+
+  // Client-side navigations keep the previous page's scroll position (each
+  // page's root spans the viewport, so Next.js never scrolls it into view).
+  // Every page renders its own LayoutWrapper, so mounting one means a page
+  // change: land at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const mainClassName = fillViewport
     ? styles.appMain

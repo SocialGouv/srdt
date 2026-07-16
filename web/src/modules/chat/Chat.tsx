@@ -306,6 +306,13 @@ export const Chat = ({
   const globalResponseTime = currentConversation?.lastResponseTime || 0;
   const apiError = currentConversation?.lastApiError;
 
+  // Switching conversations happens in place (no navigation), so the window
+  // keeps its scroll position — e.g. sitting at the footer when clicking
+  // "Nouvelle conversation". Land back at the top of the page.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentConversationId]);
+
   // Scroll within the chat messages container only
   useEffect(() => {
     // Only auto-scroll when a new message is added (array length changes),
