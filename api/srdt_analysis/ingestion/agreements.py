@@ -15,6 +15,8 @@ load_dotenv()
 DATA_DIR = "/Users/remi/dev/socialgouv/kali-data/data/"
 CC_MAIN_PARTS = ("Texte de base", "Textes Attachés", "Textes Salaires")
 
+conventions_uri = "https://www.legifrance.gouv.fr/conv_coll/id"
+
 _tokenizer = Tokenizer()
 _chunker = Chunker()
 _albert = AlbertCollectionHandler()
@@ -90,39 +92,53 @@ def _walk_articles(node, breadcrumb):
 
 def chunk_cc(data):
     children = data.get("children", [])
-    part_node = _find_main_part(children, "Texte de base")
-    if not part_node:
-        return []
-
-    doc_title = data.get("data", {}).get("title")
-    idcc = data.get("data", {}).get("num")
 
     chunks = []
-    for part_child in part_node.get("children", []):
-        for breadcrumb, article in _walk_articles(part_child, ["Texte de base"]):
-            content = article.get("data", {}).get("content")
-            if not content or not BeautifulSoup(content, "html.parser").get_text(
-                strip=True
-            ):
-                continue
 
-            article_num = article.get("data", {}).get("num")
-            header = " > ".join(breadcrumb) + (
-                f" — Article {article_num}" if article_num else ""
-            )
+    for part in ["Texte de base", "Textes Attachés"]:
+        part_node = _find_main_part(children, part)
 
-            for idx, split in enumerate(_chunker.split_html_contribs(content)):
-                chunks.append(
-                    {
-                        "title": doc_title,
-                        "breadcrumb": breadcrumb,
-                        "article_num": article_num,
-                        "cid": article.get("data", {}).get("cid"),
-                        "idx": idx,
-                        "idcc": idcc,
-                        "content": f"{header}\n{split.page_content}",
-                    }
-                )
+        if not part_node:
+            return []
+
+        idcc = data.get("data", {}).get("num")
+
+        for part_child in part_node.get("children", []):
+            for breadcrumb, article in _walk_articles(part_child, [part]):
+                content = article.get("data", {}).get("content")
+                if not content or not BeautifulSoup(content, "html.parser").get_text(
+                    strip=True
+                ):
+                    continue
+
+                article_num = article.get("data", {}).get("num")
+
+                last_breadcrumb = breadcrumb[len(breadcrumb) - 1]
+                suffix = f" — Article {article_num}" if article_num else ""
+
+                header = " > ".join(breadcrumb) + suffix
+                title = last_breadcrumb + suffix
+
+                # state =  article.get("data", {}).get("etat")
+                # if state != 'VIGUEUR_ETEN':
+                    # print(header, state)
+
+                # print(title)
+
+                for idx, split in enumerate(_chunker.split_html_contribs(content)):
+                    chunks.append(
+                        {
+                            "title": title,
+                            "breadcrumb": breadcrumb,
+                            "article_num": article_num,
+                            "cid": article.get("data", {}).get("cid"),
+                            "id": article.get("data", {}).get("id"),
+                            "etat": article.get("data", {}).get("etat"),
+                            "idx": idx,
+                            "idcc": idcc,
+                            "content": f"{header}\n{split.page_content}",
+                        }
+                    )
 
     return chunks
 
@@ -131,16 +147,17 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
     chunk_list: list[Chunk] = []
 
     for chunk in chunks:
+        id = chunk["id"] if "id" in chunk else chunk["cid"]
         chunk_list.append(
             {
                 "content": chunk["content"],
-                "id": chunk["cid"],
+                "id": id,
                 "embedding": None,
                 "metadata": {
-                    "id": chunk["cid"],
+                    "id":id, 
                     "source": "conventions",
-                    "url": "https://blabla",
-                    "initial_id": "blabla",
+                    "url": f'{conventions_uri}/{id}',
+                    "initial_id": id,
                     "title": chunk["title"],
                     # 'breadcrumb': chunk['breadcrumb'],
                     # 'article_num': chunk['article_num'],
@@ -199,6 +216,3 @@ def get_conventions_chunked(data_dir=DATA_DIR):
         # break
 
     return aggregated
-
-
-# with open('/Users/remi/dev/socialgouv/kali-data/data/KALICONT000017577652.json') as f:

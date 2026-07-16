@@ -8,6 +8,7 @@ from elasticsearch import Elasticsearch
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.core.constants import ELASTIC_BULK_BATCH_SIZE
 from srdt_analysis.core.exceptions import (
     ConfigurationError,
     ExternalServiceError,
@@ -119,12 +120,15 @@ class ElasticIndicesHandler:
             self.client.indices.delete(index=stale_indices)
 
     def add_items(self, index_name, items):
-        operations = []
-        for item in items:
-            operations.append({"index": {"_index": index_name}})
-            operations.append(item)
+        batch_size = ELASTIC_BULK_BATCH_SIZE
+        for i in range(0, len(items), batch_size):
+            batch = items[i : i + batch_size]
+            operations = []
+            for item in batch:
+                operations.append({"index": {"_index": index_name}})
+                operations.append(item)
 
-        self.client.bulk(index=index_name, operations=operations, refresh=True)
+            self.client.bulk(index=index_name, operations=operations, refresh=True)
 
     def init_index_default(self, index_name):
         return self.init_index(
