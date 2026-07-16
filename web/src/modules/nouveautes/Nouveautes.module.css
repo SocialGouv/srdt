@@ -1,17 +1,10 @@
 /* White content card sitting on the light-blue app background. */
 .card {
-  max-width: 880px;
-  margin: 2rem auto;
+  margin: 2rem 0;
   padding: 2.5rem 3rem;
   background-color: var(--background-default-grey);
   border: 1px solid var(--border-default-grey);
   border-radius: 8px;
-}
-
-/* Constrain the changelog text to a comfortable reading column. */
-.markdownBody,
-.intro {
-  max-width: 720px;
 }
 
 /* Page title — "Quoi de neuf dans l'outil ?" */

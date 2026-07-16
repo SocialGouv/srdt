@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -42,11 +42,6 @@ type Props = {
 
 export function FaqContent({ markdown }: Props) {
   const sidebar = useSidebarNav();
-
-  // Land at the top of the page (the previous screen's scroll can carry over).
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   const entries = useMemo(() => parseFaq(markdown), [markdown]);
 

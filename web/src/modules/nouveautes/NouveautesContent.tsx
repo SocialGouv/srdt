@@ -62,11 +62,6 @@ type Props = {
 export function NouveautesContent({ markdown, version }: Props) {
   const sidebar = useSidebarNav();
 
-  // Land at the top of the page (the previous screen's scroll can carry over).
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   // Opening the page counts as reading the latest updates: clear the dot.
   useEffect(() => {
     markNouveautesSeen(version);
