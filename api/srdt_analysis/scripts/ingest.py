@@ -1,17 +1,18 @@
 from dotenv import load_dotenv
 
-from srdt_analysis import legi_data
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.data_exploiter_embed import (
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.clients.postgresql_manager import get_data
+from srdt_analysis.core.constants import CHUNK_INDEX
+from srdt_analysis.core.logger import Logger
+from srdt_analysis.ingestion.agreements import get_conventions_chunked
+from srdt_analysis.ingestion.data_exploiter_embed import (
     FichesMTExploiter,
     FichesSPExploiter,
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.legi_data import get_legi_data_chunked
-from srdt_analysis.logger import Logger
-from srdt_analysis.postgresql_manager import get_data
+from srdt_analysis.ingestion.judilibre import get_judilibre_chunked
+from srdt_analysis.ingestion.legi_data import get_legi_data_chunked
 
 load_dotenv()
 
@@ -37,7 +38,8 @@ def start():
 
     page_contribs_idcc_exploiter = PagesContributionsExploiter()
     page_contribs_idcc = page_contribs_idcc_exploiter.process_documents(
-        data["contributions_idcc"], "html_contribs"
+        data["contributions_idcc"],
+        "html_contribs",
     )
 
     page_infos_exploiter = PageInfosExploiter()
@@ -55,6 +57,10 @@ def start():
 
     articles_code_du_travail = get_legi_data_chunked()
 
+    conventions = get_conventions_chunked()
+
+    judilibre = get_judilibre_chunked()
+
     logger.info("Reingest corpus")
 
     index = ElasticIndicesHandler()
@@ -70,12 +76,12 @@ def start():
         fiche_mt,
         page_sp,
         articles_code_du_travail,
+        conventions,
+        judilibre,
     ]:
         index.add_items(alias, docs)
 
     index.swap_aliases(index_name, alias)
-
-    legi_data.get_article_url("L351-6")
 
 
 if __name__ == "__main__":

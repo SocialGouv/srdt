@@ -18,6 +18,8 @@ CollectionName = Literal[
     "contributions",
     "internet",
     "contributions_idcc",
+    "conventions",
+    "judilibre",
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive", "html_contribs"]

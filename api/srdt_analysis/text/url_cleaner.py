@@ -1,8 +1,8 @@
 import regex
 
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.reference_extractor import CODE_TRAVAIL, extract_references
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.core.constants import CHUNK_INDEX
+from srdt_analysis.text.reference_extractor import CODE_TRAVAIL, extract_references
 
 whitelist = [
     "legifrance.gouv.fr",

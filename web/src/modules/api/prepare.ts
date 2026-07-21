@@ -13,6 +13,7 @@ import {
   SEARCH_OPTIONS_CODE,
   K_RERANK_CODE,
   Collection,
+  SEARCH_OPTIONS_IDCC,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -112,10 +113,8 @@ const searchTextContent = async (
 
   const options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
 
-  if (!withGenericContributions) {
-    options.collections = options.collections?.filter(
-      (c) => c != Collection.CONTRIBUTIONS
-    );
+  if (withGenericContributions) {
+    options.collections?.push(Collection.CONTRIBUTIONS);
   }
 
   const localSearchResult = await search({
@@ -215,7 +214,11 @@ const getFullContentFromReranked = async (
 // get all idcc content and run rerank using user question
 // return best 5
 const searchIDCC = async (idcc: string, anonymized: string) => {
-  const idccSearchResult = await getIdccChunks(idcc);
+  const idccSearchResult = await getIdccChunks({
+    prompts: [anonymized],
+    idcc,
+    options: SEARCH_OPTIONS_IDCC,
+  });
 
   if (idccSearchResult.error) {
     const searchError = new Error(
@@ -238,9 +241,10 @@ const searchIDCC = async (idcc: string, anonymized: string) => {
       });
 
       if (idccRerankResults.data) {
-        return getFullContentFromReranked(
-          idccRerankResults.data.results,
-          K_RERANK_IDCC
+        return (
+          idccRerankResults.data?.results
+            ?.slice(0, K_RERANK_IDCC)
+            .map(rerankedToChunk) || []
         );
       }
     }
@@ -354,10 +358,16 @@ export const prepareFollowupQuestionData = async (
   const instructions = PROMPT_INSTRUCTIONS[config];
   const model = providedModel ?? getDefaultModel();
 
+  const search_options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
+
+  if (!idcc) {
+    search_options.collections?.push(Collection.CONTRIBUTIONS);
+  }
+
   // Search for query1 (top 5)
   const searchResultQuery1 = await search({
     prompts: [query1],
-    options: SEARCH_OPTIONS_CONTENT,
+    options: search_options,
   });
 
   if (searchResultQuery1.error) {
@@ -384,7 +394,7 @@ export const prepareFollowupQuestionData = async (
   // Search for query2 (top 10)
   const searchResultQuery2 = await search({
     prompts: [query2],
-    options: SEARCH_OPTIONS_CONTENT,
+    options: search_options,
   });
 
   if (searchResultQuery2.error) {
@@ -435,8 +445,13 @@ export const prepareFollowupQuestionData = async (
   let selectedIdccChunksQuery2: ChunkResult[] = [];
 
   if (idcc) {
-    // Get all IDCC content
-    const idccSearchResult = await getIdccChunks(idcc);
+    // Get IDCC content
+    // TODO confirm how we handle followup question when searching for idcc content
+    const idccSearchResult = await getIdccChunks({
+      prompts: [query1, query2],
+      idcc,
+      options: SEARCH_OPTIONS_IDCC,
+    });
 
     if (idccSearchResult.error) {
       console.error(

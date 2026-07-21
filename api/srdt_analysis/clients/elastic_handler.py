@@ -2,18 +2,19 @@ import os
 import random
 from collections import defaultdict
 from timeit import default_timer as timer
-from typing import List
+from typing import List, Optional
 
 from elasticsearch import Elasticsearch
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
-from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.exceptions import (
+from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.core.constants import ELASTIC_BULK_BATCH_SIZE
+from srdt_analysis.core.exceptions import (
     ConfigurationError,
     ExternalServiceError,
     ServiceUnavailableError,
 )
-from srdt_analysis.logger import Logger
+from srdt_analysis.core.logger import Logger
 
 french_analyzer = {
     "filter": {
@@ -109,13 +110,25 @@ class ElasticIndicesHandler:
             ]
         )
 
-    def add_items(self, index_name, items):
-        operations = []
-        for item in items:
-            operations.append({"index": {"_index": index_name}})
-            operations.append(item)
+        stale_indices = [
+            index
+            for index in self.client.indices.get(index=f"{index_name}-*").keys()
+            if index != alias
+        ]
+        if stale_indices:
+            self.logger.info(f"Deleting {len(stale_indices)} old indices.")
+            self.client.indices.delete(index=stale_indices)
 
-        self.client.bulk(index=index_name, operations=operations, refresh=True)
+    def add_items(self, index_name, items):
+        batch_size = ELASTIC_BULK_BATCH_SIZE
+        for i in range(0, len(items), batch_size):
+            batch = items[i : i + batch_size]
+            operations = []
+            for item in batch:
+                operations.append({"index": {"_index": index_name}})
+                operations.append(item)
+
+            self.client.bulk(index=index_name, operations=operations, refresh=True)
 
     def init_index_default(self, index_name):
         return self.init_index(
@@ -123,7 +136,8 @@ class ElasticIndicesHandler:
                 "name": index_name,
                 "mappings": {
                     "properties": {
-                        "content": {"type": "text", "analyzer": "ascii_french"}
+                        "content": {"type": "text", "analyzer": "ascii_french"},
+                        "metadata.idcc": {"type": "keyword"},
                     }
                 },
                 "settings": {"analysis": french_analyzer},
@@ -153,7 +167,7 @@ class ElasticIndicesHandler:
         )
 
     def find_most_similar_text(
-        self, index_name, query, k, sources: list[str]
+        self, index_name, query, k, sources: list[str], idcc: Optional[str]
     ) -> list[ChunkResult]:
         try:
             response = self.client.search(
@@ -162,7 +176,23 @@ class ElasticIndicesHandler:
                 query={
                     "bool": {
                         "must": [{"match": {"content": query}}],
-                        "filter": [{"terms": {"metadata.source": sources}}],
+                        "filter": [
+                            {
+                                "bool": {
+                                    "must": list(
+                                        filter(
+                                            None,
+                                            [
+                                                {"terms": {"metadata.source": sources}},
+                                                {"term": {"metadata.idcc": idcc}}
+                                                if idcc is not None
+                                                else None,
+                                            ],
+                                        )
+                                    )
+                                }
+                            }
+                        ],
                     }
                 },
                 source_includes=["content", "metadata"],
@@ -173,14 +203,31 @@ class ElasticIndicesHandler:
                 f"Elasticsearch error - text search : {str(e)}", service="Elasticsearch"
             ) from e
 
-    def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
+    def find_most_similar_knn(
+        self, index_name, query, k, sources: list[str], idcc: Optional[str]
+    ):
         embeddings = self.albert.embeddings([query])[0]
 
-        # sources filter do not work properly if not every sources has been ingested
-        # i.e. if the there are no results for the required source, it will return results for other sources
+        # query = {"terms": {"metadata" : {"source": sources, "idcc": idcc}}}
+        query = {
+            "bool": {
+                "must": list(
+                    filter(
+                        None,
+                        [
+                            {"terms": {"metadata.source": sources}},
+                            {"term": {"metadata.idcc": idcc}}
+                            if idcc is not None
+                            else None,
+                        ],
+                    )
+                )
+            }
+        }
+
         try:
             response = self.client.search(
-                query={"terms": {"metadata.source": sources}},
+                query=query,
                 index=index_name,
                 knn={
                     "field": "embedding",
@@ -190,19 +237,50 @@ class ElasticIndicesHandler:
                 },
                 size=k,
             )
-            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+
+            # sources filter do not work properly if not every sources has been ingested
+            # i.e. if the there are no results for the required source, it will return results for other sources
+            # hence we need to manually filter the results
+
+            def check_hit(r):
+                metadata = r["_source"]["metadata"]
+                source_ok = metadata["source"] in sources
+                r_idcc = metadata["idcc"]
+                idcc_ok = (
+                    True if idcc is None or r_idcc is None else metadata["idcc"] == idcc
+                )
+                return source_ok and idcc_ok
+
+            filtered = [h for h in response["hits"]["hits"] if check_hit(h)]
+
+            # print(response)
+            return [self.to_chunk_result(hit) for hit in filtered]
         except Exception as e:
             raise ExternalServiceError(
                 f"Elasticsearch error - vector search : {str(e)}",
                 service="Elasticsearch",
             ) from e
 
-    def get_idcc(self, index_name: str, idcc: str):
+    def get_idcc_contributions(self, index_name: str, idcc: str, size: int):
         try:
             response = self.client.search(
                 index=index_name,
-                query={"term": {"metadata.idcc.keyword": idcc}},
-                size=1000,
+                query={
+                    "bool": {
+                        "must": list(
+                            filter(
+                                None,
+                                [
+                                    {"term": {"metadata.source": "contributions_idcc"}},
+                                    {"term": {"metadata.idcc": idcc}}
+                                    if idcc is not None
+                                    else None,
+                                ],
+                            )
+                        )
+                    }
+                },
+                size=size,
                 source_includes=["content", "metadata"],
             )
             return [hit["_source"] for hit in response["hits"]["hits"]]
@@ -240,14 +318,20 @@ class ElasticIndicesHandler:
             ) from e
 
     def search(
-        self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
+        self,
+        index_name: str,
+        prompt: str,
+        k: int,
+        hybrid: bool,
+        sources: list[str],
+        idcc: Optional[str],
     ) -> List[ChunkResult]:
         k_min = 64 if k < 64 else k
 
         start = timer()
 
         knn_res = self.find_most_similar_knn(
-            query=prompt, index_name=index_name, k=k_min, sources=sources
+            query=prompt, index_name=index_name, k=k_min, sources=sources, idcc=idcc
         )
 
         knn_time = timer() - start
@@ -259,7 +343,7 @@ class ElasticIndicesHandler:
         start = timer()
 
         text_res = self.find_most_similar_text(
-            query=prompt, index_name=index_name, k=k_min, sources=sources
+            query=prompt, index_name=index_name, k=k_min, sources=sources, idcc=idcc
         )
 
         text_time = timer() - start
