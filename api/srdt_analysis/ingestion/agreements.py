@@ -12,7 +12,9 @@ from srdt_analysis.text.tokenizer import Tokenizer
 
 load_dotenv()
 
+# TODO remove this
 DATA_DIR = "/Users/remi/dev/socialgouv/kali-data/data/"
+
 CC_MAIN_PARTS = ("Texte de base", "Textes Attachés", "Textes Salaires")
 
 conventions_uri = "https://www.legifrance.gouv.fr/conv_coll/id"
@@ -121,7 +123,7 @@ def chunk_cc(data):
 
                 # state =  article.get("data", {}).get("etat")
                 # if state != 'VIGUEUR_ETEN':
-                    # print(header, state)
+                # print(header, state)
 
                 # print(title)
 
@@ -154,9 +156,9 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
                 "id": id,
                 "embedding": None,
                 "metadata": {
-                    "id":id, 
+                    "id": id,
                     "source": "conventions",
-                    "url": f'{conventions_uri}/{id}',
+                    "url": f"{conventions_uri}/{id}",
                     "initial_id": id,
                     "title": chunk["title"],
                     # 'breadcrumb': chunk['breadcrumb'],
@@ -200,8 +202,9 @@ def get_conventions_chunked(data_dir=DATA_DIR):
     aggregated = []
     for filename in os.listdir(data_dir):
         # if not filename.endswith('5635657.json') or filename == 'index.json':
-        if not filename.endswith(".json") or filename == "index.json":
+        if not filename.endswith(".json") or filename.startswith("index"):
             continue
+        print(filename)
         with open(os.path.join(data_dir, filename)) as f:
             data = json.load(f)
         res = chunk_cc(data)
@@ -213,6 +216,6 @@ def get_conventions_chunked(data_dir=DATA_DIR):
         aggregated.extend(with_embeddings)
 
         # if len(res) > 0:
-        # break
+        #     break
 
     return aggregated

@@ -11,6 +11,7 @@ from srdt_analysis.ingestion.data_exploiter_embed import (
     PageInfosExploiter,
     PagesContributionsExploiter,
 )
+from srdt_analysis.ingestion.judilibre import get_judilibre_chunked
 from srdt_analysis.ingestion.legi_data import get_legi_data_chunked
 
 load_dotenv()
@@ -35,17 +36,11 @@ def start():
         data["contributions"], "html"
     )
 
-    kept_idcc = "1517"
     page_contribs_idcc_exploiter = PagesContributionsExploiter()
     page_contribs_idcc = page_contribs_idcc_exploiter.process_documents(
-        [
-            contrib
-            for contrib in data["contributions_idcc"]
-            if contrib.idcc == kept_idcc
-        ],
+        data["contributions_idcc"],
         "html_contribs",
     )
-    print("Kept contribution: ", kept_idcc)
 
     page_infos_exploiter = PageInfosExploiter()
     page_infos = page_infos_exploiter.process_documents(data["information"], "markdown")
@@ -64,6 +59,8 @@ def start():
 
     conventions = get_conventions_chunked()
 
+    judilibre = get_judilibre_chunked()
+
     logger.info("Reingest corpus")
 
     index = ElasticIndicesHandler()
@@ -80,6 +77,7 @@ def start():
         page_sp,
         articles_code_du_travail,
         conventions,
+        judilibre,
     ]:
         index.add_items(alias, docs)
 
