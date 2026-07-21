@@ -36,6 +36,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
+fetch_judilibre = "srdt_analysis.scripts.fetch_judilibre:start"
 ingest = "srdt_analysis.scripts.ingest:start"
 api = "srdt_analysis.api.launcher:start"
 

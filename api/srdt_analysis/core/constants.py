@@ -7,7 +7,10 @@ BASE_API_URL = "/api/v1"
 API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
-CHUNK_INDEX = "chunks-test"
+CHUNK_INDEX = "chunks"
+
+JUDILIBRE_BASE_URL = "https://api.piste.gouv.fr/cassation/judilibre/v1.0"
+
 SOURCES = [
     "conventions",
     "contributions",
@@ -15,7 +18,9 @@ SOURCES = [
     "page_fiche_ministere_travail",
     "fiches_service_public",
     "information",
+    "judilibre",
 ]
+
 LLM_ANSWER_PROMPT = """
   # Instructions
 	## Rôle et objectif
@@ -32,6 +37,7 @@ LLM_ANSWER_PROMPT = """
 	## Base de connaissance externe.
 	Voici les extraits de documents que tu peux utiliser, avec cette structure : titre du document, contenu du document, url_source.
     """
+
 LLM_REPHRASING_PROMPT = """
 	# Instructions
 	## Objectif
@@ -55,6 +61,7 @@ LLM_REPHRASING_PROMPT = """
 	Quels sont les recours applicables et la procédure à suivre ? 
 	Cordialement."
     """
+
 LLM_SPLIT_MULTIPLE_QUERIES_PROMPT = """
 	## Objectif
 	Tu es chargé d'identifier toutes les questions qui ont été posées dans la fenêtre de chat, et de les renvoyer sous format d'un document json
