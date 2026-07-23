@@ -1,3 +1,10 @@
+## [1.49.1](https://github.com/SocialGouv/srdt/compare/v1.49.0...v1.49.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* update nouveautes.md ([#403](https://github.com/SocialGouv/srdt/issues/403)) ([c81b7eb](https://github.com/SocialGouv/srdt/commit/c81b7eb72631402984e1693f46c62f823bba299d))
+
 # [1.49.0](https://github.com/SocialGouv/srdt/compare/v1.48.2...v1.49.0) (2026-07-16)
 
 
