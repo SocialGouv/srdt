@@ -112,15 +112,6 @@ export const LayoutWrapper = ({
           quickAccessItems={
             isAuthenticated
               ? [
-                  {
-                    iconId: "fr-icon-questionnaire-line",
-                    text: "Support",
-                    linkProps: {
-                      href: "https://tally.so/r/jao5z4",
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    },
-                  },
                   headerFooterDisplayItem,
                   {
                     iconId: "fr-icon-logout-box-r-line",
@@ -131,18 +122,7 @@ export const LayoutWrapper = ({
                     linkProps: undefined,
                   },
                 ]
-              : [
-                  {
-                    iconId: "fr-icon-questionnaire-line",
-                    text: "Support",
-                    linkProps: {
-                      href: "https://tally.so/r/jao5z4",
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    },
-                  },
-                  headerFooterDisplayItem,
-                ]
+              : [headerFooterDisplayItem]
           }
         />
         <main className={mainClassName}>{children}</main>
