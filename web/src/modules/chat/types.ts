@@ -1,10 +1,28 @@
 import { UserLLMMessage, AnswerResponse } from "@/types";
 
+/**
+ * Lightweight description of a document used to generate an answer. It is
+ * persisted in localStorage with the message, so it deliberately carries only
+ * what the sources panel displays: never the full document content.
+ */
+export interface MessageSource {
+  /** Document id in the search index (cdtn_id). */
+  id: string;
+  title: string;
+  url: string;
+  /** Search collection the document comes from (see `Collection`). */
+  source: string;
+  /** Short plain-text preview of the document. */
+  excerpt: string;
+}
+
 export interface ChatMessage extends UserLLMMessage {
   isError?: boolean;
   isLoading?: boolean;
   isStreaming?: boolean;
   isFollowup?: boolean;
+  /** Documents given to the LLM for this answer (assistant messages only). */
+  sources?: MessageSource[];
 }
 
 export interface Conversation {

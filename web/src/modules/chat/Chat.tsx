@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Conversation, ChatMessage as ChatMessageType } from "./types";
 import useApi from "@/hooks/use-api";
 import { MAX_FOLLOWUP_QUESTIONS } from "@/constants";
@@ -10,6 +10,8 @@ import { ChatHistory } from "./ChatHistory";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
+import { SourcesPanel } from "./SourcesPanel";
+import { toMessageSources } from "./sources";
 import {
   STORAGE_KEY,
   CURRENT_CONVERSATION_KEY,
@@ -94,6 +96,12 @@ export const Chat = ({
   const streamingMessageRef = useRef<string>("");
   const hasInitializedRef = useRef(false);
   const [messagesLength, setMessagesLength] = useState(0);
+  // Index (in the current conversation) of the message whose sources are
+  // shown in the side panel; null when the panel is closed.
+  const [sourcesMessageIndex, setSourcesMessageIndex] = useState<
+    number | null
+  >(null);
+  const closeSourcesPanel = useCallback(() => setSourcesMessageIndex(null), []);
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
@@ -311,6 +319,8 @@ export const Chat = ({
   // "Nouvelle conversation". Land back at the top of the page.
   useEffect(() => {
     window.scrollTo(0, 0);
+    // The panel indexes into the previous conversation's messages.
+    setSourcesMessageIndex(null);
   }, [currentConversationId]);
 
   // Scroll within the chat messages container only
@@ -477,6 +487,9 @@ export const Chat = ({
                   content: followupResponseText,
                   role: "assistant",
                   isFollowup: true,
+                  sources: toMessageSources(
+                    result.data?.localSearchChunks ?? []
+                  ),
                 },
               ]),
               lastApiResult: result.data,
@@ -556,6 +569,9 @@ export const Chat = ({
                 {
                   content: responseText,
                   role: "assistant",
+                  sources: toMessageSources(
+                    result.data?.localSearchChunks ?? []
+                  ),
                 },
               ]),
               lastApiResult: result.data,
@@ -670,6 +686,18 @@ export const Chat = ({
     }
   };
 
+  const sourcesMessage =
+    sourcesMessageIndex !== null ? messages[sourcesMessageIndex] : undefined;
+
+  const handleToggleSources = (index: number) => {
+    if (sourcesMessageIndex === index) {
+      setSourcesMessageIndex(null);
+      return;
+    }
+    push(["trackEvent", "chat", "show sources"]);
+    setSourcesMessageIndex(index);
+  };
+
   return (
     <div
       className={`${styles.chatContainer} ${
@@ -717,6 +745,8 @@ export const Chat = ({
                   apiError={apiError}
                   selectedAgreement={selectedAgreement}
                   dbConversationId={currentConversation?.dbConversationId}
+                  isSourcesOpen={sourcesMessageIndex === index}
+                  onShowSources={() => handleToggleSources(index)}
                 />
               ))}
             </div>
@@ -735,6 +765,14 @@ export const Chat = ({
           </>
         )}
       </div>
+
+      {sourcesMessage?.sources && sourcesMessage.sources.length > 0 && (
+        <SourcesPanel
+          sources={sourcesMessage.sources}
+          answer={sourcesMessage.content}
+          onClose={closeSourcesPanel}
+        />
+      )}
     </div>
   );
 };
