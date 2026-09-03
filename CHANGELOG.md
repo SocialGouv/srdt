@@ -1,3 +1,10 @@
+## [1.49.2](https://github.com/SocialGouv/srdt/compare/v1.49.1...v1.49.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* remove support from header ([#405](https://github.com/SocialGouv/srdt/issues/405)) ([9cd8d5d](https://github.com/SocialGouv/srdt/commit/9cd8d5d4fd20111f0bb445f79617ee27ca9a8b5c))
+
 ## [1.49.1](https://github.com/SocialGouv/srdt/compare/v1.49.0...v1.49.1) (2026-07-23)
 
 
