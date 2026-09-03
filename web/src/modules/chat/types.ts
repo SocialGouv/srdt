@@ -6,14 +6,14 @@ import { UserLLMMessage, AnswerResponse } from "@/types";
  * what the sources panel displays: never the full document content.
  */
 export interface MessageSource {
-  /** Document id in the search index (cdtn_id). */
+  /** Document id (cdtn_id), Legifrance article id, or the URL as a fallback. */
   id: string;
   title: string;
   url: string;
-  /** Search collection the document comes from (see `Collection`). */
-  source: string;
-  /** Short plain-text preview of the document. */
+  /** Short plain-text preview; empty when the document was not retrieved. */
   excerpt: string;
+  /** False when the API flagged an article link as outside the documents given to the LLM. */
+  inContext?: boolean;
 }
 
 export interface ChatMessage extends UserLLMMessage {
@@ -21,8 +21,10 @@ export interface ChatMessage extends UserLLMMessage {
   isLoading?: boolean;
   isStreaming?: boolean;
   isFollowup?: boolean;
-  /** Documents given to the LLM for this answer (assistant messages only). */
+  /** Links of this answer, enriched from the documents given to the LLM (assistant messages only). */
   sources?: MessageSource[];
+  /** Links the API stripped from the answer because they could not be verified. */
+  removedLinks?: number;
 }
 
 export interface Conversation {

@@ -109,6 +109,26 @@ export interface GenerateRequest {
   model: LLMModel;
   chat_history: UserLLMMessage[];
   system_prompt?: string;
+  /** Ids of the documents given to the LLM, so the API can flag article links coming from elsewhere. */
+  context_ids?: string[];
+}
+
+/** A link of the generated answer, as reported by the API URL post-processing. */
+export interface AnswerReference {
+  url: string;
+  /** Link description as displayed in the answer. */
+  text: string;
+  /**
+   * kept: written by the LLM and validated; rebuilt: created from an article
+   * number found in the text; removed: stripped from the text.
+   */
+  status: "kept" | "rebuilt" | "removed";
+  /** Rebuilt article links only: canonical article number ("L1226-1"). */
+  num?: string | null;
+  /** Rebuilt article links only: id of the Code du travail section holding the article. */
+  section_id?: string | null;
+  /** Rebuilt article links only: whether that section was given to the LLM. */
+  in_context?: boolean | null;
 }
 
 export interface GenerateResponse {
@@ -116,6 +136,7 @@ export interface GenerateResponse {
   text: string;
   nb_token_input: number;
   nb_token_output: number;
+  references?: AnswerReference[];
 }
 
 export interface InstructionPrompts {

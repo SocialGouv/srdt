@@ -11,7 +11,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
 import { SourcesPanel } from "./SourcesPanel";
-import { toMessageSources } from "./sources";
+import { toMessageSources, countRemovedLinks } from "./sources";
 import {
   STORAGE_KEY,
   CURRENT_CONVERSATION_KEY,
@@ -488,7 +488,11 @@ export const Chat = ({
                   role: "assistant",
                   isFollowup: true,
                   sources: toMessageSources(
-                    result.data?.localSearchChunks ?? []
+                    result.data?.localSearchChunks ?? [],
+                    result.data?.generated?.references ?? []
+                  ),
+                  removedLinks: countRemovedLinks(
+                    result.data?.generated?.references ?? []
                   ),
                 },
               ]),
@@ -570,7 +574,11 @@ export const Chat = ({
                   content: responseText,
                   role: "assistant",
                   sources: toMessageSources(
-                    result.data?.localSearchChunks ?? []
+                    result.data?.localSearchChunks ?? [],
+                    result.data?.generated?.references ?? []
+                  ),
+                  removedLinks: countRemovedLinks(
+                    result.data?.generated?.references ?? []
                   ),
                 },
               ]),
@@ -769,7 +777,7 @@ export const Chat = ({
       {sourcesMessage?.sources && sourcesMessage.sources.length > 0 && (
         <SourcesPanel
           sources={sourcesMessage.sources}
-          answer={sourcesMessage.content}
+          removedLinks={sourcesMessage.removedLinks}
           onClose={closeSourcesPanel}
         />
       )}

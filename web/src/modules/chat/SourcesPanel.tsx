@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import styles from "./Chat.module.css";
 import { MessageSource } from "./types";
-import { getSourceLabel, splitSourcesByCitation } from "./sources";
+import { getSourceLabel, groupSourcesByCategory } from "./sources";
 import marianne from "./marianne.png";
 
 /** DOM id of the panel, referenced by the "Sources" buttons (aria-controls). */
@@ -13,8 +13,8 @@ export const SOURCES_PANEL_ID = "sources-panel";
 
 interface SourcesPanelProps {
   sources: MessageSource[];
-  /** Markdown of the answer, used to tell cited sources from consulted ones. */
-  answer: string;
+  /** Links the API stripped from the answer because they could not be verified. */
+  removedLinks?: number;
   onClose: () => void;
 }
 
@@ -30,7 +30,7 @@ const SourceItem = ({ source }: { source: MessageSource }) => (
         aria-hidden="true"
         className={styles.marianneIcon}
       />
-      {getSourceLabel(source.source)}
+      {getSourceLabel(source.url)}
     </p>
     <a
       href={source.url}
@@ -41,33 +41,27 @@ const SourceItem = ({ source }: { source: MessageSource }) => (
       {source.title}
     </a>
     {source.excerpt && <p className={styles.sourceExcerpt}>{source.excerpt}</p>}
+    {source.inContext === false && (
+      <p className={styles.sourceNote}>
+        Hors des documents consultés pour cette réponse
+      </p>
+    )}
   </li>
 );
 
-const SourceList = ({ sources }: { sources: MessageSource[] }) => (
-  <ul className={styles.sourcesList}>
-    {sources.map((source) => (
-      <SourceItem key={source.id || source.url} source={source} />
-    ))}
-  </ul>
-);
-
 /**
- * Right-hand overlay listing the documents behind an answer: the ones the
- * answer links to first, the other consulted documents in a collapsed block.
+ * Right-hand overlay listing the links of an answer, grouped by category in
+ * a fixed order (fiches pratiques, articles de loi, conventions collectives,
+ * arrêts de la Cour de cassation).
  */
-export const SourcesPanel = ({ sources, answer, onClose }: SourcesPanelProps) => {
+export const SourcesPanel = ({
+  sources,
+  removedLinks = 0,
+  onClose,
+}: SourcesPanelProps) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const { cited, others } = useMemo(
-    () => splitSourcesByCitation(sources, answer),
-    [sources, answer]
-  );
-
-  // When no link could be matched (e.g. the answer cites without URLs), show
-  // everything as one flat list rather than an empty "cited" section.
-  const mainSources = cited.length > 0 ? cited : others;
-  const otherSources = cited.length > 0 ? others : [];
+  const groups = useMemo(() => groupSourcesByCategory(sources), [sources]);
 
   useEffect(() => {
     // preventScroll: the page must not jump when the panel opens from the
@@ -100,15 +94,23 @@ export const SourcesPanel = ({ sources, answer, onClose }: SourcesPanelProps) =>
         />
       </div>
 
-      <SourceList sources={mainSources} />
+      {groups.map((group) => (
+        <section key={group.key} className={styles.sourcesGroup}>
+          <h3 className={styles.sourcesGroupTitle}>{group.label}</h3>
+          <ul className={styles.sourcesList}>
+            {group.sources.map((source) => (
+              <SourceItem key={source.id || source.url} source={source} />
+            ))}
+          </ul>
+        </section>
+      ))}
 
-      {otherSources.length > 0 && (
-        <details className={styles.sourcesOthers}>
-          <summary className={styles.sourcesOthersSummary}>
-            Autres documents consultés ({otherSources.length})
-          </summary>
-          <SourceList sources={otherSources} />
-        </details>
+      {removedLinks > 0 && (
+        <p className={styles.sourcesFooter}>
+          {removedLinks > 1
+            ? `${removedLinks} liens ont été retirés de la réponse car ils n’ont pas pu être vérifiés.`
+            : "Un lien a été retiré de la réponse car il n’a pas pu être vérifié."}
+        </p>
       )}
     </aside>
   );
