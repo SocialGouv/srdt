@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -135,6 +135,26 @@ class GenerateRequest(BaseModel):
     model: LLMModel
     chat_history: List[UserLLMMessage]
     system_prompt: Optional[str] = None  # TODO : to be removed in the future
+    # Ids of the documents given to the LLM in the system prompt. When set, the
+    # article links rebuilt by the URL post-processing tell whether the article
+    # belongs to one of these documents (`AnswerReference.in_context`).
+    context_ids: Optional[List[str]] = None
+
+
+class AnswerReference(BaseModel):
+    """A link of the generated answer, as seen by the URL post-processing."""
+
+    url: str
+    # Link description as displayed in the answer
+    text: str
+    # kept: written by the LLM and validated; rebuilt: created from an article
+    # number found in the text; removed: stripped from the text (hallucinated,
+    # unknown domain or not in the index)
+    status: Literal["kept", "rebuilt", "removed"]
+    # Rebuilt article links only
+    num: Optional[str] = None
+    section_id: Optional[str] = None
+    in_context: Optional[bool] = None
 
 
 class GenerateResponse(BaseModel):
@@ -142,3 +162,4 @@ class GenerateResponse(BaseModel):
     text: str
     nb_token_input: int
     nb_token_output: int
+    references: List[AnswerReference] = Field(default_factory=list)

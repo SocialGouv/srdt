@@ -16,6 +16,7 @@ from srdt_analysis.anonymiser import anonymise_spacy
 from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
+    AnswerReference,
     ChunkResult,
     GenerateRequest,
     GenerateResponse,
@@ -248,7 +249,7 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
         request.system_prompt,
     )
 
-    response = clean_urls(response)
+    response, references = clean_urls(response, request.context_ids)
 
     chat_history_str = " ".join(
         [msg.get("content", "") for msg in request.chat_history]
@@ -259,6 +260,7 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
         text=response,
         nb_token_input=tokenizer.compute_nb_tokens(chat_history_str),
         nb_token_output=tokenizer.compute_nb_tokens(response),
+        references=[AnswerReference(**reference) for reference in references],
     )
 
 
@@ -302,7 +304,9 @@ async def generate_stream(
                 }
                 yield f"data: {json.dumps(chunk_data)}\n\n"
 
-            cleaned_accumulated = clean_urls(accumulated_response)
+            cleaned_accumulated, references = clean_urls(
+                accumulated_response, request.context_ids
+            )
             # Send final metadata
             final_data = {
                 "type": "end",
@@ -310,6 +314,7 @@ async def generate_stream(
                 "text": cleaned_accumulated,
                 "nb_token_input": nb_token_input,
                 "nb_token_output": tokenizer.compute_nb_tokens(cleaned_accumulated),
+                "references": references,
             }
             yield f"data: {json.dumps(final_data)}\n\n"
 

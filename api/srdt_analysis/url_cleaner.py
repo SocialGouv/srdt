@@ -1,3 +1,5 @@
+from typing import Literal, Optional, TypedDict
+
 import regex
 
 from srdt_analysis.constants import CHUNK_INDEX
@@ -45,17 +47,39 @@ def to_comparable_path(url: str):
     return replaced
 
 
-def clean_urls(response: str):
+ReferenceStatus = Literal["kept", "rebuilt", "removed"]
+
+
+class CleanedReference(TypedDict, total=False):
+    """A link of the answer as seen by the post-processing.
+
+    Mirrors `AnswerReference` in the API schemas.
+    """
+
+    url: str
+    text: str
+    status: ReferenceStatus
+    num: Optional[str]
+    section_id: Optional[str]
+    in_context: Optional[bool]
+
+
+def clean_urls(
+    response: str, context_ids: Optional[list[str]] = None
+) -> tuple[str, list[CleanedReference]]:
     """Remove broken urls contained in llm response, it
     might be hallucinations, wrong domains or bad format.
+
+    Also returns every link seen or created along the way, so clients do not
+    have to re-parse the markdown: `kept` links written by the LLM and
+    validated, `removed` links stripped from the text, and `rebuilt` links
+    created from the article numbers found in the text. When `context_ids`
+    (ids of the documents given to the LLM) is provided, each rebuilt article
+    link tells with `in_context` whether its section is one of them.
     """
     pattern = regex.compile(r"\[([^][]+)\](\(((?:[^()]+|(?2))+)\))")
 
-    cdtn = []
-    cdtn_error = []
-    legifrance = []
-    unknown = []
-    out_ok = []
+    links: list[CleanedReference] = []
 
     def remove_from_response(resp: str, url: str, description: str):
         # case where link looks like ([Source](https://.....))
@@ -77,7 +101,6 @@ def clean_urls(response: str):
     for match in pattern.finditer(response):
         description, _, url = match.groups()
 
-        # print(f"{description}: {url}")
         path = to_comparable_path(url)
         if path.startswith("code.travail.gouv.fr"):
             check = es.check_urls(CHUNK_INDEX, [url])
@@ -89,21 +112,17 @@ def clean_urls(response: str):
                 # allow main CC pages
                 and not url.startswith(cdtn_url + "convention-collective")
             ):
-                cdtn_error.append(url)
+                links.append({"url": url, "text": description, "status": "removed"})
                 response = remove_from_response(response, url, description)
             else:
-                cdtn.append(url)
+                links.append({"url": url, "text": description, "status": "kept"})
 
         elif path in whitelist:
-            out_ok.append(url)
+            links.append({"url": url, "text": description, "status": "kept"})
 
         # we remove link if legifrance or unknown
         else:
-            if "legifrance.gouv.fr" in url:
-                legifrance.append(url)
-            else:
-                unknown.append(url)
-
+            links.append({"url": url, "text": description, "status": "removed"})
             response = remove_from_response(response, url, description)
 
     # extract article references in plain text
@@ -122,9 +141,10 @@ def clean_urls(response: str):
         nodes = es.get_article_node(CHUNK_INDEX, f_text)
 
         if len(nodes) > 0:
+            metadata = nodes[0].get("metadata", {})
             # look for the actual reference in the node
             found = next(
-                (n for n in nodes[0]["metadata"]["articles"] if n["num"] == f_text),
+                (n for n in metadata.get("articles") or [] if n["num"] == f_text),
                 None,
             )
             if found is not None and text not in replaced:
@@ -132,4 +152,21 @@ def clean_urls(response: str):
                 response = response.replace(text, f"[{text}]({found['url']})")
                 replaced.append(text)
 
-    return response
+                section_id = metadata.get("id")
+                in_context = (
+                    section_id in context_ids
+                    if context_ids is not None and section_id is not None
+                    else None
+                )
+                links.append(
+                    {
+                        "url": found["url"],
+                        "text": text,
+                        "status": "rebuilt",
+                        "num": f_text,
+                        "section_id": section_id,
+                        "in_context": in_context,
+                    }
+                )
+
+    return response, links

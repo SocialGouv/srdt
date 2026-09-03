@@ -231,7 +231,7 @@ class ElasticIndicesHandler:
                 index=index_name,
                 query={"term": {"metadata.articles.num.keyword": num}},
                 size=1,
-                source_includes=["metadata.articles"],
+                source_includes=["metadata.articles", "metadata.id"],
             )
             return [hit["_source"] for hit in response["hits"]["hits"]]
         except Exception as e:
