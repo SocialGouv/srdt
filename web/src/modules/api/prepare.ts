@@ -12,6 +12,7 @@ import {
   K_RERANK_IDCC_FOLLOWUP,
   SEARCH_OPTIONS_CODE,
   K_RERANK_CODE,
+  K_RERANK_JURISPRUDENCE,
   Collection,
   SEARCH_OPTIONS_IDCC,
   SEARCH_OPTIONS_JURISPRUDENCE,
@@ -278,9 +279,10 @@ const searchArticles = async (anonymized: string) => {
 };
 
 // Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
-// Search brut sur la collection judilibre, on garde les 5 meilleurs chunks tels quels
-// (pas de rerank ni de retrieve). Leur utilisation effective dans la réponse est
-// pilotée par les instructions (section "⚖️ Jurisprudence").
+// Search large sur la collection judilibre, puis rerank (reranker Albert) pour ne garder
+// que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire).
+// Leur utilisation effective dans la réponse est pilotée par les instructions
+// (section "⚖️ Jurisprudence").
 const searchJurisprudence = async (
   anonymized: string
 ): Promise<ChunkResult[]> => {
@@ -302,7 +304,29 @@ const searchJurisprudence = async (
     return [];
   }
 
-  return jurisprudenceSearchResult.data?.top_chunks ?? [];
+  const jurisprudenceChunks = jurisprudenceSearchResult.data?.top_chunks ?? [];
+
+  if (jurisprudenceChunks.length === 0) {
+    return [];
+  }
+
+  const reranked = await rerank({
+    prompt: anonymized,
+    inputs: jurisprudenceChunks.slice(0, MAX_RERANK),
+  });
+
+  if (!reranked.data?.results?.length) {
+    Sentry.captureMessage("No rerank results for jurisprudence", {
+      level: "warning",
+      extra: { query: anonymized },
+    });
+    // fallback : à défaut de rerank, on garde les meilleurs chunks de la recherche
+    return jurisprudenceChunks.slice(0, K_RERANK_JURISPRUDENCE);
+  }
+
+  return reranked.data.results
+    .slice(0, K_RERANK_JURISPRUDENCE)
+    .map(rerankedToChunk);
 };
 
 // Common preprocessing logic for both streaming and non-streaming
