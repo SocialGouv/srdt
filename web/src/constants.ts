@@ -58,6 +58,7 @@ export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_CODE = 5;
 export const K_RERANK_IDCC = 5;
+export const K_RERANK_JURISPRUDENCE = 5;
 
 // Follow-up question limits
 export const MAX_FOLLOWUP_QUESTIONS = 5;
@@ -389,10 +390,11 @@ export const SEARCH_OPTIONS_CODE: SearchOptions = {
   collections: [Collection.CODE_DU_TRAVAIL],
 };
 
-// Jurisprudence (Cour de cassation) : recherche brute, top 5, en parallèle de la recherche "historique"
+// Jurisprudence (Cour de cassation) : recherche large puis rerank (reranker Albert),
+// on garde les K_RERANK_JURISPRUDENCE meilleurs, en parallèle de la recherche "historique"
 export const SEARCH_OPTIONS_JURISPRUDENCE: SearchOptions = {
   hybrid: true,
-  top_K: 5,
+  top_K: 64,
   collections: [Collection.JUDILIBRE],
 };
 

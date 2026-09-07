@@ -61,6 +61,9 @@ export interface ChunkMetadata {
   url: string;
   source: string;
   idcc?: string;
+  // Identifiant de la décision d'origine (collection judilibre) : présent car
+  // metadata.id vaut "<decision_id>-<index>" pour les chunks de jurisprudence.
+  initial_id?: string;
 }
 
 export interface ChunkResult {

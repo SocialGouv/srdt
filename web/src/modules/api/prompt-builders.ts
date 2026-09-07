@@ -3,11 +3,16 @@ import { ChunkResult } from "../../types";
 
 // Judilibre indexe un titre = hiérarchie de titrage brute ("CONTRAT DE TRAVAIL, RUPTURE,...").
 // La réponse /search ne renvoie ni le numéro de pourvoi ni la date, donc on se limite à
-// un libellé générique pour la citation ; l'URL courdecassation reste le lien exact.
-const chunkTitle = (chunk: ChunkResult) =>
-  chunk.metadata.source === Collection.JUDILIBRE
-    ? "Arrêt de la Cour de cassation"
-    : chunk.metadata.title;
+// un libellé générique + l'identifiant de la décision ; l'URL courdecassation reste le lien exact.
+const chunkTitle = (chunk: ChunkResult) => {
+  if (chunk.metadata.source !== Collection.JUDILIBRE) {
+    return chunk.metadata.title;
+  }
+  // metadata.id = "<decision_id>-<index>" ; on privilégie initial_id (= decision_id)
+  const decisionId =
+    chunk.metadata.initial_id ?? chunk.metadata.id.replace(/-\d+$/, "");
+  return `Arrêt de la Cour de cassation (réf. ${decisionId})`;
+};
 
 // Helper to format chunks for display
 export const formatChunks = (chunks: ChunkResult[]) => {
@@ -68,7 +73,7 @@ ${formatChunks(idccChunks)}`;
 
 Sources : Décisions de la Cour de cassation, chambre sociale, publiées au bulletin (sommaires).
 
-Caractéristiques : Décisions faisant autorité. Base **complémentaire** : la réponse se fonde d'abord sur les fiches officielles et le Code du travail. N'utiliser ces extraits que selon les règles de la section "⚖️ Jurisprudence" des instructions (contradiction, précision importante, ou seule source disponible). Sinon, ne pas les mentionner.
+Caractéristiques : Décisions faisant autorité. Base **complémentaire** : la réponse se fonde d'abord sur les fiches officielles et le Code du travail. N'utiliser ces extraits que selon les règles de la section "⚖️ Jurisprudence" des instructions (contradiction, précision, ou seule source disponible). Sinon, ne pas les mentionner.
 
 ${formatChunks(jurisprudenceChunks)}`;
   }
