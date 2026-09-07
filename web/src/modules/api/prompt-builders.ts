@@ -1,11 +1,20 @@
+import { Collection } from "@/constants";
 import { ChunkResult } from "../../types";
+
+// Judilibre indexe un titre = hiérarchie de titrage brute ("CONTRAT DE TRAVAIL, RUPTURE,...").
+// La réponse /search ne renvoie ni le numéro de pourvoi ni la date, donc on se limite à
+// un libellé générique pour la citation ; l'URL courdecassation reste le lien exact.
+const chunkTitle = (chunk: ChunkResult) =>
+  chunk.metadata.source === Collection.JUDILIBRE
+    ? "Arrêt de la Cour de cassation"
+    : chunk.metadata.title;
 
 // Helper to format chunks for display
 export const formatChunks = (chunks: ChunkResult[]) => {
   return chunks
     .map(
       (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-Titre: ${chunk.metadata.title}
+Titre: ${chunkTitle(chunk)}
 Contenu: ${chunk.content}
 ---`
     )
@@ -16,10 +25,11 @@ Contenu: ${chunk.content}
 export const createKnowledgeBaseContent = (
   fichesOfficiellesChunks: ChunkResult[],
   codeDuTravailChunks: ChunkResult[],
-  idccChunks?: ChunkResult[]
+  idccChunks?: ChunkResult[],
+  jurisprudenceChunks?: ChunkResult[]
 ) => {
   let content = `# Base de connaissance externe
-3 types de documents sont ajoutés dans la base de connaissance externe
+Plusieurs types de documents sont ajoutés dans la base de connaissance externe
 
 ## Fiches officielles (1 à 10 extraits) :
 
@@ -49,6 +59,18 @@ Caractéristiques : Spécifiques à la convention collective mentionnée par l'u
 Utilisation : Utiliser ces sources uniquement si l'utilisateur a fourni l'IDCC de sa convention collective. Inclure un paragraphe dédié dans la réponse et un lien vers la convention collective dans la conclusion.
 
 ${formatChunks(idccChunks)}`;
+  }
+
+  if (jurisprudenceChunks && jurisprudenceChunks.length > 0) {
+    content += `
+
+## Jurisprudence (0 à 5 extraits) :
+
+Sources : Décisions de la Cour de cassation, chambre sociale, publiées au bulletin (sommaires).
+
+Caractéristiques : Décisions faisant autorité. Base **complémentaire** : la réponse se fonde d'abord sur les fiches officielles et le Code du travail. N'utiliser ces extraits que selon les règles de la section "⚖️ Jurisprudence" des instructions (contradiction, précision importante, ou seule source disponible). Sinon, ne pas les mentionner.
+
+${formatChunks(jurisprudenceChunks)}`;
   }
 
   return content;

@@ -30,6 +30,7 @@ const buildAnswer = (
     ...preparedData.fichesOfficiellesChunks,
     ...preparedData.codeDuTravailChunks,
     ...preparedData.idccChunks,
+    ...preparedData.jurisprudenceChunks,
   ],
   generated: generatedData,
   modelName: preparedData.model.name,
@@ -43,7 +44,8 @@ const buildFollowupAnswer = (
   generatedData: GenerateResponse,
   allFichesOfficiellesChunks: ChunkResult[],
   allCodeDuTravailChunks: ChunkResult[],
-  allIdccChunks: ChunkResult[]
+  allIdccChunks: ChunkResult[],
+  allJurisprudenceChunks: ChunkResult[]
 ): AnswerResponse => ({
   config: preparedData.config.toString(),
   anonymized: null, // Follow-up doesn't use anonymization
@@ -52,6 +54,7 @@ const buildFollowupAnswer = (
     ...allFichesOfficiellesChunks,
     ...allCodeDuTravailChunks,
     ...allIdccChunks,
+    ...allJurisprudenceChunks,
   ],
   generated: generatedData,
   modelName: preparedData.model.name,
@@ -75,7 +78,8 @@ async function getGenerateData(
   const knowledgeBaseContent = createKnowledgeBaseContent(
     preparedData.fichesOfficiellesChunks,
     preparedData.codeDuTravailChunks,
-    idcc ? preparedData.idccChunks : undefined
+    idcc ? preparedData.idccChunks : undefined,
+    preparedData.jurisprudenceChunks
   );
 
   // Determine chat history and system prompt based on whether IDCC is provided
@@ -141,11 +145,14 @@ async function getFollowupGenerateData(
     ...preparedData.idccChunksQuery2,
   ];
 
+  const allJurisprudenceChunks = preparedData.jurisprudenceChunks;
+
   // Create knowledge base content
   const knowledgeBaseContent = createKnowledgeBaseContent(
     allFichesOfficiellesChunks,
     allCodeDuTravailChunks,
-    idcc ? allIdccChunks : undefined
+    idcc ? allIdccChunks : undefined,
+    allJurisprudenceChunks
   );
 
   // Determine system prompt based on whether IDCC is provided
@@ -176,6 +183,7 @@ async function getFollowupGenerateData(
     allFichesOfficiellesChunks,
     allCodeDuTravailChunks,
     allIdccChunks,
+    allJurisprudenceChunks,
   };
 }
 
@@ -310,6 +318,7 @@ export const generateFollowupAnswer = async (
       allFichesOfficiellesChunks,
       allCodeDuTravailChunks,
       allIdccChunks,
+      allJurisprudenceChunks,
     } = await getFollowupGenerateData(
       originalQuery,
       conversationHistory,
@@ -345,7 +354,8 @@ export const generateFollowupAnswer = async (
         generateResult.data,
         allFichesOfficiellesChunks,
         allCodeDuTravailChunks,
-        allIdccChunks
+        allIdccChunks,
+        allJurisprudenceChunks
       ),
     };
   } catch (error) {
@@ -377,6 +387,7 @@ export const generateFollowupAnswerStream = async (
       allFichesOfficiellesChunks,
       allCodeDuTravailChunks,
       allIdccChunks,
+      allJurisprudenceChunks,
     } = await getFollowupGenerateData(
       originalQuery,
       conversationHistory,
@@ -411,7 +422,8 @@ export const generateFollowupAnswerStream = async (
             generatedData,
             allFichesOfficiellesChunks,
             allCodeDuTravailChunks,
-            allIdccChunks
+            allIdccChunks,
+            allJurisprudenceChunks
           ),
         });
       },

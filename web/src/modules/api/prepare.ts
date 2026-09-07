@@ -14,6 +14,7 @@ import {
   K_RERANK_CODE,
   Collection,
   SEARCH_OPTIONS_IDCC,
+  SEARCH_OPTIONS_JURISPRUDENCE,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -58,6 +59,7 @@ export interface PreparedQuestionData {
   fichesOfficiellesChunks: ChunkResult[];
   codeDuTravailChunks: ChunkResult[];
   idccChunks: ChunkResult[];
+  jurisprudenceChunks: ChunkResult[];
   anonymizeResult?: UseApiResponse<AnonymizeResponse>;
   rephraseResult?: UseApiResponse<RephraseResponse>;
 }
@@ -74,6 +76,7 @@ export interface PreparedFollowupQuestionData {
   codeDuTravailChunksQuery2: ChunkResult[];
   idccChunksQuery1: ChunkResult[];
   idccChunksQuery2: ChunkResult[];
+  jurisprudenceChunks: ChunkResult[];
 }
 
 // Helper function to merge chunks by document ID
@@ -274,6 +277,34 @@ const searchArticles = async (anonymized: string) => {
   );
 };
 
+// Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
+// Search brut sur la collection judilibre, on garde les 5 meilleurs chunks tels quels
+// (pas de rerank ni de retrieve). Leur utilisation effective dans la réponse est
+// pilotée par les instructions (section "⚖️ Jurisprudence").
+const searchJurisprudence = async (
+  anonymized: string
+): Promise<ChunkResult[]> => {
+  const jurisprudenceSearchResult = await search({
+    prompts: [anonymized],
+    options: SEARCH_OPTIONS_JURISPRUDENCE,
+  });
+
+  if (jurisprudenceSearchResult.error) {
+    Sentry.captureException(
+      new Error(
+        `Erreur lors de la recherche jurisprudence: ${jurisprudenceSearchResult.error}`
+      ),
+      { extra: { query: anonymized } }
+    );
+    console.error(
+      `Erreur lors de la recherche jurisprudence: ${jurisprudenceSearchResult.error}`
+    );
+    return [];
+  }
+
+  return jurisprudenceSearchResult.data?.top_chunks ?? [];
+};
+
 // Common preprocessing logic for both streaming and non-streaming
 export const prepareQuestionData = async (
   userQuestion: string,
@@ -319,6 +350,8 @@ export const prepareQuestionData = async (
 
   const selectedCodeDuTravailChunks = await searchArticles(anonymized);
 
+  const selectedJurisprudenceChunks = await searchJurisprudence(anonymized);
+
   if (
     selectedFichesOfficiellesChunks.length === 0 &&
     selectedCodeDuTravailChunks.length === 0 &&
@@ -344,6 +377,7 @@ export const prepareQuestionData = async (
     fichesOfficiellesChunks: selectedFichesOfficiellesChunks,
     codeDuTravailChunks: selectedCodeDuTravailChunks,
     idccChunks: selectedIdccChunks,
+    jurisprudenceChunks: selectedJurisprudenceChunks,
     anonymizeResult,
     rephraseResult,
   };
@@ -446,6 +480,9 @@ export const prepareFollowupQuestionData = async (
   const selectedCodeDuTravailChunksQuery1: ChunkResult[] = [];
   const selectedCodeDuTravailChunksQuery2: ChunkResult[] = [];
 
+  // Jurisprudence search runs on the new question (query2)
+  const selectedJurisprudenceChunks = await searchJurisprudence(query2);
+
   // Handle IDCC chunks if applicable
   let selectedIdccChunksQuery1: ChunkResult[] = [];
   let selectedIdccChunksQuery2: ChunkResult[] = [];
@@ -502,5 +539,6 @@ export const prepareFollowupQuestionData = async (
     codeDuTravailChunksQuery2: selectedCodeDuTravailChunksQuery2,
     idccChunksQuery1: selectedIdccChunksQuery1,
     idccChunksQuery2: selectedIdccChunksQuery2,
+    jurisprudenceChunks: selectedJurisprudenceChunks,
   };
 };
