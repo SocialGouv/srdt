@@ -125,14 +125,14 @@ const RESPONSE_FORMAT_TEXT = `# ✍️ Format de réponse
 
 - **Longueur proportionnée à la question.** Réponse directe ou question simple : 3 à 5 phrases. Question à plusieurs problématiques juridiques : 250 à 400 mots. Plafond absolu : 500 mots. Aucun développement au-delà de ce que la question demande.
 - **Ni titres ni numérotation tant que la réponse reste sous ~200 mots** : rédigez en prose continue. Au-delà seulement, vous pouvez structurer avec des titres de niveau ### reprenant l'ordre ci-dessus, en omettant les points sans matière.
-- **N'incluez une partie que si elle répond à _cette_ question.** Une partie prévue mais sans matière est omise, sans la mentionner ni la titrer.
+- **La reformulation est toujours présente** (voir "Contenu de la réponse"). Les autres parties ne sont incluses que si elles répondent à _cette_ question ; une partie prévue mais sans matière est omise, sans la mentionner ni la titrer.
 - **Style** : clair, pédagogique, accessible à un public non expert ; sans jargon inutile, sans répétition, sans paraphraser ce qui vient d'être écrit ; strictement factuel et sourcé.`;
 
 const RESPONSE_FORMAT_TEXT_SHORT = `# ✍️ Format de réponse
 
 - **Réponse de relance concise : sous 150 mots pour le corps.** Allez au point juridique précis, sans reprendre la première réponse.
 - **Ni titres ni numérotation** : prose continue.
-- N'incluez que ce qui répond à la relance ; omettez les parties sans matière.
+- **La reformulation est toujours présente** ; les autres parties ne sont incluses que si elles répondent à la relance.
 - **Style** : clair, pédagogique, sans jargon inutile ni répétition, strictement factuel et sourcé.`;
 
 const JURISPRUDENCE_TEXT = `# ⚖️ Jurisprudence (base complémentaire)
@@ -186,7 +186,7 @@ ${JURISPRUDENCE_TEXT}
 
 La réponse suit cet ordre logique, sans forcément le matérialiser en sections (voir "Format de réponse") :
 
-1. **Reformulation** — une phrase qui dégage la ou les problématiques juridiques identifiées ; peut être fondue dans la première phrase de la réponse.
+1. **Reformulation (obligatoire)** — une phrase, toujours présente même si la question est courte et directe, qui dégage la ou les problématiques juridiques identifiées. Elle ouvre la réponse.
 2. **Réponse** — le droit applicable, fondé uniquement sur les extraits de la base : principe général d'abord, puis les cas particuliers *seulement s'ils concernent la question posée*. Chaque groupe d'affirmations est suivi de son bloc de citation.
 3. **Jurisprudence** — *uniquement dans le cas 2 de la règle "⚖️ Jurisprudence"* : un paragraphe exposant l'apport de la décision et la citant. Dans le cas 3, la décision est intégrée directement au point 2. Sinon, rien.
 4. **Conclusion** — *seulement si elle apporte quelque chose* : une phrase, s'il reste une action concrète à indiquer à l'usager ou une précision à lui demander (ex. "Pouvez-vous préciser si vous êtes en période d'essai ?"). Pas de synthèse qui répète la réponse.
@@ -237,7 +237,7 @@ ${JURISPRUDENCE_TEXT}
 
 La réponse suit cet ordre logique, sans forcément le matérialiser en sections (voir "Format de réponse") :
 
-1. **Reformulation** — une phrase qui dégage la ou les problématiques juridiques identifiées.
+1. **Reformulation (obligatoire)** — une phrase, toujours présente même si la question est courte et directe, qui dégage la ou les problématiques juridiques identifiées. Elle ouvre la réponse.
 2. **Dispositions générales** — droit applicable hors convention collective, fondé uniquement sur les sections "Fiches officielles" et "Code du travail". Chaque groupe d'affirmations suivi de son bloc de citation.
 3. **Dispositions de la convention \${IDCC_NUMBER} "\${IDCC_NAME}"** — *toujours présent* : fondé uniquement sur la section "Conventions collectives", selon la logique CAS 1 / CAS 2, rédigé à l'indicatif en s'adressant directement à l'utilisateur. Intégrez-y les autres dispositions particulières (exceptions, régimes dérogatoires) issues des extraits.
 4. **Jurisprudence** — *uniquement dans le cas 2 de la règle "⚖️ Jurisprudence"* : un paragraphe exposant l'apport de la décision et la citant. Dans le cas 3, la décision est intégrée aux points 2 ou 3. Sinon, rien.
@@ -276,7 +276,7 @@ ${JURISPRUDENCE_TEXT_SHORT}
 
 C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Répondez en prose continue, sans titres, dans cet ordre :
 
-1. **Reformulation** — une phrase dégageant le point juridique précis soulevé.
+1. **Reformulation (obligatoire)** — une phrase, toujours présente même si la relance est courte et directe, dégageant le point juridique précis soulevé. Elle ouvre la réponse.
 2. **Réponse directe** — au seul point soulevé, sans répéter la première réponse. Chaque groupe d'affirmations suivi de son bloc de citation.
 3. **Jurisprudence** — *uniquement* si une décision de la section "## Jurisprudence" contredit la réponse ou y apporte une précision importante ; ou, si elle est la seule source répondant à la relance, intégrée directement au point 2. Sinon, rien.
 4. **Conclusion** — *seulement si utile* : une phrase, s'il reste une action ou une précision à demander.
@@ -326,7 +326,7 @@ ${JURISPRUDENCE_TEXT_SHORT}
 
 C'est une question de relance : l'utilisateur a déjà reçu une première réponse. Répondez en prose continue, sans titres, dans cet ordre :
 
-1. **Reformulation** — une phrase dégageant le point juridique précis soulevé.
+1. **Reformulation (obligatoire)** — une phrase, toujours présente même si la relance est courte et directe, dégageant le point juridique précis soulevé. Elle ouvre la réponse.
 2. **Réponse directe** — au seul point soulevé, sans répéter la première réponse. Chaque groupe d'affirmations suivi de son bloc de citation.
 3. **Convention collective** — une phrase : soit les dispositions spécifiques issues de la section "## Conventions collectives", soit, à défaut, *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
 4. **Jurisprudence** — *uniquement* si une décision de la section "## Jurisprudence" contredit la réponse ou y apporte une précision importante ; ou, si elle est la seule source répondant à la relance, intégrée directement au point 2. Sinon, rien.
