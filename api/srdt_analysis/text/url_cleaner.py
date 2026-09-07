@@ -34,6 +34,11 @@ whitelist = [
 
 cdtn_url = "https://code.travail.gouv.fr/"
 
+# Décisions de la Cour de cassation (base jurisprudence) : l'URL est construite par
+# get_decision_url() à partir de l'identifiant Judilibre, donc toujours bien formée.
+# On la conserve quelle que soit la profondeur du chemin (/decision/<id>).
+courdecassation_domain = "courdecassation.fr"
+
 es = ElasticIndicesHandler()
 
 
@@ -93,6 +98,11 @@ def clean_urls(response: str):
                 response = remove_from_response(response, url, description)
             else:
                 cdtn.append(url)
+
+        elif path == courdecassation_domain or path.startswith(
+            courdecassation_domain + "/"
+        ):
+            out_ok.append(url)
 
         elif path in whitelist:
             out_ok.append(url)
