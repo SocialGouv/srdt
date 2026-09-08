@@ -170,7 +170,6 @@ async def get_contributions_idcc(
     start_time = time.time()
     if request.idcc is not None:
         if idcc_with_contribs(request.idcc):
-            print("with contrib !")
             idcc_chunks = get_contributions_chunks_by_idcc(request.idcc)
             return SearchResponse(
                 time=time.time() - start_time,
@@ -193,11 +192,13 @@ async def get_contributions_idcc(
                     idcc=request.idcc,
                 )
 
-                transformed_results = [
-                    item
-                    for item in search_result
-                    if item.score >= request.options.threshold
-                ]
+                transformed_results.extend(
+                    [
+                        item
+                        for item in search_result
+                        if item.score >= request.options.threshold
+                    ]
+                )
 
             return SearchResponse(
                 time=time.time() - start_time,

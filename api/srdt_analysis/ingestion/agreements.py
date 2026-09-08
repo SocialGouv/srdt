@@ -12,9 +12,6 @@ from srdt_analysis.text.tokenizer import Tokenizer
 
 load_dotenv()
 
-# TODO remove this
-DATA_DIR = "/Users/remi/dev/socialgouv/kali-data/data/"
-
 CC_MAIN_PARTS = ("Texte de base", "Textes Attachés", "Textes Salaires")
 
 conventions_uri = "https://www.legifrance.gouv.fr/conv_coll/id"
@@ -101,7 +98,7 @@ def chunk_cc(data):
         part_node = _find_main_part(children, part)
 
         if not part_node:
-            return []
+            continue
 
         idcc = data.get("data", {}).get("num")
 
@@ -149,7 +146,7 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
     chunk_list: list[Chunk] = []
 
     for chunk in chunks:
-        id = chunk["id"] if "id" in chunk else chunk["cid"]
+        id = chunk.get("id") or chunk["cid"]
         chunk_list.append(
             {
                 "content": chunk["content"],
@@ -179,32 +176,14 @@ def embed_cc_chunks(chunks) -> list[Chunk]:
     return chunk_list
 
 
-def parse_all_agreements(data_dir=DATA_DIR):
-    for filename in os.listdir(data_dir):
-        if not filename.endswith(".json") or filename == "index.json":
-            continue
-        with open(os.path.join(data_dir, filename)) as f:
-            data = json.load(f)
-        res = chunk_cc(data)
-
-        # print(json.dumps(res[:4]))
-
-        if len(res) > 0:
-            break
-    #     if res :
-    #         (title, stats) = res
-    #         stats['Texte de base']['title'] = title
-    #         aggregated.append(stats['Texte de base'])
-    # pd.DataFrame(aggregated).to_csv("~/tmp/ccs.csv")
-
-
-def get_conventions_chunked(data_dir=DATA_DIR):
+def get_conventions_chunked():
+    data_dir = str(os.getenv("KALI_DATA_PATH"))
     aggregated = []
     for filename in os.listdir(data_dir):
         # if not filename.endswith('5635657.json') or filename == 'index.json':
         if not filename.endswith(".json") or filename.startswith("index"):
             continue
-        print(filename)
+        # print(filename)
         with open(os.path.join(data_dir, filename)) as f:
             data = json.load(f)
         res = chunk_cc(data)

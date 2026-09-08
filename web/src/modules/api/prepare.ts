@@ -114,7 +114,10 @@ const searchTextContent = async (
   const options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
 
   if (withGenericContributions) {
-    options.collections?.push(Collection.CONTRIBUTIONS);
+    options.collections = [
+      ...(options.collections ?? []),
+      Collection.CONTRIBUTIONS,
+    ];
   }
 
   const localSearchResult = await search({
@@ -361,7 +364,10 @@ export const prepareFollowupQuestionData = async (
   const search_options = Object.assign({}, SEARCH_OPTIONS_CONTENT);
 
   if (!idcc) {
-    search_options.collections?.push(Collection.CONTRIBUTIONS);
+    search_options.collections = [
+      ...(search_options.collections ?? []),
+      Collection.CONTRIBUTIONS,
+    ];
   }
 
   // Search for query1 (top 5)
