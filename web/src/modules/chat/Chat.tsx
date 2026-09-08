@@ -11,7 +11,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
 import { SourcesPanel } from "./SourcesPanel";
-import { toMessageSources, countRemovedLinks } from "./sources";
+import { buildMessageSources } from "./sources";
 import {
   STORAGE_KEY,
   CURRENT_CONVERSATION_KEY,
@@ -487,13 +487,10 @@ export const Chat = ({
                   content: followupResponseText,
                   role: "assistant",
                   isFollowup: true,
-                  sources: toMessageSources(
+                  ...buildMessageSources(
                     result.data?.localSearchChunks ?? [],
-                    followupResponseText
-                  ),
-                  removedLinks: countRemovedLinks(
-                    streamingMessageRef.current,
-                    followupResponseText
+                    followupResponseText,
+                    streamingMessageRef.current
                   ),
                 },
               ]),
@@ -574,13 +571,10 @@ export const Chat = ({
                 {
                   content: responseText,
                   role: "assistant",
-                  sources: toMessageSources(
+                  ...buildMessageSources(
                     result.data?.localSearchChunks ?? [],
-                    responseText
-                  ),
-                  removedLinks: countRemovedLinks(
-                    streamingMessageRef.current,
-                    responseText
+                    responseText,
+                    streamingMessageRef.current
                   ),
                 },
               ]),

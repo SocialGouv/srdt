@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import type { ChunkResult } from "@/types";
 import type { MessageSource } from "./types";
 
@@ -125,6 +126,26 @@ export const extractLinks = (markdown: string): AnswerLink[] => {
 };
 
 /**
+ * Sources are decorative: an error while building them must never prevent
+ * the answer from being finalized. Degrades to an answer without sources.
+ */
+export const buildMessageSources = (
+  chunks: ChunkResult[],
+  answer: string,
+  rawAnswer: string
+): { sources: MessageSource[]; removedLinks: number } => {
+  try {
+    return {
+      sources: toMessageSources(chunks, answer),
+      removedLinks: countRemovedLinks(rawAnswer, answer),
+    };
+  } catch (error) {
+    Sentry.captureException(error, { tags: { component: "sources" } });
+    return { sources: [], removedLinks: 0 };
+  }
+};
+
+/**
  * Links the API stripped from the answer because they could not be verified:
  * present in the raw LLM output (the streamed chunks) and absent from the
  * cleaned final text.
@@ -165,7 +186,9 @@ export const findArticleText = (
 ): string | undefined => {
   const letter = num.charAt(0);
   const digits = num.slice(1).replace(/[^\d-]/g, "");
-  if (!letter || !digits) return undefined;
+  // Only the article letters go into the pattern: anything else is not an
+  // article number and must not reach `new RegExp`.
+  if (!/^[LRD]$/i.test(letter) || !digits) return undefined;
   const pattern = new RegExp(
     `Article\\s+${letter}\\.?\\s?${digits}(?![\\d-])\\s*([\\s\\S]*?)(?=\\n\\s*Article\\s+[LRD]|$)`
   );

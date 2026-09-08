@@ -73,12 +73,17 @@ export const SourcesPanel = ({
   useEffect(() => {
     // preventScroll: the page must not jump when the panel opens from the
     // bottom of a long answer.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     closeButtonRef.current?.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      // Give focus back to the "Sources" button, not to <body>.
+      previouslyFocused?.focus({ preventScroll: true });
+    };
   }, [onClose]);
 
   return (
