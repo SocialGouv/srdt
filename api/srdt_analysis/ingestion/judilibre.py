@@ -38,6 +38,8 @@ def chunk_decision(decision):
                     "title": ",".join(titles) if titles else decision.get("number"),
                     "decision_id": decision_id,
                     "content": split.page_content,
+                    "number": decision.get("number"),
+                    "decision_date": decision.get("decision_date"),
                 }
             )
 
@@ -61,6 +63,8 @@ def embed_judilibre_chunks(chunks) -> list[Chunk]:
                     "title": chunk["title"],
                     "idx": chunk["idx"],
                     "idcc": None,
+                    "number": chunk["number"],
+                    "decision_date": chunk["decision_date"],
                     "articles": [],
                 },
             }

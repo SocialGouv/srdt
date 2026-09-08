@@ -12,7 +12,7 @@ load_dotenv()
 logger = Logger("Judilibre download")
 
 OUTPUT_DIR = "judilibre"
-START_YEAR = 2000
+START_YEAR = 1990
 
 
 def start():

@@ -55,10 +55,13 @@ def start():
         data["fiches_service_public"], "character_recursive"
     )
 
+    logger.info("Legi data")
     articles_code_du_travail = get_legi_data_chunked()
 
+    logger.info("Cconventions")
     conventions = get_conventions_chunked()
 
+    logger.info("Judilibre")
     judilibre = get_judilibre_chunked()
 
     logger.info("Reingest corpus")

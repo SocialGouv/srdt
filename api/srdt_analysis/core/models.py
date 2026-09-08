@@ -165,6 +165,8 @@ class ChunkMetadata(TypedDict):
     idx: int
     initial_id: Optional[str]
     articles: Optional[list[JSONDict]]
+    number: NotRequired[Optional[str]]
+    decision_date: NotRequired[Optional[str]]
 
 
 @dataclass

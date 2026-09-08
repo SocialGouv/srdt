@@ -158,6 +158,8 @@ class ElasticIndicesHandler:
             idcc=metadataDict["idcc"],
             title=metadataDict["title"],
             url=metadataDict["url"],
+            number=metadataDict.get("number"),
+            decision_date=metadataDict.get("decision_date"),
         )
         return ChunkResult(
             id_chunk=r["_id"],

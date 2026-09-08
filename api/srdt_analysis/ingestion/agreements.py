@@ -183,7 +183,7 @@ def get_conventions_chunked():
         # if not filename.endswith('5635657.json') or filename == 'index.json':
         if not filename.endswith(".json") or filename.startswith("index"):
             continue
-        # print(filename)
+        print(filename)
         with open(os.path.join(data_dir, filename)) as f:
             data = json.load(f)
         res = chunk_cc(data)
