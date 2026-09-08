@@ -4,12 +4,12 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-from srdt_analysis.chunker import Chunker
-from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.data_exploiter_embed import make_batches
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.models import Chunk, DocumentData
+from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.core.constants import CHUNK_INDEX
+from srdt_analysis.core.models import Chunk, DocumentData
+from srdt_analysis.ingestion.data_exploiter_embed import make_batches
+from srdt_analysis.text.chunker import Chunker
 
 uri = "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050"
 

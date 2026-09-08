@@ -18,6 +18,8 @@ CollectionName = Literal[
     "contributions",
     "internet",
     "contributions_idcc",
+    "conventions",
+    "judilibre",
 ]
 
 ChunkerContentType = Literal["markdown", "html", "character_recursive", "html_contribs"]
@@ -163,6 +165,8 @@ class ChunkMetadata(TypedDict):
     idx: int
     initial_id: Optional[str]
     articles: Optional[list[JSONDict]]
+    number: NotRequired[Optional[str]]
+    decision_date: NotRequired[Optional[str]]
 
 
 @dataclass

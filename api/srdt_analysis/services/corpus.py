@@ -3,16 +3,21 @@ from typing import List, cast
 from dotenv import load_dotenv
 
 from srdt_analysis.api.schemas import ChunkResult, ContentResult
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.core.constants import CHUNK_INDEX
 
 load_dotenv()
 
 es_handler = ElasticIndicesHandler()
 
 
-def getChunksByIdcc(idcc: str, score: int = 1) -> List[ChunkResult]:
-    hits = es_handler.get_idcc(CHUNK_INDEX, idcc)
+def idcc_with_contribs(idcc: str) -> bool:
+    hits = es_handler.get_idcc_contributions(CHUNK_INDEX, idcc, 1)
+    return len(hits) > 0
+
+
+def get_contributions_chunks_by_idcc(idcc: str, score: int = 1) -> List[ChunkResult]:
+    hits = es_handler.get_idcc_contributions(CHUNK_INDEX, idcc, 1000)
 
     def to_chunk(source):
         metadata = source["metadata"]
@@ -28,7 +33,7 @@ def getChunksByIdcc(idcc: str, score: int = 1) -> List[ChunkResult]:
     return cast(List[ChunkResult], chunks)
 
 
-def getDocsContent(ids: List[str]) -> List[ContentResult]:
+def get_docs_content(ids: List[str]) -> List[ContentResult]:
     hits = es_handler.get_chunks(CHUNK_INDEX, ids)
 
     doc_chunks = {}

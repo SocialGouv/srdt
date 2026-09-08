@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 
 import asyncpg
 
-from srdt_analysis.models import CollectionName, Document, DocumentsList
+from srdt_analysis.core.models import CollectionName, Document, DocumentsList
 
 
 class PostgreSQLManager:

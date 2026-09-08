@@ -100,11 +100,12 @@ export const rephrase = async (
 };
 
 export const getIdccChunks = async (
-  idcc: string
+  request: SearchRequest
 ): Promise<UseApiResponse<SearchResponse>> => {
   try {
-    const data = await fetchApi<SearchResponse>(`/api/v1/idcc/${idcc}`, {
-      method: "GET",
+    const data = await fetchApi<SearchResponse>(`/api/v1/idcc/search`, {
+      method: "POST",
+      body: JSON.stringify(request),
     });
     return { data, error: null, loading: false };
   } catch (error) {
@@ -162,7 +163,7 @@ export const generate = async (
     //   error: null,
     //   loading: false,
     // };
-    console.log(JSON.stringify(request, null, 2));
+    // console.log(JSON.stringify(request, null, 2));
 
     const data = await fetchApi<GenerateResponse>("/api/v1/generate", {
       method: "POST",

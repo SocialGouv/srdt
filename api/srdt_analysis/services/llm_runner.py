@@ -1,13 +1,13 @@
 from typing import AsyncIterator, Optional, Tuple
 
-from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.constants import (
+from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.clients.llm_client import LLMClient
+from srdt_analysis.core.constants import (
     LLM_ANSWER_PROMPT,
     LLM_REPHRASING_PROMPT,
     LLM_SPLIT_MULTIPLE_QUERIES_PROMPT,
 )
-from srdt_analysis.llm_client import LLMClient
-from srdt_analysis.models import (
+from srdt_analysis.core.models import (
     UserLLMMessage,
 )
 
