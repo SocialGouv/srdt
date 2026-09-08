@@ -11,6 +11,10 @@ CHUNK_INDEX = "chunks"
 
 JUDILIBRE_BASE_URL = "https://api.piste.gouv.fr/cassation/judilibre/v1.0"
 
+# LLM generation: on force la température pour les appels Mistral
+MISTRAL_API_HOST = "api.mistral.ai"
+MISTRAL_TEMPERATURE = 0.3
+
 SOURCES = [
     "conventions",
     "contributions",

@@ -10,7 +10,11 @@ from tenacity import (
     wait_exponential,
 )
 
-from srdt_analysis.core.constants import API_TIMEOUT
+from srdt_analysis.core.constants import (
+    API_TIMEOUT,
+    MISTRAL_API_HOST,
+    MISTRAL_TEMPERATURE,
+)
 from srdt_analysis.core.exceptions import (
     ExternalServiceError,
     ServiceUnavailableError,
@@ -34,6 +38,23 @@ class LLMClient:
             "Authorization": f"Bearer {api_key}",
         }
         self.model = model
+        # Température forcée pour les appels Mistral, laissée au défaut du
+        # fournisseur pour les autres.
+        self.temperature: float | None = (
+            MISTRAL_TEMPERATURE if MISTRAL_API_HOST in (base_url or "") else None
+        )
+
+    def _base_payload(
+        self,
+        messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]],
+    ) -> LLMChatPayload:
+        payload: LLMChatPayload = {
+            "messages": messages,
+            "model": self.model,
+        }
+        if self.temperature is not None:
+            payload["temperature"] = self.temperature
+        return payload
 
     def _raise_for_status(self, e: httpx.HTTPStatusError) -> NoReturn:
         self.logger.error(
@@ -76,10 +97,7 @@ class LLMClient:
                     SystemLLMMessage(role="system", content=system_prompt),
                 ] + chat_history
 
-                payload: LLMChatPayload = {
-                    "messages": messages,
-                    "model": self.model,
-                }
+                payload = self._base_payload(messages)
 
                 # self.logger.debug(payload)
 
@@ -114,11 +132,8 @@ class LLMClient:
                     SystemLLMMessage(role="system", content=system_prompt),
                 ] + chat_history
 
-                payload: LLMChatPayload = {
-                    "messages": messages,
-                    "model": self.model,
-                    "stream": True,
-                }
+                payload = self._base_payload(messages)
+                payload["stream"] = True
 
                 async with self.client.stream(
                     "POST",
