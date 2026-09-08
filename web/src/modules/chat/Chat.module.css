@@ -508,12 +508,19 @@ a.sidebarRowActive:hover {
   color: var(--text-mention-grey);
 }
 
-/* Article linked by the answer but absent from the documents given to the LLM. */
+.sourcesGroupDescription {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-mention-grey);
+}
+
+/* Page linked by the answer but absent from the documents given to the LLM. */
 .sourceNote {
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
   line-height: 1.5;
-  color: var(--text-default-warning);
+  color: var(--text-mention-grey);
 }
 
 .sourcesFooter {

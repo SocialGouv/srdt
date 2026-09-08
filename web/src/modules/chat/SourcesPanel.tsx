@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import styles from "./Chat.module.css";
 import { MessageSource } from "./types";
 import { getSourceLabel, groupSourcesByCategory } from "./sources";
@@ -31,6 +32,11 @@ const SourceItem = ({ source }: { source: MessageSource }) => (
         className={styles.marianneIcon}
       />
       {getSourceLabel(source.url)}
+      {source.inContext === false && (
+        <Badge as="span" small noIcon severity="info">
+          À vérifier
+        </Badge>
+      )}
     </p>
     <a
       href={source.url}
@@ -43,7 +49,8 @@ const SourceItem = ({ source }: { source: MessageSource }) => (
     {source.excerpt && <p className={styles.sourceExcerpt}>{source.excerpt}</p>}
     {source.inContext === false && (
       <p className={styles.sourceNote}>
-        Hors des documents consultés pour cette réponse
+        Page citée par l’assistant sans figurer dans ses documents de
+        référence pour cette réponse.
       </p>
     )}
   </li>
@@ -97,6 +104,11 @@ export const SourcesPanel = ({
       {groups.map((group) => (
         <section key={group.key} className={styles.sourcesGroup}>
           <h3 className={styles.sourcesGroupTitle}>{group.label}</h3>
+          {group.description && (
+            <p className={styles.sourcesGroupDescription}>
+              {group.description}
+            </p>
+          )}
           <ul className={styles.sourcesList}>
             {group.sources.map((source) => (
               <SourceItem key={source.id || source.url} source={source} />

@@ -15,10 +15,22 @@ export type SourceCategory =
   | "cassation"
   | "autres";
 
-/** Panel groups, in display order. */
-export const SOURCE_CATEGORIES: { key: SourceCategory; label: string }[] = [
+/** Panel groups, in display order, with an optional explanation line. */
+export const SOURCE_CATEGORIES: {
+  key: SourceCategory;
+  label: string;
+  description?: string;
+}[] = [
   { key: "fiches", label: "Fiches pratiques" },
-  { key: "articles", label: "Articles de loi" },
+  {
+    key: "articles",
+    label: "Articles de loi",
+    // Article numbers mostly come from the LLM's own knowledge (the indexed
+    // fiches carry none), so the excerpt is the only positive proof that the
+    // text was in the documents it was given.
+    // Not used currently.
+    // description: "Articles cités par l’assistant avec un lien vérifié vers Légifrance (un extrait indique que le texte figurait dans les documents de référence).",
+  },
   { key: "conventions", label: "Conventions collectives" },
   { key: "cassation", label: "Arrêts de la Cour de cassation" },
   { key: "autres", label: "Autres liens" },
@@ -141,23 +153,6 @@ export const normalizeArticleNum = (text: string): string =>
     .replace(/[.\s]/g, "")
     .toUpperCase();
 
-// Article numbers are compared without dots nor spaces; apply the same
-// normalization to a text before looking one up in it.
-const normalizeForArticleLookup = (text: string): string =>
-  text.replace(/[.\s]/g, "");
-
-const escapeRegExp = (text: string): string =>
-  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-/**
- * Whether a text normalized with `normalizeForArticleLookup` mentions the
- * article `num`, without matching L1226-1 inside L1226-1-1 or L1226-10.
- */
-export const mentionsArticle = (normalizedText: string, num: string): boolean =>
-  new RegExp(`(^|[^\\d-])${escapeRegExp(num)}(?![\\d-])`, "i").test(
-    normalizedText
-  );
-
 /**
  * Text of one article inside an ingested Code du travail section, which reads
  * "…\nArticle L1226-1 \n <texte> \n \nArticle L1226-1-1 \n …". The number may
@@ -235,10 +230,11 @@ const isIndexedDocumentUrl = (url: string): boolean =>
  * links of the (cleaned) answer, enriched with the chunks that were given to
  * the LLM. A link matching a retrieved document gets its title and an
  * excerpt; a Legifrance article link gets the article text when it sits in a
- * retrieved Code du travail chunk. `inContext` is set to false when the LLM
- * linked something it was not given: a page absent from the retrieved
- * documents, or an article neither present nor mentioned in them. Full
- * document contents never reach localStorage.
+ * retrieved Code du travail chunk (articles are never flagged: their numbers
+ * mostly come from the LLM's own knowledge, the excerpt is the positive proof).
+ * `inContext` is set to false when the LLM linked an indexed page that was
+ * not among the documents it was given. Full document contents never reach
+ * localStorage.
  */
 export const toMessageSources = (
   chunks: ChunkResult[],
@@ -247,10 +243,6 @@ export const toMessageSources = (
   const documents = groupByDocument(chunks);
   const byUrl = new Map(documents.map((d) => [normalizeUrl(d.url), d]));
   const contents = documents.flatMap((d) => d.contents);
-  // Normalized once, on first need, for the article "mentioned" lookups.
-  let normalizedContents: string | undefined;
-  const getNormalizedContents = () =>
-    (normalizedContents ??= contents.map(normalizeForArticleLookup).join("\n"));
 
   const sources: MessageSource[] = [];
 
@@ -262,7 +254,6 @@ export const toMessageSources = (
       const text = contents
         .map((content) => findArticleText(content, num))
         .find(Boolean);
-      const mentioned = !!text || mentionsArticle(getNormalizedContents(), num);
       sources.push({
         id: articleId,
         title: /^\s*article/i.test(link.text)
@@ -270,7 +261,6 @@ export const toMessageSources = (
           : `Article ${link.text}`,
         url: link.url,
         excerpt: text ? toExcerpt(text) : "",
-        ...(mentioned ? {} : { inContext: false }),
       });
     } else {
       const document = byUrl.get(normalizeUrl(link.url));

@@ -12,7 +12,7 @@ export interface MessageSource {
   url: string;
   /** Short plain-text preview; empty when the document was not retrieved. */
   excerpt: string;
-  /** False when the linked page or article was not among the documents given to the LLM. */
+  /** False when the linked page (fiche, contribution…) was not among the documents given to the LLM. */
   inContext?: boolean;
 }
 
