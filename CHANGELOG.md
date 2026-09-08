@@ -1,3 +1,10 @@
+# [1.50.0](https://github.com/SocialGouv/srdt/compare/v1.49.2...v1.50.0) (2026-09-08)
+
+
+### Features
+
+* refactor API structure / add full agreements search ([#399](https://github.com/SocialGouv/srdt/issues/399)) / update judilibre ([#411](https://github.com/SocialGouv/srdt/issues/411)) ([6504eef](https://github.com/SocialGouv/srdt/commit/6504eeffd7ea459324a64c3f02bc1c791e847633))
+
 ## [1.49.2](https://github.com/SocialGouv/srdt/compare/v1.49.1...v1.49.2) (2026-09-03)
 
 
