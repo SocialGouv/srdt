@@ -61,11 +61,6 @@ const buildFollowupAnswer = (
   modelFamily: getFamilyModel(preparedData.model),
 });
 
-// Ids of the documents given to the LLM, sent to the API so it can tell which
-// rebuilt article links come from them (see AnswerReference.in_context).
-const toContextIds = (chunks: ChunkResult[]): string[] =>
-  Array.from(new Set(chunks.map((chunk) => chunk.metadata.id).filter(Boolean)));
-
 // Get generate data for question
 async function getGenerateData(
   userQuestion: string,
@@ -108,17 +103,10 @@ async function getGenerateData(
       };
   // console.log("systemPrompt", systemPrompt);
 
-  const contextIds = toContextIds([
-    ...preparedData.fichesOfficiellesChunks,
-    ...preparedData.codeDuTravailChunks,
-    ...(idcc ? preparedData.idccChunks : []),
-  ]);
-
   return {
     preparedData,
     chatHistory,
     systemPrompt,
-    contextIds,
   };
 }
 
@@ -188,17 +176,10 @@ async function getFollowupGenerateData(
           knowledgeBaseContent,
       };
 
-  const contextIds = toContextIds([
-    ...allFichesOfficiellesChunks,
-    ...allCodeDuTravailChunks,
-    ...(idcc ? allIdccChunks : []),
-  ]);
-
   return {
     preparedData,
     chatHistory,
     systemPrompt,
-    contextIds,
     allFichesOfficiellesChunks,
     allCodeDuTravailChunks,
     allIdccChunks,
@@ -216,14 +197,17 @@ export const generateAnswer = async (
 ): Promise<ApiResponse<AnswerResponse>> => {
   const startedAt = Date.now();
   try {
-    const { preparedData, chatHistory, systemPrompt, contextIds } =
-      await getGenerateData(userQuestion, requiredConfig, idcc, idccName);
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
+      userQuestion,
+      requiredConfig,
+      idcc,
+      idccName
+    );
 
     const generateResult = await generate({
       model: preparedData.model,
       chat_history: chatHistory,
       system_prompt: systemPrompt,
-      context_ids: contextIds,
     });
 
     if (generateResult.error) {
@@ -269,15 +253,18 @@ export const generateAnswerStream = async (
   idccName?: string
 ): Promise<void> => {
   try {
-    const { preparedData, chatHistory, systemPrompt, contextIds } =
-      await getGenerateData(userQuestion, requiredConfig, idcc, idccName);
+    const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
+      userQuestion,
+      requiredConfig,
+      idcc,
+      idccName
+    );
 
     await generateStream(
       {
         model: preparedData.model,
         chat_history: chatHistory,
         system_prompt: systemPrompt,
-        context_ids: contextIds,
       },
       onChunk,
       undefined, // onStart
@@ -288,7 +275,6 @@ export const generateAnswerStream = async (
           text: endData.text,
           nb_token_input: endData.nb_token_input,
           nb_token_output: endData.nb_token_output,
-          references: endData.references,
         };
 
         onComplete({
@@ -329,7 +315,6 @@ export const generateFollowupAnswer = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      contextIds,
       allFichesOfficiellesChunks,
       allCodeDuTravailChunks,
       allIdccChunks,
@@ -348,7 +333,6 @@ export const generateFollowupAnswer = async (
       model: preparedData.model,
       chat_history: chatHistory,
       system_prompt: systemPrompt,
-      context_ids: contextIds,
     });
 
     if (generateResult.error) {
@@ -400,7 +384,6 @@ export const generateFollowupAnswerStream = async (
       preparedData,
       chatHistory,
       systemPrompt,
-      contextIds,
       allFichesOfficiellesChunks,
       allCodeDuTravailChunks,
       allIdccChunks,
@@ -420,7 +403,6 @@ export const generateFollowupAnswerStream = async (
         model: preparedData.model,
         chat_history: chatHistory,
         system_prompt: systemPrompt,
-        context_ids: contextIds,
       },
       onChunk,
       undefined, // onStart
@@ -431,7 +413,6 @@ export const generateFollowupAnswerStream = async (
           text: endData.text,
           nb_token_input: endData.nb_token_input,
           nb_token_output: endData.nb_token_output,
-          references: endData.references,
         };
 
         onComplete({

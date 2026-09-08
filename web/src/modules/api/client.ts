@@ -10,7 +10,6 @@ import {
   RerankRequest,
   RerankResponse,
   RetrieveResponse,
-  AnswerReference,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 
@@ -29,7 +28,6 @@ export interface StreamChunk {
   text?: string;
   nb_token_input?: number;
   nb_token_output?: number;
-  references?: AnswerReference[];
   error?: string;
 }
 
@@ -186,7 +184,6 @@ export const generateStream = async (
     text: string;
     nb_token_input: number;
     nb_token_output: number;
-    references: AnswerReference[];
   }) => void,
   onError?: (error: string) => void
 ): Promise<void> => {
@@ -261,7 +258,6 @@ export const generateStream = async (
                       text: data.text,
                       nb_token_input: data.nb_token_input,
                       nb_token_output: data.nb_token_output,
-                      references: data.references ?? [],
                     });
                   }
                   break;

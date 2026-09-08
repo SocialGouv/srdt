@@ -1,4 +1,4 @@
-import type { AnswerReference, ChunkResult } from "@/types";
+import type { ChunkResult } from "@/types";
 import type { MessageSource } from "./types";
 
 /** Characters kept for a source preview (about two lines in the panel). */
@@ -34,11 +34,10 @@ const stripOrigin = (url: string): string =>
 
 /**
  * Category of a link, from its URL:
- * - Fiches pratiques: code.travail.gouv.fr pages, except the contribution
- *   pages dedicated to one agreement;
+ * - Fiches pratiques: code.travail.gouv.fr pages, except agreement pages;
  * - Articles de loi: legifrance.gouv.fr/codes;
  * - Conventions collectives: agreement-specific contribution pages (slug
- *   prefixed by the IDCC number) and legifrance.gouv.fr/conv_coll;
+ *   prefixed by the IDCC number), agreement pages, legifrance.gouv.fr/conv_coll;
  * - Arrêts: courdecassation.fr.
  * A generic contribution page (no IDCC prefix) answers for every agreement,
  * so it reads as a fiche pratique.
@@ -46,9 +45,10 @@ const stripOrigin = (url: string): string =>
 export const getSourceCategory = (url: string): SourceCategory => {
   const path = stripOrigin(url);
   if (path.startsWith("code.travail.gouv.fr/")) {
-    return /^code\.travail\.gouv\.fr\/contribution\/\d+-/.test(path)
-      ? "conventions"
-      : "fiches";
+    const isAgreementPage =
+      /^code\.travail\.gouv\.fr\/contribution\/\d+-/.test(path) ||
+      path.startsWith("code.travail.gouv.fr/convention-collective/");
+    return isAgreementPage ? "conventions" : "fiches";
   }
   if (path.startsWith("legifrance.gouv.fr/codes")) return "articles";
   if (path.startsWith("legifrance.gouv.fr/conv_coll")) return "conventions";
@@ -79,22 +79,7 @@ export const groupSourcesByCategory = (sources: MessageSource[]) =>
     ),
   })).filter((group) => group.sources.length > 0);
 
-// ---- Helpers --------------------------------------------------------------
-
-// Plain-text preview: collapse whitespace, drop markdown markers, cut on a
-// word boundary.
-const toExcerpt = (content: string): string => {
-  const text = content
-    .replace(/[#*`]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (text.length <= SOURCE_EXCERPT_MAX_LENGTH) return text;
-  const cut = text.slice(0, SOURCE_EXCERPT_MAX_LENGTH);
-  const lastSpace = cut.lastIndexOf(" ");
-  const clean =
-    lastSpace > SOURCE_EXCERPT_MAX_LENGTH / 2 ? cut.slice(0, lastSpace) : cut;
-  return `${clean}…`;
-};
+// ---- Links of an answer ---------------------------------------------------
 
 // Loose URL comparison: the answer may link to a section (#anchor) or omit
 // the trailing slash while the index stores the canonical page URL.
@@ -102,6 +87,76 @@ const normalizeUrl = (url: string): string =>
   stripOrigin(url)
     .replace(/[#?].*$/, "")
     .replace(/\/+$/, "");
+
+export interface AnswerLink {
+  /** Link description as written in the answer. */
+  text: string;
+  url: string;
+}
+
+// The API post-processing leaves plain "[text](url)" links only: validated
+// code.travail.gouv.fr pages and Legifrance article links rebuilt from the
+// article numbers of the text.
+const LINK_PATTERN = /\[([^\]]+)\]\(\s*(https?:\/\/[^)\s]+)\s*\)/g;
+
+/** Links of an answer in order of appearance, one per URL. */
+export const extractLinks = (markdown: string): AnswerLink[] => {
+  const links = new Map<string, AnswerLink>();
+  const pattern = new RegExp(LINK_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(markdown)) !== null) {
+    const [, text, url] = match;
+    const key = normalizeUrl(url);
+    if (!links.has(key)) links.set(key, { text: text.trim(), url });
+  }
+  return [...links.values()];
+};
+
+/**
+ * Links the API stripped from the answer because they could not be verified:
+ * present in the raw LLM output (the streamed chunks) and absent from the
+ * cleaned final text.
+ */
+export const countRemovedLinks = (
+  rawAnswer: string,
+  cleanedAnswer: string
+): number => {
+  const kept = new Set(
+    extractLinks(cleanedAnswer).map((link) => normalizeUrl(link.url))
+  );
+  return extractLinks(rawAnswer).filter(
+    (link) => !kept.has(normalizeUrl(link.url))
+  ).length;
+};
+
+// ---- Code du travail articles ---------------------------------------------
+
+const articleIdFromUrl = (url: string): string | undefined =>
+  /legifrance\.gouv\.fr\/codes\/article_lc\/(LEGIARTI\d+)/i.exec(url)?.[1];
+
+/** "L. 1226-1", "l1226-1", "Article L1226-1" → "L1226-1". */
+export const normalizeArticleNum = (text: string): string =>
+  text
+    .replace(/^\s*articles?\s+/i, "")
+    .replace(/[.\s]/g, "")
+    .toUpperCase();
+
+// Article numbers are compared without dots nor spaces; apply the same
+// normalization to a text before looking one up in it.
+const normalizeForArticleLookup = (text: string): string =>
+  text.replace(/[.\s]/g, "");
+
+const escapeRegExp = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Whether a text normalized with `normalizeForArticleLookup` mentions the
+ * article `num`, without matching L1226-1 inside L1226-1-1 or L1226-10.
+ */
+export const mentionsArticle = (normalizedText: string, num: string): boolean =>
+  new RegExp(`(^|[^\\d-])${escapeRegExp(num)}(?![\\d-])`, "i").test(
+    normalizedText
+  );
 
 /**
  * Text of one article inside an ingested Code du travail section, which reads
@@ -123,8 +178,22 @@ export const findArticleText = (
   return text || undefined;
 };
 
-const articleIdFromUrl = (url: string): string | undefined =>
-  /(LEGIARTI\d+)/.exec(url)?.[1];
+// ---- Retrieved documents --------------------------------------------------
+
+// Plain-text preview: collapse whitespace, drop markdown markers, cut on a
+// word boundary.
+const toExcerpt = (content: string): string => {
+  const text = content
+    .replace(/[#*`]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= SOURCE_EXCERPT_MAX_LENGTH) return text;
+  const cut = text.slice(0, SOURCE_EXCERPT_MAX_LENGTH);
+  const lastSpace = cut.lastIndexOf(" ");
+  const clean =
+    lastSpace > SOURCE_EXCERPT_MAX_LENGTH / 2 ? cut.slice(0, lastSpace) : cut;
+  return `${clean}…`;
+};
 
 interface RetrievedDocument {
   id: string;
@@ -151,65 +220,68 @@ const groupByDocument = (chunks: ChunkResult[]): RetrievedDocument[] => {
   return [...documents.values()];
 };
 
+// Pages of the indexed collections: the ones the LLM can only know by having
+// been given them. Agreement pages and the site root are navigational links
+// the prompt itself asks for, so they are never flagged.
+const isIndexedDocumentUrl = (url: string): boolean =>
+  /^code\.travail\.gouv\.fr\/(fiche-service-public|fiche-ministere-travail|information|contribution|code-du-travail)\//.test(
+    stripOrigin(url)
+  );
+
 // ---- Message sources ------------------------------------------------------
 
 /**
- * Build the lightweight sources persisted with an assistant message from the
- * links the API reports in the answer (`references`), enriched with the
- * documents that were given to the LLM (`chunks`): title and excerpt when a
- * link matches a retrieved document, the article text when a rebuilt Code du
- * travail link sits in a retrieved section. Removed links are only counted
- * (see `countRemovedLinks`). Full document contents never reach localStorage.
+ * Build the lightweight sources persisted with an assistant message: the
+ * links of the (cleaned) answer, enriched with the chunks that were given to
+ * the LLM. A link matching a retrieved document gets its title and an
+ * excerpt; a Legifrance article link gets the article text when it sits in a
+ * retrieved Code du travail chunk. `inContext` is set to false when the LLM
+ * linked something it was not given: a page absent from the retrieved
+ * documents, or an article neither present nor mentioned in them. Full
+ * document contents never reach localStorage.
  */
 export const toMessageSources = (
   chunks: ChunkResult[],
-  references: AnswerReference[]
+  answer: string
 ): MessageSource[] => {
   const documents = groupByDocument(chunks);
   const byUrl = new Map(documents.map((d) => [normalizeUrl(d.url), d]));
-  const byId = new Map(documents.map((d) => [d.id, d]));
+  const contents = documents.flatMap((d) => d.contents);
+  // Normalized once, on first need, for the article "mentioned" lookups.
+  let normalizedContents: string | undefined;
+  const getNormalizedContents = () =>
+    (normalizedContents ??= contents.map(normalizeForArticleLookup).join("\n"));
 
-  const seen = new Set<string>();
   const sources: MessageSource[] = [];
 
-  for (const reference of references) {
-    if (reference.status === "removed") continue;
-    const key = normalizeUrl(reference.url);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
+  for (const link of extractLinks(answer)) {
+    const articleId = articleIdFromUrl(link.url);
 
-    if (reference.status === "rebuilt") {
-      // Article link rebuilt by the API from an article number. Its excerpt
-      // is the article text, looked up in the section the API points to (or
-      // in every retrieved document when it does not say).
-      const section = reference.section_id
-        ? byId.get(reference.section_id)
-        : undefined;
-      const candidates = section ? [section] : documents;
-      const num = reference.num;
-      const text = num
-        ? candidates
-            .flatMap((d) => d.contents)
-            .map((content) => findArticleText(content, num))
-            .find(Boolean)
-        : undefined;
-
+    if (articleId) {
+      const num = normalizeArticleNum(link.text);
+      const text = contents
+        .map((content) => findArticleText(content, num))
+        .find(Boolean);
+      const mentioned = !!text || mentionsArticle(getNormalizedContents(), num);
       sources.push({
-        id: articleIdFromUrl(reference.url) ?? reference.url,
-        title: /^\s*article/i.test(reference.text)
-          ? reference.text.trim()
-          : `Article ${reference.text.trim()}`,
-        url: reference.url,
+        id: articleId,
+        title: /^\s*article/i.test(link.text)
+          ? link.text
+          : `Article ${link.text}`,
+        url: link.url,
         excerpt: text ? toExcerpt(text) : "",
-        ...(reference.in_context === false ? { inContext: false } : {}),
+        ...(mentioned ? {} : { inContext: false }),
       });
     } else {
-      const document = byUrl.get(key);
+      const document = byUrl.get(normalizeUrl(link.url));
       sources.push({
-        id: document?.id ?? reference.url,
-        title: document?.title ?? reference.text.trim(),
-        url: reference.url,
+        id: document?.id ?? link.url,
+        title: document?.title ?? link.text,
+        url: link.url,
         excerpt: document ? toExcerpt(document.contents[0]) : "",
+        ...(!document && isIndexedDocumentUrl(link.url)
+          ? { inContext: false }
+          : {}),
       });
     }
 
@@ -218,7 +290,3 @@ export const toMessageSources = (
 
   return sources;
 };
-
-/** Links the API stripped from the answer because they could not be verified. */
-export const countRemovedLinks = (references: AnswerReference[]): number =>
-  references.filter((reference) => reference.status === "removed").length;

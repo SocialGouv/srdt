@@ -489,10 +489,11 @@ export const Chat = ({
                   isFollowup: true,
                   sources: toMessageSources(
                     result.data?.localSearchChunks ?? [],
-                    result.data?.generated?.references ?? []
+                    followupResponseText
                   ),
                   removedLinks: countRemovedLinks(
-                    result.data?.generated?.references ?? []
+                    streamingMessageRef.current,
+                    followupResponseText
                   ),
                 },
               ]),
@@ -575,10 +576,11 @@ export const Chat = ({
                   role: "assistant",
                   sources: toMessageSources(
                     result.data?.localSearchChunks ?? [],
-                    result.data?.generated?.references ?? []
+                    responseText
                   ),
                   removedLinks: countRemovedLinks(
-                    result.data?.generated?.references ?? []
+                    streamingMessageRef.current,
+                    responseText
                   ),
                 },
               ]),
