@@ -228,3 +228,4 @@ class LLMChatPayload(TypedDict):
     model: str
     messages: Sequence[Union[SystemLLMMessage, UserLLMMessage]]
     stream: NotRequired[bool]
+    temperature: NotRequired[float]
