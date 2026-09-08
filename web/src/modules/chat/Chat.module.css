@@ -495,7 +495,7 @@ a.sidebarRowActive:hover {
 
 /* Category groups (Fiches pratiques, Articles de loi, …) in a fixed order. */
 .sourcesGroup + .sourcesGroup {
-  margin-top: 1.75rem;
+  margin-top: 2.5rem;
 }
 
 .sourcesGroupTitle {
