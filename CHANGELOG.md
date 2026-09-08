@@ -1,3 +1,20 @@
+# [1.51.0](https://github.com/SocialGouv/srdt/compare/v1.50.0...v1.51.0) (2026-09-08)
+
+
+### Bug Fixes
+
+* **api:** conserve les URLs courdecassation.fr dans clean_urls ([34ef610](https://github.com/SocialGouv/srdt/commit/34ef610fca8f71fca3ea20925c770f9daa4f37e1))
+* **web:** assouplit l'usage des jurisprudences dans les prompts generate ([ae898cf](https://github.com/SocialGouv/srdt/commit/ae898cfa8c92422007e67558d6ca9c6691d094ac))
+* **web:** rend l'étape de reformulation obligatoire dans les 4 prompts ([a432e1b](https://github.com/SocialGouv/srdt/commit/a432e1b2920d738517e4687ed5b4d000baf3ab9c))
+* **web:** restaure la mise en forme des prompts de main (sections numérotées) ([40f5e09](https://github.com/SocialGouv/srdt/commit/40f5e09122dea9766892c99358d502c575eebe88))
+
+
+### Features
+
+* **api:** force la température à 0.3 pour les appels Mistral ([947d6cd](https://github.com/SocialGouv/srdt/commit/947d6cda26afee643f01b84302715faeb683924a))
+* **web:** ajoute la jurisprudence au RAG et resserre les prompts generate ([10d67a2](https://github.com/SocialGouv/srdt/commit/10d67a23b40c80c079e5cb146d838d986e71af0e))
+* **web:** rerank des jurisprudences + réf. de la décision dans le titre ([7d0c530](https://github.com/SocialGouv/srdt/commit/7d0c5307bdb778d8aae5d84fedff90155efdee26))
+
 # [1.50.0](https://github.com/SocialGouv/srdt/compare/v1.49.2...v1.50.0) (2026-09-08)
 
 
