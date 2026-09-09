@@ -5,8 +5,10 @@ import { ChunkResult } from "../../types";
 // Pour citer la décision dans le prompt generate, on préfère son numéro de pourvoi et sa date
 // ("Arrêt numéro 21-12.345 du 10/05/2023") ; à défaut, on se rabat sur un libellé générique +
 // l'identifiant de la décision. L'URL courdecassation reste le lien exact.
-const formatDecisionDate = (raw?: string): string | null => {
-  if (!raw) return null;
+// Tolérant au runtime : decision_date / number peuvent être absents ou non-string
+// dans le payload de l'API (ex. tableau pour des pourvois joints).
+const formatDecisionDate = (raw?: unknown): string | null => {
+  if (typeof raw !== "string" || !raw) return null;
   const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return raw;
   const [, year, month, day] = match;
@@ -19,7 +21,7 @@ const chunkTitle = (chunk: ChunkResult) => {
   }
   const { number, decision_date } = chunk.metadata;
   const formattedDate = formatDecisionDate(decision_date);
-  if (number && formattedDate) {
+  if (typeof number === "string" && number && formattedDate) {
     return `Arrêt numéro ${number} du ${formattedDate}`;
   }
   // Fallback : numéro/date absents de la base -> identifiant de la décision.
