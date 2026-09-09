@@ -140,9 +140,13 @@ La jurisprudence est une base **complémentaire** : la réponse se fonde toujour
 3. **La question ne trouve pas de réponse dans les fiches officielles / le Code du travail, mais une décision de la section Jurisprudence y répond**
 → La Réponse générale se fonde alors directement sur cette décision : exposez-la et citez-la **à cet endroit**, sans paragraphe "Jurisprudence" distinct (elle est déjà au cœur de la réponse). Dans ce cas uniquement, la règle d'absence de source ne s'applique pas.
 
-**Chaque décision est exposée et citée une seule fois**, dans un bloc de citation dédié (URL exacte fournie dans la base, courdecassation.fr), en signalant toujours à l'utilisateur qu'il s'agit d'une décision de justice (nature, date, portée). Un seul emplacement possible, jamais les deux :
-- dans le **paragraphe dédié "Jurisprudence"** lorsqu'elle contredit la Réponse générale ou lui apporte une précision substantielle (cas 2) ;
-- dans la **Réponse générale** uniquement lorsque celle-ci se fonde directement sur elle (cas 3).
+**RÈGLE ANTI-DOUBLON.** Une même décision de la Cour de cassation — et *a fortiori* un même passage cité — n'apparaît que dans **une seule** section de la réponse, jamais deux. Avant de rédiger, décidez pour chaque décision pertinente son emplacement unique et tenez-vous-y :
+- **cas 2** → uniquement dans le paragraphe dédié "Jurisprudence". La Réponse générale et les Dispositions particulières exposent la règle issue des fiches / du Code **sans mentionner ni citer** cette décision.
+- **cas 3** → uniquement dans la Réponse générale (elle en est le fondement). **Pas** de section "Jurisprudence" — ne créez jamais une section pour signaler qu'une décision est « déjà citée plus haut ».
+
+La citation se fait dans un bloc dédié (URL exacte fournie dans la base, courdecassation.fr), en signalant toujours à l'utilisateur qu'il s'agit d'une décision de justice (nature, date, portée).
+
+Si une **fiche officielle commente elle-même l'arrêt** : la Réponse générale relaie la fiche sans détailler la décision ; le détail et la citation de l'arrêt vont dans le paragraphe "Jurisprudence" (cas 2), une seule fois.
 
 Lorsque plusieurs décisions de la section "## Jurisprudence" sont pertinentes pour la question, mobilisez-les **toutes** — ne vous limitez pas à une seule. Le paragraphe "Jurisprudence" peut ainsi regrouper plusieurs décisions complémentaires (arrêts voisins, précisions, évolutions) non citées ailleurs.
 
@@ -155,7 +159,7 @@ const JURISPRUDENCE_TEXT_SHORT = `# ⚖️ Jurisprudence (base complémentaire)
 La section "## Jurisprudence" (si présente) contient des décisions de la Cour de cassation trouvées en parallèle. Base **complémentaire** :
 
 - Réponse fondée d'abord sur les fiches officielles et le Code du travail.
-- Décision de la section "## Jurisprudence" : **une seule mention, un seul bloc de citation** (URL courdecassation exacte fournie dans la base), en signalant qu'il s'agit d'une décision de justice. À citer **uniquement** si elle contredit la réponse de base (fiches + Code du travail) ou lui apporte une précision substantielle ; sinon, ne pas la mentionner. Emplacement — jamais les deux : dans un **paragraphe dédié "Jurisprudence"** dans ce cas (cas par défaut) ; dans la **Réponse directe** uniquement si celle-ci se fonde directement sur elle. Si plusieurs décisions sont pertinentes, mobilisez-les toutes.
+- Décision de la section "## Jurisprudence" : à citer **uniquement** si elle contredit la réponse de base (fiches + Code du travail) ou lui apporte une précision substantielle ; sinon, ne pas la mentionner. **RÈGLE ANTI-DOUBLON** : une même décision — *a fortiori* un même passage cité — n'apparaît que dans **une seule** section, jamais deux. Emplacement unique : le **paragraphe dédié "Jurisprudence"** (cas par défaut) ; la **Réponse directe** seulement si elle s'y fonde directement, et alors **pas** de paragraphe "Jurisprudence". La §"Dispositions particulières" / "Convention collective" ne traite jamais de jurisprudence. Citer dans un bloc dédié (URL courdecassation exacte fournie dans la base), en signalant qu'il s'agit d'une décision de justice. Si plusieurs décisions sont pertinentes, mobilisez-les toutes.
 - Décision évoquée dans le corps d'une fiche officielle ou d'un article du Code du travail : restituée de façon transparente (nature, apport), rattachée au bloc de citation de la fiche/l'article, sans URL courdecassation inventée.
 - Une règle d'origine jurisprudentielle n'est jamais donnée sans que l'arrêt soit nommé à l'utilisateur, quelle que soit sa provenance.
 - Sinon, ne pas mentionner la jurisprudence du tout.`;
@@ -193,13 +197,13 @@ ${NUMBERING_RULE_TEXT}
 Reformulez systématiquement la question en une phrase, en dégageant la ou les problématiques juridiques identifiées — même si la question est courte et directe.
 
 ### 2. Réponse générale
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base. Aller à l'essentiel, pas de développements inutiles, pas de répétition. Faites suivre chaque groupe d'affirmations de son bloc de citation dédié. **Ne mentionnez pas ici les décisions de la section "## Jurisprudence"**, sauf lorsque la réponse s'y fonde directement (cas 3 de la règle "⚖️ Jurisprudence").
 
-### 3. Dispositions particulières *(optionnelle)*
-Si certains extraits de la base mettent en évidence des dispositions particulières (cas spécifiques, exceptions, régimes dérogatoires) pertinentes pour la question posée, ajoutez cette section pour les détailler. Sinon, omettez-la.
+### 3. Dispositions particulières *(optionnelle, à n'utiliser que si nécessaire)*
+Section **exceptionnelle**, omise dans la plupart des réponses. Ne l'ajoutez que si la base fait ressortir des dispositions particulières (cas spécifiques, exceptions, régimes dérogatoires) réellement **distinctes** de la Réponse générale et nécessaires pour répondre à la question. Elle ne sert **jamais** à reformuler, prolonger ou redécouper le contenu de la Réponse générale. En cas de doute, intégrez l'information à la Réponse générale et omettez cette section. **Ne traitez jamais ici une décision de la section "## Jurisprudence"** : elle relève exclusivement de la section "Jurisprudence" (ou de la Réponse générale en cas 3).
 
 ### 4. Jurisprudence *(optionnelle)*
-Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la Réponse générale ou lui apportent une **précision substantielle** (cas 2 de la règle "⚖️ Jurisprudence") : exposez leur apport et citez-les dans un bloc de citation dédié. Si plusieurs décisions sont pertinentes, mobilisez-les toutes plutôt que d'en retenir une seule. **N'y placez pas** une décision sur laquelle la Réponse générale se fonde déjà directement (cas 3) : elle est citée là-haut, pas ici. Omettez la section si aucune décision ne contredit la réponse ni ne lui apporte de précision substantielle (cas le plus fréquent).
+Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la règle de base (fiches + Code du travail) ou lui apportent une **précision substantielle** (cas 2 de la règle "⚖️ Jurisprudence") : exposez leur apport et citez-les dans un bloc de citation dédié — **une seule fois, ici et nulle part ailleurs** dans la réponse. Peut regrouper plusieurs décisions ; si plusieurs sont pertinentes, mobilisez-les toutes. **N'ouvrez pas** cette section lorsque la Réponse générale se fonde déjà directement sur la décision (cas 3), ni pour signaler qu'une décision est « déjà citée plus haut ». Omettez-la si aucune décision ne contredit la règle de base ni ne lui apporte de précision substantielle (cas le plus fréquent).
 
 ### 5. Conclusion
 Synthèse en une phrase, proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous êtes en période d'essai ?"
@@ -263,13 +267,13 @@ ${NUMBERING_RULE_TEXT}
 Reformulez systématiquement la question en une phrase, en dégageant la ou les problématiques juridiques identifiées — même si la question est courte et directe.
 
 ### 2. Réponse générale
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaissance externe). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions générales et non relatives à la convention collective** (sections "Fiches officielles", "Code du Travail", de la base de connaissance externe). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié. **Ne mentionnez pas ici les décisions de la section "## Jurisprudence"**, sauf lorsque la réponse s'y fonde directement (cas 3 de la règle "⚖️ Jurisprudence").
 
 ### 3. Dispositions spécifiques à la convention \${IDCC_NUMBER} "\${IDCC_NAME}" *(partie obligatoire)*
-Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions spécifiques à la convention collective** (section "Conventions collectives" de la base de connaissance externe). Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici.
+Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions spécifiques à la convention collective** (section "Conventions collectives" de la base de connaissance externe). Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici. **Ne traitez jamais ici une décision de la section "## Jurisprudence"** : elle relève exclusivement de la section "Jurisprudence" (ou de la Réponse générale en cas 3).
 
 ### 4. Jurisprudence *(optionnelle)*
-Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la Réponse générale ou lui apportent une **précision substantielle** (cas 2 de la règle "⚖️ Jurisprudence") : exposez leur apport et citez-les dans un bloc de citation dédié. Si plusieurs décisions sont pertinentes, mobilisez-les toutes plutôt que d'en retenir une seule. **N'y placez pas** une décision sur laquelle la Réponse générale se fonde déjà directement (cas 3) : elle est citée là-haut, pas ici. Omettez la section si aucune décision ne contredit la réponse ni ne lui apporte de précision substantielle (cas le plus fréquent).
+Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la règle de base (fiches + Code du travail) ou lui apportent une **précision substantielle** (cas 2 de la règle "⚖️ Jurisprudence") : exposez leur apport et citez-les dans un bloc de citation dédié — **une seule fois, ici et nulle part ailleurs** dans la réponse. Peut regrouper plusieurs décisions ; si plusieurs sont pertinentes, mobilisez-les toutes. **N'ouvrez pas** cette section lorsque la Réponse générale se fonde déjà directement sur la décision (cas 3), ni pour signaler qu'une décision est « déjà citée plus haut ». Omettez-la si aucune décision ne contredit la règle de base ni ne lui apporte de précision substantielle (cas le plus fréquent).
 
 ### 5. Conclusion
 Synthèse en une phrase et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Ajouter : *« Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective] »*
@@ -316,10 +320,10 @@ ${NUMBERING_RULE_TEXT}
 Reformulez systématiquement la question de relance en une phrase, en dégageant le point juridique précis soulevé — même si la question est courte et directe.
 
 ### 2. Réponse directe
-Réponse **synthétique** au point juridique précis soulevé, sans répéter les informations déjà fournies. Aller à l'essentiel (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+Réponse **synthétique** au point juridique précis soulevé, sans répéter les informations déjà fournies. Aller à l'essentiel (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié. **Ne mentionnez pas ici les décisions de la section "## Jurisprudence"**, sauf lorsque la réponse s'y fonde directement.
 
 ### 3. Jurisprudence *(optionnelle)*
-Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la Réponse directe ou lui apportent une **précision substantielle** : exposez leur apport et citez-les dans un bloc de citation dédié. Si plusieurs décisions sont pertinentes, mobilisez-les toutes. **N'y placez pas** une décision sur laquelle la Réponse directe se fonde déjà directement — elle est citée là-haut, pas ici. Omettez la section sinon (cas le plus fréquent).
+Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la règle de base ou lui apportent une **précision substantielle** : exposez leur apport et citez-les dans un bloc de citation dédié — **une seule fois, ici et nulle part ailleurs** dans la réponse. Si plusieurs décisions sont pertinentes, mobilisez-les toutes. **N'ouvrez pas** cette section lorsque la Réponse directe se fonde déjà directement sur la décision, ni pour signaler qu'elle est « déjà citée plus haut ». Omettez la section sinon (cas le plus fréquent).
 
 ### 4. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
@@ -380,7 +384,7 @@ ${NUMBERING_RULE_TEXT}
 Reformulez systématiquement la question de relance en une phrase, en dégageant le point juridique précis soulevé — même si la question est courte et directe.
 
 ### 2. Réponse directe
-Répondre uniquement au point juridique précis soulevé, sans répéter les informations déjà fournies. Rester concis (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié.
+Répondre uniquement au point juridique précis soulevé, sans répéter les informations déjà fournies. Rester concis (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié. **Ne mentionnez pas ici les décisions de la section "## Jurisprudence"**, sauf lorsque la réponse s'y fonde directement.
 
 ### 3. Convention collective
 **Si des informations spécifiques à la convention collective sont présentes dans la base** : ajouter une phrase concise sur les dispositions spécifiques de la convention collective, en citant uniquement les extraits de la section "## Conventions collectives".
@@ -388,7 +392,7 @@ Répondre uniquement au point juridique précis soulevé, sans répéter les inf
 **Si aucune information spécifique n'est disponible dans la base** : indiquer explicitement : *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
 
 ### 4. Jurisprudence *(optionnelle)*
-Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la Réponse directe ou lui apportent une **précision substantielle** : exposez leur apport et citez-les dans un bloc de citation dédié. Si plusieurs décisions sont pertinentes, mobilisez-les toutes. **N'y placez pas** une décision sur laquelle la Réponse directe se fonde déjà directement — elle est citée là-haut, pas ici. Omettez la section sinon (cas le plus fréquent).
+Paragraphe dédié aux décisions de la section "## Jurisprudence" qui **contredisent** la règle de base ou lui apportent une **précision substantielle** : exposez leur apport et citez-les dans un bloc de citation dédié — **une seule fois, ici et nulle part ailleurs** dans la réponse. Si plusieurs décisions sont pertinentes, mobilisez-les toutes. **N'ouvrez pas** cette section lorsque la Réponse directe se fonde déjà directement sur la décision, ni pour signaler qu'elle est « déjà citée plus haut ». Omettez la section sinon (cas le plus fréquent).
 
 ### 5. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
