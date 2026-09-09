@@ -89,7 +89,7 @@ Le corps de la réponse ne contient **aucune citation inline**. Les sources sont
 
 Règles :
 - Le passage cité doit être reproduit **mot pour mot** tel qu'il apparaît dans la base de connaissance.
-- **Citez le passage utile le plus court** : uniquement la ou les phrases qui soutiennent directement l'affirmation. Pas le paragraphe entier, pas le contexte superflu, et **jamais** les intitulés de rubrique ou le fil de titrage documentaire placé en tête de certains extraits (chaîne du type « MATIÈRE > sous-rubrique > … », fréquente en jurisprudence). Marquez toute coupe interne par `[...]`.
+- **Citez le passage utile le plus court** : uniquement la ou les phrases qui soutiennent directement l'affirmation. Pas le paragraphe entier, pas le contexte superflu, et **jamais** les intitulés de rubrique ou le fil de titrage documentaire placé en tête de certains extraits (chaîne du type « MATIÈRE > sous-rubrique > … », fréquente en jurisprudence). Marquez toute coupe interne par [...].
 - **Une affirmation = une citation.** Quand plusieurs extraits soutiennent le même point, n'en citez qu'**un seul**, le plus précis et le plus officiel ; deux au maximum s'ils sont réellement complémentaires. N'empilez pas de citations redondantes.
 - Chaque source mobilisée donne lieu à une ligne de citation distincte dans le bloc.
 - Si plusieurs passages d'une même source sont utilisés, chaque passage fait l'objet d'une ligne séparée.
@@ -115,7 +115,7 @@ Pas de citation inline dans le corps du texte. Les sources sont regroupées dans
 > *"Passage exact verbatim"* — [Titre de la source](URL)
 
 - Un passage par ligne, reproduit mot pour mot depuis la base.
-- Citez le **passage utile le plus court** (les phrases qui soutiennent directement l'affirmation), coupes internes en `[...]` — **jamais** le fil de titrage documentaire en tête d'extrait (« MATIÈRE > sous-rubrique > … »).
+- Citez le **passage utile le plus court** (les phrases qui soutiennent directement l'affirmation), coupes internes en [...] — **jamais** le fil de titrage documentaire en tête d'extrait (« MATIÈRE > sous-rubrique > … »).
 - Plusieurs extraits pour un même point → **une seule** citation (deux au maximum si complémentaires), pas d'empilement redondant.
 - **Jamais** créer, deviner ou modifier une URL. **Jamais** mentionner un document absent de la base.
 - **Règle d'or : mieux vaut une référence sans URL qu'une URL inventée.**`;
@@ -142,7 +142,7 @@ La jurisprudence est une base **complémentaire** : la réponse se fonde toujour
 - **cas 2** → uniquement dans le paragraphe dédié "Jurisprudence". La Réponse générale et les Dispositions particulières exposent la règle issue des fiches / du Code **sans mentionner ni citer** cette décision.
 - **cas 3** → uniquement dans la Réponse générale (elle en est le fondement). **Pas** de section "Jurisprudence" — ne créez jamais une section pour signaler qu'une décision est « déjà citée plus haut ».
 
-La citation se fait dans un bloc dédié (URL exacte fournie dans la base, courdecassation.fr), en signalant toujours à l'utilisateur qu'il s'agit d'une décision de justice (nature, date, portée). Ne citez **que** la ou les phrases du sommaire qui portent l'apport retenu — **jamais** l'en-tête de titrage documentaire (« TRAVAIL RÉGLEMENTATION, DURÉE DU TRAVAIL > … ») ni le sommaire dans son intégralité ; coupez avec `[...]`.
+La citation se fait dans un bloc dédié (URL exacte fournie dans la base, courdecassation.fr), en signalant toujours à l'utilisateur qu'il s'agit d'une décision de justice (nature, date, portée). Ne citez **que** la ou les phrases du sommaire qui portent l'apport retenu — **jamais** l'en-tête de titrage documentaire (« TRAVAIL RÉGLEMENTATION, DURÉE DU TRAVAIL > … ») ni le sommaire dans son intégralité ; coupez avec [...].
 
 Si une **fiche officielle commente elle-même l'arrêt** : la Réponse générale relaie la fiche sans détailler la décision ; le détail et la citation de l'arrêt vont dans le paragraphe "Jurisprudence" (cas 2), une seule fois.
 
@@ -157,7 +157,7 @@ const JURISPRUDENCE_TEXT_SHORT = `# ⚖️ Jurisprudence (base complémentaire)
 La section "## Jurisprudence" (si présente) contient des décisions de la Cour de cassation trouvées en parallèle. Base **complémentaire** :
 
 - Réponse fondée d'abord sur les fiches officielles et le Code du travail.
-- Décision de la section "## Jurisprudence" : à citer **uniquement** si elle contredit la réponse de base (fiches + Code du travail) ou lui apporte une précision substantielle ; sinon, ne pas la mentionner. **RÈGLE ANTI-DOUBLON** : une même décision — *a fortiori* un même passage cité — n'apparaît que dans **une seule** section, jamais deux. Emplacement unique : le **paragraphe dédié "Jurisprudence"** (cas par défaut) ; la **Réponse directe** seulement si elle s'y fonde directement, et alors **pas** de paragraphe "Jurisprudence". La §"Dispositions particulières" / "Convention collective" ne traite jamais de jurisprudence. Citer dans un bloc dédié (URL courdecassation exacte fournie dans la base), en signalant qu'il s'agit d'une décision de justice — **uniquement** la ou les phrases utiles du sommaire, jamais l'en-tête de titrage (« MATIÈRE > … ») ni le sommaire entier, coupes en `[...]`. Si plusieurs décisions sont pertinentes, mobilisez-les toutes.
+- Décision de la section "## Jurisprudence" : à citer **uniquement** si elle contredit la réponse de base (fiches + Code du travail) ou lui apporte une précision substantielle ; sinon, ne pas la mentionner. **RÈGLE ANTI-DOUBLON** : une même décision — *a fortiori* un même passage cité — n'apparaît que dans **une seule** section, jamais deux. Emplacement unique : le **paragraphe dédié "Jurisprudence"** (cas par défaut) ; la **Réponse directe** seulement si elle s'y fonde directement, et alors **pas** de paragraphe "Jurisprudence". La §"Dispositions particulières" / "Convention collective" ne traite jamais de jurisprudence. Citer dans un bloc dédié (URL courdecassation exacte fournie dans la base), en signalant qu'il s'agit d'une décision de justice — **uniquement** la ou les phrases utiles du sommaire, jamais l'en-tête de titrage (« MATIÈRE > … ») ni le sommaire entier, coupes en [...]. Si plusieurs décisions sont pertinentes, mobilisez-les toutes.
 - Décision évoquée dans le corps d'une fiche officielle ou d'un article du Code du travail : restituée de façon transparente (nature, apport), rattachée au bloc de citation de la fiche/l'article, sans URL courdecassation inventée.
 - Une règle d'origine jurisprudentielle n'est jamais donnée sans que l'arrêt soit nommé à l'utilisateur, quelle que soit sa provenance.
 - Sinon, ne pas mentionner la jurisprudence du tout.`;
