@@ -213,6 +213,44 @@ const toExcerpt = (content: string): string => {
   return `${clean}…`;
 };
 
+// ---- Cour de cassation decisions ------------------------------------------
+
+// "2024-11-27" → "27 novembre 2024"
+const formatDecisionDate = (raw: string): string => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  if (!match) return raw;
+  const [, year, month, day] = match;
+  try {
+    return new Intl.DateTimeFormat("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))));
+  } catch {
+    return `${day}/${month}/${year}`;
+  }
+};
+
+/**
+ * Judilibre indexes as "title" the raw titling hierarchy of a decision
+ * ("CONTRAT DE TRAVAIL, RUPTURE, …"), which reads like content. Users expect
+ * the decision reference: "Pourvoi n° 22-21.693 du 27 novembre 2024". The
+ * pourvoi number may be an array for joined cases.
+ */
+export const documentTitle = (metadata: ChunkResult["metadata"]): string => {
+  const rawNumber: unknown = metadata.number;
+  const number = (Array.isArray(rawNumber) ? rawNumber : [rawNumber])
+    .filter((n): n is string => typeof n === "string" && n.length > 0)
+    .join(", ");
+  if (!number) return metadata.title;
+  const date =
+    typeof metadata.decision_date === "string" && metadata.decision_date
+      ? formatDecisionDate(metadata.decision_date)
+      : "";
+  return date ? `Pourvoi n° ${number} du ${date}` : `Pourvoi n° ${number}`;
+};
+
 interface RetrievedDocument {
   id: string;
   title: string;
@@ -225,14 +263,19 @@ interface RetrievedDocument {
 const groupByDocument = (chunks: ChunkResult[]): RetrievedDocument[] => {
   const documents = new Map<string, RetrievedDocument>();
   for (const chunk of chunks) {
-    const { id, title, url } = chunk.metadata;
+    const { id, url } = chunk.metadata;
     const key = id || url;
     if (!key) continue;
     const existing = documents.get(key);
     if (existing) {
       existing.contents.push(chunk.content ?? "");
     } else {
-      documents.set(key, { id, title, url, contents: [chunk.content ?? ""] });
+      documents.set(key, {
+        id,
+        title: documentTitle(chunk.metadata),
+        url,
+        contents: [chunk.content ?? ""],
+      });
     }
   }
   return [...documents.values()];
