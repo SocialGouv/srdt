@@ -9,6 +9,9 @@ import { AnswerResponse } from "@/types";
 import React, { useState, useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
+import Image from "next/image";
+import { SOURCES_PANEL_ID } from "./SourcesPanel";
+import marianne from "./marianne.png";
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
@@ -74,6 +77,10 @@ interface ChatMessageProps {
   selectedAgreement?: Agreement;
   /** Database conversation ID for saving feedback */
   dbConversationId?: string;
+  /** Opens (or closes) the sources side panel for this message. */
+  onShowSources?: () => void;
+  /** Whether the sources panel currently shows this message's sources. */
+  isSourcesOpen?: boolean;
 }
 
 export const ChatMessage = ({
@@ -86,6 +93,8 @@ export const ChatMessage = ({
   apiError,
   selectedAgreement,
   dbConversationId,
+  onShowSources,
+  isSourcesOpen = false,
 }: ChatMessageProps) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -107,6 +116,8 @@ export const ChatMessage = ({
     !message.isLoading &&
     !message.isStreaming &&
     !message.isError;
+
+  const hasSources = (message.sources?.length ?? 0) > 0;
 
   // Always show feedback for the last assistant message
   // This naturally handles: show after first → hide when follow-up starts → show after follow-up
@@ -229,7 +240,31 @@ export const ChatMessage = ({
             !message.isLoading &&
             !message.isStreaming &&
             index !== 0 && (
-              <div className={styles.copyButtonContainer}>
+              <div className={styles.messageActions}>
+                {hasSources && onShowSources && (
+                  <Button
+                    onClick={onShowSources}
+                    priority="tertiary no outline"
+                    size="small"
+                    title="Afficher les sources de la réponse"
+                    className={styles.copyButton}
+                    nativeButtonProps={{
+                      "aria-expanded": isSourcesOpen,
+                      "aria-controls": SOURCES_PANEL_ID,
+                    }}
+                  >
+                    <Image
+                      src={marianne}
+                      alt=""
+                      unoptimized
+                      width={20}
+                      height={20}
+                      aria-hidden="true"
+                      className={`${styles.marianneIcon} ${styles.sourcesButtonIcon}`}
+                    />
+                    Sources
+                  </Button>
+                )}
                 <Button
                   onClick={handleCopyToClipboard}
                   iconId={
