@@ -1,3 +1,10 @@
+## [1.51.1](https://github.com/SocialGouv/srdt/compare/v1.51.0...v1.51.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **promp:** update prompt jurisprudences ([#416](https://github.com/SocialGouv/srdt/issues/416)) ([d1bdb6b](https://github.com/SocialGouv/srdt/commit/d1bdb6ba1c357e821a21d0372653c98e19f98e7d))
+
 # [1.51.0](https://github.com/SocialGouv/srdt/compare/v1.50.0...v1.51.0) (2026-09-08)
 
 
