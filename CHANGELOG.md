@@ -1,3 +1,10 @@
+# [1.52.0](https://github.com/SocialGouv/srdt/compare/v1.51.1...v1.52.0) (2026-09-10)
+
+
+### Features
+
+* sources in side panel ([#409](https://github.com/SocialGouv/srdt/issues/409)) ([6035caf](https://github.com/SocialGouv/srdt/commit/6035caf54b184192aab504c5df69c458a1ce883d))
+
 ## [1.51.1](https://github.com/SocialGouv/srdt/compare/v1.51.0...v1.51.1) (2026-09-10)
 
 
