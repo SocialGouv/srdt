@@ -2,12 +2,29 @@ import { Collection } from "@/constants";
 import { ChunkResult } from "../../types";
 
 // Judilibre indexe un titre = hiérarchie de titrage brute ("CONTRAT DE TRAVAIL, RUPTURE,...").
-// La réponse /search ne renvoie ni le numéro de pourvoi ni la date, donc on se limite à
-// un libellé générique + l'identifiant de la décision ; l'URL courdecassation reste le lien exact.
+// Pour citer la décision dans le prompt generate, on préfère son numéro de pourvoi et sa date
+// ("Arrêt numéro 21-12.345 du 10/05/2023") ; à défaut, on se rabat sur un libellé générique +
+// l'identifiant de la décision. L'URL courdecassation reste le lien exact.
+// Tolérant au runtime : decision_date / number peuvent être absents ou non-string
+// dans le payload de l'API (ex. tableau pour des pourvois joints).
+const formatDecisionDate = (raw?: unknown): string | null => {
+  if (typeof raw !== "string" || !raw) return null;
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return raw;
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+};
+
 const chunkTitle = (chunk: ChunkResult) => {
   if (chunk.metadata.source !== Collection.JUDILIBRE) {
     return chunk.metadata.title;
   }
+  const { number, decision_date } = chunk.metadata;
+  const formattedDate = formatDecisionDate(decision_date);
+  if (typeof number === "string" && number && formattedDate) {
+    return `Arrêt numéro ${number} du ${formattedDate}`;
+  }
+  // Fallback : numéro/date absents de la base -> identifiant de la décision.
   // metadata.id = "<decision_id>-<index>" ; on privilégie initial_id (= decision_id)
   const decisionId =
     chunk.metadata.initial_id ?? chunk.metadata.id.replace(/-\d+$/, "");
