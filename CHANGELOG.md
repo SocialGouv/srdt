@@ -1,3 +1,10 @@
+## [1.52.1](https://github.com/SocialGouv/srdt/compare/v1.52.0...v1.52.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* **web:** add numéro de pourvoi with date in sources for jurisprudence ([#419](https://github.com/SocialGouv/srdt/issues/419)) ([5823167](https://github.com/SocialGouv/srdt/commit/58231676792ab75ad7452af78a2eb34920e555df))
+
 # [1.52.0](https://github.com/SocialGouv/srdt/compare/v1.51.1...v1.52.0) (2026-09-10)
 
 
