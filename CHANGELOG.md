@@ -1,3 +1,10 @@
+## [1.52.3](https://github.com/SocialGouv/srdt/compare/v1.52.2...v1.52.3) (2026-09-11)
+
+
+### Bug Fixes
+
+* **web:** limit conversation history to 12 entries ([#417](https://github.com/SocialGouv/srdt/issues/417)) ([#423](https://github.com/SocialGouv/srdt/issues/423)) ([5ef98ba](https://github.com/SocialGouv/srdt/commit/5ef98baf05535f1f1e2ccbba5c6e1a0ee3e3fdeb))
+
 ## [1.52.2](https://github.com/SocialGouv/srdt/compare/v1.52.1...v1.52.2) (2026-09-11)
 
 
