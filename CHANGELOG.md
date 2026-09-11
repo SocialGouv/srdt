@@ -1,3 +1,10 @@
+## [1.52.2](https://github.com/SocialGouv/srdt/compare/v1.52.1...v1.52.2) (2026-09-11)
+
+
+### Bug Fixes
+
+* update domains for proconnect ([#422](https://github.com/SocialGouv/srdt/issues/422)) ([5f6f9d9](https://github.com/SocialGouv/srdt/commit/5f6f9d93d1087e97ef8c17bd160c30df8f4cabfc))
+
 ## [1.52.1](https://github.com/SocialGouv/srdt/compare/v1.52.0...v1.52.1) (2026-09-11)
 
 
