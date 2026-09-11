@@ -63,6 +63,10 @@ export const K_RERANK_JURISPRUDENCE = 5;
 // Follow-up question limits
 export const MAX_FOLLOWUP_QUESTIONS = 5;
 
+// Conversations kept in the sidebar history (and in localStorage): the most
+// recent ones win, older ones are dropped.
+export const MAX_HISTORY_CONVERSATIONS = 12;
+
 // Follow-up question constants
 export const K_RERANK_FOLLOWUP_QUERY1 = 5; // Top 5 chunks for query_1
 export const K_RERANK_FOLLOWUP_QUERY2 = 10; // Top 10 chunks for query_2

@@ -16,6 +16,8 @@ import {
   STORAGE_KEY,
   CURRENT_CONVERSATION_KEY,
   OPEN_CONVERSATION_KEY,
+  trimHistory,
+  prepareForStorage,
 } from "./conversation-storage";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
@@ -60,8 +62,6 @@ const buildConversationHistory = (
   }
   return history;
 };
-
-const MAX_CONVERSATIONS_TO_STORE = 30;
 
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
@@ -148,17 +148,20 @@ export const Chat = ({
           selectedModel: undefined,
         };
 
-        // Ensure backward compatibility by adding missing fields to loaded conversations
-        const compatibleParsed = parsed.map(
-          (conv: Partial<Conversation>) =>
-            ({
-              ...conv,
-              isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
-              followupCount: conv.followupCount ?? 0,
-              firstUserQuestion: conv.firstUserQuestion ?? undefined,
-              firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
-              selectedModel: conv.selectedModel ?? undefined,
-            } as Conversation)
+        // Ensure backward compatibility by adding missing fields to loaded
+        // conversations, and cap the history (older lists may be longer).
+        const compatibleParsed = trimHistory(
+          parsed.map(
+            (conv: Partial<Conversation>) =>
+              ({
+                ...conv,
+                isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
+                followupCount: conv.followupCount ?? 0,
+                firstUserQuestion: conv.firstUserQuestion ?? undefined,
+                firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
+                selectedModel: conv.selectedModel ?? undefined,
+              } as Conversation)
+          )
         );
 
         // Another screen (e.g. Nouveautés) may have asked us to open a
@@ -225,17 +228,8 @@ export const Chat = ({
       );
 
       if (storageConversations.length > 0) {
-        // Prepare conversations for storage (remove heavy chunks)
-        const conversationsToStore = storageConversations.map((conv) => ({
-          ...conv,
-          // Remove heavy localSearchChunks from API results before storing
-          lastApiResult: conv.lastApiResult
-            ? {
-                ...conv.lastApiResult,
-                localSearchChunks: [],
-              }
-            : conv.lastApiResult,
-        }));
+        // Cap the history, drop what the sidebar doesn't list, strip chunks
+        const conversationsToStore = prepareForStorage(storageConversations);
 
         try {
           localStorage.setItem(
@@ -340,9 +334,13 @@ export const Chat = ({
   }, [messages, messagesLength]);
 
   const updateCurrentConversation = (updates: Partial<Conversation>) => {
+    // Re-apply the cap: the first user message turns the current conversation
+    // into a history entry, which may push the oldest one out.
     setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === currentConversationId ? { ...conv, ...updates } : conv
+      trimHistory(
+        prev.map((conv) =>
+          conv.id === currentConversationId ? { ...conv, ...updates } : conv
+        )
       )
     );
   };
@@ -630,14 +628,7 @@ export const Chat = ({
       selectedModel: undefined,
     };
 
-    setConversations((prev) => {
-      const newList = [newConversation, ...prev];
-      // If we exceed the limit, trim to keep only the most recent ones
-      if (newList.length > MAX_CONVERSATIONS_TO_STORE) {
-        return newList.slice(0, MAX_CONVERSATIONS_TO_STORE);
-      }
-      return newList;
-    });
+    setConversations((prev) => trimHistory([newConversation, ...prev]));
     setCurrentConversationId(newId);
     setNewMessage("");
     setIsDisabled(false);

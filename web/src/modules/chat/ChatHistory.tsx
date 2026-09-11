@@ -4,6 +4,7 @@ import { Button } from "@codegouvfr/react-dsfr/Button";
 import { fr } from "@codegouvfr/react-dsfr";
 import { push } from "@socialgouv/matomo-next";
 import { Conversation } from "./types";
+import { isHistoryConversation } from "./conversation-storage";
 import { getSeenNouveautesVersion } from "@/modules/nouveautes/seen";
 import styles from "./Chat.module.css";
 
@@ -33,10 +34,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   nouveautesVersion,
 }) => {
   // Get conversations that have actual user messages (not just the welcome message) and haven't failed
-  const conversationsWithMessages = conversations.filter(
-    (conv) =>
-      conv.messages.some((msg) => msg.role === "user") && !conv.hasFailed
-  );
+  const conversationsWithMessages = conversations.filter(isHistoryConversation);
 
   // Show a dot when the current content version differs from the last one the
   // user opened. Read from localStorage only after mount to avoid a hydration
