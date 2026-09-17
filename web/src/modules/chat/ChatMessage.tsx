@@ -12,6 +12,8 @@ import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import Image from "next/image";
 import { SOURCES_PANEL_ID } from "./SourcesPanel";
 import marianne from "./marianne.png";
+import addCc from "./add-cc.svg";
+import { agreementModalButtonProps } from "../convention-collective/AgreementModal";
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
@@ -74,7 +76,8 @@ interface ChatMessageProps {
   apiResult: AnswerResponse | null;
   globalResponseTime: number;
   apiError?: string;
-  selectedAgreement?: Agreement;
+  /** Collective agreement the conversation was started with, if any */
+  agreement?: Agreement;
   /** Database conversation ID for saving feedback */
   dbConversationId?: string;
   /** Opens (or closes) the sources side panel for this message. */
@@ -91,7 +94,7 @@ export const ChatMessage = ({
   apiResult,
   globalResponseTime,
   apiError,
-  selectedAgreement,
+  agreement,
   dbConversationId,
   onShowSources,
   isSourcesOpen = false,
@@ -180,17 +183,16 @@ export const ChatMessage = ({
                 severity="info"
                 className={styles.conventionBadge}
               >
-                {selectedAgreement ? (
+                {agreement ? (
                   <>
                     <span
                       className={styles.conventionBadgeTitle}
-                      title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
+                      title={`${agreement.shortTitle} (IDCC ${agreement.num})`}
                     >
-                      Convention collective&nbsp;:{" "}
-                      {selectedAgreement.shortTitle}
+                      Convention collective&nbsp;: {agreement.shortTitle}
                     </span>
                     <span className={styles.conventionBadgeIdcc}>
-                      &nbsp;(IDCC {selectedAgreement.num})
+                      &nbsp;(IDCC {agreement.num})
                     </span>
                   </>
                 ) : (
@@ -199,6 +201,24 @@ export const ChatMessage = ({
                   </span>
                 )}
               </Badge>
+              {!agreement && (
+                <Button
+                  priority="secondary"
+                  nativeButtonProps={agreementModalButtonProps}
+                  disabled={isLoading}
+                  className={styles.addAgreementButton}
+                >
+                  <Image
+                    src={addCc}
+                    alt=""
+                    width={23}
+                    height={27}
+                    aria-hidden="true"
+                    className={styles.addAgreementIcon}
+                  />
+                  Préciser la convention collective
+                </Button>
+              )}
             </div>
           )}
           <div
@@ -301,7 +321,7 @@ export const ChatMessage = ({
             userQuestion={apiResult?.anonymized?.anonymized_question}
             llmResponse={apiResult?.generated.text}
             errorMessage={apiError}
-            idcc={selectedAgreement?.id}
+            idcc={agreement?.id}
             isFollowupResponse={message.isFollowup}
             dbConversationId={dbConversationId}
           />
