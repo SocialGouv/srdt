@@ -201,7 +201,8 @@ export const ChatMessage = ({
                   </span>
                 )}
               </Badge>
-              {!agreement && (
+              {/* Restarts with the first question only, so not on follow-ups */}
+              {!agreement && !message.isFollowup && (
                 <Button
                   priority="secondary"
                   nativeButtonProps={agreementModalButtonProps}
