@@ -1,4 +1,5 @@
 import { UserLLMMessage, AnswerResponse } from "@/types";
+import { Agreement } from "../convention-collective/search";
 
 /**
  * Lightweight description of a document used to generate an answer. It is
@@ -45,4 +46,6 @@ export interface Conversation {
   followupCount?: number;
   /** Database conversation ID for tracking (saved to PostgreSQL) */
   dbConversationId?: string;
+  /** Collective agreement the conversation was started with, if any */
+  agreement?: Agreement;
 }

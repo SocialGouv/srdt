@@ -380,9 +380,27 @@ a.sidebarRowActive:hover {
   font-size: 0.875rem;
 }
 
+/* Badge + "Préciser la convention collective" button (when none is set). */
 .conventionBadgeContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem 1rem;
   margin-bottom: 0.5rem;
   max-width: 100%;
+}
+
+.addAgreementButton {
+  margin-left: auto;
+}
+
+/* Icon from the mockup (not in the DSFR icon set). */
+.addAgreementIcon {
+  width: 1.25rem;
+  height: auto;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 .conventionBadge {

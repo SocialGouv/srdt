@@ -11,6 +11,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
 import { SourcesPanel } from "./SourcesPanel";
+import { AgreementModal } from "../convention-collective/AgreementModal";
 import { buildMessageSources } from "./sources";
 import {
   STORAGE_KEY,
@@ -333,17 +334,32 @@ export const Chat = ({
     }
   }, [messages, messagesLength]);
 
-  const updateCurrentConversation = (updates: Partial<Conversation>) => {
+  const updateConversation = (
+    conversationId: string,
+    updates: Partial<Conversation>
+  ) => {
     // Re-apply the cap: the first user message turns the current conversation
     // into a history entry, which may push the oldest one out.
     setConversations((prev) =>
       trimHistory(
         prev.map((conv) =>
-          conv.id === currentConversationId ? { ...conv, ...updates } : conv
+          conv.id === conversationId ? { ...conv, ...updates } : conv
         )
       )
     );
   };
+
+  const createConversation = (agreement?: Agreement): Conversation => ({
+    id: `conv_${Date.now()}`,
+    title: "Nouvelle conversation",
+    messages: [{ content: initialConversationText, role: "assistant" }],
+    createdAt: new Date(),
+    hasFailed: false,
+    isAwaitingFollowup: false,
+    followupCount: 0,
+    selectedModel: undefined,
+    agreement,
+  });
 
   const generateConversationTitle = (firstUserMessage: string): string => {
     // Take first 50 characters and add ellipsis if longer
@@ -354,26 +370,34 @@ export const Chat = ({
     return title;
   };
 
-  const handleSubmit = async (e?: React.FormEvent, messageOverride?: string) => {
-    if (e) e.preventDefault();
-
-    const messageToSend = messageOverride ?? newMessage;
-    if (!messageToSend.trim() || isDisabled) return;
+  /**
+   * Asks a question in `conversation` (the current one, or one just created
+   * that the state may not have caught up with yet) and streams the answer
+   * into it. `agreement` is the collective agreement the question is asked
+   * under; the first question records it on the conversation.
+   */
+  const askQuestion = async (
+    conversation: Conversation,
+    messageToSend: string,
+    agreement: Agreement | undefined
+  ) => {
+    const update = (updates: Partial<Conversation>) =>
+      updateConversation(conversation.id, updates);
 
     setIsDisabled(true);
 
     const userMessage = {
       content: messageToSend,
       role: "user" as const,
-      isFollowup: currentConversation?.isAwaitingFollowup || false,
+      isFollowup: conversation.isAwaitingFollowup || false,
     };
-    const currentMessages = [...messages, userMessage];
+    const currentMessages = [...conversation.messages, userMessage];
 
     // Check if this is a follow-up question
     const isFollowupQuestion =
-      currentConversation?.isAwaitingFollowup &&
-      currentConversation?.firstUserQuestion &&
-      currentConversation?.firstAssistantAnswer;
+      conversation.isAwaitingFollowup &&
+      conversation.firstUserQuestion &&
+      conversation.firstAssistantAnswer;
 
     push([
       "trackEvent",
@@ -383,7 +407,8 @@ export const Chat = ({
 
     // Update conversation title if this is the first user message
     const shouldUpdateTitle =
-      messages.length === 1 && messages[0].role === "assistant";
+      conversation.messages.length === 1 &&
+      conversation.messages[0].role === "assistant";
     const conversationUpdates: Partial<Conversation> = {
       messages: currentMessages,
       lastUserQuestion: messageToSend,
@@ -393,6 +418,8 @@ export const Chat = ({
       conversationUpdates.title = generateConversationTitle(messageToSend);
       // Store the first question for potential follow-up
       conversationUpdates.firstUserQuestion = messageToSend;
+      // The agreement applies to the whole conversation
+      conversationUpdates.agreement = agreement;
     }
 
     // If this is a follow-up, clear the awaiting state
@@ -400,8 +427,7 @@ export const Chat = ({
       conversationUpdates.isAwaitingFollowup = false;
     }
 
-    updateCurrentConversation(conversationUpdates);
-    setNewMessage("");
+    update(conversationUpdates);
 
     const loadingMessage = {
       content: "",
@@ -411,7 +437,7 @@ export const Chat = ({
       isFollowup: !!isFollowupQuestion,
     };
 
-    updateCurrentConversation({
+    update({
       messages: [...currentMessages, loadingMessage],
     });
 
@@ -420,17 +446,19 @@ export const Chat = ({
 
     if (isFollowupQuestion) {
       // Build conversation history from messages
-      const conversationHistory = buildConversationHistory(messages);
+      const conversationHistory = buildConversationHistory(
+        conversation.messages
+      );
 
       // Use follow-up streaming
       await generateFollowupAnswerStream(
-        currentConversation.firstUserQuestion!,
+        conversation.firstUserQuestion!,
         conversationHistory,
         messageToSend,
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
-          updateCurrentConversation({
+          update({
             messages: currentMessages.concat([
               {
                 content: streamingMessageRef.current,
@@ -447,7 +475,7 @@ export const Chat = ({
           const responseTimeInSeconds = (endTime - startTime) / 1000;
 
           if (result.error || !result.success) {
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: `Une erreur est survenue : ${result.error}`,
@@ -465,9 +493,9 @@ export const Chat = ({
               result.data?.generated?.text ?? streamingMessageRef.current;
 
             // Save followup to database if we have a DB conversation ID
-            if (currentConversation?.dbConversationId) {
+            if (conversation.dbConversationId) {
               saveConversationToDb("save_followup", {
-                conversationId: currentConversation.dbConversationId,
+                conversationId: conversation.dbConversationId,
                 followupQuestion: messageToSend,
                 followupResponse: followupResponseText,
                 generationTimeMs: Math.round(endTime - startTime),
@@ -475,11 +503,11 @@ export const Chat = ({
             }
 
             const newFollowupCount =
-              (currentConversation?.followupCount ?? 0) + 1;
+              (conversation.followupCount ?? 0) + 1;
             const hasMoreFollowups =
               newFollowupCount < MAX_FOLLOWUP_QUESTIONS;
 
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: followupResponseText,
@@ -502,12 +530,12 @@ export const Chat = ({
             });
           }
           const newFollowupCountForDisable =
-            (currentConversation?.followupCount ?? 0) + 1;
+            (conversation.followupCount ?? 0) + 1;
           setIsDisabled(newFollowupCountForDisable >= MAX_FOLLOWUP_QUESTIONS);
         },
-        selectedAgreement?.id,
-        selectedAgreement?.title,
-        currentConversation.selectedModel
+        agreement?.id,
+        agreement?.title,
+        conversation.selectedModel
       );
     } else {
       // Use regular streaming for initial question
@@ -516,7 +544,7 @@ export const Chat = ({
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
-          updateCurrentConversation({
+          update({
             messages: currentMessages.concat([
               {
                 content: streamingMessageRef.current,
@@ -532,7 +560,7 @@ export const Chat = ({
           const responseTimeInSeconds = (endTime - startTime) / 1000;
 
           if (result.error || !result.success) {
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: `Une erreur est survenue : ${result.error}`,
@@ -552,19 +580,19 @@ export const Chat = ({
             saveConversationToDb("save_initial", {
               question: messageToSend,
               response: responseText,
-              idcc: selectedAgreement?.id,
+              idcc: agreement?.id,
               modelName: result.data?.modelName,
               generationTimeMs: Math.round(endTime - startTime),
             }).then((saveResult) => {
               if (saveResult.success && saveResult.conversationId) {
                 // Store the DB conversation ID for later updates (feedback, followup)
-                updateCurrentConversation({
+                update({
                   dbConversationId: saveResult.conversationId,
                 });
               }
             });
 
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: responseText,
@@ -587,10 +615,46 @@ export const Chat = ({
           }
           setIsDisabled(false); // Re-enable for potential follow-up
         },
-        selectedAgreement?.id,
-        selectedAgreement?.title
+        agreement?.id,
+        agreement?.title
       );
     }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent, messageOverride?: string) => {
+    if (e) e.preventDefault();
+
+    const messageToSend = messageOverride ?? newMessage;
+    if (!messageToSend.trim() || isDisabled || !currentConversation) return;
+
+    setNewMessage("");
+    // The composer's agreement only applies to a conversation's first
+    // question; follow-ups reuse the one the conversation was started with.
+    await askQuestion(
+      currentConversation,
+      messageToSend,
+      isEmptyState ? selectedAgreement : currentConversation.agreement
+    );
+  };
+
+  /**
+   * Re-asks the first question in a new conversation, this time under
+   * `agreement` (the "Préciser la convention collective" flow).
+   */
+  const handleRestartWithAgreement = async (agreement: Agreement) => {
+    const question = currentConversation?.firstUserQuestion;
+    if (!question) return;
+
+    cancelStream();
+    const newConversation = createConversation(agreement);
+    setConversations((prev) => trimHistory([newConversation, ...prev]));
+    setCurrentConversationId(newConversation.id);
+    setSelectedAgreement(agreement);
+    setNewMessage("");
+    streamingMessageRef.current = "";
+    push(["trackEvent", "chat", "restart with agreement"]);
+
+    await askQuestion(newConversation, question, agreement);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -616,20 +680,9 @@ export const Chat = ({
       return;
     }
 
-    const newId = `conv_${Date.now()}`;
-    const newConversation: Conversation = {
-      id: newId,
-      title: "Nouvelle conversation",
-      messages: [{ content: initialConversationText, role: "assistant" }],
-      createdAt: new Date(),
-      hasFailed: false,
-      isAwaitingFollowup: false,
-      followupCount: 0,
-      selectedModel: undefined,
-    };
-
+    const newConversation = createConversation();
     setConversations((prev) => trimHistory([newConversation, ...prev]));
-    setCurrentConversationId(newId);
+    setCurrentConversationId(newConversation.id);
     setNewMessage("");
     setIsDisabled(false);
     setSelectedAgreement(undefined);
@@ -738,7 +791,7 @@ export const Chat = ({
                   apiResult={apiResult}
                   globalResponseTime={globalResponseTime}
                   apiError={apiError}
-                  selectedAgreement={selectedAgreement}
+                  agreement={currentConversation?.agreement}
                   dbConversationId={currentConversation?.dbConversationId}
                   isSourcesOpen={sourcesMessageIndex === index}
                   onShowSources={() => handleToggleSources(index)}
@@ -757,6 +810,8 @@ export const Chat = ({
               onNewConversation={handleNewConversation}
               onSuggestion={(text) => handleSubmit(undefined, text)}
             />
+
+            <AgreementModal onAgreementSelect={handleRestartWithAgreement} />
           </>
         )}
       </div>
