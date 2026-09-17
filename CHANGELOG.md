@@ -1,3 +1,10 @@
+# [1.53.0](https://github.com/SocialGouv/srdt/compare/v1.52.3...v1.53.0) (2026-09-17)
+
+
+### Features
+
+* **web:** préciser la convention collective après la première réponse ([#424](https://github.com/SocialGouv/srdt/issues/424)) ([cfa33f3](https://github.com/SocialGouv/srdt/commit/cfa33f37f61832fec260e09d1d2d1029aea35500))
+
 ## [1.52.3](https://github.com/SocialGouv/srdt/compare/v1.52.2...v1.52.3) (2026-09-11)
 
 
