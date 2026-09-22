@@ -17,7 +17,11 @@ import { agreementModalButtonProps } from "../convention-collective/AgreementMod
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  a: ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => (
     <a {...props} target="_blank" rel="noopener noreferrer" />
   ),
 };
@@ -48,7 +52,11 @@ function processStreamingLinks(content: string): string {
 
 // Markdown components used during streaming: adds special rendering for link placeholders
 const streamingMarkdownComponents = {
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  a: ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => (
     <a {...props} target="_blank" rel="noopener noreferrer" />
   ),
   em: ({
