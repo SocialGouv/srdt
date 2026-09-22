@@ -1,3 +1,15 @@
+# [1.54.0](https://github.com/SocialGouv/srdt/compare/v1.53.0...v1.54.0) (2026-09-22)
+
+
+### Bug Fixes
+
+* **web:** ne plus propager la prop node de react-markdown sur les liens ([#425](https://github.com/SocialGouv/srdt/issues/425)) ([89a5af3](https://github.com/SocialGouv/srdt/commit/89a5af3a7abdc4967b873b4f3893d69d3b6a31ba))
+
+
+### Features
+
+* **web:** copier une seule section de la réponse ([#426](https://github.com/SocialGouv/srdt/issues/426)) ([cc43b34](https://github.com/SocialGouv/srdt/commit/cc43b345d471510b13988c5794a092285ddbf346))
+
 # [1.53.0](https://github.com/SocialGouv/srdt/compare/v1.52.3...v1.53.0) (2026-09-17)
 
 
