@@ -4,7 +4,7 @@ from srdt_analysis.core.models import (
     EnrichedRankedChunk,
     RankedChunk,
 )
-from srdt_analysis.ingestion.data_exploiter import (
+from srdt_analysis.ingestion.data_exploiter_embed import (
     ArticlesCodeDuTravailExploiter,
     BaseDataExploiter,
     FichesMTExploiter,

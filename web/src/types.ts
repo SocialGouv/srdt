@@ -42,6 +42,9 @@ export interface SearchOptions {
   top_K?: number;
   threshold?: number;
   collections?: string[];
+  // ids de documents : la recherche est restreinte aux chunks du code du
+  // travail qu'ils citent
+  linked_from?: string[];
 }
 
 export interface SearchRequest {
