@@ -467,6 +467,37 @@ export const SEARCH_OPTIONS_JURISPRUDENCE: SearchOptions = {
   collections: [Collection.JUDILIBRE],
 };
 
+// Filtre LLM des jurisprudences (après le rerank) : pour chaque arrêt retenu, on demande
+// au LLM s'il permet de répondre à la question ; seuls les arrêts jugés "OUI" sont
+// transmis au prompt generate.
+export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-large-latest";
+
+export const JURISPRUDENCE_FILTER_INSTRUCTION = `# 🎯 Rôle
+
+Vous êtes un **juriste expert en droit du travail français (secteur privé)**. Votre unique tâche est d'évaluer la **pertinence d'un arrêt de la Cour de cassation** pour une question posée par un salarié ou un employeur.
+
+# 📥 Entrée
+
+- La **question** de l'utilisateur.
+- **Un arrêt** de la Cour de cassation (numéro, date, lien et sommaire).
+
+# 🔎 Analyse
+
+Demandez-vous si cet arrêt permet, **directement ou en partie**, de répondre à la question posée :
+- il tranche la **même situation juridique** que celle de la question (mêmes faits ou même règle en jeu), **ou**
+- il pose une règle qui s'applique clairement à cette situation et qui aide à y répondre.
+
+Répondez **NON** si l'arrêt :
+- porte sur un autre sujet, même voisin (même thème général mais question juridique différente) ;
+- ne partage avec la question que des mots-clés ;
+- ne permet pas de dire quelque chose d'utile sur la réponse à apporter.
+
+En cas de doute, répondez **NON**.
+
+# 📤 Format de réponse
+
+Répondez **uniquement** par \`OUI\` ou \`NON\`, sans aucun autre texte.`;
+
 export const CHATGPT_LLM: LLMModel = {
   api_key: process.env.CHATGPT_LLM_API_KEY ?? "",
   name: process.env.CHATGPT_MODEL_NAME ?? "",
@@ -477,6 +508,11 @@ export const MISTRAL_LLM: LLMModel = {
   api_key: process.env.MISTRAL_LLM_API_KEY ?? "",
   name: process.env.MISTRAL_MODEL_NAME ?? "",
   base_url: MISTRAL_BASE_URL,
+};
+
+export const JURISPRUDENCE_FILTER_LLM: LLMModel = {
+  ...MISTRAL_LLM,
+  name: JURISPRUDENCE_FILTER_MODEL_NAME,
 };
 
 export const ALBERT_LLM: LLMModel = {

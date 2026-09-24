@@ -16,6 +16,8 @@ import {
   Collection,
   SEARCH_OPTIONS_IDCC,
   SEARCH_OPTIONS_JURISPRUDENCE,
+  JURISPRUDENCE_FILTER_INSTRUCTION,
+  JURISPRUDENCE_FILTER_LLM,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -47,7 +49,9 @@ import {
   search,
   rerank,
   retrieveDocs,
+  generate,
 } from "./client";
+import { formatChunks } from "./prompt-builders";
 
 export interface PreparedQuestionData {
   query: string;
@@ -278,9 +282,53 @@ const searchArticles = async (anonymized: string) => {
   );
 };
 
+// Filtre LLM des jurisprudences : un appel par arrêt (en parallèle), le LLM répond
+// OUI/NON selon que l'arrêt permet ou non de répondre à la question. On ne garde que
+// les OUI. En cas d'erreur d'appel, on réessaie une fois ; si l'erreur persiste,
+// l'arrêt est conservé (comme si la réponse était OUI).
+const filterJurisprudence = async (
+  question: string,
+  chunks: ChunkResult[]
+): Promise<ChunkResult[]> => {
+  const verdicts = await Promise.all(
+    chunks.map(async (chunk) => {
+      const request = {
+        model: JURISPRUDENCE_FILTER_LLM,
+        system_prompt: JURISPRUDENCE_FILTER_INSTRUCTION,
+        chat_history: [
+          {
+            role: "user" as const,
+            content: `Question : ${question}\n\nArrêt :\n${formatChunks([chunk])}`,
+          },
+        ],
+      };
+
+      let result = await generate(request);
+      if (result.error || !result.data) {
+        result = await generate(request);
+      }
+
+      if (result.error || !result.data) {
+        Sentry.captureException(
+          new Error(
+            `Erreur lors du filtre jurisprudence: ${result.error ?? "réponse vide"}`
+          ),
+          { extra: { query: question, url: chunk.metadata.url } }
+        );
+        return true;
+      }
+
+      return /^\W*OUI\b/i.test(result.data.text.trim());
+    })
+  );
+
+  return chunks.filter((_, i) => verdicts[i]);
+};
+
 // Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
 // Search large sur la collection judilibre, puis rerank (reranker Albert) pour ne garder
-// que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire).
+// que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire),
+// puis filtre LLM (filterJurisprudence) pour ne garder que les arrêts utiles à la question.
 // Leur utilisation effective dans la réponse est pilotée par les instructions
 // (section "⚖️ Jurisprudence").
 const searchJurisprudence = async (
@@ -321,12 +369,16 @@ const searchJurisprudence = async (
       extra: { query: anonymized },
     });
     // fallback : à défaut de rerank, on garde les meilleurs chunks de la recherche
-    return jurisprudenceChunks.slice(0, K_RERANK_JURISPRUDENCE);
+    return filterJurisprudence(
+      anonymized,
+      jurisprudenceChunks.slice(0, K_RERANK_JURISPRUDENCE)
+    );
   }
 
-  return reranked.data.results
-    .slice(0, K_RERANK_JURISPRUDENCE)
-    .map(rerankedToChunk);
+  return filterJurisprudence(
+    anonymized,
+    reranked.data.results.slice(0, K_RERANK_JURISPRUDENCE).map(rerankedToChunk)
+  );
 };
 
 // Common preprocessing logic for both streaming and non-streaming
