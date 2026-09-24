@@ -137,7 +137,9 @@ const JURISPRUDENCE_TEXT = `# ⚖️ Jurisprudence (base complémentaire)
 
 Une recherche est effectuée **en parallèle** dans une base d'arrêts de la Cour de cassation (chambre sociale, publiés au bulletin), qui apparaissent le cas échéant dans la section "## Jurisprudence" de la base de connaissance externe.
 
-La réponse repose **toujours d'abord** sur les fiches officielles et le Code du travail. Chaque arrêt de la section "## Jurisprudence" relève de **l'une** des trois situations suivantes, jamais de plusieurs :
+**Vérification préalable, arrêt par arrêt** : avant toute utilisation, examinez chaque arrêt individuellement et demandez-vous s'il est réellement utile pour répondre à la question posée (il traite du sujet, directement ou indirectement). Écartez et ignorez silencieusement tout arrêt dont l'utilité pour la question est incertaine, ténue ou hors sujet — ne l'utilisez ni ne le mentionnez nulle part, pas même dans la section "Jurisprudence" illustrative. Seuls les arrêts ayant passé ce filtre sont classés selon les trois situations ci-dessous.
+
+La réponse repose **toujours d'abord** sur les fiches officielles et le Code du travail. Chaque arrêt de la section "## Jurisprudence" retenu relève de **l'une** des trois situations suivantes, jamais de plusieurs :
 
 1. **Sans effet sur la réponse** — il ne la contredit pas et ne la précise pas nettement.
 → Ne le mentionnez pas. Aucune citation, aucune section. C'est le cas le plus fréquent.
@@ -159,8 +161,9 @@ const JURISPRUDENCE_TEXT_SHORT = `# ⚖️ Jurisprudence (base complémentaire)
 
 La section "## Jurisprudence" (si présente) contient des décisions de la Cour de cassation trouvées en parallèle. Base **complémentaire** :
 
+- **Vérification préalable, arrêt par arrêt** : avant toute utilisation, vérifiez pour chaque arrêt qu'il est réellement utile pour répondre à la question (traite du sujet, directement ou indirectement). Si son utilité est incertaine ou hors sujet, écartez-le silencieusement — ne l'utilisez ni ne le mentionnez, pas même en section "Jurisprudence" illustrative.
 - Réponse fondée d'abord sur les fiches officielles et le Code du travail.
-- Chaque arrêt de la section "## Jurisprudence" relève d'**une seule** de ces trois situations :
+- Chaque arrêt retenu (ayant passé la vérification ci-dessus) relève d'**une seule** de ces trois situations :
   1. **sans effet sur la réponse** → ne pas le mentionner (cas le plus fréquent) ;
   2. **il modifie ou précise la réponse**, ou **seul un arrêt répond** (aucune fiche ni article du Code) → l'intégrer au corps de la réponse (« la Cour de cassation a jugé le [date] (n° [numéro]) que… »), **sans** section "Jurisprudence" ni refus pour absence de source ;
   3. **purement illustratif** (ne change pas la réponse, l'éclaire) → section "Jurisprudence" uniquement, nulle part ailleurs.
