@@ -48,6 +48,7 @@ import {
   rerank,
   retrieveDocs,
 } from "./client";
+import { ConversationHistoryEntry } from "./prompt-builders";
 
 export interface PreparedQuestionData {
   query: string;
@@ -78,6 +79,12 @@ export interface PreparedFollowupQuestionData {
   idccChunksQuery1: ChunkResult[];
   idccChunksQuery2: ChunkResult[];
   jurisprudenceChunks: ChunkResult[];
+}
+export interface AnonymizedFollowupInputs {
+  originalQuery: string;
+  conversationHistory: ConversationHistoryEntry[];
+  newQuestion: string;
+  newQuestionAnonymizeResult: AnonymizeResponse;
 }
 
 // Helper function to merge chunks by document ID
@@ -404,6 +411,49 @@ export const prepareQuestionData = async (
     jurisprudenceChunks: selectedJurisprudenceChunks,
     anonymizeResult,
     rephraseResult,
+  };
+};
+
+// Anonymize every user text of a follow-up (first question, previous questions
+// and the new one) before it reaches search, rerank or generation
+export const anonymizeFollowupInputs = async (
+  originalQuery: string,
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string
+): Promise<AnonymizedFollowupInputs> => {
+  const texts = Array.from(
+    new Set([
+      originalQuery,
+      newQuestion,
+      ...conversationHistory.map((entry) => entry.question),
+    ])
+  );
+
+  const results = await Promise.all(
+    texts.map((text) => anonymize({ user_question: text }))
+  );
+
+  const anonymized = new Map<string, AnonymizeResponse>();
+  results.forEach((result, i) => {
+    if (result.error || !result.data) {
+      throw new Error(
+        `Erreur lors de l'anonymisation: ${result.error ?? "réponse vide"}`
+      );
+    }
+    anonymized.set(texts[i], result.data);
+  });
+
+  const anonymizedText = (text: string) =>
+    anonymized.get(text)!.anonymized_question;
+
+  return {
+    originalQuery: anonymizedText(originalQuery),
+    conversationHistory: conversationHistory.map((entry) => ({
+      ...entry,
+      question: anonymizedText(entry.question),
+    })),
+    newQuestion: anonymizedText(newQuestion),
+    newQuestionAnonymizeResult: anonymized.get(newQuestion)!,
   };
 };
 

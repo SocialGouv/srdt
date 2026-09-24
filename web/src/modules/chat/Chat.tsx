@@ -493,10 +493,13 @@ export const Chat = ({
               result.data?.generated?.text ?? streamingMessageRef.current;
 
             // Save followup to database if we have a DB conversation ID
-            if (conversation.dbConversationId) {
+            // (anonymized question only, never the raw user input)
+            const anonymizedFollowup =
+              result.data?.anonymized?.anonymized_question;
+            if (conversation.dbConversationId && anonymizedFollowup) {
               saveConversationToDb("save_followup", {
                 conversationId: conversation.dbConversationId,
-                followupQuestion: messageToSend,
+                followupQuestion: anonymizedFollowup,
                 followupResponse: followupResponseText,
                 generationTimeMs: Math.round(endTime - startTime),
               });
@@ -577,20 +580,25 @@ export const Chat = ({
               result.data?.generated?.text ?? streamingMessageRef.current;
 
             // Save initial conversation to database
-            saveConversationToDb("save_initial", {
-              question: messageToSend,
-              response: responseText,
-              idcc: agreement?.id,
-              modelName: result.data?.modelName,
-              generationTimeMs: Math.round(endTime - startTime),
-            }).then((saveResult) => {
-              if (saveResult.success && saveResult.conversationId) {
-                // Store the DB conversation ID for later updates (feedback, followup)
-                update({
-                  dbConversationId: saveResult.conversationId,
-                });
-              }
-            });
+            // (anonymized question only, never the raw user input)
+            const anonymizedQuestion =
+              result.data?.anonymized?.anonymized_question;
+            if (anonymizedQuestion != null) {
+              saveConversationToDb("save_initial", {
+                question: anonymizedQuestion,
+                response: responseText,
+                idcc: agreement?.id,
+                modelName: result.data?.modelName,
+                generationTimeMs: Math.round(endTime - startTime),
+              }).then((saveResult) => {
+                if (saveResult.success && saveResult.conversationId) {
+                  // Store the DB conversation ID for later updates (feedback, followup)
+                  update({
+                    dbConversationId: saveResult.conversationId,
+                  });
+                }
+              });
+            }
 
             update({
               messages: currentMessages.concat([

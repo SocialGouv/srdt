@@ -1,5 +1,10 @@
 import { Config, getFamilyModel } from "@/constants";
-import { GenerateResponse, ChunkResult, LLMModel } from "../../types";
+import {
+  AnonymizeResponse,
+  GenerateResponse,
+  ChunkResult,
+  LLMModel,
+} from "../../types";
 import { ApiResponse, AnswerResponse } from "@/types";
 import { generate, generateStream } from "./client";
 import {
@@ -15,6 +20,7 @@ import {
   PreparedFollowupQuestionData,
   prepareQuestionData,
   prepareFollowupQuestionData,
+  anonymizeFollowupInputs,
 } from "./prepare";
 
 // Build answer response
@@ -45,10 +51,11 @@ const buildFollowupAnswer = (
   allFichesOfficiellesChunks: ChunkResult[],
   allCodeDuTravailChunks: ChunkResult[],
   allIdccChunks: ChunkResult[],
-  allJurisprudenceChunks: ChunkResult[]
+  allJurisprudenceChunks: ChunkResult[],
+  anonymized: AnonymizeResponse
 ): AnswerResponse => ({
   config: preparedData.config.toString(),
-  anonymized: null, // Follow-up doesn't use anonymization
+  anonymized, // anonymization of the new question
   rephrased: null, // Follow-up doesn't use rephrasing
   localSearchChunks: [
     ...allFichesOfficiellesChunks,
@@ -120,10 +127,17 @@ async function getFollowupGenerateData(
   idccName?: string,
   providedModel?: LLMModel
 ) {
+  // Only anonymized user texts go to search, rerank and generation
+  const anonymized = await anonymizeFollowupInputs(
+    originalQuery,
+    conversationHistory,
+    newQuestion
+  );
+
   // RAG search still uses only original query + new question (2 queries)
   const preparedData = await prepareFollowupQuestionData(
-    originalQuery,
-    newQuestion,
+    anonymized.originalQuery,
+    anonymized.newQuestion,
     requiredConfig,
     idcc,
     providedModel
@@ -159,7 +173,10 @@ async function getFollowupGenerateData(
   // LLM receives the full conversation history for coherent responses
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createFollowupIdccChatHistory(conversationHistory, newQuestion),
+        chatHistory: createFollowupIdccChatHistory(
+          anonymized.conversationHistory,
+          anonymized.newQuestion
+        ),
         systemPrompt:
           (preparedData.instructions.generate_followup_instruction_idcc
             ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
@@ -169,7 +186,10 @@ async function getFollowupGenerateData(
           knowledgeBaseContent,
       }
     : {
-        chatHistory: createFollowupChatHistory(conversationHistory, newQuestion),
+        chatHistory: createFollowupChatHistory(
+          anonymized.conversationHistory,
+          anonymized.newQuestion
+        ),
         systemPrompt:
           (preparedData.instructions.generate_followup_instruction || "") +
           "\n\n" +
@@ -184,6 +204,7 @@ async function getFollowupGenerateData(
     allCodeDuTravailChunks,
     allIdccChunks,
     allJurisprudenceChunks,
+    newQuestionAnonymizeResult: anonymized.newQuestionAnonymizeResult,
   };
 }
 
@@ -319,6 +340,7 @@ export const generateFollowupAnswer = async (
       allCodeDuTravailChunks,
       allIdccChunks,
       allJurisprudenceChunks,
+      newQuestionAnonymizeResult,
     } = await getFollowupGenerateData(
       originalQuery,
       conversationHistory,
@@ -355,7 +377,8 @@ export const generateFollowupAnswer = async (
         allFichesOfficiellesChunks,
         allCodeDuTravailChunks,
         allIdccChunks,
-        allJurisprudenceChunks
+        allJurisprudenceChunks,
+        newQuestionAnonymizeResult
       ),
     };
   } catch (error) {
@@ -388,6 +411,7 @@ export const generateFollowupAnswerStream = async (
       allCodeDuTravailChunks,
       allIdccChunks,
       allJurisprudenceChunks,
+      newQuestionAnonymizeResult,
     } = await getFollowupGenerateData(
       originalQuery,
       conversationHistory,
@@ -423,7 +447,8 @@ export const generateFollowupAnswerStream = async (
             allFichesOfficiellesChunks,
             allCodeDuTravailChunks,
             allIdccChunks,
-            allJurisprudenceChunks
+            allJurisprudenceChunks,
+            newQuestionAnonymizeResult
           ),
         });
       },
