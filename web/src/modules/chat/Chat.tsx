@@ -583,7 +583,7 @@ export const Chat = ({
             // (anonymized question only, never the raw user input)
             const anonymizedQuestion =
               result.data?.anonymized?.anonymized_question;
-            if (anonymizedQuestion) {
+            if (anonymizedQuestion != null) {
               saveConversationToDb("save_initial", {
                 question: anonymizedQuestion,
                 response: responseText,
