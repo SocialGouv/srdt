@@ -255,6 +255,12 @@ async def search(
 
     transformed_results: List[ChunkResult] = []
 
+    ids = None
+    if request.options.linked_from is not None:
+        ids = es.get_linked_chunk_ids(CHUNK_INDEX, request.options.linked_from)
+        if not ids:
+            return SearchResponse(time=time.time() - start_time, top_chunks=[])
+
     for prompt in request.prompts:
         search_result = es.search(
             index_name=CHUNK_INDEX,
@@ -263,6 +269,7 @@ async def search(
             hybrid=request.options.hybrid or False,
             sources=request.options.collections,
             idcc=request.idcc,
+            ids=ids,
         )
 
         transformed_results = [
