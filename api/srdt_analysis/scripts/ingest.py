@@ -34,14 +34,14 @@ logger = Logger("Ingester")
 # Sources to (re)ingest: comment out the ones to keep as they are.
 # Chunks of unselected sources are copied from the current index.
 SELECTED_SOURCES: list[CollectionName] = [
-    # "contributions",
-    # "contributions_idcc",
-    # "information",
+    "contributions",
+    "contributions_idcc",
+    "information",
     "page_fiche_ministere_travail",
     "fiches_service_public",
     "code_du_travail",
     "conventions",
-    # "judilibre",
+    "judilibre",
 ]
 
 # Sources read from Postgres: exploiter and chunker content type

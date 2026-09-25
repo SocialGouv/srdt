@@ -160,7 +160,7 @@ class ElasticIndicesHandler:
                     "properties": {
                         "content": {"type": "text", "analyzer": "ascii_french"},
                         "metadata.idcc": {"type": "keyword"},
-                        "metadata.legi_links": {"type": "object"},
+                        "metadata.legi_links": {"type": "object", "enabled": False},
                     }
                 },
                 "settings": {"analysis": french_analyzer},
