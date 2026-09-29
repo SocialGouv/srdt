@@ -1,13 +1,16 @@
 # ============================================================================
-# srdt — CI + CD sur GitLab PIC (dépôt PRIMAIRE). Migré de GitHub Actions + kontinuous.
+# srdt — CI + CD sur GitLab PIC. Migré de GitHub Actions + kontinuous.
+# Pattern 3 dépôts : ce dépôt ne fait que construire les images ; le chart vit dans
+# srdt-charts, le déploiement dans srdt-gitops.
 #   check   : lint API (ruff) — non bloquant au 1er jet
-#   build   : 2 images (api FastAPI/RAG + web Next.js) via BuildKit DinD mutualisé (ci-common)
-#   publish : chart Helm `charts/srdt` en OCI (référence les 2 images par appVersion=sha)
-#   deploy  : DÉCLENCHE le pipeline srdt-gitops (trigger multi-projet, CI_JOB_TOKEN
-#             + allowlist inbound côté gitops — déjà posée). Pas de token gitops ici.
+#   build   : 2 images (api FastAPI/RAG + web Next.js) via BuildKit DinD mutualisé (ci-common),
+#             taguées sha-<commit>
+#   deploy  : trigger_app (gitops-cd-component) -> srdt-gitops, qui ouvre une MR bumpant
+#             srdt.global.imageTag de l'env ; le merge de cette MR déploie.
+#             deploy-dev : branches de travail + branche par défaut ; deploy-preprod : branche
+#             par défaut. CI_JOB_TOKEN + allowlist inbound côté gitops, aucun token ici.
 #   release : semantic-release (branche par défaut)
-# Déploiement : Atlas v2 (zone dev) via ArgoCD synchronisant srdt-gitops.
-# Voir docs/30-migrations/srdt.md.
+# Voir docs/30-migrations/srdt.md et docs/20-cd-pattern/parcours-deploiement.md (dépôt devops).
 #
 # Variables CI/CD requises : SEMANTIC_RELEASE_TOKEN (release).  Backend build = DinD -> AUCUNE
 #   variable BUILDKIT_* requise.
@@ -21,19 +24,25 @@ include:
   - project: socialgouv/commun/studio-tech-commun/sdpsn-devops-ci-utils
     ref: main
     file: ci-common/image-build.yml
-  - project: socialgouv/commun/studio-tech-commun/sdpsn-devops-ci-utils
-    ref: main
-    file: ci-common/publish-chart.yml
-
-variables:
-  CHART_DIR: charts/srdt
-  # Version immuable par-commit : 1 SEULE source de vérité (publish-chart + triggers gitops).
-  CHART_VERSION: "0.0.0-sha.${CI_COMMIT_SHORT_SHA}"
+  - component: $CI_SERVER_FQDN/socialgouv/produits-dnum/studio-tech/devops/components/gitops-cd-component/trigger_app@0.3.1
+    inputs:
+      job_name: deploy-dev
+      gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      deploy_action: dev
+      rules:
+        - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - component: $CI_SERVER_FQDN/socialgouv/produits-dnum/studio-tech/devops/components/gitops-cd-component/trigger_app@0.3.1
+    inputs:
+      job_name: deploy-preprod
+      gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      deploy_action: preprod
+      rules:
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 stages:
   - check
   - build
-  - publish
   - deploy
   - release
 
@@ -43,13 +52,10 @@ workflow:
   rules:
     - if: $CI_COMMIT_BRANCH
 
-# build/publish : branches de feature (review) + branche par défaut (image déployable)
+# build : branches de travail + branche par défaut (image déployable)
 .build-rules: &build-rules
   - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
   - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-# deploy review : uniquement les branches de feature
-.review-rules: &review-rules
-  - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
 
 # ---------------------------------------------------------------------------
 # CHECK : lint API (ruff, config dans api/pyproject.toml). Non bloquant au 1er jet.
@@ -88,53 +94,14 @@ build:
     BUILD_TAGS: "sha-$CI_COMMIT_SHA,$CI_COMMIT_REF_SLUG"
   rules: *build-rules
 
-# PUBLISH : chart Helm OCI (snapshot SHA). appVersion = sha immuable = tag des 2 images.
-publish-chart:
-  extends: .publish-chart
+# ---------------------------------------------------------------------------
+# DEPLOY : jobs générés par trigger_app (cf. include) ; ils attendent les images.
+# ---------------------------------------------------------------------------
+deploy-dev:
   needs: ["build"]
-  rules: *build-rules
-
-# ---------------------------------------------------------------------------
-# DEPLOY : l'app DÉCLENCHE le pipeline srdt-gitops (CI_JOB_TOKEN + allowlist inbound),
-# en passant DEPLOY_ACTION/SLUG/CHART_VERSION. Aucun token gitops stocké ici.
-# ---------------------------------------------------------------------------
-.deploy-trigger:
-  stage: deploy
-  variables:
-    SLUG: "$CI_COMMIT_REF_SLUG"
-  trigger:
-    project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
-    branch: main
-    strategy: depend
-
-deploy-review:
-  extends: .deploy-trigger
-  needs: ["publish-chart"]
-  rules: *review-rules
-  variables:
-    DEPLOY_ACTION: review
-  environment:
-    name: review/$CI_COMMIT_REF_SLUG
 
 deploy-preprod:
-  extends: .deploy-trigger
-  needs: ["publish-chart"]
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  variables:
-    DEPLOY_ACTION: preprod
-  environment:
-    name: preprod
-
-stop-review:
-  extends: .deploy-trigger
-  needs: []
-  rules:
-    - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
-      when: manual
-      allow_failure: true
-  variables:
-    DEPLOY_ACTION: stop-review
+  needs: ["build"]
 
 # ---------------------------------------------------------------------------
 # RELEASE : semantic-release sur la branche par défaut (tags + release GitLab).
