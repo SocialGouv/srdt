@@ -27,6 +27,19 @@ from srdt_analysis.core.models import (
 )
 
 
+def _extract_text(content) -> str:
+    # En mode raisonnement (reasoning_effort), Mistral renvoie le contenu sous forme
+    # de liste de blocs ("thinking" puis "text") au lieu d'une chaîne : on ne garde
+    # que le texte de la réponse, sans le raisonnement.
+    if isinstance(content, list):
+        return "".join(
+            block.get("text", "")
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return content or ""
+
+
 class LLMClient:
     def __init__(
         self, base_url, api_key, model, temperature=None, reasoning_effort=None
@@ -45,9 +58,7 @@ class LLMClient:
         self.temperature: float | None = (
             temperature
             if temperature is not None
-            else MISTRAL_TEMPERATURE
-            if MISTRAL_API_HOST in (base_url or "")
-            else None
+            else MISTRAL_TEMPERATURE if MISTRAL_API_HOST in (base_url or "") else None
         )
         self.reasoning_effort: str | None = reasoning_effort
 
@@ -120,7 +131,7 @@ class LLMClient:
                 response_json = response.json()
                 # self.logger.debug(response_json)
 
-                return response_json["choices"][0]["message"]["content"]
+                return _extract_text(response_json["choices"][0]["message"]["content"])
 
             except httpx.HTTPStatusError as e:
                 self._raise_for_status(e)
@@ -166,9 +177,9 @@ class LLMClient:
                                         and "delta" in chunk["choices"][0]
                                         and "content" in chunk["choices"][0]["delta"]
                                     ):
-                                        content = chunk["choices"][0]["delta"][
-                                            "content"
-                                        ]
+                                        content = _extract_text(
+                                            chunk["choices"][0]["delta"]["content"]
+                                        )
                                         if content:
                                             yield content
                                 except json.JSONDecodeError:
