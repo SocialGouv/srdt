@@ -17,10 +17,19 @@ class LLMRunner:
     # llm_processor: MistralClient
     llm_processor: LLMClient
 
-    def __init__(self, llm_url: str, llm_api_token: str, llm_model: str):
+    def __init__(
+        self,
+        llm_url: str,
+        llm_api_token: str,
+        llm_model: str,
+        temperature: Optional[float] = None,
+        reasoning_effort: Optional[str] = None,
+    ):
         self.collections = AlbertCollectionHandler()
         # self.llm_processor = MistralClient(llm_url, llm_api_token, llm_model)
-        self.llm_processor = LLMClient(llm_url, llm_api_token, llm_model)
+        self.llm_processor = LLMClient(
+            llm_url, llm_api_token, llm_model, temperature, reasoning_effort
+        )
 
     async def rephrase_and_split(
         self,

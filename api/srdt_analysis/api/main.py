@@ -146,6 +146,8 @@ async def rephrase(request: RephraseRequest, _api_key: str = Depends(get_api_key
         llm_api_token=request.model.api_key,
         llm_model=request.model.name,
         llm_url=request.model.base_url,
+        temperature=request.model.temperature,
+        reasoning_effort=request.model.reasoning_effort,
     )
 
     rephrased, queries = await llm_runner.rephrase_and_split(
@@ -290,6 +292,8 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
         llm_api_token=request.model.api_key,
         llm_model=request.model.name,
         llm_url=request.model.base_url,
+        temperature=request.model.temperature,
+        reasoning_effort=request.model.reasoning_effort,
     )
 
     response = await llm_runner.chat_with_full_document(
@@ -321,6 +325,8 @@ async def generate_stream(
         llm_api_token=request.model.api_key,
         llm_model=request.model.name,
         llm_url=request.model.base_url,
+        temperature=request.model.temperature,
+        reasoning_effort=request.model.reasoning_effort,
     )
 
     chat_history_str = " ".join(

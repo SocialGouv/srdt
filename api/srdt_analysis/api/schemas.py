@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,6 +14,9 @@ class LLMModel(BaseModel):
     base_url: str
     name: str
     api_key: str
+    # Paramètres optionnels transmis tels quels au fournisseur (sinon défauts du client)
+    temperature: Optional[float] = None
+    reasoning_effort: Optional[Literal["low", "medium", "high"]] = None
 
 
 class AnonymizeRequest(BaseModel):

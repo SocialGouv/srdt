@@ -28,7 +28,9 @@ from srdt_analysis.core.models import (
 
 
 class LLMClient:
-    def __init__(self, base_url, api_key, model):
+    def __init__(
+        self, base_url, api_key, model, temperature=None, reasoning_effort=None
+    ):
         super().__init__()
         self.logger = Logger("LLMClient")
         self.client = httpx.AsyncClient(timeout=API_TIMEOUT)
@@ -38,11 +40,16 @@ class LLMClient:
             "Authorization": f"Bearer {api_key}",
         }
         self.model = model
-        # Température forcée pour les appels Mistral, laissée au défaut du
-        # fournisseur pour les autres.
+        # Température demandée par l'appelant si fournie ; sinon forcée pour les
+        # appels Mistral, laissée au défaut du fournisseur pour les autres.
         self.temperature: float | None = (
-            MISTRAL_TEMPERATURE if MISTRAL_API_HOST in (base_url or "") else None
+            temperature
+            if temperature is not None
+            else MISTRAL_TEMPERATURE
+            if MISTRAL_API_HOST in (base_url or "")
+            else None
         )
+        self.reasoning_effort: str | None = reasoning_effort
 
     def _base_payload(
         self,
@@ -54,6 +61,8 @@ class LLMClient:
         }
         if self.temperature is not None:
             payload["temperature"] = self.temperature
+        if self.reasoning_effort is not None:
+            payload["reasoning_effort"] = self.reasoning_effort
         return payload
 
     def _raise_for_status(self, e: httpx.HTTPStatusError) -> NoReturn:

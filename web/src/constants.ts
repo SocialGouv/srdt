@@ -470,7 +470,7 @@ export const SEARCH_OPTIONS_JURISPRUDENCE: SearchOptions = {
 // Filtre LLM des jurisprudences (après le rerank) : pour chaque arrêt retenu, on demande
 // au LLM s'il permet de répondre à la question ; seuls les arrêts jugés "OUI" sont
 // transmis au prompt generate.
-export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-large-latest";
+export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-medium-latest";
 
 export const JURISPRUDENCE_FILTER_INSTRUCTION = `# 🎯 Rôle
 
@@ -513,6 +513,8 @@ export const MISTRAL_LLM: LLMModel = {
 export const JURISPRUDENCE_FILTER_LLM: LLMModel = {
   ...MISTRAL_LLM,
   name: JURISPRUDENCE_FILTER_MODEL_NAME,
+  temperature: 0.2,
+  reasoning_effort: "high",
 };
 
 export const ALBERT_LLM: LLMModel = {

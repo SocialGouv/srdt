@@ -2,6 +2,9 @@ export interface LLMModel {
   base_url: string;
   name: string;
   api_key: string;
+  // optionnels, transmis tels quels au fournisseur (sinon défauts de l'API)
+  temperature?: number;
+  reasoning_effort?: "low" | "medium" | "high";
 }
 
 export enum LLMFamily {
