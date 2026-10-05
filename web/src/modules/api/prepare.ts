@@ -267,17 +267,29 @@ const searchIDCC = async (idcc: string, anonymized: string) => {
   return [];
 };
 
-const searchArticles = async (anonymized: string) => {
+// Recherche restreinte aux articles du code du travail cités par les documents
+// `linkedFrom` (les fiches officielles sélectionnées) : aucun article sinon.
+const searchArticles = async (anonymized: string, linkedFrom: string[]) => {
+  if (linkedFrom.length === 0) {
+    return [];
+  }
+
   // call search
   const codeSearchResult = await search({
     prompts: [anonymized],
-    options: SEARCH_OPTIONS_CODE,
+    options: { ...SEARCH_OPTIONS_CODE, linked_from: linkedFrom },
   });
+
+  const codeSearchChunks = codeSearchResult.data?.top_chunks ?? [];
+
+  if (codeSearchChunks.length === 0) {
+    return [];
+  }
 
   // run rerank
   const reranked = await rerank({
     prompt: anonymized,
-    inputs: codeSearchResult.data?.top_chunks.slice(0, MAX_RERANK) || [],
+    inputs: codeSearchChunks.slice(0, MAX_RERANK),
   });
 
   return (
@@ -379,7 +391,10 @@ export const prepareQuestionData = async (
     selectedIdccChunks.length < 1
   );
 
-  const selectedCodeDuTravailChunks = await searchArticles(anonymized);
+  const selectedCodeDuTravailChunks = await searchArticles(
+    anonymized,
+    selectedFichesOfficiellesChunks.map((chunk) => chunk.metadata.id)
+  );
 
   const selectedJurisprudenceChunks = await searchJurisprudence(anonymized);
 
