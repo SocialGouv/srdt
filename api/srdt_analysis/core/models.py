@@ -154,6 +154,26 @@ class Document:
 DocumentsList = list[Document]
 
 
+# Legifrance links to a code (https://www.legifrance.gouv.fr/codes/...)
+LegiKind = Literal["article", "section"]
+
+
+class RawLegiLink(TypedDict):
+    legi_id: str
+    url: URL
+    label: Optional[str]
+    origin: str
+
+
+class LegiLink(RawLegiLink):
+    # resolved against the code du travail (LEGI), None if outside of it
+    kind: Optional[LegiKind]
+    cid: Optional[str]
+    num: Optional[str]
+    chunk_id: Optional[str]
+    canonical_url: Optional[URL]
+
+
 # Chunk
 @dataclass
 class ChunkMetadata(TypedDict):
@@ -167,6 +187,7 @@ class ChunkMetadata(TypedDict):
     articles: Optional[list[JSONDict]]
     number: NotRequired[Optional[str]]
     decision_date: NotRequired[Optional[str]]
+    legi_links: NotRequired[list[LegiLink]]
 
 
 @dataclass

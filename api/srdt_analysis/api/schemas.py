@@ -47,6 +47,9 @@ class SearchOptions(BaseModel):
     threshold: float = Field(default=0, ge=0.0, le=2.0)
     collections: List[str] = Field(default=SOURCES)
     hybrid: Optional[bool] = False
+    # document ids (metadata.id): the search is restricted to the code du travail
+    # chunks they cite (legi_links)
+    linked_from: Optional[List[str]] = None
 
     @field_validator("collections")
     @classmethod

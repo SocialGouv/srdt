@@ -83,7 +83,7 @@ export async function POST(request: NextRequest): Promise<Response> {
                   extra: {
                     method: "POST",
                     source: "python_api",
-                    question: question,
+                    hasQuestion: !!question,
                     config: config,
                     agreementId: agreementId,
                   },
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             },
             extra: {
               method: "POST",
-              question: question,
+              hasQuestion: !!question,
               config: config,
               agreementId: agreementId,
             },

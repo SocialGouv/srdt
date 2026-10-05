@@ -1,3 +1,17 @@
+# [1.55.0](https://github.com/SocialGouv/srdt/compare/v1.54.1...v1.55.0) (2026-10-05)
+
+
+### Features
+
+* link articles [#322](https://github.com/SocialGouv/srdt/issues/322) ([#430](https://github.com/SocialGouv/srdt/issues/430)) ([c1f56e7](https://github.com/SocialGouv/srdt/commit/c1f56e77f96e2183d410d439cf2f84dacbeb0cc4))
+
+## [1.54.1](https://github.com/SocialGouv/srdt/compare/v1.54.0...v1.54.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **web:** improve anonymisation + logs ([7434639](https://github.com/SocialGouv/srdt/commit/74346390eaadd911ac01ef2555a7c8c6851e477e))
+
 # [1.54.0](https://github.com/SocialGouv/srdt/compare/v1.53.0...v1.54.0) (2026-09-22)
 
 

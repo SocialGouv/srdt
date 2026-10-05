@@ -51,7 +51,7 @@ import {
   retrieveDocs,
   generate,
 } from "./client";
-import { formatChunks } from "./prompt-builders";
+import { ConversationHistoryEntry, formatChunks } from "./prompt-builders";
 
 export interface PreparedQuestionData {
   query: string;
@@ -82,6 +82,12 @@ export interface PreparedFollowupQuestionData {
   idccChunksQuery1: ChunkResult[];
   idccChunksQuery2: ChunkResult[];
   jurisprudenceChunks: ChunkResult[];
+}
+export interface AnonymizedFollowupInputs {
+  originalQuery: string;
+  conversationHistory: ConversationHistoryEntry[];
+  newQuestion: string;
+  newQuestionAnonymizeResult: AnonymizeResponse;
 }
 
 // Helper function to merge chunks by document ID
@@ -264,17 +270,29 @@ const searchIDCC = async (idcc: string, anonymized: string) => {
   return [];
 };
 
-const searchArticles = async (anonymized: string) => {
+// Recherche restreinte aux articles du code du travail cités par les documents
+// `linkedFrom` (les fiches officielles sélectionnées) : aucun article sinon.
+const searchArticles = async (anonymized: string, linkedFrom: string[]) => {
+  if (linkedFrom.length === 0) {
+    return [];
+  }
+
   // call search
   const codeSearchResult = await search({
     prompts: [anonymized],
-    options: SEARCH_OPTIONS_CODE,
+    options: { ...SEARCH_OPTIONS_CODE, linked_from: linkedFrom },
   });
+
+  const codeSearchChunks = codeSearchResult.data?.top_chunks ?? [];
+
+  if (codeSearchChunks.length === 0) {
+    return [];
+  }
 
   // run rerank
   const reranked = await rerank({
     prompt: anonymized,
-    inputs: codeSearchResult.data?.top_chunks.slice(0, MAX_RERANK) || [],
+    inputs: codeSearchChunks.slice(0, MAX_RERANK),
   });
 
   return (
@@ -424,7 +442,10 @@ export const prepareQuestionData = async (
     selectedIdccChunks.length < 1
   );
 
-  const selectedCodeDuTravailChunks = await searchArticles(anonymized);
+  const selectedCodeDuTravailChunks = await searchArticles(
+    anonymized,
+    selectedFichesOfficiellesChunks.map((chunk) => chunk.metadata.id)
+  );
 
   const selectedJurisprudenceChunks = await searchJurisprudence(anonymized);
 
@@ -456,6 +477,49 @@ export const prepareQuestionData = async (
     jurisprudenceChunks: selectedJurisprudenceChunks,
     anonymizeResult,
     rephraseResult,
+  };
+};
+
+// Anonymize every user text of a follow-up (first question, previous questions
+// and the new one) before it reaches search, rerank or generation
+export const anonymizeFollowupInputs = async (
+  originalQuery: string,
+  conversationHistory: ConversationHistoryEntry[],
+  newQuestion: string
+): Promise<AnonymizedFollowupInputs> => {
+  const texts = Array.from(
+    new Set([
+      originalQuery,
+      newQuestion,
+      ...conversationHistory.map((entry) => entry.question),
+    ])
+  );
+
+  const results = await Promise.all(
+    texts.map((text) => anonymize({ user_question: text }))
+  );
+
+  const anonymized = new Map<string, AnonymizeResponse>();
+  results.forEach((result, i) => {
+    if (result.error || !result.data) {
+      throw new Error(
+        `Erreur lors de l'anonymisation: ${result.error ?? "réponse vide"}`
+      );
+    }
+    anonymized.set(texts[i], result.data);
+  });
+
+  const anonymizedText = (text: string) =>
+    anonymized.get(text)!.anonymized_question;
+
+  return {
+    originalQuery: anonymizedText(originalQuery),
+    conversationHistory: conversationHistory.map((entry) => ({
+      ...entry,
+      question: anonymizedText(entry.question),
+    })),
+    newQuestion: anonymizedText(newQuestion),
+    newQuestionAnonymizeResult: anonymized.get(newQuestion)!,
   };
 };
 

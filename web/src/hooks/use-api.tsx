@@ -47,7 +47,7 @@ const useApi = () => {
           method: "generateAnswer",
         },
         extra: {
-          userQuestion: userQuestion,
+          hasUserQuestion: !!userQuestion,
           agreementId: agreementId,
           agreementTitle: agreementTitle,
         },
@@ -147,7 +147,7 @@ const useApi = () => {
                   },
                   extra: {
                     line: line,
-                    userQuestion: userQuestion,
+                    hasUserQuestion: !!userQuestion,
                     streamingStep: "parse_streaming_data",
                   },
                 });
@@ -175,7 +175,7 @@ const useApi = () => {
           method: "generateAnswerStream",
         },
         extra: {
-          userQuestion: userQuestion,
+          hasUserQuestion: !!userQuestion,
           agreementId: agreementId,
           agreementTitle: agreementTitle,
         },
@@ -224,8 +224,8 @@ const useApi = () => {
           method: "generateFollowupAnswer",
         },
         extra: {
-          originalQuery,
-          newQuestion,
+          hasOriginalQuery: !!originalQuery,
+          hasNewQuestion: !!newQuestion,
           agreementId,
           agreementTitle,
           modelName,
@@ -332,8 +332,8 @@ const useApi = () => {
                   },
                   extra: {
                     line: line,
-                    originalQuery,
-                    newQuestion,
+                    hasOriginalQuery: !!originalQuery,
+                    hasNewQuestion: !!newQuestion,
                     streamingStep: "parse_streaming_data",
                     modelName: modelName,
                   },
@@ -362,8 +362,8 @@ const useApi = () => {
           method: "generateFollowupAnswerStream",
         },
         extra: {
-          originalQuery,
-          newQuestion,
+          hasOriginalQuery: !!originalQuery,
+          hasNewQuestion: !!newQuestion,
           agreementId,
           agreementTitle,
           modelName,
