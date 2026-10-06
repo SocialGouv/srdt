@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.core.constants import LEGIFRANCE_CONVENTIONS_URL
 from srdt_analysis.core.models import Chunk
 from srdt_analysis.ingestion.data_exploiter_embed import make_batches
 from srdt_analysis.text.chunker import Chunker
@@ -14,7 +15,7 @@ load_dotenv()
 
 CC_MAIN_PARTS = ("Texte de base", "Textes Attachés", "Textes Salaires")
 
-conventions_uri = "https://www.legifrance.gouv.fr/conv_coll/id"
+conventions_uri = LEGIFRANCE_CONVENTIONS_URL
 
 _tokenizer = Tokenizer()
 _chunker = Chunker()

@@ -349,6 +349,47 @@ class ElasticIndicesHandler:
                 f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
             ) from e
 
+    def find_indexed_legifrance_urls(
+        self, index_name: str, urls: list[str]
+    ) -> set[str]:
+        """Subset of the (canonical) legifrance urls present in the index: either
+        as the url of a chunk (conventions, code du travail sections) or as the
+        url of an article of a code du travail chunk.
+        """
+        if not urls:
+            return set()
+
+        def url_agg(field: str):
+            return {"terms": {"field": field, "include": urls, "size": len(urls)}}
+
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={
+                    "bool": {
+                        "should": [
+                            {"terms": {"metadata.url.keyword": urls}},
+                            {"terms": {"metadata.articles.url.keyword": urls}},
+                        ]
+                    }
+                },
+                size=0,
+                aggregations={
+                    "chunk_urls": url_agg("metadata.url.keyword"),
+                    "article_urls": url_agg("metadata.articles.url.keyword"),
+                },
+            )
+            aggs = response["aggregations"]
+            return {
+                b["key"]
+                for agg in ("chunk_urls", "article_urls")
+                for b in aggs[agg]["buckets"]
+            }
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
+
     def get_article_node(self, index_name: str, num: str):
         try:
             response = self.client.search(

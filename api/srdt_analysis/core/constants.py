@@ -9,7 +9,16 @@ ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
 CHUNK_INDEX = "chunks"
 
-JUDILIBRE_BASE_URL = "https://api.piste.gouv.fr/cassation/judilibre/v1.0"
+# Legifrance base urls of the indexed content (chunk and article urls are built from them)
+LEGIFRANCE_CONVENTIONS_URL = "https://www.legifrance.gouv.fr/conv_coll/id"
+LEGIFRANCE_ARTICLES_URL = "https://www.legifrance.gouv.fr/codes/article_lc"
+
+# Code du travail section
+LEGIFRANCE_SECTIONS_URL = (
+    "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050"
+)
+
+JUDILIBRE_BASE_URL ="https://api.piste.gouv.fr/cassation/judilibre/v1.0"
 
 # LLM generation: on force la température pour les appels Mistral
 MISTRAL_API_HOST = "api.mistral.ai"

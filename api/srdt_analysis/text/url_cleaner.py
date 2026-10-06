@@ -1,7 +1,14 @@
+from typing import Optional
+
 import regex
 
 from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.core.constants import CHUNK_INDEX
+from srdt_analysis.core.constants import (
+    CHUNK_INDEX,
+    LEGIFRANCE_ARTICLES_URL,
+    LEGIFRANCE_CONVENTIONS_URL,
+    LEGIFRANCE_SECTIONS_URL,
+)
 from srdt_analysis.text.reference_extractor import CODE_TRAVAIL, extract_references
 
 whitelist = [
@@ -39,7 +46,43 @@ cdtn_url = "https://code.travail.gouv.fr/"
 # On la conserve quelle que soit la profondeur du chemin (/decision/<id>).
 courdecassation_domain = "courdecassation.fr"
 
+# Legifrance links we index (agreements, code du travail articles and sections): the
+# id found in the url is enough to rebuild the url as it is stored in the index.
+_LEGIFRANCE_HOST = r"^(?:https?://)?(?:www\.)?legifrance\.gouv\.fr"
+_LEGIFRANCE_END = r"(?:[/?#]|$)"
+legifrance_indexed_links = [
+    (
+        regex.compile(
+            rf"{_LEGIFRANCE_HOST}/conv_coll/id/(KALI[A-Z]{{4}}\d{{12}}){_LEGIFRANCE_END}"
+        ),
+        LEGIFRANCE_CONVENTIONS_URL,
+    ),
+    (
+        regex.compile(
+            rf"{_LEGIFRANCE_HOST}/codes/article_lc/(LEGIARTI\d{{12}}){_LEGIFRANCE_END}"
+        ),
+        LEGIFRANCE_ARTICLES_URL,
+    ),
+    (
+        regex.compile(
+            rf"{_LEGIFRANCE_HOST}/codes/section_lc/LEGITEXT000006072050/(LEGISCTA\d{{12}}){_LEGIFRANCE_END}"
+        ),
+        LEGIFRANCE_SECTIONS_URL,
+    ),
+]
+
 es = ElasticIndicesHandler()
+
+
+def to_canonical_legifrance_url(url: str) -> Optional[str]:
+    """Url as stored in the index for a legifrance link to an agreement, an article
+    or a section of the code du travail, None for any other url.
+    """
+    for pattern, base_url in legifrance_indexed_links:
+        match = pattern.match(url.strip())
+        if match:
+            return f"{base_url}/{match.group(1)}"
+    return None
 
 
 def to_comparable_path(url: str):
@@ -79,11 +122,24 @@ def clean_urls(response: str):
         else:
             return resp.replace(f"[{description}]({url})", description)
 
-    for match in pattern.finditer(response):
+    matches = list(pattern.finditer(response))
+
+    # legifrance links we index are checked all at once against the index
+    canonical_urls = {
+        url: canonical
+        for url in {m.group(3) for m in matches}
+        if (canonical := to_canonical_legifrance_url(url)) is not None
+    }
+    indexed_urls = es.find_indexed_legifrance_urls(
+        CHUNK_INDEX, list(set(canonical_urls.values()))
+    )
+
+    for match in matches:
         description, _, url = match.groups()
 
         # print(f"{description}: {url}")
         path = to_comparable_path(url)
+        canonical = canonical_urls.get(url)
         if path.startswith("code.travail.gouv.fr"):
             check = es.check_urls(CHUNK_INDEX, [url])
             if (
@@ -104,16 +160,19 @@ def clean_urls(response: str):
         ):
             out_ok.append(url)
 
+        elif canonical is not None and canonical in indexed_urls:
+            out_ok.append(canonical)
+            if url != canonical:
+                response = response.replace(
+                    f"[{description}]({url})", f"[{description}]({canonical})"
+                )
+
         elif path in whitelist:
             out_ok.append(url)
 
         # we remove link if legifrance or unknown
         else:
-            if "legifrance.gouv.fr" in url:
-                legifrance.append(url)
-            else:
-                unknown.append(url)
-
+            unknown.append(url)
             response = remove_from_response(response, url, description)
 
     # extract article references in plain text
