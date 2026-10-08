@@ -1,3 +1,10 @@
+## [1.55.1](https://github.com/SocialGouv/srdt/compare/v1.55.0...v1.55.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **api:** clean url allow legifrance CC links [#404](https://github.com/SocialGouv/srdt/issues/404) ([#420](https://github.com/SocialGouv/srdt/issues/420)) ([1052376](https://github.com/SocialGouv/srdt/commit/10523764c8da7e24a1c8d8ac5ea8dd61fcd7094c))
+
 # [1.55.0](https://github.com/SocialGouv/srdt/compare/v1.54.1...v1.55.0) (2026-10-05)
 
 
