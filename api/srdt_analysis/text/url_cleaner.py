@@ -39,6 +39,11 @@ cdtn_url = "https://code.travail.gouv.fr/"
 # On la conserve quelle que soit la profondeur du chemin (/decision/<id>).
 courdecassation_domain = "courdecassation.fr"
 
+# Conventions collectives sur Légifrance : chemin variable selon la convention
+# (ex. /conv_coll/id/KALICONT...), donc pas de correspondance exacte possible
+# via la whitelist. On conserve tout ce qui est sous ce préfixe.
+legifrance_conv_coll_path = "legifrance.gouv.fr/conv_coll"
+
 es = ElasticIndicesHandler()
 
 
@@ -104,10 +109,15 @@ def clean_urls(response: str):
         ):
             out_ok.append(url)
 
+        elif path == legifrance_conv_coll_path or path.startswith(
+            legifrance_conv_coll_path + "/"
+        ):
+            out_ok.append(url)
+
         elif path in whitelist:
             out_ok.append(url)
 
-        # we remove link if legifrance or unknown
+        # we remove link if legifrance (except CCs, see above) or unknown
         else:
             if "legifrance.gouv.fr" in url:
                 legifrance.append(url)
