@@ -2,18 +2,19 @@ import os
 import random
 from collections import defaultdict
 from timeit import default_timer as timer
-from typing import List
+from typing import List, Optional
 
 from elasticsearch import Elasticsearch
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
-from srdt_analysis.collections import AlbertCollectionHandler
-from srdt_analysis.exceptions import (
+from srdt_analysis.clients.collections import AlbertCollectionHandler
+from srdt_analysis.core.constants import ELASTIC_BULK_BATCH_SIZE
+from srdt_analysis.core.exceptions import (
     ConfigurationError,
     ExternalServiceError,
     ServiceUnavailableError,
 )
-from srdt_analysis.logger import Logger
+from srdt_analysis.core.logger import Logger
 
 french_analyzer = {
     "filter": {
@@ -109,13 +110,47 @@ class ElasticIndicesHandler:
             ]
         )
 
-    def add_items(self, index_name, items):
-        operations = []
-        for item in items:
-            operations.append({"index": {"_index": index_name}})
-            operations.append(item)
+        stale_indices = [
+            index
+            for index in self.client.indices.get(index=f"{index_name}-*").keys()
+            if index != alias
+        ]
+        if stale_indices:
+            self.logger.info(f"Deleting {len(stale_indices)} old indices.")
+            self.client.indices.delete(index=stale_indices)
 
-        self.client.bulk(index=index_name, operations=operations, refresh=True)
+    def copy_other_sources(self, index_name, alias, sources: list[str]):
+        """Copy into `alias` the chunks of the current `index_name` index whose
+        source is not in `sources` (reindexed by Elastic, embeddings included).
+        """
+        if not self.client.indices.exists_alias(name=index_name):
+            self.logger.info(f"No current {index_name} index, nothing to copy.")
+            return
+
+        response = self.client.options(request_timeout=3600).reindex(
+            source={
+                "index": index_name,
+                "query": {
+                    "bool": {"must_not": [{"terms": {"metadata.source": sources}}]}
+                },
+            },
+            dest={"index": alias},
+            refresh=True,
+        )
+        self.logger.info(
+            f"Copied {response['total']} chunks from current {index_name} index."
+        )
+
+    def add_items(self, index_name, items):
+        batch_size = ELASTIC_BULK_BATCH_SIZE
+        for i in range(0, len(items), batch_size):
+            batch = items[i : i + batch_size]
+            operations = []
+            for item in batch:
+                operations.append({"index": {"_index": index_name}})
+                operations.append(item)
+
+            self.client.bulk(index=index_name, operations=operations, refresh=True)
 
     def init_index_default(self, index_name):
         return self.init_index(
@@ -123,7 +158,9 @@ class ElasticIndicesHandler:
                 "name": index_name,
                 "mappings": {
                     "properties": {
-                        "content": {"type": "text", "analyzer": "ascii_french"}
+                        "content": {"type": "text", "analyzer": "ascii_french"},
+                        "metadata.idcc": {"type": "keyword"},
+                        "metadata.legi_links": {"type": "object", "enabled": False},
                     }
                 },
                 "settings": {"analysis": french_analyzer},
@@ -144,6 +181,8 @@ class ElasticIndicesHandler:
             idcc=metadataDict["idcc"],
             title=metadataDict["title"],
             url=metadataDict["url"],
+            number=metadataDict.get("number"),
+            decision_date=metadataDict.get("decision_date"),
         )
         return ChunkResult(
             id_chunk=r["_id"],
@@ -153,8 +192,20 @@ class ElasticIndicesHandler:
         )
 
     def find_most_similar_text(
-        self, index_name, query, k, sources: list[str]
+        self,
+        index_name,
+        query,
+        k,
+        sources: list[str],
+        idcc: Optional[str],
+        ids: Optional[list[str]] = None,
     ) -> list[ChunkResult]:
+        filters: list[dict] = [{"terms": {"metadata.source": sources}}]
+        if idcc is not None:
+            filters.append({"term": {"metadata.idcc": idcc}})
+        if ids is not None:
+            filters.append({"terms": {"metadata.id.keyword": ids}})
+
         try:
             response = self.client.search(
                 index=index_name,
@@ -162,7 +213,7 @@ class ElasticIndicesHandler:
                 query={
                     "bool": {
                         "must": [{"match": {"content": query}}],
-                        "filter": [{"terms": {"metadata.source": sources}}],
+                        "filter": filters,
                     }
                 },
                 source_includes=["content", "metadata"],
@@ -173,36 +224,109 @@ class ElasticIndicesHandler:
                 f"Elasticsearch error - text search : {str(e)}", service="Elasticsearch"
             ) from e
 
-    def find_most_similar_knn(self, index_name, query, k, sources: list[str]):
+    def find_most_similar_knn(
+        self,
+        index_name,
+        query,
+        k,
+        sources: list[str],
+        idcc: Optional[str],
+        ids: Optional[list[str]] = None,
+    ):
         embeddings = self.albert.embeddings([query])[0]
 
-        # sources filter do not work properly if not every sources has been ingested
-        # i.e. if the there are no results for the required source, it will return results for other sources
+        # pre-filter: the k nearest neighbours are searched among the filtered chunks
+        filters: list[dict] = [{"terms": {"metadata.source": sources}}]
+        if idcc is not None:
+            # chunks of the requested idcc or without idcc
+            filters.append(
+                {
+                    "bool": {
+                        "should": [
+                            {"term": {"metadata.idcc": idcc}},
+                            {
+                                "bool": {
+                                    "must_not": {"exists": {"field": "metadata.idcc"}}
+                                }
+                            },
+                        ]
+                    }
+                }
+            )
+        if ids is not None:
+            filters.append({"terms": {"metadata.id.keyword": ids}})
+
         try:
             response = self.client.search(
-                query={"terms": {"metadata.source": sources}},
                 index=index_name,
                 knn={
                     "field": "embedding",
                     "query_vector": embeddings,
-                    "num_candidates": k * 1.5,
+                    "num_candidates": int(k * 1.5),
                     "k": k,
+                    "filter": filters,
                 },
                 size=k,
+                source_includes=["content", "metadata"],
             )
-            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"][:k]]
+            return [self.to_chunk_result(hit) for hit in response["hits"]["hits"]]
         except Exception as e:
             raise ExternalServiceError(
                 f"Elasticsearch error - vector search : {str(e)}",
                 service="Elasticsearch",
             ) from e
 
-    def get_idcc(self, index_name: str, idcc: str):
+    def get_linked_chunk_ids(self, index_name: str, doc_ids: List[str]) -> list[str]:
+        """Code du travail chunks cited (resolved legi_links) by the `doc_ids`
+        documents. Links are copied on every chunk, so only the first one is read.
+        """
         try:
             response = self.client.search(
                 index=index_name,
-                query={"term": {"metadata.idcc.keyword": idcc}},
-                size=1000,
+                query={
+                    "bool": {
+                        "filter": [
+                            {"terms": {"metadata.id.keyword": doc_ids}},
+                            {"term": {"metadata.idx": 0}},
+                        ]
+                    }
+                },
+                size=len(doc_ids),
+                source_includes=["metadata.legi_links"],
+            )
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
+
+        chunk_ids: list[str] = []
+        for hit in response["hits"]["hits"]:
+            for link in hit["_source"].get("metadata", {}).get("legi_links") or []:
+                chunk_id = link.get("chunk_id")
+                if chunk_id and chunk_id not in chunk_ids:
+                    chunk_ids.append(chunk_id)
+        return chunk_ids
+
+    def get_idcc_contributions(self, index_name: str, idcc: str, size: int):
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={
+                    "bool": {
+                        "must": list(
+                            filter(
+                                None,
+                                [
+                                    {"term": {"metadata.source": "contributions_idcc"}},
+                                    {"term": {"metadata.idcc": idcc}}
+                                    if idcc is not None
+                                    else None,
+                                ],
+                            )
+                        )
+                    }
+                },
+                size=size,
                 source_includes=["content", "metadata"],
             )
             return [hit["_source"] for hit in response["hits"]["hits"]]
@@ -240,14 +364,26 @@ class ElasticIndicesHandler:
             ) from e
 
     def search(
-        self, index_name: str, prompt: str, k: int, hybrid: bool, sources: list[str]
+        self,
+        index_name: str,
+        prompt: str,
+        k: int,
+        hybrid: bool,
+        sources: list[str],
+        idcc: Optional[str],
+        ids: Optional[list[str]] = None,
     ) -> List[ChunkResult]:
         k_min = 64 if k < 64 else k
 
         start = timer()
 
         knn_res = self.find_most_similar_knn(
-            query=prompt, index_name=index_name, k=k_min, sources=sources
+            query=prompt,
+            index_name=index_name,
+            k=k_min,
+            sources=sources,
+            idcc=idcc,
+            ids=ids,
         )
 
         knn_time = timer() - start
@@ -259,7 +395,12 @@ class ElasticIndicesHandler:
         start = timer()
 
         text_res = self.find_most_similar_text(
-            query=prompt, index_name=index_name, k=k_min, sources=sources
+            query=prompt,
+            index_name=index_name,
+            k=k_min,
+            sources=sources,
+            idcc=idcc,
+            ids=ids,
         )
 
         text_time = timer() - start

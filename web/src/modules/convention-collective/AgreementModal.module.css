@@ -1,0 +1,27 @@
+/* Let the suggestions list float over the backdrop instead of scrolling
+   inside the (short) modal: DSFR clips the body and its container. */
+.modal :global(.fr-container),
+.modal :global(.fr-modal__body) {
+  overflow: visible;
+}
+
+/* The title and the form sit together on a light blue block (mockup). */
+.modal :global(.fr-modal__content) {
+  margin: 0 1rem 3.5rem;
+  padding: 1.5rem;
+  background-color: var(--background-alt-blue-france);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-action-high-blue-france);
+}
+
+.notice > span {
+  flex-shrink: 0;
+}

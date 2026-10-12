@@ -42,6 +42,9 @@ export interface SearchOptions {
   top_K?: number;
   threshold?: number;
   collections?: string[];
+  // ids de documents : la recherche est restreinte aux chunks du code du
+  // travail qu'ils citent
+  linked_from?: string[];
 }
 
 export interface SearchRequest {
@@ -61,6 +64,12 @@ export interface ChunkMetadata {
   url: string;
   source: string;
   idcc?: string;
+  // Identifiant de la décision d'origine (collection judilibre) : présent car
+  // metadata.id vaut "<decision_id>-<index>" pour les chunks de jurisprudence.
+  initial_id?: string;
+  // Métadonnées des décisions de jurisprudence (collection judilibre).
+  number?: string;
+  decision_date?: string;
 }
 
 export interface ChunkResult {

@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Button } from "@codegouvfr/react-dsfr/Button";
-import { fr } from "@codegouvfr/react-dsfr";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Conversation, ChatMessage as ChatMessageType } from "./types";
 import useApi from "@/hooks/use-api";
 import { MAX_FOLLOWUP_QUESTIONS } from "@/constants";
@@ -11,10 +9,19 @@ import { Agreement } from "../convention-collective/search";
 import { ChatHistory } from "./ChatHistory";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
+import { NewConversationView } from "./NewConversationView";
+import { SourcesPanel } from "./SourcesPanel";
+import { AgreementModal } from "../convention-collective/AgreementModal";
+import { buildMessageSources } from "./sources";
+import {
+  STORAGE_KEY,
+  CURRENT_CONVERSATION_KEY,
+  OPEN_CONVERSATION_KEY,
+  trimHistory,
+  prepareForStorage,
+} from "./conversation-storage";
 import * as Sentry from "@sentry/nextjs";
 import { push } from "@socialgouv/matomo-next";
-
-const STORAGE_KEY = "chat-conversations";
 
 // Helper to save conversation to database
 const saveConversationToDb = async (
@@ -57,21 +64,27 @@ const buildConversationHistory = (
   return history;
 };
 
-const CURRENT_CONVERSATION_KEY = "current-conversation-id";
-
-const MAX_CONVERSATIONS_TO_STORE = 30;
-
 const initialConversationText =
   "Bonjour, je suis un assistant juridique spécialisé en droit du travail. Comment puis-je vous aider ?";
 
-export const Chat = () => {
+type ChatProps = {
+  /** Notifies the parent when a conversation becomes active (a question was asked). */
+  onConversationActiveChange?: (active: boolean) => void;
+  /** Fingerprint of the Nouveautés content, used to show the "unread" dot. */
+  nouveautesVersion?: string;
+};
+
+export const Chat = ({
+  onConversationActiveChange,
+  nouveautesVersion,
+}: ChatProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] =
     useState<string>("");
   const [selectedAgreement, setSelectedAgreement] = useState<
     Agreement | undefined
   >(undefined);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
   const {
@@ -82,10 +95,24 @@ export const Chat = () => {
   } = useApi();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const streamingMessageRef = useRef<string>("");
+  const hasInitializedRef = useRef(false);
   const [messagesLength, setMessagesLength] = useState(0);
+  // Index (in the current conversation) of the message whose sources are
+  // shown in the side panel; null when the panel is closed.
+  const [sourcesMessageIndex, setSourcesMessageIndex] = useState<
+    number | null
+  >(null);
+  const closeSourcesPanel = useCallback(() => setSourcesMessageIndex(null), []);
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
+    // Run this once per mount. Under React StrictMode (dev) effects fire twice;
+    // without this guard the second pass reads an already-consumed
+    // OPEN_CONVERSATION_KEY and falls back to a new conversation, so a
+    // conversation opened from another page (Nouveautés/FAQ) would be lost.
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const savedConversations = localStorage.getItem(STORAGE_KEY);
 
     if (savedConversations) {
@@ -122,21 +149,48 @@ export const Chat = () => {
           selectedModel: undefined,
         };
 
-        // Ensure backward compatibility by adding missing fields to loaded conversations
-        const compatibleParsed = parsed.map(
-          (conv: Partial<Conversation>) =>
-            ({
-              ...conv,
-              isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
-              followupCount: conv.followupCount ?? 0,
-              firstUserQuestion: conv.firstUserQuestion ?? undefined,
-              firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
-              selectedModel: conv.selectedModel ?? undefined,
-            } as Conversation)
+        // Ensure backward compatibility by adding missing fields to loaded
+        // conversations, and cap the history (older lists may be longer).
+        const compatibleParsed = trimHistory(
+          parsed.map(
+            (conv: Partial<Conversation>) =>
+              ({
+                ...conv,
+                isAwaitingFollowup: conv.isAwaitingFollowup ?? false,
+                followupCount: conv.followupCount ?? 0,
+                firstUserQuestion: conv.firstUserQuestion ?? undefined,
+                firstAssistantAnswer: conv.firstAssistantAnswer ?? undefined,
+                selectedModel: conv.selectedModel ?? undefined,
+              } as Conversation)
+          )
         );
 
-        setConversations([newConversation, ...compatibleParsed]);
-        setCurrentConversationId(newId);
+        // Another screen (e.g. Nouveautés) may have asked us to open a
+        // specific conversation instead of starting a fresh one.
+        const pendingOpenId = sessionStorage.getItem(OPEN_CONVERSATION_KEY);
+        if (pendingOpenId) sessionStorage.removeItem(OPEN_CONVERSATION_KEY);
+        const pendingConv: Conversation | undefined = pendingOpenId
+          ? compatibleParsed.find(
+              (c: Conversation) => c.id === pendingOpenId
+            )
+          : undefined;
+
+        if (pendingConv) {
+          // Restoring an existing conversation: no fresh empty one on top.
+          setConversations(compatibleParsed);
+          setCurrentConversationId(pendingConv.id);
+          const hasStarted = pendingConv.messages.some(
+            (m) => m.role === "user"
+          );
+          const atLimit =
+            hasStarted &&
+            (!pendingConv.isAwaitingFollowup ||
+              (pendingConv.followupCount ?? 0) >= MAX_FOLLOWUP_QUESTIONS);
+          setIsDisabled(!!atLimit);
+        } else {
+          setConversations([newConversation, ...compatibleParsed]);
+          setCurrentConversationId(newId);
+        }
       } catch (error) {
         Sentry.captureException(error, {
           tags: {
@@ -175,17 +229,8 @@ export const Chat = () => {
       );
 
       if (storageConversations.length > 0) {
-        // Prepare conversations for storage (remove heavy chunks)
-        const conversationsToStore = storageConversations.map((conv) => ({
-          ...conv,
-          // Remove heavy localSearchChunks from API results before storing
-          lastApiResult: conv.lastApiResult
-            ? {
-                ...conv.lastApiResult,
-                localSearchChunks: [],
-              }
-            : conv.lastApiResult,
-        }));
+        // Cap the history, drop what the sidebar doesn't list, strip chunks
+        const conversationsToStore = prepareForStorage(storageConversations);
 
         try {
           localStorage.setItem(
@@ -251,10 +296,27 @@ export const Chat = () => {
     [currentConversation?.messages]
   );
 
+  // Empty state: a fresh conversation where no question has been asked yet.
+  const isEmptyState = !messages.some((m) => m.role === "user");
+
+  // Let the layout know whether a conversation is active (drives footer behavior).
+  useEffect(() => {
+    onConversationActiveChange?.(!isEmptyState);
+  }, [isEmptyState, onConversationActiveChange]);
+
   // Get conversation-specific state
   const apiResult = currentConversation?.lastApiResult || null;
   const globalResponseTime = currentConversation?.lastResponseTime || 0;
   const apiError = currentConversation?.lastApiError;
+
+  // Switching conversations happens in place (no navigation), so the window
+  // keeps its scroll position — e.g. sitting at the footer when clicking
+  // "Nouvelle conversation". Land back at the top of the page.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    // The panel indexes into the previous conversation's messages.
+    setSourcesMessageIndex(null);
+  }, [currentConversationId]);
 
   // Scroll within the chat messages container only
   useEffect(() => {
@@ -272,13 +334,32 @@ export const Chat = () => {
     }
   }, [messages, messagesLength]);
 
-  const updateCurrentConversation = (updates: Partial<Conversation>) => {
+  const updateConversation = (
+    conversationId: string,
+    updates: Partial<Conversation>
+  ) => {
+    // Re-apply the cap: the first user message turns the current conversation
+    // into a history entry, which may push the oldest one out.
     setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === currentConversationId ? { ...conv, ...updates } : conv
+      trimHistory(
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, ...updates } : conv
+        )
       )
     );
   };
+
+  const createConversation = (agreement?: Agreement): Conversation => ({
+    id: `conv_${Date.now()}`,
+    title: "Nouvelle conversation",
+    messages: [{ content: initialConversationText, role: "assistant" }],
+    createdAt: new Date(),
+    hasFailed: false,
+    isAwaitingFollowup: false,
+    followupCount: 0,
+    selectedModel: undefined,
+    agreement,
+  });
 
   const generateConversationTitle = (firstUserMessage: string): string => {
     // Take first 50 characters and add ellipsis if longer
@@ -289,25 +370,34 @@ export const Chat = () => {
     return title;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!newMessage.trim() || isDisabled) return;
+  /**
+   * Asks a question in `conversation` (the current one, or one just created
+   * that the state may not have caught up with yet) and streams the answer
+   * into it. `agreement` is the collective agreement the question is asked
+   * under; the first question records it on the conversation.
+   */
+  const askQuestion = async (
+    conversation: Conversation,
+    messageToSend: string,
+    agreement: Agreement | undefined
+  ) => {
+    const update = (updates: Partial<Conversation>) =>
+      updateConversation(conversation.id, updates);
 
     setIsDisabled(true);
 
     const userMessage = {
-      content: newMessage,
+      content: messageToSend,
       role: "user" as const,
-      isFollowup: currentConversation?.isAwaitingFollowup || false,
+      isFollowup: conversation.isAwaitingFollowup || false,
     };
-    const currentMessages = [...messages, userMessage];
+    const currentMessages = [...conversation.messages, userMessage];
 
     // Check if this is a follow-up question
     const isFollowupQuestion =
-      currentConversation?.isAwaitingFollowup &&
-      currentConversation?.firstUserQuestion &&
-      currentConversation?.firstAssistantAnswer;
+      conversation.isAwaitingFollowup &&
+      conversation.firstUserQuestion &&
+      conversation.firstAssistantAnswer;
 
     push([
       "trackEvent",
@@ -317,16 +407,19 @@ export const Chat = () => {
 
     // Update conversation title if this is the first user message
     const shouldUpdateTitle =
-      messages.length === 1 && messages[0].role === "assistant";
+      conversation.messages.length === 1 &&
+      conversation.messages[0].role === "assistant";
     const conversationUpdates: Partial<Conversation> = {
       messages: currentMessages,
-      lastUserQuestion: newMessage,
+      lastUserQuestion: messageToSend,
     };
 
     if (shouldUpdateTitle) {
-      conversationUpdates.title = generateConversationTitle(newMessage);
+      conversationUpdates.title = generateConversationTitle(messageToSend);
       // Store the first question for potential follow-up
-      conversationUpdates.firstUserQuestion = newMessage;
+      conversationUpdates.firstUserQuestion = messageToSend;
+      // The agreement applies to the whole conversation
+      conversationUpdates.agreement = agreement;
     }
 
     // If this is a follow-up, clear the awaiting state
@@ -334,8 +427,7 @@ export const Chat = () => {
       conversationUpdates.isAwaitingFollowup = false;
     }
 
-    updateCurrentConversation(conversationUpdates);
-    setNewMessage("");
+    update(conversationUpdates);
 
     const loadingMessage = {
       content: "",
@@ -345,7 +437,7 @@ export const Chat = () => {
       isFollowup: !!isFollowupQuestion,
     };
 
-    updateCurrentConversation({
+    update({
       messages: [...currentMessages, loadingMessage],
     });
 
@@ -354,17 +446,19 @@ export const Chat = () => {
 
     if (isFollowupQuestion) {
       // Build conversation history from messages
-      const conversationHistory = buildConversationHistory(messages);
+      const conversationHistory = buildConversationHistory(
+        conversation.messages
+      );
 
       // Use follow-up streaming
       await generateFollowupAnswerStream(
-        currentConversation.firstUserQuestion!,
+        conversation.firstUserQuestion!,
         conversationHistory,
-        newMessage,
+        messageToSend,
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
-          updateCurrentConversation({
+          update({
             messages: currentMessages.concat([
               {
                 content: streamingMessageRef.current,
@@ -381,7 +475,7 @@ export const Chat = () => {
           const responseTimeInSeconds = (endTime - startTime) / 1000;
 
           if (result.error || !result.success) {
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: `Une erreur est survenue : ${result.error}`,
@@ -399,26 +493,34 @@ export const Chat = () => {
               result.data?.generated?.text ?? streamingMessageRef.current;
 
             // Save followup to database if we have a DB conversation ID
-            if (currentConversation?.dbConversationId) {
+            // (anonymized question only, never the raw user input)
+            const anonymizedFollowup =
+              result.data?.anonymized?.anonymized_question;
+            if (conversation.dbConversationId && anonymizedFollowup) {
               saveConversationToDb("save_followup", {
-                conversationId: currentConversation.dbConversationId,
-                followupQuestion: newMessage,
+                conversationId: conversation.dbConversationId,
+                followupQuestion: anonymizedFollowup,
                 followupResponse: followupResponseText,
                 generationTimeMs: Math.round(endTime - startTime),
               });
             }
 
             const newFollowupCount =
-              (currentConversation?.followupCount ?? 0) + 1;
+              (conversation.followupCount ?? 0) + 1;
             const hasMoreFollowups =
               newFollowupCount < MAX_FOLLOWUP_QUESTIONS;
 
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: followupResponseText,
                   role: "assistant",
                   isFollowup: true,
+                  ...buildMessageSources(
+                    result.data?.localSearchChunks ?? [],
+                    followupResponseText,
+                    streamingMessageRef.current
+                  ),
                 },
               ]),
               lastApiResult: result.data,
@@ -431,21 +533,21 @@ export const Chat = () => {
             });
           }
           const newFollowupCountForDisable =
-            (currentConversation?.followupCount ?? 0) + 1;
+            (conversation.followupCount ?? 0) + 1;
           setIsDisabled(newFollowupCountForDisable >= MAX_FOLLOWUP_QUESTIONS);
         },
-        selectedAgreement?.id,
-        selectedAgreement?.title,
-        currentConversation.selectedModel
+        agreement?.id,
+        agreement?.title,
+        conversation.selectedModel
       );
     } else {
       // Use regular streaming for initial question
       await generateAnswerStream(
-        newMessage,
+        messageToSend,
         (chunk: string) => {
           // Handle each streaming chunk
           streamingMessageRef.current += chunk;
-          updateCurrentConversation({
+          update({
             messages: currentMessages.concat([
               {
                 content: streamingMessageRef.current,
@@ -461,7 +563,7 @@ export const Chat = () => {
           const responseTimeInSeconds = (endTime - startTime) / 1000;
 
           if (result.error || !result.success) {
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: `Une erreur est survenue : ${result.error}`,
@@ -478,26 +580,36 @@ export const Chat = () => {
               result.data?.generated?.text ?? streamingMessageRef.current;
 
             // Save initial conversation to database
-            saveConversationToDb("save_initial", {
-              question: newMessage,
-              response: responseText,
-              idcc: selectedAgreement?.id,
-              modelName: result.data?.modelName,
-              generationTimeMs: Math.round(endTime - startTime),
-            }).then((saveResult) => {
-              if (saveResult.success && saveResult.conversationId) {
-                // Store the DB conversation ID for later updates (feedback, followup)
-                updateCurrentConversation({
-                  dbConversationId: saveResult.conversationId,
-                });
-              }
-            });
+            // (anonymized question only, never the raw user input)
+            const anonymizedQuestion =
+              result.data?.anonymized?.anonymized_question;
+            if (anonymizedQuestion != null) {
+              saveConversationToDb("save_initial", {
+                question: anonymizedQuestion,
+                response: responseText,
+                idcc: agreement?.id,
+                modelName: result.data?.modelName,
+                generationTimeMs: Math.round(endTime - startTime),
+              }).then((saveResult) => {
+                if (saveResult.success && saveResult.conversationId) {
+                  // Store the DB conversation ID for later updates (feedback, followup)
+                  update({
+                    dbConversationId: saveResult.conversationId,
+                  });
+                }
+              });
+            }
 
-            updateCurrentConversation({
+            update({
               messages: currentMessages.concat([
                 {
                   content: responseText,
                   role: "assistant",
+                  ...buildMessageSources(
+                    result.data?.localSearchChunks ?? [],
+                    responseText,
+                    streamingMessageRef.current
+                  ),
                 },
               ]),
               lastApiResult: result.data,
@@ -511,10 +623,46 @@ export const Chat = () => {
           }
           setIsDisabled(false); // Re-enable for potential follow-up
         },
-        selectedAgreement?.id,
-        selectedAgreement?.title
+        agreement?.id,
+        agreement?.title
       );
     }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent, messageOverride?: string) => {
+    if (e) e.preventDefault();
+
+    const messageToSend = messageOverride ?? newMessage;
+    if (!messageToSend.trim() || isDisabled || !currentConversation) return;
+
+    setNewMessage("");
+    // The composer's agreement only applies to a conversation's first
+    // question; follow-ups reuse the one the conversation was started with.
+    await askQuestion(
+      currentConversation,
+      messageToSend,
+      isEmptyState ? selectedAgreement : currentConversation.agreement
+    );
+  };
+
+  /**
+   * Re-asks the first question in a new conversation, this time under
+   * `agreement` (the "Préciser la convention collective" flow).
+   */
+  const handleRestartWithAgreement = async (agreement: Agreement) => {
+    const question = currentConversation?.firstUserQuestion;
+    if (!question) return;
+
+    cancelStream();
+    const newConversation = createConversation(agreement);
+    setConversations((prev) => trimHistory([newConversation, ...prev]));
+    setCurrentConversationId(newConversation.id);
+    setSelectedAgreement(agreement);
+    setNewMessage("");
+    streamingMessageRef.current = "";
+    push(["trackEvent", "chat", "restart with agreement"]);
+
+    await askQuestion(newConversation, question, agreement);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -540,27 +688,9 @@ export const Chat = () => {
       return;
     }
 
-    const newId = `conv_${Date.now()}`;
-    const newConversation: Conversation = {
-      id: newId,
-      title: "Nouvelle conversation",
-      messages: [{ content: initialConversationText, role: "assistant" }],
-      createdAt: new Date(),
-      hasFailed: false,
-      isAwaitingFollowup: false,
-      followupCount: 0,
-      selectedModel: undefined,
-    };
-
-    setConversations((prev) => {
-      const newList = [newConversation, ...prev];
-      // If we exceed the limit, trim to keep only the most recent ones
-      if (newList.length > MAX_CONVERSATIONS_TO_STORE) {
-        return newList.slice(0, MAX_CONVERSATIONS_TO_STORE);
-      }
-      return newList;
-    });
-    setCurrentConversationId(newId);
+    const newConversation = createConversation();
+    setConversations((prev) => trimHistory([newConversation, ...prev]));
+    setCurrentConversationId(newConversation.id);
     setNewMessage("");
     setIsDisabled(false);
     setSelectedAgreement(undefined);
@@ -612,8 +742,24 @@ export const Chat = () => {
     }
   };
 
+  const sourcesMessage =
+    sourcesMessageIndex !== null ? messages[sourcesMessageIndex] : undefined;
+
+  const handleToggleSources = (index: number) => {
+    if (sourcesMessageIndex === index) {
+      setSourcesMessageIndex(null);
+      return;
+    }
+    push(["trackEvent", "chat", "show sources"]);
+    setSourcesMessageIndex(index);
+  };
+
   return (
-    <div className={styles.chatContainer}>
+    <div
+      className={`${styles.chatContainer} ${
+        isEmptyState ? styles.chatContainerEmpty : styles.chatContainerResponse
+      }`}
+    >
       <ChatHistory
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -621,67 +767,70 @@ export const Chat = () => {
         onShowHistoryChange={setShowHistory}
         onConversationSelect={handleConversationSelect}
         onDeleteConversation={handleDeleteConversation}
+        onNewConversation={handleNewConversation}
+        nouveautesVersion={nouveautesVersion}
       />
 
       <div className={styles.chatMainContent}>
-        {/* Fixed header with buttons - always visible */}
-        <div className={`${fr.cx("fr-mt-2w")} ${styles.chatHeader}`}>
-          <Button
-            onClick={() => {
-              if (!showHistory) {
-                push(["trackEvent", "history", "show history"]);
-              }
-              setShowHistory(!showHistory);
-            }}
-            iconId={"fr-icon-menu-fill"}
-            priority="tertiary no outline"
-            title={
-              showHistory ? "Masquer l'historique" : "Afficher l'historique"
-            }
+        {isEmptyState ? (
+          <NewConversationView
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            onSubmit={handleSubmit}
+            onKeyDown={handleKeyDown}
+            isDisabled={isDisabled}
+            selectedAgreement={selectedAgreement}
+            setSelectedAgreement={setSelectedAgreement}
           />
+        ) : (
+          <>
+            {/* Scrollable messages area */}
+            <div
+              ref={chatMessagesRef}
+              className={`chat-messages ${styles.chatMessagesContainer}`}
+            >
+              {messages.map((message, index) => (
+                <ChatMessage
+                  key={index}
+                  message={message}
+                  index={index}
+                  isLastMessage={index === messages.length - 1}
+                  isLoading={isLoading}
+                  apiResult={apiResult}
+                  globalResponseTime={globalResponseTime}
+                  apiError={apiError}
+                  agreement={currentConversation?.agreement}
+                  dbConversationId={currentConversation?.dbConversationId}
+                  isSourcesOpen={sourcesMessageIndex === index}
+                  onShowSources={() => handleToggleSources(index)}
+                />
+              ))}
+            </div>
 
-          <Button
-            onClick={handleNewConversation}
-            iconId="fr-icon-add-line"
-            priority="secondary"
-          >
-            Nouvelle conversation
-          </Button>
-        </div>
-
-        {/* Scrollable messages area */}
-        <div
-          ref={chatMessagesRef}
-          className={`chat-messages ${styles.chatMessagesContainer}`}
-        >
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              message={message}
-              index={index}
-              isLastMessage={index === messages.length - 1}
-              isLoading={isLoading}
-              apiResult={apiResult}
-              globalResponseTime={globalResponseTime}
-              apiError={apiError}
-              selectedAgreement={selectedAgreement}
-              dbConversationId={currentConversation?.dbConversationId}
+            <ChatInput
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              onSubmit={handleSubmit}
+              onKeyDown={handleKeyDown}
+              isDisabled={isDisabled}
+              messages={messages}
+              currentConversation={currentConversation}
+              onNewConversation={handleNewConversation}
+              onSuggestion={(text) => handleSubmit(undefined, text)}
             />
-          ))}
-        </div>
 
-        <ChatInput
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          onSubmit={handleSubmit}
-          onKeyDown={handleKeyDown}
-          isDisabled={isDisabled}
-          messages={messages}
-          currentConversation={currentConversation}
-          selectedAgreement={selectedAgreement}
-          setSelectedAgreement={setSelectedAgreement}
-        />
+            <AgreementModal onAgreementSelect={handleRestartWithAgreement} />
+          </>
+        )}
       </div>
+
+      {sourcesMessage?.sources && sourcesMessage.sources.length > 0 && (
+        <SourcesPanel
+          sources={sourcesMessage.sources}
+          removedLinks={sourcesMessage.removedLinks}
+          onClose={closeSourcesPanel}
+        />
+      )}
     </div>
   );
 };

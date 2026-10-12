@@ -1,3 +1,186 @@
+## [1.55.1](https://github.com/SocialGouv/srdt/compare/v1.55.0...v1.55.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **api:** clean url allow legifrance CC links [#404](https://github.com/SocialGouv/srdt/issues/404) ([#420](https://github.com/SocialGouv/srdt/issues/420)) ([1052376](https://github.com/SocialGouv/srdt/commit/10523764c8da7e24a1c8d8ac5ea8dd61fcd7094c))
+
+# [1.55.0](https://github.com/SocialGouv/srdt/compare/v1.54.1...v1.55.0) (2026-10-05)
+
+
+### Features
+
+* link articles [#322](https://github.com/SocialGouv/srdt/issues/322) ([#430](https://github.com/SocialGouv/srdt/issues/430)) ([c1f56e7](https://github.com/SocialGouv/srdt/commit/c1f56e77f96e2183d410d439cf2f84dacbeb0cc4))
+
+## [1.54.1](https://github.com/SocialGouv/srdt/compare/v1.54.0...v1.54.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **web:** improve anonymisation + logs ([7434639](https://github.com/SocialGouv/srdt/commit/74346390eaadd911ac01ef2555a7c8c6851e477e))
+
+# [1.54.0](https://github.com/SocialGouv/srdt/compare/v1.53.0...v1.54.0) (2026-09-22)
+
+
+### Bug Fixes
+
+* **web:** ne plus propager la prop node de react-markdown sur les liens ([#425](https://github.com/SocialGouv/srdt/issues/425)) ([89a5af3](https://github.com/SocialGouv/srdt/commit/89a5af3a7abdc4967b873b4f3893d69d3b6a31ba))
+
+
+### Features
+
+* **web:** copier une seule section de la réponse ([#426](https://github.com/SocialGouv/srdt/issues/426)) ([cc43b34](https://github.com/SocialGouv/srdt/commit/cc43b345d471510b13988c5794a092285ddbf346))
+
+# [1.53.0](https://github.com/SocialGouv/srdt/compare/v1.52.3...v1.53.0) (2026-09-17)
+
+
+### Features
+
+* **web:** préciser la convention collective après la première réponse ([#424](https://github.com/SocialGouv/srdt/issues/424)) ([cfa33f3](https://github.com/SocialGouv/srdt/commit/cfa33f37f61832fec260e09d1d2d1029aea35500))
+
+## [1.52.3](https://github.com/SocialGouv/srdt/compare/v1.52.2...v1.52.3) (2026-09-11)
+
+
+### Bug Fixes
+
+* **web:** limit conversation history to 12 entries ([#417](https://github.com/SocialGouv/srdt/issues/417)) ([#423](https://github.com/SocialGouv/srdt/issues/423)) ([5ef98ba](https://github.com/SocialGouv/srdt/commit/5ef98baf05535f1f1e2ccbba5c6e1a0ee3e3fdeb))
+
+## [1.52.2](https://github.com/SocialGouv/srdt/compare/v1.52.1...v1.52.2) (2026-09-11)
+
+
+### Bug Fixes
+
+* update domains for proconnect ([#422](https://github.com/SocialGouv/srdt/issues/422)) ([5f6f9d9](https://github.com/SocialGouv/srdt/commit/5f6f9d93d1087e97ef8c17bd160c30df8f4cabfc))
+
+## [1.52.1](https://github.com/SocialGouv/srdt/compare/v1.52.0...v1.52.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* **web:** add numéro de pourvoi with date in sources for jurisprudence ([#419](https://github.com/SocialGouv/srdt/issues/419)) ([5823167](https://github.com/SocialGouv/srdt/commit/58231676792ab75ad7452af78a2eb34920e555df))
+
+# [1.52.0](https://github.com/SocialGouv/srdt/compare/v1.51.1...v1.52.0) (2026-09-10)
+
+
+### Features
+
+* sources in side panel ([#409](https://github.com/SocialGouv/srdt/issues/409)) ([6035caf](https://github.com/SocialGouv/srdt/commit/6035caf54b184192aab504c5df69c458a1ce883d))
+
+## [1.51.1](https://github.com/SocialGouv/srdt/compare/v1.51.0...v1.51.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **promp:** update prompt jurisprudences ([#416](https://github.com/SocialGouv/srdt/issues/416)) ([d1bdb6b](https://github.com/SocialGouv/srdt/commit/d1bdb6ba1c357e821a21d0372653c98e19f98e7d))
+
+# [1.51.0](https://github.com/SocialGouv/srdt/compare/v1.50.0...v1.51.0) (2026-09-08)
+
+
+### Bug Fixes
+
+* **api:** conserve les URLs courdecassation.fr dans clean_urls ([34ef610](https://github.com/SocialGouv/srdt/commit/34ef610fca8f71fca3ea20925c770f9daa4f37e1))
+* **web:** assouplit l'usage des jurisprudences dans les prompts generate ([ae898cf](https://github.com/SocialGouv/srdt/commit/ae898cfa8c92422007e67558d6ca9c6691d094ac))
+* **web:** rend l'étape de reformulation obligatoire dans les 4 prompts ([a432e1b](https://github.com/SocialGouv/srdt/commit/a432e1b2920d738517e4687ed5b4d000baf3ab9c))
+* **web:** restaure la mise en forme des prompts de main (sections numérotées) ([40f5e09](https://github.com/SocialGouv/srdt/commit/40f5e09122dea9766892c99358d502c575eebe88))
+
+
+### Features
+
+* **api:** force la température à 0.3 pour les appels Mistral ([947d6cd](https://github.com/SocialGouv/srdt/commit/947d6cda26afee643f01b84302715faeb683924a))
+* **web:** ajoute la jurisprudence au RAG et resserre les prompts generate ([10d67a2](https://github.com/SocialGouv/srdt/commit/10d67a23b40c80c079e5cb146d838d986e71af0e))
+* **web:** rerank des jurisprudences + réf. de la décision dans le titre ([7d0c530](https://github.com/SocialGouv/srdt/commit/7d0c5307bdb778d8aae5d84fedff90155efdee26))
+
+# [1.50.0](https://github.com/SocialGouv/srdt/compare/v1.49.2...v1.50.0) (2026-09-08)
+
+
+### Features
+
+* refactor API structure / add full agreements search ([#399](https://github.com/SocialGouv/srdt/issues/399)) / update judilibre ([#411](https://github.com/SocialGouv/srdt/issues/411)) ([6504eef](https://github.com/SocialGouv/srdt/commit/6504eeffd7ea459324a64c3f02bc1c791e847633))
+
+## [1.49.2](https://github.com/SocialGouv/srdt/compare/v1.49.1...v1.49.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* remove support from header ([#405](https://github.com/SocialGouv/srdt/issues/405)) ([9cd8d5d](https://github.com/SocialGouv/srdt/commit/9cd8d5d4fd20111f0bb445f79617ee27ca9a8b5c))
+
+## [1.49.1](https://github.com/SocialGouv/srdt/compare/v1.49.0...v1.49.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* update nouveautes.md ([#403](https://github.com/SocialGouv/srdt/issues/403)) ([c81b7eb](https://github.com/SocialGouv/srdt/commit/c81b7eb72631402984e1693f46c62f823bba299d))
+
+# [1.49.0](https://github.com/SocialGouv/srdt/compare/v1.48.2...v1.49.0) (2026-07-16)
+
+
+### Features
+
+* new prompt 07 26 ([#402](https://github.com/SocialGouv/srdt/issues/402)) ([6e0088b](https://github.com/SocialGouv/srdt/commit/6e0088b86a04ab4fede28bb377eb4b39a4dd3dda))
+
+## [1.48.2](https://github.com/SocialGouv/srdt/compare/v1.48.1...v1.48.2) (2026-07-16)
+
+
+### Bug Fixes
+
+* scroll and size of screen ([#401](https://github.com/SocialGouv/srdt/issues/401)) ([4b720fb](https://github.com/SocialGouv/srdt/commit/4b720fb7f2f3188365e200a23b2a9b2ab5d2517c))
+
+## [1.48.1](https://github.com/SocialGouv/srdt/compare/v1.48.0...v1.48.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* write mail following answer ([#398](https://github.com/SocialGouv/srdt/issues/398)) ([bfed8c2](https://github.com/SocialGouv/srdt/commit/bfed8c25aa4d4147a35b3f6f01b266e134ead81f))
+
+# [1.48.0](https://github.com/SocialGouv/srdt/compare/v1.47.0...v1.48.0) (2026-07-13)
+
+
+### Features
+
+* add FAQ section ([#397](https://github.com/SocialGouv/srdt/issues/397)) ([d2c2fde](https://github.com/SocialGouv/srdt/commit/d2c2fde583183f13113e3927ad185d0a2754c669))
+
+# [1.47.0](https://github.com/SocialGouv/srdt/compare/v1.46.2...v1.47.0) (2026-07-09)
+
+
+### Features
+
+* add nouveautes section ([#396](https://github.com/SocialGouv/srdt/issues/396)) ([5431bc9](https://github.com/SocialGouv/srdt/commit/5431bc95cd773c24391cc98bdd216b8769d5002a))
+
+## [1.46.2](https://github.com/SocialGouv/srdt/compare/v1.46.1...v1.46.2) (2026-07-02)
+
+
+### Bug Fixes
+
+* ux sidebar header ([#385](https://github.com/SocialGouv/srdt/issues/385)) ([64627b7](https://github.com/SocialGouv/srdt/commit/64627b7a9019f8736dd81eb159f79c8d07a96c8f))
+
+## [1.46.1](https://github.com/SocialGouv/srdt/compare/v1.46.0...v1.46.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* various display fix new display ([#384](https://github.com/SocialGouv/srdt/issues/384)) ([9f3f641](https://github.com/SocialGouv/srdt/commit/9f3f64160eded513e6288e84bb1f127e10f65777))
+
+# [1.46.0](https://github.com/SocialGouv/srdt/compare/v1.45.0...v1.46.0) (2026-06-30)
+
+
+### Features
+
+* footer and scroll bars ([#383](https://github.com/SocialGouv/srdt/issues/383)) ([02bc05a](https://github.com/SocialGouv/srdt/commit/02bc05afba94d78330de424e7110e6646c81d37d))
+
+# [1.45.0](https://github.com/SocialGouv/srdt/compare/v1.44.0...v1.45.0) (2026-06-30)
+
+
+### Features
+
+* continue chat box ([#382](https://github.com/SocialGouv/srdt/issues/382)) ([c469598](https://github.com/SocialGouv/srdt/commit/c469598c6b7ea244a6ebdc04adb4b70a0d590c6d))
+
+# [1.44.0](https://github.com/SocialGouv/srdt/compare/v1.43.1...v1.44.0) (2026-06-29)
+
+
+### Features
+
+* new intro screen ([a1d01a6](https://github.com/SocialGouv/srdt/commit/a1d01a6f95f8eb8b8371ca70178a5e43239aa21b))
+
 ## [1.43.1](https://github.com/SocialGouv/srdt/compare/v1.43.0...v1.43.1) (2026-05-29)
 
 

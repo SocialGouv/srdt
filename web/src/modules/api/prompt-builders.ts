@@ -1,11 +1,42 @@
+import { Collection } from "@/constants";
 import { ChunkResult } from "../../types";
+
+// Judilibre indexe un titre = hiérarchie de titrage brute ("CONTRAT DE TRAVAIL, RUPTURE,...").
+// Pour citer la décision dans le prompt generate, on préfère son numéro de pourvoi et sa date
+// ("Arrêt numéro 21-12.345 du 10/05/2023") ; à défaut, on se rabat sur un libellé générique +
+// l'identifiant de la décision. L'URL courdecassation reste le lien exact.
+// Tolérant au runtime : decision_date / number peuvent être absents ou non-string
+// dans le payload de l'API (ex. tableau pour des pourvois joints).
+const formatDecisionDate = (raw?: unknown): string | null => {
+  if (typeof raw !== "string" || !raw) return null;
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return raw;
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+};
+
+const chunkTitle = (chunk: ChunkResult) => {
+  if (chunk.metadata.source !== Collection.JUDILIBRE) {
+    return chunk.metadata.title;
+  }
+  const { number, decision_date } = chunk.metadata;
+  const formattedDate = formatDecisionDate(decision_date);
+  if (typeof number === "string" && number && formattedDate) {
+    return `Arrêt numéro ${number} du ${formattedDate}`;
+  }
+  // Fallback : numéro/date absents de la base -> identifiant de la décision.
+  // metadata.id = "<decision_id>-<index>" ; on privilégie initial_id (= decision_id)
+  const decisionId =
+    chunk.metadata.initial_id ?? chunk.metadata.id.replace(/-\d+$/, "");
+  return `Arrêt de la Cour de cassation (réf. ${decisionId})`;
+};
 
 // Helper to format chunks for display
 export const formatChunks = (chunks: ChunkResult[]) => {
   return chunks
     .map(
       (chunk) => `Source: ${chunk.metadata.source} (${chunk.metadata.url})
-Titre: ${chunk.metadata.title}
+Titre: ${chunkTitle(chunk)}
 Contenu: ${chunk.content}
 ---`
     )
@@ -16,10 +47,11 @@ Contenu: ${chunk.content}
 export const createKnowledgeBaseContent = (
   fichesOfficiellesChunks: ChunkResult[],
   codeDuTravailChunks: ChunkResult[],
-  idccChunks?: ChunkResult[]
+  idccChunks?: ChunkResult[],
+  jurisprudenceChunks?: ChunkResult[]
 ) => {
   let content = `# Base de connaissance externe
-3 types de documents sont ajoutés dans la base de connaissance externe
+Plusieurs types de documents sont ajoutés dans la base de connaissance externe
 
 ## Fiches officielles (1 à 10 extraits) :
 
@@ -49,6 +81,18 @@ Caractéristiques : Spécifiques à la convention collective mentionnée par l'u
 Utilisation : Utiliser ces sources uniquement si l'utilisateur a fourni l'IDCC de sa convention collective. Inclure un paragraphe dédié dans la réponse et un lien vers la convention collective dans la conclusion.
 
 ${formatChunks(idccChunks)}`;
+  }
+
+  if (jurisprudenceChunks && jurisprudenceChunks.length > 0) {
+    content += `
+
+## Jurisprudence (0 à 5 extraits) :
+
+Sources : Décisions de la Cour de cassation, chambre sociale, publiées au bulletin (sommaires).
+
+Caractéristiques : Décisions faisant autorité. Base **complémentaire** : la réponse se fonde d'abord sur les fiches officielles et le Code du travail. N'utiliser ces extraits que selon les règles de la section "⚖️ Jurisprudence" des instructions (contradiction, précision, ou seule source disponible). Sinon, ne pas les mentionner.
+
+${formatChunks(jurisprudenceChunks)}`;
   }
 
   return content;

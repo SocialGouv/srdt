@@ -2,8 +2,8 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from srdt_analysis.constants import SOURCES
-from srdt_analysis.models import (
+from srdt_analysis.core.constants import SOURCES
+from srdt_analysis.core.models import (
     CHUNK_ID,
     CollectionName,
     UserLLMMessage,
@@ -47,6 +47,9 @@ class SearchOptions(BaseModel):
     threshold: float = Field(default=0, ge=0.0, le=2.0)
     collections: List[str] = Field(default=SOURCES)
     hybrid: Optional[bool] = False
+    # document ids (metadata.id): the search is restricted to the code du travail
+    # chunks they cite (legi_links)
+    linked_from: Optional[List[str]] = None
 
     @field_validator("collections")
     @classmethod
@@ -88,6 +91,8 @@ class ChunkMetadata(BaseModel):
     source: CollectionName
     idcc: Optional[str] = None
     articles: Optional[list[Dict[str, str]]] = None
+    number: Optional[str] = None
+    decision_date: Optional[str] = None
 
 
 class ChunkResult(BaseModel):

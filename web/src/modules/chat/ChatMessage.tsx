@@ -6,13 +6,23 @@ import styles from "./Chat.module.css";
 import { ChatMessage as ChatMessageType } from "./types";
 import { Agreement } from "../convention-collective/search";
 import { AnswerResponse } from "@/types";
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
+import Image from "next/image";
+import { SOURCES_PANEL_ID } from "./SourcesPanel";
+import marianne from "./marianne.png";
+import addCc from "./add-cc.svg";
+import { agreementModalButtonProps } from "../convention-collective/AgreementModal";
+import { CopyAnswerMenu } from "./CopyAnswerMenu";
 
 // Custom markdown components to handle links properly
 const markdownComponents = {
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  a: ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => (
     <a {...props} target="_blank" rel="noopener noreferrer" />
   ),
 };
@@ -43,7 +53,11 @@ function processStreamingLinks(content: string): string {
 
 // Markdown components used during streaming: adds special rendering for link placeholders
 const streamingMarkdownComponents = {
-  a: ({ ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  a: ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node: _node,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => (
     <a {...props} target="_blank" rel="noopener noreferrer" />
   ),
   em: ({
@@ -71,9 +85,14 @@ interface ChatMessageProps {
   apiResult: AnswerResponse | null;
   globalResponseTime: number;
   apiError?: string;
-  selectedAgreement?: Agreement;
+  /** Collective agreement the conversation was started with, if any */
+  agreement?: Agreement;
   /** Database conversation ID for saving feedback */
   dbConversationId?: string;
+  /** Opens (or closes) the sources side panel for this message. */
+  onShowSources?: () => void;
+  /** Whether the sources panel currently shows this message's sources. */
+  isSourcesOpen?: boolean;
 }
 
 export const ChatMessage = ({
@@ -84,10 +103,11 @@ export const ChatMessage = ({
   apiResult,
   globalResponseTime,
   apiError,
-  selectedAgreement,
+  agreement,
   dbConversationId,
+  onShowSources,
+  isSourcesOpen = false,
 }: ChatMessageProps) => {
-  const [copySuccess, setCopySuccess] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const bubbleClasses = [
@@ -108,45 +128,11 @@ export const ChatMessage = ({
     !message.isStreaming &&
     !message.isError;
 
+  const hasSources = (message.sources?.length ?? 0) > 0;
+
   // Always show feedback for the last assistant message
   // This naturally handles: show after first → hide when follow-up starts → show after follow-up
   const shouldShowFeedback = isLastAssistantMessage;
-
-  // Handle copy to clipboard with formatted HTML
-  const handleCopyToClipboard = async () => {
-    try {
-      if (!contentRef.current) return;
-
-      // Get the HTML content from the rendered markdown
-      const htmlContent = contentRef.current.innerHTML;
-      const plainText = contentRef.current.innerText;
-
-      // Check if ClipboardItem is supported (not in Firefox)
-      if (typeof ClipboardItem !== "undefined") {
-        const clipboardItem = new ClipboardItem({
-          "text/html": new Blob([htmlContent], { type: "text/html" }),
-          "text/plain": new Blob([plainText], { type: "text/plain" }),
-        });
-        await navigator.clipboard.write([clipboardItem]);
-      } else {
-        // Fallback for Firefox: use plain text
-        await navigator.clipboard.writeText(plainText);
-      }
-
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy text:", err);
-      // Final fallback to plain text
-      try {
-        await navigator.clipboard.writeText(message.content);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      } catch (fallbackErr) {
-        console.error("Fallback copy also failed:", fallbackErr);
-      }
-    }
-  };
 
   return (
     <div key={index}>
@@ -154,7 +140,11 @@ export const ChatMessage = ({
         className={`${fr.cx(
           "fr-my-1w",
           message.role === "user" ? "fr-ml-auto" : "fr-mr-auto"
-        )} ${styles.messageWrapper}`}
+        )} ${styles.messageWrapper} ${
+          message.role === "user"
+            ? styles.messageWrapperUser
+            : styles.messageWrapperAssistant
+        }`}
       >
         <div className={bubbleClasses}>
           {message.role === "assistant" && index !== 0 && (
@@ -165,17 +155,16 @@ export const ChatMessage = ({
                 severity="info"
                 className={styles.conventionBadge}
               >
-                {selectedAgreement ? (
+                {agreement ? (
                   <>
                     <span
                       className={styles.conventionBadgeTitle}
-                      title={`${selectedAgreement.shortTitle} (IDCC ${selectedAgreement.num})`}
+                      title={`${agreement.shortTitle} (IDCC ${agreement.num})`}
                     >
-                      Convention collective&nbsp;:{" "}
-                      {selectedAgreement.shortTitle}
+                      Convention collective&nbsp;: {agreement.shortTitle}
                     </span>
                     <span className={styles.conventionBadgeIdcc}>
-                      &nbsp;(IDCC {selectedAgreement.num})
+                      &nbsp;(IDCC {agreement.num})
                     </span>
                   </>
                 ) : (
@@ -184,6 +173,25 @@ export const ChatMessage = ({
                   </span>
                 )}
               </Badge>
+              {/* Restarts with the first question only, so not on follow-ups */}
+              {!agreement && !message.isFollowup && (
+                <Button
+                  priority="secondary"
+                  nativeButtonProps={agreementModalButtonProps}
+                  disabled={isLoading}
+                  className={styles.addAgreementButton}
+                >
+                  <Image
+                    src={addCc}
+                    alt=""
+                    width={23}
+                    height={27}
+                    aria-hidden="true"
+                    className={styles.addAgreementIcon}
+                  />
+                  Préciser la convention collective
+                </Button>
+              )}
             </div>
           )}
           <div
@@ -225,21 +233,35 @@ export const ChatMessage = ({
             !message.isLoading &&
             !message.isStreaming &&
             index !== 0 && (
-              <div className={styles.copyButtonContainer}>
-                <Button
-                  onClick={handleCopyToClipboard}
-                  iconId={
-                    copySuccess
-                      ? "fr-icon-check-line"
-                      : "fr-icon-file-text-line"
-                  }
-                  priority="tertiary no outline"
-                  size="small"
-                  title="Copier la réponse"
-                  className={styles.copyButton}
-                >
-                  {copySuccess ? "Copié !" : "Copier la réponse"}
-                </Button>
+              <div className={styles.messageActions}>
+                {hasSources && onShowSources && (
+                  <Button
+                    onClick={onShowSources}
+                    priority="tertiary no outline"
+                    size="small"
+                    title="Afficher les sources de la réponse"
+                    className={styles.copyButton}
+                    nativeButtonProps={{
+                      "aria-expanded": isSourcesOpen,
+                      "aria-controls": SOURCES_PANEL_ID,
+                    }}
+                  >
+                    <Image
+                      src={marianne}
+                      alt=""
+                      unoptimized
+                      width={20}
+                      height={20}
+                      aria-hidden="true"
+                      className={`${styles.marianneIcon} ${styles.sourcesButtonIcon}`}
+                    />
+                    Sources
+                  </Button>
+                )}
+                <CopyAnswerMenu
+                  contentRef={contentRef}
+                  fallbackText={message.content}
+                />
               </div>
             )}
         </div>
@@ -249,7 +271,7 @@ export const ChatMessage = ({
         <div
           className={`${styles.messageBubble} ${styles.messageBubbleAssistant}`}
         >
-          <p className={fr.cx("fr-m-0", "fr-h1")}>
+          <p className={fr.cx("fr-m-0", "fr-h3")}>
             Donnez votre avis sur cette réponse
           </p>
           <FeedbackSelector
@@ -262,7 +284,7 @@ export const ChatMessage = ({
             userQuestion={apiResult?.anonymized?.anonymized_question}
             llmResponse={apiResult?.generated.text}
             errorMessage={apiError}
-            idcc={selectedAgreement?.id}
+            idcc={agreement?.id}
             isFollowupResponse={message.isFollowup}
             dbConversationId={dbConversationId}
           />

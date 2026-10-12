@@ -1,12 +1,26 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthVerification } from "@/modules/auth/AuthVerification";
 import { Chat } from "@/modules/chat/Chat";
 import { LayoutWrapper } from "@/modules/layout/LayoutWrapper";
 
-export function HomeContent() {
+type HomeContentProps = {
+  /** Fingerprint of the Nouveautés content, used to show the "unread" dot. */
+  nouveautesVersion?: string;
+};
+
+export function HomeContent({ nouveautesVersion }: HomeContentProps) {
   const { isAuthenticated, isLoading } = useAuth();
+  const [conversationActive, setConversationActive] = useState(false);
+  const [chatKey, setChatKey] = useState(0);
+
+  // Reset to a fresh home screen (used when clicking the header brand).
+  const goHome = useCallback(() => {
+    setConversationActive(false);
+    setChatKey((k) => k + 1);
+  }, []);
 
   if (isLoading) {
     return (
@@ -23,8 +37,20 @@ export function HomeContent() {
   }
 
   return (
-    <LayoutWrapper>
-      {isAuthenticated ? <Chat /> : <AuthVerification />}
+    <LayoutWrapper
+      fullWidth={isAuthenticated}
+      fillViewport={isAuthenticated && conversationActive}
+      onGoHome={isAuthenticated ? goHome : undefined}
+    >
+      {isAuthenticated ? (
+        <Chat
+          key={chatKey}
+          onConversationActiveChange={setConversationActive}
+          nouveautesVersion={nouveautesVersion}
+        />
+      ) : (
+        <AuthVerification />
+      )}
     </LayoutWrapper>
   );
 }

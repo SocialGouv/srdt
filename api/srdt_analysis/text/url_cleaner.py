@@ -1,8 +1,8 @@
 import regex
 
-from srdt_analysis.constants import CHUNK_INDEX
-from srdt_analysis.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.reference_extractor import CODE_TRAVAIL, extract_references
+from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.core.constants import CHUNK_INDEX
+from srdt_analysis.text.reference_extractor import CODE_TRAVAIL, extract_references
 
 whitelist = [
     "legifrance.gouv.fr",
@@ -33,6 +33,16 @@ whitelist = [
 ]
 
 cdtn_url = "https://code.travail.gouv.fr/"
+
+# Décisions de la Cour de cassation (base jurisprudence) : l'URL est construite par
+# get_decision_url() à partir de l'identifiant Judilibre, donc toujours bien formée.
+# On la conserve quelle que soit la profondeur du chemin (/decision/<id>).
+courdecassation_domain = "courdecassation.fr"
+
+# Conventions collectives sur Légifrance : chemin variable selon la convention
+# (ex. /conv_coll/id/KALICONT...), donc pas de correspondance exacte possible
+# via la whitelist. On conserve tout ce qui est sous ce préfixe.
+legifrance_conv_coll_path = "legifrance.gouv.fr/conv_coll"
 
 es = ElasticIndicesHandler()
 
@@ -94,10 +104,20 @@ def clean_urls(response: str):
             else:
                 cdtn.append(url)
 
+        elif path == courdecassation_domain or path.startswith(
+            courdecassation_domain + "/"
+        ):
+            out_ok.append(url)
+
+        elif path == legifrance_conv_coll_path or path.startswith(
+            legifrance_conv_coll_path + "/"
+        ):
+            out_ok.append(url)
+
         elif path in whitelist:
             out_ok.append(url)
 
-        # we remove link if legifrance or unknown
+        # we remove link if legifrance (except CCs, see above) or unknown
         else:
             if "legifrance.gouv.fr" in url:
                 legifrance.append(url)

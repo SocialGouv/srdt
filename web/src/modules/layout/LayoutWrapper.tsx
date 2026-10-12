@@ -3,7 +3,7 @@
 import { Header as DsfrHeader } from "@codegouvfr/react-dsfr/Header";
 import { Footer as DsfrFooter } from "@codegouvfr/react-dsfr/Footer";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { headerFooterDisplayItem } from "@codegouvfr/react-dsfr/Display";
 import { fr } from "@codegouvfr/react-dsfr";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,13 +11,42 @@ import { signOut } from "next-auth/react";
 import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
 import { AuthorizationCheck } from "@/modules/auth/AuthorizationCheck";
 import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
+import styles from "./LayoutWrapper.module.css";
 
 type Props = {
   children: ReactNode;
+  /** When true, `main` spans the full width instead of the centered DSFR container. */
+  fullWidth?: boolean;
+  /**
+   * When true, header + main fill the viewport (app-shell) and the footer is
+   * pushed below the fold — used on the conversation screen to free reading space.
+   */
+  fillViewport?: boolean;
+  /** When set, clicking the header brand resets to the home screen instead of navigating. */
+  onGoHome?: () => void;
 };
 
-export const LayoutWrapper = ({ children }: Props) => {
-  const { isAuthenticated, user, session } = useAuth();
+export const LayoutWrapper = ({
+  children,
+  fullWidth = false,
+  fillViewport = false,
+  onGoHome,
+}: Props) => {
+  const { isAuthenticated, session } = useAuth();
+
+  // Client-side navigations keep the previous page's scroll position (each
+  // page's root spans the viewport, so Next.js never scrolls it into view).
+  // Every page renders its own LayoutWrapper, so mounting one means a page
+  // change: land at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const mainClassName = fillViewport
+    ? styles.appMain
+    : fullWidth
+    ? ""
+    : fr.cx("fr-container", "fr-mb-5w");
 
   const handleSignOut = async () => {
     try {
@@ -47,74 +76,57 @@ export const LayoutWrapper = ({ children }: Props) => {
     <>
       <AuthorizationCheck />
       <MatomoUserTracking />
-      <DsfrHeader
-        brandTop={
-          <>
-            RÉPUBLIQUE
-            <br />
-            FRANÇAISE
-          </>
-        }
-        homeLinkProps={{
-          href: "/",
-          title: "Accueil - Experimentation SRDT IA",
-        }}
-        serviceTitle={
-          <>
-            Experimentation SRDT IA{" "}
-            <Badge as="span" noIcon severity="success">
-              Beta
-            </Badge>
-          </>
-        }
-        serviceTagline="Direction générale du travail"
-        quickAccessItems={
-          isAuthenticated
-            ? [
-                {
-                  iconId: "fr-icon-account-circle-line",
-                  text: user?.name || user?.email || "Mon compte",
-                  buttonProps: undefined,
-                  linkProps: {
-                    href: "#",
-                    onClick: (e: React.MouseEvent) => e.preventDefault(),
+      <div className={fillViewport ? styles.appShell : styles.contents}>
+        <DsfrHeader
+          brandTop={
+            <>
+              RÉPUBLIQUE
+              <br />
+              FRANÇAISE
+            </>
+          }
+          homeLinkProps={{
+            href: "/",
+            title: "Accueil - L’assistant IA des SRDT",
+            ...(onGoHome
+              ? {
+                  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // Let the browser handle modifier-clicks (open in a new tab/window).
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+                      return;
+                    e.preventDefault();
+                    onGoHome();
                   },
-                },
-
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
+                }
+              : {}),
+          }}
+          serviceTitle={
+            <>
+              L’assistant IA des SRDT{" "}
+              <Badge as="span" noIcon severity="success">
+                Beta
+              </Badge>
+            </>
+          }
+          serviceTagline="Direction générale du travail"
+          quickAccessItems={
+            isAuthenticated
+              ? [
+                  headerFooterDisplayItem,
+                  {
+                    iconId: "fr-icon-logout-box-r-line",
+                    text: "Se déconnecter",
+                    buttonProps: {
+                      onClick: handleSignOut,
+                    },
+                    linkProps: undefined,
                   },
-                },
-                headerFooterDisplayItem,
-                {
-                  iconId: "fr-icon-logout-box-r-line",
-                  text: "Se déconnecter",
-                  buttonProps: {
-                    onClick: handleSignOut,
-                  },
-                  linkProps: undefined,
-                },
-              ]
-            : [
-                {
-                  iconId: "fr-icon-questionnaire-line",
-                  text: "Support",
-                  linkProps: {
-                    href: "https://tally.so/r/jao5z4",
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                  },
-                },
-                headerFooterDisplayItem,
-              ]
-        }
-      />
-      <main className={fr.cx("fr-container", "fr-mb-5w")}>{children}</main>
+                ]
+              : [headerFooterDisplayItem]
+          }
+        />
+        <main className={mainClassName}>{children}</main>
+      </div>
       <DsfrFooter
         accessibility="non compliant"
         bottomItems={[
