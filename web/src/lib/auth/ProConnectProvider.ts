@@ -1,5 +1,6 @@
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers/oauth";
 import * as jose from "jose";
+import { getProConnectDomain } from "./proconnect-domain";
 
 export interface ProConnectProfile {
   sub: string;
@@ -19,18 +20,7 @@ export interface ProConnectProfile {
 export default function ProConnectProvider<P extends ProConnectProfile>(
   options: OAuthUserConfig<P>
 ): OAuthConfig<P> {
-  // ProConnect/AgentConnect domains:
-  // This provider supports Internet environments (default)
-  // - Internet Integration: fca.integ01.dev-agentconnect.fr
-  // - Internet Production: auth.agentconnect.gouv.fr
-  // For RIE environments, set PROCONNECT_DOMAIN env var manually:
-  // - RIE Integration: fca.integ02.agentconnect.rie.gouv.fr
-  // - RIE Production: auth.agentconnect.rie.gouv.fr
-
-  const PROCONNECT_DOMAIN =
-    process.env.PROCONNECT_ENV === "production"
-      ? "https://auth.agentconnect.gouv.fr/api/v2"
-      : "https://fca.integ01.dev-agentconnect.fr/api/v2";
+  const PROCONNECT_DOMAIN = getProConnectDomain();
 
   return {
     id: "proconnect",
