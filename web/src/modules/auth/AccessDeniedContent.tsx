@@ -2,36 +2,12 @@
 
 import { Alert } from "@codegouvfr/react-dsfr/Alert";
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { signOut, useSession } from "next-auth/react";
-import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
+import { useSession } from "next-auth/react";
+import { signOutWithProConnect } from "@/lib/auth/sign-out-with-proconnect";
 import { ALLOWED_EMAIL_DOMAINS } from "@/constants";
 
 export const AccessDeniedContent = () => {
   const { data: session } = useSession();
-
-  const handleSignOut = async () => {
-    try {
-      const idToken = session?.idToken;
-
-      if (idToken) {
-        // Full ProConnect logout with id_token
-        const postLogoutRedirectUri = window.location.origin;
-        const proconnectLogoutUrl = buildProConnectLogoutUrl(
-          idToken,
-          postLogoutRedirectUri
-        );
-
-        await signOut({ redirect: false });
-        window.location.href = proconnectLogoutUrl;
-      } else {
-        // Fallback if no id_token
-        await signOut({ callbackUrl: "/" });
-      }
-    } catch (error) {
-      console.error("Error signing out:", error);
-      await signOut({ callbackUrl: "/" });
-    }
-  };
 
   return (
     <div className="fr-container fr-my-6w">
@@ -62,7 +38,7 @@ export const AccessDeniedContent = () => {
             contacter l&apos;administrateur de l&apos;application.
           </p>
 
-          <Button onClick={handleSignOut} priority="primary">
+          <Button onClick={signOutWithProConnect} priority="primary">
             Se déconnecter et retourner à l&apos;accueil
           </Button>
         </div>
