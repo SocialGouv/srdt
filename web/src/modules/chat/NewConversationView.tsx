@@ -2,6 +2,7 @@
 
 import { fr } from "@codegouvfr/react-dsfr";
 import { Button } from "@codegouvfr/react-dsfr/Button";
+import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import Image from "next/image";
 import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
@@ -17,6 +18,8 @@ interface NewConversationViewProps {
   isDisabled: boolean;
   selectedAgreement: Agreement | undefined;
   setSelectedAgreement: (agreement: Agreement | undefined) => void;
+  withJurisprudence: boolean;
+  setWithJurisprudence: (withJurisprudence: boolean) => void;
 }
 
 export const NewConversationView = ({
@@ -27,6 +30,8 @@ export const NewConversationView = ({
   isDisabled,
   selectedAgreement,
   setSelectedAgreement,
+  withJurisprudence,
+  setWithJurisprudence,
 }: NewConversationViewProps) => {
   return (
     <div className={styles.composerScreen}>
@@ -80,6 +85,22 @@ export const NewConversationView = ({
             />
           </div>
         </div>
+
+        <Checkbox
+          className={styles.composerField}
+          options={[
+            {
+              label: "Rechercher aussi dans la jurisprudence",
+              hintText:
+                "Arrêts de la chambre sociale de la Cour de cassation publiés au bulletin.",
+              nativeInputProps: {
+                checked: withJurisprudence,
+                onChange: (e) => setWithJurisprudence(e.target.checked),
+                disabled: isDisabled,
+              },
+            },
+          ]}
+        />
 
         <div className={styles.composerActions}>
           <Button

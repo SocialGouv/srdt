@@ -11,6 +11,8 @@ interface RequestBody {
   config?: Config;
   agreementId?: string;
   agreementTitle?: string;
+  /** Absent = true : la jurisprudence est incluse par défaut */
+  withJurisprudence?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: RequestBody | null = null;
   try {
     body = await request.json();
-    const { question, config, agreementId, agreementTitle } =
+    const { question, config, agreementId, agreementTitle, withJurisprudence } =
       body as RequestBody;
 
     if (!question) {
@@ -67,7 +69,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       config,
       agreementId,
       agreementTitle,
-      debugMode
+      debugMode,
+      withJurisprudence !== false
     );
 
     if (!result.success) {

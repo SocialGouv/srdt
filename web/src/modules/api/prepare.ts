@@ -352,7 +352,8 @@ const searchJurisprudence = async (
 export const prepareQuestionData = async (
   userQuestion: string,
   requiredConfig?: Config,
-  idcc?: string
+  idcc?: string,
+  withJurisprudence: boolean = true
 ): Promise<PreparedQuestionData> => {
   const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
@@ -396,7 +397,10 @@ export const prepareQuestionData = async (
     selectedFichesOfficiellesChunks.map((chunk) => chunk.metadata.id)
   );
 
-  const selectedJurisprudenceChunks = await searchJurisprudence(anonymized);
+  // L'utilisateur peut exclure la jurisprudence depuis l'écran de saisie
+  const selectedJurisprudenceChunks = withJurisprudence
+    ? await searchJurisprudence(anonymized)
+    : [];
 
   if (
     selectedFichesOfficiellesChunks.length === 0 &&
@@ -478,7 +482,8 @@ export const prepareFollowupQuestionData = async (
   query2: string,
   requiredConfig?: Config,
   idcc?: string,
-  providedModel?: LLMModel
+  providedModel?: LLMModel,
+  withJurisprudence: boolean = true
 ): Promise<PreparedFollowupQuestionData> => {
   const config = requiredConfig || Config.V2_0;
   const instructions = PROMPT_INSTRUCTIONS[config];
@@ -569,8 +574,11 @@ export const prepareFollowupQuestionData = async (
   const selectedCodeDuTravailChunksQuery1: ChunkResult[] = [];
   const selectedCodeDuTravailChunksQuery2: ChunkResult[] = [];
 
-  // Jurisprudence search runs on the new question (query2)
-  const selectedJurisprudenceChunks = await searchJurisprudence(query2);
+  // Jurisprudence search runs on the new question (query2), unless the
+  // conversation was started without it
+  const selectedJurisprudenceChunks = withJurisprudence
+    ? await searchJurisprudence(query2)
+    : [];
 
   // Handle IDCC chunks if applicable
   let selectedIdccChunksQuery1: ChunkResult[] = [];

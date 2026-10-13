@@ -9,6 +9,8 @@ interface RequestBody {
   config?: Config;
   agreementId?: string;
   agreementTitle?: string;
+  /** Absent = true : la jurisprudence est incluse par défaut */
+  withJurisprudence?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -22,7 +24,8 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const body: RequestBody = await request.json();
-    const { question, config, agreementId, agreementTitle } = body;
+    const { question, config, agreementId, agreementTitle, withJurisprudence } =
+      body;
 
     if (!question) {
       return new Response(
@@ -100,7 +103,8 @@ export async function POST(request: NextRequest): Promise<Response> {
           },
           config,
           agreementId,
-          agreementTitle
+          agreementTitle,
+          withJurisprudence !== false
         ).catch((error) => {
           Sentry.captureException(error, {
             tags: {
