@@ -73,12 +73,14 @@ async function getGenerateData(
   userQuestion: string,
   requiredConfig?: Config,
   idcc?: string,
-  idccName?: string
+  idccName?: string,
+  withJurisprudence: boolean = true
 ) {
   const preparedData = await prepareQuestionData(
     userQuestion,
     requiredConfig,
-    idcc
+    idcc,
+    withJurisprudence
   );
 
   // Create knowledge base content
@@ -125,7 +127,8 @@ async function getFollowupGenerateData(
   requiredConfig?: Config,
   idcc?: string,
   idccName?: string,
-  providedModel?: LLMModel
+  providedModel?: LLMModel,
+  withJurisprudence: boolean = true
 ) {
   // Only anonymized user texts go to search, rerank and generation
   const anonymized = await anonymizeFollowupInputs(
@@ -140,7 +143,8 @@ async function getFollowupGenerateData(
     anonymized.newQuestion,
     requiredConfig,
     idcc,
-    providedModel
+    providedModel,
+    withJurisprudence
   );
 
   // Combine chunks from both queries
@@ -214,7 +218,8 @@ export const generateAnswer = async (
   requiredConfig?: Config,
   idcc?: string,
   idccName?: string,
-  debug?: boolean
+  debug?: boolean,
+  withJurisprudence: boolean = true
 ): Promise<ApiResponse<AnswerResponse>> => {
   const startedAt = Date.now();
   try {
@@ -222,7 +227,8 @@ export const generateAnswer = async (
       userQuestion,
       requiredConfig,
       idcc,
-      idccName
+      idccName,
+      withJurisprudence
     );
 
     const generateResult = await generate({
@@ -271,14 +277,16 @@ export const generateAnswerStream = async (
   onComplete: (result: ApiResponse<AnswerResponse>) => void,
   requiredConfig?: Config,
   idcc?: string,
-  idccName?: string
+  idccName?: string,
+  withJurisprudence: boolean = true
 ): Promise<void> => {
   try {
     const { preparedData, chatHistory, systemPrompt } = await getGenerateData(
       userQuestion,
       requiredConfig,
       idcc,
-      idccName
+      idccName,
+      withJurisprudence
     );
 
     await generateStream(
@@ -329,7 +337,8 @@ export const generateFollowupAnswer = async (
   requiredConfig?: Config,
   idcc?: string,
   idccName?: string,
-  providedModel?: LLMModel
+  providedModel?: LLMModel,
+  withJurisprudence: boolean = true
 ): Promise<ApiResponse<AnswerResponse>> => {
   try {
     const {
@@ -348,7 +357,8 @@ export const generateFollowupAnswer = async (
       requiredConfig,
       idcc,
       idccName,
-      providedModel
+      providedModel,
+      withJurisprudence
     );
 
     const generateResult = await generate({
@@ -400,7 +410,8 @@ export const generateFollowupAnswerStream = async (
   requiredConfig?: Config,
   idcc?: string,
   idccName?: string,
-  providedModel?: LLMModel
+  providedModel?: LLMModel,
+  withJurisprudence: boolean = true
 ): Promise<void> => {
   try {
     const {
@@ -419,7 +430,8 @@ export const generateFollowupAnswerStream = async (
       requiredConfig,
       idcc,
       idccName,
-      providedModel
+      providedModel,
+      withJurisprudence
     );
 
     await generateStream(

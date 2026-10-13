@@ -13,6 +13,8 @@ interface FollowupRequestBody {
   agreementId?: string;
   agreementTitle?: string;
   modelName?: string;
+  /** Absent = true : la jurisprudence est incluse par défaut */
+  withJurisprudence?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const body: FollowupRequestBody = await request.json();
-    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName } = body;
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName, withJurisprudence } = body;
 
     if (!originalQuery || !conversationHistory || !newQuestion) {
       return new Response(
@@ -144,7 +146,8 @@ export async function POST(request: NextRequest): Promise<Response> {
           config,
           agreementId,
           agreementTitle,
-          providedModel
+          providedModel,
+          withJurisprudence !== false
         ).catch((error) => {
           Sentry.captureException(error, {
             tags: {
