@@ -1,3 +1,10 @@
+# [1.56.0](https://github.com/SocialGouv/srdt/compare/v1.55.1...v1.56.0) (2026-10-13)
+
+
+### Features
+
+* **web:** rendre la recherche jurisprudentielle optionnelle ([#437](https://github.com/SocialGouv/srdt/issues/437)) ([ec45d57](https://github.com/SocialGouv/srdt/commit/ec45d57d9cc2c9dc51d8d736410f896a3c8ac522))
+
 ## [1.55.1](https://github.com/SocialGouv/srdt/compare/v1.55.0...v1.55.1) (2026-10-08)
 
 
