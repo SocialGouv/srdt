@@ -1,3 +1,10 @@
+## [1.56.1](https://github.com/SocialGouv/srdt/compare/v1.56.0...v1.56.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **web:** build ProConnect logout URL server-side ([#438](https://github.com/SocialGouv/srdt/issues/438)) ([e9f8dae](https://github.com/SocialGouv/srdt/commit/e9f8daebb83323c56ae4af59a1da1f0ae2ebba21))
+
 # [1.56.0](https://github.com/SocialGouv/srdt/compare/v1.55.1...v1.56.0) (2026-10-13)
 
 
