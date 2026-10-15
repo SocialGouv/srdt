@@ -1,0 +1,183 @@
+# ============================================================================
+# srdt — CI + CD sur GitLab PIC. Migré de GitHub Actions + kontinuous.
+# Pattern 3 dépôts : ce dépôt ne fait que construire les images ; le chart vit dans
+# srdt-charts, le déploiement dans srdt-gitops.
+#   check   : lint API (ruff) — non bloquant au 1er jet
+#   build   : 2 images (api FastAPI/RAG + web Next.js) via BuildKit DinD mutualisé (ci-common),
+#             taguées sha-<commit>
+#   deploy  : trigger_app (gitops-cd-component) -> srdt-gitops, qui ouvre une MR bumpant
+#             srdt.global.imageTag de l'env ; le merge de cette MR déploie.
+#             deploy-dev : branches de travail + branche par défaut ; deploy-preprod : branche
+#             par défaut. CI_JOB_TOKEN + allowlist inbound côté gitops, aucun token ici.
+#   release : semantic-release (branche par défaut)
+# Voir docs/30-migrations/srdt.md et docs/20-cd-pattern/parcours-deploiement.md (dépôt devops).
+#
+# Variables CI/CD requises : SEMANTIC_RELEASE_TOKEN (release).  Backend build = DinD -> AUCUNE
+#   variable BUILDKIT_* requise.
+# api et web sont des sous-projets indépendants -> contexte de build PAR composant (api/, web/),
+#   contrairement à graal (contexte racine partagé). Aucun build-arg applicatif :
+#   - web : les NEXT_PUBLIC_* sont injectés au RUNTIME (configMap), pas au build ;
+#           le secret de build Sentry est `required=false` -> ignoré sans le fournir.
+# ============================================================================
+
+include:
+  - project: socialgouv/commun/studio-tech-commun/sdpsn-devops-ci-utils
+    ref: main
+    file: ci-common/image-build.yml
+  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@0.3.1
+    inputs:
+      job_name: deploy-dev
+      gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      deploy_action: dev
+      rules:
+        - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@0.3.1
+    inputs:
+      job_name: deploy-preprod
+      gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      deploy_action: preprod
+      rules:
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - check
+  - build
+  - deploy
+  - release
+
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+# build : branches de travail + branche par défaut (image déployable)
+.build-rules: &build-rules
+  - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
+  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# CHECK : lint API (ruff, config dans api/pyproject.toml). Non bloquant au 1er jet.
+# (Tests pytest+Postgres et lint/tests web = à câbler dans un 2e temps.)
+# ---------------------------------------------------------------------------
+lint-api:
+  stage: check
+  image: python:3.12-slim
+  interruptible: true
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - pip install --no-cache-dir ruff
+    - ruff check api
+
+.python-quality:
+  stage: check
+  image: python:3.12-slim
+  interruptible: true
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git libatomic1 > /dev/null
+    - pip install --no-cache-dir poetry
+    - cd api
+    - poetry install --no-interaction
+
+python-format:
+  extends: .python-quality
+  script:
+    - poetry run ruff format --check
+
+python-type-check:
+  extends: .python-quality
+  script:
+    - poetry run pyright
+
+python-hook:
+  extends: .python-quality
+  script:
+    - poetry run pre-commit run --all-files
+
+.web-quality:
+  stage: check
+  image: node:22.12.0-alpine
+  interruptible: true
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  before_script:
+    - npm install -g corepack@latest
+    - corepack enable
+    - cd web
+    - pnpm install --frozen-lockfile
+
+web-lint:
+  extends: .web-quality
+  script:
+    - pnpm lint
+
+web-type-check:
+  extends: .web-quality
+  script:
+    - pnpm type-check
+
+lint-dockerfile:
+  stage: check
+  image: hadolint/hadolint:v2.12.0-debian
+  interruptible: true
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  script:
+    - hadolint api/Dockerfile web/Dockerfile
+
+# ---------------------------------------------------------------------------
+# BUILD : 2 images via le backend DinD mutualisé (ci-common) -> registre PIC.
+# srdt = produit -> backend `.build-dind` (runners PIC OK, pas de mTLS/daemon distant).
+# Contexte PAR composant (api/, web/) : chaque Dockerfile fait COPY depuis SON dossier.
+# ---------------------------------------------------------------------------
+build:
+  extends: .build-buildkit-operator
+  interruptible: true
+  needs: []
+  parallel:
+    matrix:
+      - COMPONENT: api
+        BUILD_IMAGE: "$CI_REGISTRY_IMAGE/api"
+        BUILD_CONTEXT: "api"
+        BUILD_DOCKERFILE: "Dockerfile"
+      - COMPONENT: web
+        BUILD_IMAGE: "$CI_REGISTRY_IMAGE/web"
+        BUILD_CONTEXT: "web"
+        BUILD_DOCKERFILE: "Dockerfile"
+  variables:
+    BUILD_TAGS: "sha-$CI_COMMIT_SHA,$CI_COMMIT_REF_SLUG"
+  rules: *build-rules
+
+# ---------------------------------------------------------------------------
+# DEPLOY : jobs générés par trigger_app (cf. include) ; ils attendent les images.
+# ---------------------------------------------------------------------------
+deploy-dev:
+  needs: ["build"]
+
+deploy-preprod:
+  needs: ["build"]
+
+# ---------------------------------------------------------------------------
+# RELEASE : semantic-release sur la branche par défaut (tags + release GitLab).
+# Nécessite .releaserc.json (plugin @semantic-release/gitlab) sinon défaut npm+github.
+# ---------------------------------------------------------------------------
+release:
+  stage: release
+  image: node:22-alpine
+  variables:
+    GIT_DEPTH: 0
+    GITLAB_TOKEN: $SEMANTIC_RELEASE_TOKEN
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  before_script:
+    - apk add --no-cache git
+  script:
+    - npx --yes -p semantic-release -p @semantic-release/commit-analyzer -p @semantic-release/release-notes-generator -p @semantic-release/gitlab semantic-release
