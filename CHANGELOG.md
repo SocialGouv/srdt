@@ -1,3 +1,24 @@
+## [1.56.2](https://github.com/SocialGouv/srdt/compare/v1.56.1...v1.56.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* **web:** respect rerank order for search results ([5b89fff](https://github.com/SocialGouv/srdt/commit/5b89ffffd1b7a0632dffe21ef710864d904236af))
+
+## [1.56.1](https://github.com/SocialGouv/srdt/compare/v1.56.0...v1.56.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **web:** build ProConnect logout URL server-side ([#438](https://github.com/SocialGouv/srdt/issues/438)) ([e9f8dae](https://github.com/SocialGouv/srdt/commit/e9f8daebb83323c56ae4af59a1da1f0ae2ebba21))
+
+# [1.56.0](https://github.com/SocialGouv/srdt/compare/v1.55.1...v1.56.0) (2026-10-13)
+
+
+### Features
+
+* **web:** rendre la recherche jurisprudentielle optionnelle ([#437](https://github.com/SocialGouv/srdt/issues/437)) ([ec45d57](https://github.com/SocialGouv/srdt/commit/ec45d57d9cc2c9dc51d8d736410f896a3c8ac522))
+
 ## [1.55.1](https://github.com/SocialGouv/srdt/compare/v1.55.0...v1.55.1) (2026-10-08)
 
 
