@@ -1,3 +1,10 @@
+## [1.56.2](https://github.com/SocialGouv/srdt/compare/v1.56.1...v1.56.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* **web:** respect rerank order for search results ([5b89fff](https://github.com/SocialGouv/srdt/commit/5b89ffffd1b7a0632dffe21ef710864d904236af))
+
 ## [1.56.1](https://github.com/SocialGouv/srdt/compare/v1.56.0...v1.56.1) (2026-10-13)
 
 
