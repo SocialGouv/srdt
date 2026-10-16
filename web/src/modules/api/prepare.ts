@@ -2,7 +2,6 @@ import {
   Config,
   getModelByFamily,
   MISTRAL_LLM,
-  PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_CONTENT,
   MAX_RERANK,
   K_RERANK,
@@ -16,8 +15,6 @@ import {
   Collection,
   SEARCH_OPTIONS_IDCC,
   SEARCH_OPTIONS_JURISPRUDENCE,
-  JURISPRUDENCE_FILTER_INSTRUCTION,
-  JURISPRUDENCE_FILTER_LLM,
 } from "@/constants";
 import {
   AnonymizeResponse,
@@ -49,9 +46,10 @@ import {
   search,
   rerank,
   retrieveDocs,
-  generate,
 } from "./client";
-import { ConversationHistoryEntry, formatChunks } from "./prompt-builders";
+import { PROMPT_INSTRUCTIONS } from "@/prompts";
+import { filterJurisprudence } from "./jurisprudence-filter";
+import { ConversationHistoryEntry } from "./prompt-builders";
 
 export interface PreparedQuestionData {
   query: string;
@@ -308,58 +306,6 @@ const searchArticles = async (anonymized: string, linkedFrom: string[]) => {
   );
 };
 
-// Filtre LLM des jurisprudences : un appel par arrêt (en parallèle), le LLM répond
-// OUI/NON selon que l'arrêt permet ou non de répondre à la question. On ne garde que
-// les OUI. En cas d'erreur d'appel, on réessaie une fois ; si l'erreur persiste,
-// l'arrêt est conservé (comme si la réponse était OUI). Une réponse qui ne commence
-// ni par OUI ni par NON est signalée à Sentry et l'arrêt est écarté.
-const filterJurisprudence = async (
-  question: string,
-  chunks: ChunkResult[]
-): Promise<ChunkResult[]> => {
-  const verdicts = await Promise.all(
-    chunks.map(async (chunk) => {
-      const request = {
-        model: JURISPRUDENCE_FILTER_LLM,
-        system_prompt: JURISPRUDENCE_FILTER_INSTRUCTION,
-        chat_history: [
-          {
-            role: "user" as const,
-            content: `Question : ${question}\n\nArrêt :\n${formatChunks([chunk])}\n\nRépondez uniquement par OUI ou NON.`,
-          },
-        ],
-      };
-
-      let result = await generate(request);
-      if (result.error || !result.data) {
-        result = await generate(request);
-      }
-
-      if (result.error || !result.data) {
-        Sentry.captureException(
-          new Error(
-            `Erreur lors du filtre jurisprudence: ${result.error ?? "réponse vide"}`
-          ),
-          { extra: { query: question, url: chunk.metadata.url } }
-        );
-        return true;
-      }
-
-      const verdict = result.data.text.trim().match(/^\W*(OUI|NON)\b/i);
-      if (!verdict) {
-        Sentry.captureMessage(
-          `Réponse invalide du filtre jurisprudence: ${result.data.text.slice(0, 200)}`,
-          { extra: { query: question, url: chunk.metadata.url } }
-        );
-        return false;
-      }
-      return verdict[1].toUpperCase() === "OUI";
-    })
-  );
-
-  return chunks.filter((_, i) => verdicts[i]);
-};
-
 // Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
 // Search large sur la collection judilibre, puis rerank (reranker Albert) pour ne garder
 // que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire),
@@ -398,21 +344,19 @@ const searchJurisprudence = async (
     inputs: jurisprudenceChunks.slice(0, MAX_RERANK),
   });
 
-  if (!reranked.data?.results?.length) {
+  let candidates = reranked.data?.results?.map(rerankedToChunk) ?? [];
+  if (candidates.length === 0) {
     Sentry.captureMessage("No rerank results for jurisprudence", {
       level: "warning",
       extra: { query: anonymized },
     });
     // fallback : à défaut de rerank, on garde les meilleurs chunks de la recherche
-    return filterJurisprudence(
-      anonymized,
-      jurisprudenceChunks.slice(0, K_RERANK_JURISPRUDENCE)
-    );
+    candidates = jurisprudenceChunks;
   }
 
   return filterJurisprudence(
     anonymized,
-    reranked.data.results.slice(0, K_RERANK_JURISPRUDENCE).map(rerankedToChunk)
+    candidates.slice(0, K_RERANK_JURISPRUDENCE)
   );
 };
 
