@@ -179,5 +179,8 @@ release:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   before_script:
     - apk add --no-cache git
+    - git remote set-url origin "https://${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - git config credential.helper '!f(){ echo username=gitlab-ci-token; echo "password=${GITLAB_TOKEN}"; };f'
+    - git fetch origin --tags --force --prune
   script:
-    - npx --yes -p semantic-release -p @semantic-release/commit-analyzer -p @semantic-release/release-notes-generator -p @semantic-release/gitlab semantic-release
+    - npx --yes -p semantic-release -p @semantic-release/commit-analyzer -p @semantic-release/release-notes-generator -p @semantic-release/gitlab semantic-release --repository-url "https://${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
