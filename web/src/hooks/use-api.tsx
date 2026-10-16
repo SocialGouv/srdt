@@ -65,7 +65,8 @@ const useApi = () => {
     onChunk: (chunk: string) => void,
     onComplete: (result: ApiResponse<AnswerResponse>) => void,
     agreementId?: string,
-    agreementTitle?: string
+    agreementTitle?: string,
+    withJurisprudence?: boolean
   ): Promise<void> => {
     cancelStream();
     const abortController = new AbortController();
@@ -82,6 +83,7 @@ const useApi = () => {
           question: userQuestion,
           agreementId,
           agreementTitle,
+          withJurisprudence,
         }),
         signal: abortController.signal,
       });
@@ -247,7 +249,8 @@ const useApi = () => {
     onComplete: (result: ApiResponse<AnswerResponse>) => void,
     agreementId?: string,
     agreementTitle?: string,
-    modelName?: string
+    modelName?: string,
+    withJurisprudence?: boolean
   ): Promise<void> => {
     cancelStream();
     const abortController = new AbortController();
@@ -267,6 +270,7 @@ const useApi = () => {
           agreementId,
           agreementTitle,
           modelName,
+          withJurisprudence,
         }),
         signal: abortController.signal,
       });

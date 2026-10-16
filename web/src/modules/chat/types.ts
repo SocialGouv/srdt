@@ -48,4 +48,6 @@ export interface Conversation {
   dbConversationId?: string;
   /** Collective agreement the conversation was started with, if any */
   agreement?: Agreement;
+  /** Whether case law is searched; undefined (older conversations) means yes */
+  withJurisprudence?: boolean;
 }

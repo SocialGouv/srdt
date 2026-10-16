@@ -14,6 +14,8 @@ interface FollowupRequestBody {
   agreementId?: string;
   agreementTitle?: string;
   modelName?: string;
+  /** Absent = true : la jurisprudence est incluse par défaut */
+  withJurisprudence?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   let body: FollowupRequestBody | null = null;
   try {
     body = await request.json();
-    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName } =
+    const { originalQuery, conversationHistory, newQuestion, config, agreementId, agreementTitle, modelName, withJurisprudence } =
       body as FollowupRequestBody;
 
     if (!originalQuery || !conversationHistory || !newQuestion) {
@@ -103,7 +105,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       config,
       agreementId,
       agreementTitle,
-      providedModel
+      providedModel,
+      withJurisprudence !== false
     );
 
     if (!result.success) {

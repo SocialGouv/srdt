@@ -7,8 +7,7 @@ import { ReactNode, useEffect } from "react";
 import { headerFooterDisplayItem } from "@codegouvfr/react-dsfr/Display";
 import { fr } from "@codegouvfr/react-dsfr";
 import { useAuth } from "@/hooks/use-auth";
-import { signOut } from "next-auth/react";
-import { buildProConnectLogoutUrl } from "@/lib/auth/proconnect-logout";
+import { signOutWithProConnect } from "@/lib/auth/sign-out-with-proconnect";
 import { AuthorizationCheck } from "@/modules/auth/AuthorizationCheck";
 import { MatomoUserTracking } from "@/modules/common/MatomoUserTracking";
 import styles from "./LayoutWrapper.module.css";
@@ -32,7 +31,7 @@ export const LayoutWrapper = ({
   fillViewport = false,
   onGoHome,
 }: Props) => {
-  const { isAuthenticated, session } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Client-side navigations keep the previous page's scroll position (each
   // page's root spans the viewport, so Next.js never scrolls it into view).
@@ -47,30 +46,6 @@ export const LayoutWrapper = ({
     : fullWidth
     ? ""
     : fr.cx("fr-container", "fr-mb-5w");
-
-  const handleSignOut = async () => {
-    try {
-      // Get the ID token from the session
-      const idToken = session?.idToken;
-
-      // Build ProConnect logout URL (without trailing slash to match ProConnect config)
-      const postLogoutRedirectUri = window.location.origin;
-      const proconnectLogoutUrl = buildProConnectLogoutUrl(
-        idToken || "",
-        postLogoutRedirectUri
-      );
-
-      // Clear NextAuth session first
-      await signOut({ redirect: false });
-
-      // Then redirect to ProConnect logout
-      window.location.href = proconnectLogoutUrl;
-    } catch (error) {
-      console.error("❌ Error signing out:", error);
-      // Fallback: still try to sign out
-      await signOut({ callbackUrl: "/" });
-    }
-  };
 
   return (
     <>
@@ -117,7 +92,7 @@ export const LayoutWrapper = ({
                     iconId: "fr-icon-logout-box-r-line",
                     text: "Se déconnecter",
                     buttonProps: {
-                      onClick: handleSignOut,
+                      onClick: signOutWithProConnect,
                     },
                     linkProps: undefined,
                   },

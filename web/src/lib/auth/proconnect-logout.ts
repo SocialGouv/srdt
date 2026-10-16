@@ -1,20 +1,16 @@
 /**
- * ProConnect logout utilities
+ * ProConnect logout utilities (server-only)
  * Handles proper logout from both NextAuth and ProConnect (OpenID Connect provider)
  */
+
+import { getProConnectDomain } from "./proconnect-domain";
 
 /**
  * Get the ProConnect end_session_endpoint URL based on environment
  */
 export function getProConnectLogoutUrl(): string {
-  const PROCONNECT_DOMAIN =
-    process.env.NEXT_PUBLIC_PROCONNECT_ENV === "integration"
-      ? "https://fca.integ01.dev-agentconnect.fr/api/v2"
-      : "https://auth.agentconnect.gouv.fr/api/v2";
-
-
   // OpenID Connect standard logout endpoint
-  return `${PROCONNECT_DOMAIN}/session/end`;
+  return `${getProConnectDomain()}/session/end`;
 }
 
 /**

@@ -84,6 +84,7 @@ export const Chat = ({
   const [selectedAgreement, setSelectedAgreement] = useState<
     Agreement | undefined
   >(undefined);
+  const [withJurisprudence, setWithJurisprudence] = useState(true);
   const [showHistory, setShowHistory] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
@@ -374,12 +375,14 @@ export const Chat = ({
    * Asks a question in `conversation` (the current one, or one just created
    * that the state may not have caught up with yet) and streams the answer
    * into it. `agreement` is the collective agreement the question is asked
-   * under; the first question records it on the conversation.
+   * under and `withJurisprudence` whether case law is searched; the first
+   * question records both on the conversation.
    */
   const askQuestion = async (
     conversation: Conversation,
     messageToSend: string,
-    agreement: Agreement | undefined
+    agreement: Agreement | undefined,
+    withJurisprudence: boolean
   ) => {
     const update = (updates: Partial<Conversation>) =>
       updateConversation(conversation.id, updates);
@@ -418,8 +421,9 @@ export const Chat = ({
       conversationUpdates.title = generateConversationTitle(messageToSend);
       // Store the first question for potential follow-up
       conversationUpdates.firstUserQuestion = messageToSend;
-      // The agreement applies to the whole conversation
+      // The agreement applies to the whole conversation, so does case law
       conversationUpdates.agreement = agreement;
+      conversationUpdates.withJurisprudence = withJurisprudence;
     }
 
     // If this is a follow-up, clear the awaiting state
@@ -538,7 +542,8 @@ export const Chat = ({
         },
         agreement?.id,
         agreement?.title,
-        conversation.selectedModel
+        conversation.selectedModel,
+        withJurisprudence
       );
     } else {
       // Use regular streaming for initial question
@@ -624,7 +629,8 @@ export const Chat = ({
           setIsDisabled(false); // Re-enable for potential follow-up
         },
         agreement?.id,
-        agreement?.title
+        agreement?.title,
+        withJurisprudence
       );
     }
   };
@@ -636,12 +642,16 @@ export const Chat = ({
     if (!messageToSend.trim() || isDisabled || !currentConversation) return;
 
     setNewMessage("");
-    // The composer's agreement only applies to a conversation's first
-    // question; follow-ups reuse the one the conversation was started with.
+    // The composer's agreement and case-law choice only apply to a
+    // conversation's first question; follow-ups reuse the ones the
+    // conversation was started with.
     await askQuestion(
       currentConversation,
       messageToSend,
-      isEmptyState ? selectedAgreement : currentConversation.agreement
+      isEmptyState ? selectedAgreement : currentConversation.agreement,
+      isEmptyState
+        ? withJurisprudence
+        : currentConversation.withJurisprudence ?? true
     );
   };
 
@@ -662,7 +672,12 @@ export const Chat = ({
     streamingMessageRef.current = "";
     push(["trackEvent", "chat", "restart with agreement"]);
 
-    await askQuestion(newConversation, question, agreement);
+    await askQuestion(
+      newConversation,
+      question,
+      agreement,
+      currentConversation?.withJurisprudence ?? true
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -694,6 +709,7 @@ export const Chat = ({
     setNewMessage("");
     setIsDisabled(false);
     setSelectedAgreement(undefined);
+    setWithJurisprudence(true);
     streamingMessageRef.current = "";
     push(["trackEvent", "chat", "new conversation"]);
   };
@@ -781,6 +797,8 @@ export const Chat = ({
             isDisabled={isDisabled}
             selectedAgreement={selectedAgreement}
             setSelectedAgreement={setSelectedAgreement}
+            withJurisprudence={withJurisprudence}
+            setWithJurisprudence={setWithJurisprudence}
           />
         ) : (
           <>
