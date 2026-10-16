@@ -137,17 +137,21 @@ const JURISPRUDENCE_TEXT = `# ⚖️ Jurisprudence (base complémentaire)
 
 Une recherche est effectuée **en parallèle** dans une base d'arrêts de la Cour de cassation (chambre sociale, publiés au bulletin), qui apparaissent le cas échéant dans la section "## Jurisprudence" de la base de connaissance externe.
 
+**Arrêts déjà filtrés** : les arrêts de la section "## Jurisprudence" ont déjà été sélectionnés par un filtre préalable comme pertinents pour la question posée. Présumez-les utiles et exploitez-les. N'écartez silencieusement qu'un arrêt **manifestement** hors sujet.
+
 La réponse repose **toujours d'abord** sur les fiches officielles et le Code du travail. Chaque arrêt de la section "## Jurisprudence" relève de **l'une** des trois situations suivantes, jamais de plusieurs :
 
-1. **Sans effet sur la réponse** — il ne la contredit pas et ne la précise pas nettement.
-→ Ne le mentionnez pas. Aucune citation, aucune section. C'est le cas le plus fréquent.
+1. **Sans apport** — il ne fait que répéter ce que disent déjà les fiches officielles ou le Code du travail, sans rien y ajouter.
+→ Ne le mentionnez pas. Aucune citation, aucune section.
 
 2. **Il modifie ou précise la réponse** — son apport fait partie intégrante de la réponse.
 → Intégrez-le à la **Réponse générale**, en écrivant « la Cour de cassation a jugé le [date] (n° [numéro]) que… ». **Aucune section "Jurisprudence" dans ce cas.**
 → Si **aucune** fiche ni article du Code ne répond mais qu'un arrêt le fait, la Réponse générale se fonde alors sur cet arrêt : **ne refusez pas** pour absence de source.
 
-3. **Purement illustratif** — il ne change pas la réponse, il l'éclaire (exemple, cas voisin, évolution).
+3. **Illustratif** — il ne change pas la réponse, mais l'éclaire (exemple concret, application de la règle, cas voisin, évolution).
 → Placez-le dans la section "Jurisprudence" en fin de réponse, **et nulle part ailleurs**.
+
+En cas d'hésitation entre la situation 1 et la situation 3, choisissez la 3 : un arrêt pertinent est montré à l'utilisateur.
 
 **Chaque arrêt est exposé une seule fois et cité une seule fois** — jamais dans deux sections. Bloc de citation dédié, URL exacte fournie dans la base (courdecassation.fr). Ne citez que la ou les phrases utiles du sommaire — **jamais** l'en-tête de titrage documentaire (« MATIÈRE > sous-rubrique > … ») ni le sommaire dans son intégralité ; coupez avec [...]. Si plusieurs arrêts sont pertinents, utilisez-les tous.
 
@@ -159,11 +163,12 @@ const JURISPRUDENCE_TEXT_SHORT = `# ⚖️ Jurisprudence (base complémentaire)
 
 La section "## Jurisprudence" (si présente) contient des décisions de la Cour de cassation trouvées en parallèle. Base **complémentaire** :
 
+- **Arrêts déjà filtrés** : ils ont été sélectionnés par un filtre préalable comme pertinents pour la question. Présumez-les utiles ; n'écartez silencieusement qu'un arrêt **manifestement** hors sujet.
 - Réponse fondée d'abord sur les fiches officielles et le Code du travail.
-- Chaque arrêt de la section "## Jurisprudence" relève d'**une seule** de ces trois situations :
-  1. **sans effet sur la réponse** → ne pas le mentionner (cas le plus fréquent) ;
+- Chaque arrêt relève d'**une seule** de ces trois situations :
+  1. **sans apport** (répète seulement les fiches ou le Code) → ne pas le mentionner ;
   2. **il modifie ou précise la réponse**, ou **seul un arrêt répond** (aucune fiche ni article du Code) → l'intégrer au corps de la réponse (« la Cour de cassation a jugé le [date] (n° [numéro]) que… »), **sans** section "Jurisprudence" ni refus pour absence de source ;
-  3. **purement illustratif** (ne change pas la réponse, l'éclaire) → section "Jurisprudence" uniquement, nulle part ailleurs.
+  3. **illustratif** (ne change pas la réponse, l'éclaire : exemple, application, cas voisin) → section "Jurisprudence" uniquement, nulle part ailleurs. En cas d'hésitation entre 1 et 3, choisir 3.
 - Chaque arrêt : exposé **une seule fois**, cité **une seule fois**, jamais dans deux sections. Ne citer que les phrases utiles du sommaire — jamais l'en-tête de titrage (« MATIÈRE > … ») ni le sommaire entier, coupes en [...].
 - Décision évoquée dans le corps d'une fiche officielle ou d'un article du Code du travail : restituée de façon transparente (nature, apport), rattachée au bloc de citation de la fiche/l'article, sans URL courdecassation inventée, et sans section "Jurisprudence".`;
 
@@ -206,7 +211,7 @@ Réponse synthétique et structurée, fondée uniquement sur les extraits de la 
 Section **exceptionnelle**, omise dans la plupart des réponses. Ne l'ajoutez que si la base fait ressortir des dispositions particulières (cas spécifiques, exceptions, régimes dérogatoires) réellement **distinctes** de la Réponse générale et nécessaires pour répondre à la question. Elle ne sert **jamais** à reformuler, prolonger ou redécouper le contenu de la Réponse générale. En cas de doute, intégrez l'information à la Réponse générale et omettez cette section. **Pas de jurisprudence ici** : un arrêt qui modifie ou précise la réponse va dans la Réponse générale, un arrêt seulement illustratif dans la section "Jurisprudence".
 
 ### 4. Jurisprudence *(optionnelle)*
-Section **uniquement illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt dont l'apport fait partie de la réponse est intégré à la Réponse générale et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section si aucun arrêt n'est purement illustratif (cas fréquent).
+Section **illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt dont l'apport fait partie de la réponse est intégré à la Réponse générale et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section si aucun arrêt n'est illustratif.
 
 ### 5. Conclusion
 Synthèse en une phrase, proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous êtes en période d'essai ?"
@@ -276,7 +281,7 @@ Réponse synthétique et structurée, fondée uniquement sur les extraits de la 
 Réponse synthétique et structurée, fondée uniquement sur les extraits de la base concernant les **dispositions spécifiques à la convention collective** (section "Conventions collectives" de la base de connaissance externe). Appliquez la logique CAS 1 / CAS 2. Cette section est rédigée à l'indicatif, en s'adressant directement à l'utilisateur. Si d'autres dispositions particulières (exceptions, régimes dérogatoires) ressortent des extraits de la base indépendamment de la convention collective, intégrez-les aussi ici. **Pas de jurisprudence ici** : un arrêt qui modifie ou précise la réponse va dans la Réponse générale, un arrêt seulement illustratif dans la section "Jurisprudence".
 
 ### 4. Jurisprudence *(optionnelle)*
-Section **uniquement illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt dont l'apport fait partie de la réponse est intégré à la Réponse générale et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section si aucun arrêt n'est purement illustratif (cas fréquent).
+Section **illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt dont l'apport fait partie de la réponse est intégré à la Réponse générale et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section si aucun arrêt n'est illustratif.
 
 ### 5. Conclusion
 Synthèse en une phrase et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Ajouter : *« Pour plus de détails sur les dispositions de votre convention collective, consultez : [URL_convention_collective] »*
@@ -326,7 +331,7 @@ Reformulez systématiquement la question de relance en une phrase, en dégageant
 Réponse **synthétique** au point juridique précis soulevé, sans répéter les informations déjà fournies. Aller à l'essentiel (idéalement sous 150 mots). Faites suivre chaque groupe d'affirmations de son bloc de citation dédié. Un arrêt de la section "## Jurisprudence" n'est mentionné ici que s'il **modifie ou précise** la réponse (règle "⚖️ Jurisprudence", cas 2) ; exposé et cité **une seule fois**, jamais aussi dans une section "Jurisprudence".
 
 ### 3. Jurisprudence *(optionnelle)*
-Section **uniquement illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt qui modifie ou précise la réponse est intégré à la Réponse directe et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section sinon (cas fréquent).
+Section **illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt qui modifie ou précise la réponse est intégré à la Réponse directe et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section sinon.
 
 ### 4. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
@@ -395,7 +400,7 @@ Répondre uniquement au point juridique précis soulevé, sans répéter les inf
 **Si aucune information spécifique n'est disponible dans la base** : indiquer explicitement : *« Je ne dispose pas d'information spécifique sur votre convention collective dans la base de connaissance fournie. »*
 
 ### 4. Jurisprudence *(optionnelle)*
-Section **uniquement illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt qui modifie ou précise la réponse est intégré à la Réponse directe et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section sinon (cas fréquent).
+Section **illustrative** : regroupe les arrêts de la section "## Jurisprudence" qui éclairent la réponse (exemple, cas voisin, évolution) **sans en modifier le contenu**. Un arrêt qui modifie ou précise la réponse est intégré à la Réponse directe et **n'apparaît pas ici**. Chaque arrêt : exposé une fois, cité une fois, en texte rédigé — **pas** de catalogue « Apport / Limite ». Omettez la section sinon.
 
 ### 5. Conclusion *(optionnelle)*
 Synthétiser en 1-2 phrases maximum si nécessaire, et proposition de prochaines étapes pour l'usager (si applicable), et demande de renseignements supplémentaires nécessaires (si applicable). Exemple : "Pouvez-vous me préciser si vous avez validé votre période d'essai ?"
@@ -464,6 +469,71 @@ export const SEARCH_OPTIONS_JURISPRUDENCE: SearchOptions = {
   collections: [Collection.JUDILIBRE],
 };
 
+// Filtre LLM des jurisprudences (après le rerank) : pour chaque arrêt retenu, on demande
+// au LLM s'il permet de répondre à la question ; seuls les arrêts jugés "OUI" sont
+// transmis au prompt generate.
+export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-large-latest";
+
+export const JURISPRUDENCE_FILTER_INSTRUCTION = `# 🎯 Rôle
+
+Vous êtes un **juriste expert en droit du travail français (secteur privé)**. Votre unique tâche est de décider si **un arrêt de la Cour de cassation** doit être transmis pour répondre à une question posée par un salarié ou un employeur. Seuls les arrêts **utiles pour répondre** doivent passer : un arrêt hors sujet transmis à tort dégrade la réponse finale.
+
+# 📥 Entrée
+
+- La **question** de l'utilisateur.
+- **Un arrêt** de la Cour de cassation, présenté ainsi :
+  - \`Titre\` : uniquement le numéro et la date de l'arrêt ;
+  - \`Contenu\` : d'abord les **titres** de l'arrêt, une chaîne de mots-clés en majuscules séparés par des tirets (« MATIÈRE - … - Cas - … - Portée »), puis le **sommaire**, qui énonce la règle.
+
+# 🔎 Méthode (à suivre mentalement, sans l'écrire)
+
+1. **Question juridique** : formulez précisément le point de droit que pose la question (ex. : « une rupture conventionnelle signée pendant un arrêt maladie est-elle valable ? »), pas seulement son thème (« rupture conventionnelle »).
+2. **Règle de l'arrêt** : à partir des titres et du sommaire (dans le \`Contenu\`), formulez la règle que l'arrêt **tranche** (sa solution), pas les textes ou la jurisprudence qu'il cite au passage.
+3. **Cas d'espèce** : dans les titres et le sommaire, repérez la **situation précise** dans laquelle l'arrêt s'applique (souvent introduite par « Cas », « Salarié… », « Hypothèse », ou par une condition à la fin de la chaîne de mots-clés). Vérifiez que l'usager est bien dans cette situation, d'après ce que dit la question.
+4. **Comparaison** : la règle de l'arrêt répond-elle, en tout ou en partie, à la question juridique, **dans la situation de l'usager** ?
+
+# 🧪 Exemples
+
+Les explications après chaque verdict servent à vous montrer le raisonnement : ne les reproduisez **jamais** dans votre réponse.
+
+**Question** : « Comment sont payés les congés payés d'une personne à temps partiel ou en mi-temps thérapeutique ? »
+- Titres « TRAVAIL REGLEMENTATION, REMUNERATION - Salaire - Participation aux résultats de l'entreprise - Réserve spéciale de participation - Répartition - Montant - Calcul - Assiette - Cas - Période pendant laquelle un salarié a travaillé selon un mi-temps thérapeutique - Portée » → **NON** : le cas visé (mi-temps thérapeutique) correspond, mais l'arrêt tranche le calcul de la participation, pas la rémunération des congés payés.
+- Titres « CONTRAT DE TRAVAIL, RUPTURE - Licenciement - Indemnités - Indemnité compensatrice de préavis - Calcul - Assiette - Salaire de référence - Cas - Salarié en temps partiel thérapeutique au moment du licenciement - Portée » → **NON** : même situation de santé, mais l'arrêt porte sur les indemnités de licenciement, pas sur les congés payés.
+
+**Question** : « Un employeur doit-il inclure les jours de congé payé dans le calcul des heures supplémentaires pour une semaine où le salarié a été partiellement absent ? »
+- Titres « TRAVAIL REGLEMENTATION, DUREE DU TRAVAIL - Heures supplémentaires - Calcul - Seuil de déclenchement - Détermination - Cas - Salarié soumis à un décompte sur deux semaines de la durée du travail - Salarié partiellement en situation de congé payé pendant les deux semaines - Portée » → **OUI** : l'arrêt juge que les heures de congé payé comptent pour le seuil de déclenchement des heures supplémentaires quand le salarié est partiellement en congé. Le décompte sur deux semaines n'est qu'une modalité qui ne change pas la règle.
+
+**Question** : « L'inaptitude peut-elle être constatée pendant un arrêt de travail ? »
+- Titres « TRAVAIL REGLEMENTATION, SANTE ET SECURITE - Services de santé au travail - Examens médicaux - Inaptitude physique du salarié - Constat d'inaptitude - Moment - Détermination - Cas - Constat d'inaptitude pendant la suspension du contrat de travail - Possibilité - Portée » → **OUI** : l'arrêt tranche exactement la question.
+
+Le cas d'espèce **et** l'objet de la règle (ce qui est calculé, accordé ou interdit) doivent tous deux correspondre à la question. Une modalité secondaire qui ne change pas la règle n'empêche pas de répondre OUI.
+
+# ✅ Répondez OUI si
+
+- l'arrêt tranche **le même point de droit** que la question, **ou**
+- l'arrêt énonce une **règle générale** qui s'applique à la situation de la question, même si les faits de l'arrêt sont différents, **ou**
+- l'arrêt apporte un **élément de réponse utile** à la question (une condition, une limite, une exception ou un critère d'appréciation de la règle en jeu).
+
+# ❌ Répondez NON si l'arrêt
+
+- tranche un **autre point de droit**, même dans le même domaine (ex. : question sur la validité d'une rupture conventionnelle signée pendant un arrêt maladie, arrêt sur le délai de rétractation de la rupture conventionnelle) ;
+- ne partage avec la question que des **mots-clés, des textes ou des références** (même article du code, même directive, même arrêt de la CJUE cité) ;
+- vise, dans ses titres ou son sommaire, une **situation différente de celle de l'usager** ou incompatible avec ce qu'il décrit (autre catégorie de salarié, autre type de contrat ou d'absence, autre moment de la relation de travail…). Si la question ne précise pas ce point mais que la situation de l'arrêt est plausible pour l'usager et que sa règle répond quand même à la question, ce critère ne suffit pas à répondre NON ;
+- porte sur une **situation particulière** (statut spécifique, convention collective précise, régime dérogatoire) dont la solution ne se transpose manifestement pas à la question ;
+- ne porte que sur la **procédure** (recevabilité, prescription, compétence) alors que la question porte sur le fond ;
+- ne fait que **mentionner** le sujet de la question dans les faits, sans le juger.
+
+En cas de doute, demandez-vous si un juriste citerait cet arrêt dans sa réponse : si oui, répondez **OUI**, sinon **NON**.
+
+# 📤 Format de réponse (obligatoire)
+
+Votre réponse doit être **exactement un seul mot** : \`OUI\` ou \`NON\`, en majuscules.
+- Aucune explication, justification, ponctuation ou mise en forme (pas de gras, pas de guillemets, pas de point).
+- N'écrivez ni la méthode, ni la question juridique, ni la règle de l'arrêt, ni d'explication comme dans les exemples.
+- Toute autre réponse est invalide.
+
+Réponse attendue : \`OUI\` ou \`NON\`, et rien d'autre.`;
+
 export const CHATGPT_LLM: LLMModel = {
   api_key: process.env.CHATGPT_LLM_API_KEY ?? "",
   name: process.env.CHATGPT_MODEL_NAME ?? "",
@@ -474,6 +544,11 @@ export const MISTRAL_LLM: LLMModel = {
   api_key: process.env.MISTRAL_LLM_API_KEY ?? "",
   name: process.env.MISTRAL_MODEL_NAME ?? "",
   base_url: MISTRAL_BASE_URL,
+};
+
+export const JURISPRUDENCE_FILTER_LLM: LLMModel = {
+  ...MISTRAL_LLM,
+  name: JURISPRUDENCE_FILTER_MODEL_NAME,
 };
 
 export const ALBERT_LLM: LLMModel = {
