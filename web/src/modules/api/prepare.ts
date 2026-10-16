@@ -211,7 +211,15 @@ const getFullContentFromReranked = async (
   }, new Array<string>());
 
   const retrieveResponse = await retrieveDocs(selectedDocumentsIds);
-  const selectedDocuments = retrieveResponse.data?.contents || [];
+
+  // /docs/retrieve does not return documents in the order of the requested ids
+  // (it follows the order of the search hits): restore the rerank order
+  const rank = new Map(selectedDocumentsIds.map((id, i) => [id, i]));
+  const selectedDocuments = [...(retrieveResponse.data?.contents || [])].sort(
+    (a, b) =>
+      (rank.get(a.metadata.id) ?? selectedDocumentsIds.length) -
+      (rank.get(b.metadata.id) ?? selectedDocumentsIds.length)
+  );
 
   const fullContentToChunk = (fc: ContentResult): ChunkResult => {
     return {
