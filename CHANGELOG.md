@@ -1,3 +1,10 @@
+# [1.57.0](https://github.com/SocialGouv/srdt/compare/v1.56.2...v1.57.0) (2026-10-19)
+
+
+### Features
+
+* improve jurisprudences ([9f7f234](https://github.com/SocialGouv/srdt/commit/9f7f234c496b165cd57d2dadb0c705a8fe2465cd))
+
 ## [1.56.2](https://github.com/SocialGouv/srdt/compare/v1.56.1...v1.56.2) (2026-10-16)
 
 
