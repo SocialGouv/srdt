@@ -24,18 +24,20 @@ include:
   - project: socialgouv/commun/studio-tech-commun/sdpsn-devops-ci-utils
     ref: main
     file: ci-common/image-build.yml
-  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@0.3.1
+  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@7252ed11f1ead2111c02dc955f190ed135dc9a4a
     inputs:
       job_name: deploy-dev
       gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      app_name: srdt
       deploy_action: dev
       rules:
         - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
         - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@0.3.1
+  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@7252ed11f1ead2111c02dc955f190ed135dc9a4a
     inputs:
       job_name: deploy-preprod
       gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      app_name: srdt
       deploy_action: preprod
       rules:
         - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
