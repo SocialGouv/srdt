@@ -162,10 +162,10 @@ build:
 # DEPLOY : jobs générés par trigger_app (cf. include) ; ils attendent les images.
 # ---------------------------------------------------------------------------
 deploy-dev:
-  needs: ["build"]
+  needs: ["build", "prepare-deploy-dev"]
 
 deploy-preprod:
-  needs: ["build"]
+  needs: ["build", "prepare-deploy-preprod"]
 
 # ---------------------------------------------------------------------------
 # RELEASE : semantic-release sur la branche par défaut (tags + release GitLab).
