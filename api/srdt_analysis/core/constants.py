@@ -8,6 +8,10 @@ API_TIMEOUT = 180
 ALBERT_SEARCH_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
 CHUNK_INDEX = "chunks"
+# Vector search: when the filters keep at most this many chunks, every one of them is
+# scored (exact search) instead of walking the HNSW graph, whose recall depends on how
+# the index was built (it can miss most of the true neighbours of a filtered query).
+EXACT_KNN_MAX_CHUNKS = 20_000
 
 JUDILIBRE_BASE_URL = "https://api.piste.gouv.fr/cassation/judilibre/v1.0"
 

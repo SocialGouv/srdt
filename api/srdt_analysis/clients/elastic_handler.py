@@ -8,7 +8,7 @@ from elasticsearch import Elasticsearch
 
 from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.clients.collections import AlbertCollectionHandler
-from srdt_analysis.core.constants import ELASTIC_BULK_BATCH_SIZE
+from srdt_analysis.core.constants import ELASTIC_BULK_BATCH_SIZE, EXACT_KNN_MAX_CHUNKS
 from srdt_analysis.core.exceptions import (
     ConfigurationError,
     ExternalServiceError,
@@ -257,18 +257,46 @@ class ElasticIndicesHandler:
             filters.append({"terms": {"metadata.id.keyword": ids}})
 
         try:
-            response = self.client.search(
-                index=index_name,
-                knn={
-                    "field": "embedding",
-                    "query_vector": embeddings,
-                    "num_candidates": int(k * 1.5),
-                    "k": k,
-                    "filter": filters,
-                },
-                size=k,
-                source_includes=["content", "metadata"],
-            )
+            filtered = self.client.count(
+                index=index_name, query={"bool": {"filter": filters}}
+            )["count"]
+            if filtered <= EXACT_KNN_MAX_CHUNKS:
+                response = self.client.search(
+                    index=index_name,
+                    query={
+                        "script_score": {
+                            "query": {
+                                "bool": {
+                                    "filter": [
+                                        *filters,
+                                        {"exists": {"field": "embedding"}},
+                                    ]
+                                }
+                            },
+                            # same scale as the knn score of a cosine field
+                            "script": {
+                                "source": "(cosineSimilarity(params.query_vector, "
+                                "'embedding') + 1.0) / 2.0",
+                                "params": {"query_vector": embeddings},
+                            },
+                        }
+                    },
+                    size=k,
+                    source_includes=["content", "metadata"],
+                )
+            else:
+                response = self.client.search(
+                    index=index_name,
+                    knn={
+                        "field": "embedding",
+                        "query_vector": embeddings,
+                        "num_candidates": int(k * 1.5),
+                        "k": k,
+                        "filter": filters,
+                    },
+                    size=k,
+                    source_includes=["content", "metadata"],
+                )
             return [self.to_chunk_result(hit) for hit in response["hits"]["hits"]]
         except Exception as e:
             raise ExternalServiceError(
