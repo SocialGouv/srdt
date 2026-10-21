@@ -1,3 +1,10 @@
+## [1.57.1](https://github.com/SocialGouv/srdt/compare/v1.57.0...v1.57.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **api:** improve knn search ([7e7ba0d](https://github.com/SocialGouv/srdt/commit/7e7ba0db23a41a91c6822dcb471fca4c22e25abc))
+
 # [1.57.0](https://github.com/SocialGouv/srdt/compare/v1.56.2...v1.57.0) (2026-10-19)
 
 
