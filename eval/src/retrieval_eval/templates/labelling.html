@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relevance labelling</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #d9dde5;
+    --accent: #2457d6; --accent-soft: #e5ecfc;
+    --g0: #b42318; --g0-soft: #fdecea; --g1: #b54708; --g1-soft: #fdf0dc;
+    --g2: #067647; --g2-soft: #def5e8; --flag: #7a3ea1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171e; --panel: #1c212b; --text: #e6e9ef; --muted: #9aa3b5; --line: #323a49;
+      --accent: #7aa2ff; --accent-soft: #232f4f;
+      --g0: #ff8b7e; --g0-soft: #3a1f1c; --g1: #ffb85c; --g1-soft: #3a2b14;
+      --g2: #5ed39a; --g2-soft: #14352a; --flag: #c79bf0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+  .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+           padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  .progress { flex: 1 1 220px; min-width: 180px; }
+  .progress .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .progress .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  .progress small { color: var(--muted); }
+  .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 6px 12px; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  label.toggle { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: 230px 1fr; min-height: 0; }
+  aside { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; min-height: 0; }
+  aside .filter { padding: 8px; position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--line); }
+  aside select { width: 100%; padding: 4px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+  .item { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0;
+          border-bottom: 1px solid var(--line); background: none; padding: 7px 10px; font-size: 13px; }
+  .item:hover { background: var(--accent-soft); }
+  .item.current { background: var(--accent-soft); font-weight: 600; }
+  .item .dot { flex: none; width: 18px; height: 18px; border-radius: 9px; border: 1px solid var(--line);
+               display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .item .dot.g0 { background: var(--g0-soft); color: var(--g0); border-color: var(--g0); }
+  .item .dot.g1 { background: var(--g1-soft); color: var(--g1); border-color: var(--g1); }
+  .item .dot.g2 { background: var(--g2-soft); color: var(--g2); border-color: var(--g2); }
+  .item .snippet { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .item .flagmark { color: var(--flag); margin-left: auto; }
+  .item .secs { margin-left: auto; font-size: 11px; color: var(--muted); flex: none; }
+  .item .secs.quick { color: var(--g1); font-weight: 600; }
+  .item .chg { color: var(--accent); flex: none; }
+  .note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  .note b { color: var(--text); }
+  main { overflow-y: auto; padding: 16px; min-height: 0; display: grid; gap: 14px; align-content: start;
+         grid-template-columns: minmax(0, 1fr); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .question { font-size: 17px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .badge[hidden] { display: none; }
+  a { color: var(--accent); }
+  .badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px;
+           background: var(--accent-soft); color: var(--accent); margin-left: 8px; vertical-align: middle; }
+  .doc-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-bottom: 8px; }
+  .doc-head .title { font-weight: 600; font-size: 16px; }
+  .doc-head .meta { color: var(--muted); font-size: 13px; }
+  .doc-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: calc(100vh - 600px); min-height: 200px; overflow-y: auto;
+              border: 1px solid var(--line); border-radius: 6px; padding: 12px; background: var(--bg);
+              font-size: 14.5px; line-height: 1.6; }
+  .grading { position: sticky; bottom: -16px; z-index: 2; margin-bottom: -16px;
+             box-shadow: 0 -10px 18px -10px rgba(0,0,0,.35); }
+  .grades { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .grade { border: 2px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--panel); text-align: left; }
+  .grade .num { font-size: 22px; font-weight: 700; display: block; }
+  .grade .def { font-size: 13px; color: var(--muted); }
+  .grade.g0:hover, .grade.g0.on { border-color: var(--g0); background: var(--g0-soft); }
+  .grade.g1:hover, .grade.g1.on { border-color: var(--g1); background: var(--g1-soft); }
+  .grade.g2:hover, .grade.g2.on { border-color: var(--g2); background: var(--g2-soft); }
+  .grade.on .num { text-decoration: underline; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+  textarea { width: 100%; min-height: 40px; resize: vertical; padding: 8px; border-radius: 6px;
+             border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 12.5px; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; background: var(--panel); }
+  .flagbtn.on { border-color: var(--flag); color: var(--flag); }
+  #guideline { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 92vw); background: var(--panel);
+               border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,.18);
+               padding: 16px 18px; overflow-y: auto; transform: translateX(105%); transition: transform .18s; z-index: 5; }
+  #guideline.open { transform: none; }
+  #guideline h2 { margin-top: 0; }
+  #guideline p { margin: 0 0 10px; }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text);
+           color: var(--bg); padding: 8px 14px; border-radius: 6px; opacity: 0; pointer-events: none;
+           transition: opacity .2s; z-index: 9; max-width: 90vw; }
+  #toast.show { opacity: .95; }
+  #warn { display: none; background: var(--g1-soft); color: var(--g1); padding: 8px 16px; font-size: 13px; border-bottom: 1px solid var(--g1); }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { display: none; }
+    .grades { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div>
+    <div id="warn" role="alert"></div>
+    <header>
+      <h1 id="page-title">Relevance labelling</h1>
+      <div class="progress">
+        <div class="bar" aria-hidden="true"><div id="bar"></div></div>
+        <small id="progress-text"></small>
+      </div>
+      <label class="toggle"><input type="checkbox" id="auto" checked> next after grading</label>
+      <button class="btn" id="btn-guideline" title="Show the guideline (g)">Guideline <kbd>g</kbd></button>
+      <button class="btn" id="btn-load" title="Load labels from a CSV exported earlier">Load CSV</button>
+      <button class="btn primary" id="btn-export" title="Download the labels as CSV">Export CSV</button>
+      <input type="file" id="file" accept=".csv,text/csv" hidden>
+    </header>
+  </div>
+  <div class="layout">
+    <aside>
+      <div class="filter">
+        <select id="filter" aria-label="Filter the list">
+          <option value="all">All</option>
+          <option value="todo">Not labelled</option>
+          <option value="flag">Flagged</option>
+          <option value="done">Labelled</option>
+          <option value="quick">Quick (under 20 s)</option>
+          <option value="changed">Changed by me</option>
+        </select>
+      </div>
+      <div id="list"></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <section class="card">
+        <h2>User question <span id="idcc" class="badge" hidden></span></h2>
+        <div class="question" id="question"></div>
+      </section>
+      <section class="card">
+        <h2>Document found</h2>
+        <div class="doc-head">
+          <span class="title" id="doc-title"></span>
+          <span class="meta" id="doc-meta"></span>
+        </div>
+        <div class="doc-text" id="doc-text" tabindex="0" aria-label="Document text"></div>
+      </section>
+      <section class="card grading">
+        <h2>Your grade</h2>
+        <div class="grades" id="grades"></div>
+        <div class="row">
+          <button class="btn flagbtn" id="flag" title="Mark to come back to (f)">⚑ Come back later <kbd>f</kbd></button>
+          <span class="spacer"></span>
+          <button class="btn" id="prev">← Previous</button>
+          <button class="btn" id="next">Next →</button>
+          <button class="btn" id="next-todo" title="Next not labelled (n)">Next not labelled <kbd>n</kbd></button>
+        </div>
+        <div class="note" id="history" hidden></div>
+        <div class="row" style="margin-top:8px"><textarea id="comment" aria-label="Comment (optional)" placeholder="Comment (optional): c to type, Esc to leave"></textarea></div>
+        <p class="hint" style="margin:6px 0 0">Keys: <kbd>0</kbd> <kbd>1</kbd> <kbd>2</kbd> grade · <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>f</kbd> flag · <kbd>g</kbd> guideline. Labels are saved in this browser as you go: export the CSV regularly.</p>
+      </section>
+    </main>
+  </div>
+</div>
+<aside id="guideline" aria-label="Guideline" tabindex="-1"></aside>
+<div id="toast" role="status"></div>
+
+<script type="application/json" id="data">__DATA__</script>
+
+<script id="core">
+// --- core:start (pure functions, tested with Node: no DOM in here)
+const GRADES = [0, 1, 2];
+
+function csvEscape(value) {
+  const s = value === null || value === undefined ? "" : String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// Columns audit_id, grade, comment are the ones `retrieval-eval audit-import` reads.
+// `first_grade` is the grade first given to the pair: what `grade` was before any change.
+const CSV_COLUMNS = ["audit_id", "grade", "comment", "flag", "seconds", "first_grade"];
+const QUICK_SECONDS = 20; // pairs graded faster than this are offered for a second look
+
+function buildCsv(items, labels) {
+  const lines = [CSV_COLUMNS.join(",")];
+  for (const item of items) {
+    const l = labels[item.audit_id] || {};
+    lines.push([
+      item.audit_id,
+      l.grade === null || l.grade === undefined ? "" : l.grade,
+      l.comment || "",
+      l.flag ? "1" : "",
+      l.seconds ? Math.round(l.seconds) : "",
+      l.first === null || l.first === undefined ? "" : l.first,
+    ].map(csvEscape).join(","));
+  }
+  return lines.join("\r\n") + "\r\n";
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (quoted) {
+      if (c === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; } else { quoted = false; }
+      } else { field += c; }
+    } else if (c === '"') { quoted = true; }
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && src[i + 1] === "\n") i++;
+      row.push(field); field = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+    } else { field += c; }
+  }
+  if (field !== "" || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// Labels from the rows of a CSV exported by this page. Unknown ids and invalid grades
+// are reported, not applied.
+function labelsFromCsv(text, knownIds) {
+  const rows = parseCsv(text);
+  if (!rows.length) return { labels: {}, applied: 0, skipped: ["empty file"] };
+  const header = rows[0].map((h) => h.trim());
+  const col = (name) => header.indexOf(name);
+  if (col("audit_id") < 0 || col("grade") < 0) {
+    return { labels: {}, applied: 0, skipped: ["no audit_id / grade columns"] };
+  }
+  const labels = {}, skipped = [];
+  let applied = 0;
+  for (const r of rows.slice(1)) {
+    const id = (r[col("audit_id")] || "").trim();
+    if (!knownIds.has(id)) { skipped.push("unknown id " + id); continue; }
+    const raw = (r[col("grade")] || "").trim();
+    let grade = null;
+    if (raw !== "") {
+      if (!/^[012]$/.test(raw)) { skipped.push(id + ": grade " + raw); continue; }
+      grade = Number(raw);
+    }
+    const get = (name) => (col(name) >= 0 ? (r[col(name)] || "") : "");
+    const comment = get("comment"), flag = get("flag").trim() !== "", seconds = Number(get("seconds")) || 0;
+    if (grade === null && !comment && !flag && !seconds) continue;
+    const firstRaw = get("first_grade").trim();
+    // a CSV from before `first_grade` existed: the grade it holds is the first one
+    const first = /^[012]$/.test(firstRaw) ? Number(firstRaw) : grade;
+    labels[id] = { grade, comment, flag, seconds, first };
+    applied++;
+  }
+  return { labels, applied, skipped };
+}
+
+function isChanged(label) {
+  return !!label && label.grade !== null && label.grade !== undefined
+    && label.first !== null && label.first !== undefined && label.grade !== label.first;
+}
+
+function isQuick(label) {
+  return !!label && label.grade !== null && label.grade !== undefined
+    && (label.seconds || 0) < QUICK_SECONDS;
+}
+
+function summarise(items, labels) {
+  let done = 0, flagged = 0, seconds = 0, timed = 0, changed = 0, quick = 0;
+  for (const it of items) {
+    const l = labels[it.audit_id];
+    if (!l) continue;
+    if (l.grade !== null && l.grade !== undefined) { done++; if (l.seconds) { seconds += l.seconds; timed++; } }
+    if (l.flag) flagged++;
+    if (isChanged(l)) changed++;
+    if (isQuick(l)) quick++;
+  }
+  const perItem = timed >= 5 ? seconds / timed : null;
+  return { done, flagged, changed, quick, total: items.length, perItem,
+           remaining: perItem === null ? null : perItem * (items.length - done) };
+}
+
+function formatDuration(seconds) {
+  if (seconds === null || seconds === undefined) return "";
+  const m = Math.round(seconds / 60);
+  return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+}
+
+function matchesFilter(filter, label) {
+  const done = label && label.grade !== null && label.grade !== undefined;
+  if (filter === "todo") return !done;
+  if (filter === "done") return !!done;
+  if (filter === "flag") return !!(label && label.flag);
+  if (filter === "quick") return isQuick(label);
+  if (filter === "changed") return isChanged(label);
+  return true;
+}
+// --- core:end
+</script>
+
+<script id="ui">
+(function () {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("data").textContent);
+  const items = DATA.items;
+  const known = new Set(items.map((i) => i.audit_id));
+  const storageKey = "retrieval-labelling:" + DATA.dataset_id;
+  const $ = (id) => document.getElementById(id);
+
+  let labels = {};
+  let index = 0;
+  let shownAt = Date.now();
+  let storageOk = true;
+  let lastExportedCount = null;
+
+  document.title = DATA.title;
+  $("page-title").textContent = DATA.title;
+
+  // ---- storage
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+      if (saved) { labels = saved.labels || {}; index = Math.min(saved.index || 0, items.length - 1); }
+    } catch (e) { storageOk = false; }
+  }
+  function save() {
+    try { localStorage.setItem(storageKey, JSON.stringify({ labels, index })); }
+    catch (e) { storageOk = false; showWarn(); }
+  }
+  function showWarn() {
+    const warn = $("warn");
+    if (!storageOk) {
+      warn.textContent = "Autosave is unavailable in this browser: your labels are kept only while this page stays open. Export the CSV often.";
+      warn.style.display = "block";
+    }
+  }
+
+  // ---- time spent on the current item
+  function addTime() {
+    const now = Date.now();
+    const seconds = Math.min((now - shownAt) / 1000, 600); // idle time past 10 min is not counted
+    shownAt = now;
+    const id = items[index].audit_id;
+    const l = labels[id] || (labels[id] = { grade: null, comment: "", flag: false, seconds: 0, first: null });
+    l.seconds = (l.seconds || 0) + seconds;
+  }
+
+  // ---- rendering
+  function labelOf(i) { return labels[items[i].audit_id]; }
+  function gradeOf(i) { const l = labelOf(i); return l && l.grade !== null && l.grade !== undefined ? l.grade : null; }
+
+  function renderList() {
+    const filter = $("filter").value;
+    const list = $("list");
+    list.textContent = "";
+    items.forEach((it, i) => {
+      if (!matchesFilter(filter, labelOf(i)) && i !== index) return;
+      const b = document.createElement("button");
+      b.className = "item" + (i === index ? " current" : "");
+      const g = gradeOf(i);
+      const dot = document.createElement("span");
+      dot.className = "dot" + (g !== null ? " g" + g : "");
+      dot.textContent = g !== null ? String(g) : "";
+      const snippet = document.createElement("span");
+      snippet.className = "snippet";
+      snippet.textContent = (i + 1) + ". " + it.query.replace(/\s+/g, " ").slice(0, 60);
+      b.append(dot, snippet);
+      if (isChanged(labelOf(i))) {
+        const c = document.createElement("span");
+        c.className = "chg"; c.textContent = "↺"; c.title = "changed from " + labelOf(i).first; b.append(c);
+      }
+      if (labelOf(i) && labelOf(i).flag) {
+        const f = document.createElement("span");
+        f.className = "flagmark"; f.textContent = "⚑"; b.append(f);
+      }
+      if (g !== null && labelOf(i).seconds) {
+        const t = document.createElement("span");
+        t.className = "secs" + (isQuick(labelOf(i)) ? " quick" : "");
+        t.textContent = Math.round(labelOf(i).seconds) + " s"; b.append(t);
+      }
+      b.addEventListener("click", () => go(i));
+      list.append(b);
+    });
+    const current = list.querySelector(".current");
+    if (current) current.scrollIntoView({ block: "nearest" });
+  }
+
+  function renderProgress() {
+    const s = summarise(items, labels);
+    $("bar").style.width = (100 * s.done / s.total) + "%";
+    let text = s.done + " / " + s.total + " labelled";
+    if (s.flagged) text += " · " + s.flagged + " flagged";
+    if (s.changed) text += " · " + s.changed + " changed";
+    if (s.remaining !== null && s.done < s.total) text += " · about " + formatDuration(s.remaining) + " left";
+    $("progress-text").textContent = text;
+  }
+
+  function renderItem() {
+    const it = items[index];
+    $("question").textContent = it.query;
+    const idcc = $("idcc");
+    idcc.hidden = !it.idcc;
+    idcc.textContent = it.idcc ? "IDCC " + it.idcc : "";
+    $("doc-title").textContent = it.title || "(untitled)";
+    const meta = $("doc-meta");
+    meta.textContent = "";
+    meta.append((it.source || "unknown source") + " · " + it.chars.toLocaleString("fr-FR") + " characters");
+    if (/^https?:\/\//.test(it.url || "")) {
+      const a = document.createElement("a");
+      a.href = it.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = " · open the source page";
+      meta.append(a);
+    }
+    const text = $("doc-text");
+    text.textContent = it.text;
+    text.scrollTop = 0;
+    $("main").scrollTop = 0;
+    const l = labelOf(index) || {};
+    $("comment").value = l.comment || "";
+    $("flag").classList.toggle("on", !!l.flag);
+    const history = $("history");
+    history.textContent = "";
+    if (l.grade !== null && l.grade !== undefined) {
+      const bits = [];
+      if (l.seconds) bits.push("time spent: " + Math.round(l.seconds) + " s" + (isQuick(l) ? " (quick)" : ""));
+      if (isChanged(l)) bits.push("first grade: " + l.first + ", now " + l.grade);
+      history.hidden = bits.length === 0;
+      history.textContent = bits.join(" · ");
+    } else { history.hidden = true; }
+    document.querySelectorAll(".grade").forEach((b) => b.classList.toggle("on", Number(b.dataset.grade) === l.grade));
+    $("prev").disabled = index === 0;
+    $("next").disabled = index === items.length - 1;
+    renderList();
+    renderProgress();
+    shownAt = Date.now();
+  }
+
+  function go(i) {
+    addTime();
+    index = Math.max(0, Math.min(items.length - 1, i));
+    save();
+    renderItem();
+  }
+
+  function nextTodo(from) {
+    for (let step = 1; step <= items.length; step++) {
+      const i = (from + step) % items.length;
+      if (gradeOf(i) === null) return i;
+    }
+    return null;
+  }
+
+  function setGrade(g) {
+    addTime();
+    const id = items[index].audit_id;
+    const l = labels[id];
+    l.grade = l.grade === g ? null : g; // pressing the same grade again clears it
+    if (l.grade !== null && (l.first === null || l.first === undefined)) l.first = l.grade;
+    save();
+    if (l.grade !== null && $("auto").checked) {
+      const n = nextTodo(index);
+      if (n === null) { toast("All labelled. Export the CSV."); renderItem(); return; }
+      index = n; save();
+    }
+    renderItem();
+  }
+
+  function toast(message) {
+    const t = $("toast");
+    t.textContent = message;
+    t.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  // ---- guideline panel
+  function renderGuideline() {
+    const panel = $("guideline");
+    const h = document.createElement("h2");
+    h.textContent = "Guideline";
+    panel.append(h);
+    DATA.guideline.split(/\n{2,}|\n(?=- )/).forEach((block) => {
+      const p = document.createElement("p");
+      block.split(/(\*\*[^*]+\*\*)/).forEach((part) => {
+        if (/^\*\*[^*]+\*\*$/.test(part)) {
+          const s = document.createElement("strong"); s.textContent = part.slice(2, -2); p.append(s);
+        } else { p.append(part); }
+      });
+      panel.append(p);
+    });
+    const close = document.createElement("button");
+    close.className = "btn"; close.textContent = "Close (g)";
+    close.addEventListener("click", toggleGuideline);
+    panel.append(close);
+  }
+  function toggleGuideline() { $("guideline").classList.toggle("open"); }
+
+  // ---- grades buttons
+  function renderGradeButtons() {
+    const wrap = $("grades");
+    GRADES.slice().reverse().forEach((g) => {
+      const b = document.createElement("button");
+      b.className = "grade g" + g; b.dataset.grade = String(g);
+      const num = document.createElement("span"); num.className = "num"; num.textContent = String(g);
+      const def = document.createElement("span"); def.className = "def"; def.textContent = DATA.grade_names[g] || "";
+      b.append(num, def);
+      b.addEventListener("click", () => setGrade(g));
+      wrap.append(b);
+    });
+  }
+
+  // ---- export / load
+  function exportCsv() {
+    addTime(); save();
+    const blob = new Blob([buildCsv(items, labels)], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+    a.href = URL.createObjectURL(blob);
+    a.download = "labels-" + DATA.dataset_id + "-" + stamp + ".csv";
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    lastExportedCount = summarise(items, labels).done;
+    toast("Exported " + lastExportedCount + " labels");
+  }
+
+  function loadCsv(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = labelsFromCsv(String(reader.result), known);
+      if (result.applied === 0) { toast("Nothing loaded: " + (result.skipped[0] || "no label in the file")); return; }
+      Object.assign(labels, result.labels);
+      save(); renderItem();
+      toast("Loaded " + result.applied + " rows" + (result.skipped.length ? " (" + result.skipped.length + " skipped)" : ""));
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- events
+  $("filter").addEventListener("change", renderList);
+  $("prev").addEventListener("click", () => go(index - 1));
+  $("next").addEventListener("click", () => go(index + 1));
+  $("next-todo").addEventListener("click", () => { const n = nextTodo(index); if (n === null) toast("Everything is labelled"); else go(n); });
+  $("flag").addEventListener("click", () => {
+    addTime();
+    const l = labels[items[index].audit_id]; l.flag = !l.flag; save(); renderItem();
+  });
+  $("comment").addEventListener("input", () => {
+    const l = labels[items[index].audit_id] || (labels[items[index].audit_id] = { grade: null, comment: "", flag: false, seconds: 0, first: null });
+    l.comment = $("comment").value; save();
+  });
+  $("btn-guideline").addEventListener("click", toggleGuideline);
+  $("btn-export").addEventListener("click", exportCsv);
+  $("btn-load").addEventListener("click", () => $("file").click());
+  $("file").addEventListener("change", (e) => { if (e.target.files[0]) loadCsv(e.target.files[0]); e.target.value = ""; });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const typing = e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.tagName === "SELECT";
+    if (typing) { if (e.key === "Escape") { e.target.blur(); } return; }
+    if (e.key === "0" || e.key === "1" || e.key === "2") { setGrade(Number(e.key)); e.preventDefault(); }
+    else if (e.key === "ArrowRight" || e.key === "l") { go(index + 1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft" || e.key === "h") { go(index - 1); e.preventDefault(); }
+    else if (e.key === "n") { const n = nextTodo(index); if (n !== null) go(n); }
+    else if (e.key === "f") { $("flag").click(); }
+    else if (e.key === "g") { toggleGuideline(); }
+    else if (e.key === "c") { $("comment").focus(); e.preventDefault(); }
+    else if (e.key === "Escape") { $("guideline").classList.remove("open"); }
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    const done = summarise(items, labels).done;
+    if (done > 0 && done !== lastExportedCount) { addTime(); save(); e.preventDefault(); e.returnValue = ""; }
+  });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { addTime(); save(); } else { shownAt = Date.now(); } });
+
+  load();
+  items.forEach((it) => {
+    if (!labels[it.audit_id]) labels[it.audit_id] = { grade: null, comment: "", flag: false, seconds: 0, first: null };
+    const l = labels[it.audit_id];
+    // grades saved before `first` existed: the grade they hold is the first one
+    if (l.grade !== null && l.grade !== undefined && (l.first === null || l.first === undefined)) l.first = l.grade;
+  });
+  renderGradeButtons();
+  renderGuideline();
+  showWarn();
+  renderItem();
+})();
+</script>
+</body>
+</html>

@@ -101,3 +101,7 @@ local_dump/*
 data/*
 
 *.prod.http
+# Downloaded by scripts/fetch_judilibre.py and the LEGI fetch, not committed
+judilibre/
+judilibre-90/
+legi-data/

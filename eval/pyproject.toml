@@ -1,0 +1,55 @@
+[project]
+name = "judge-eval"
+version = "0.1.0"
+description = "Benchmark LLMs as judges of SRDT answers against human labels"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "openai>=1.54,<3",
+    "pydantic>=2.10,<3",
+    "pandas>=2.2,<3",
+    "numpy>=1.26",
+    "httpx>=0.27",  # retrieval-eval talks to the SRDT API (already pulled by openai)
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+judge-eval = "judge_eval.cli:main"
+retrieval-eval = "retrieval_eval.cli:main"
+answer-eval = "answer_eval.cli:main"
+
+[project.optional-dependencies]
+# Only `retrieval-eval sample-queries` needs it (same pins as srdt-dataset).
+anonymise = [
+    "spacy==3.8.7",
+    "click>=8",  # spaCy imports it, but recent typer releases no longer pull it in
+    "fr_core_news_md @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.8.0/fr_core_news_md-3.8.0.tar.gz",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.8",
+    # Reference implementation the hand-written metrics are checked against.
+    "scikit-learn>=1.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/judge_eval", "src/retrieval_eval", "src/answer_eval"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+exclude = [".ruff_cache", "__pycache__", ".venv", "runs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

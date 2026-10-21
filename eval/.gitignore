@@ -1,0 +1,16 @@
+.venv/
+.env
+runs/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+retrieval/.local/
+# Anonymised real user questions: local until reviewed
+retrieval/queries.jsonl
+retrieval/qrels/
+retrieval/dataset/
+
+# Kept local for now
+dataset/
+config/models.toml
