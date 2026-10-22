@@ -1,0 +1,44 @@
+# Answer models compared by `answer-eval generate`. Same format as models.toml (no
+# secrets: api_key_env names a variable of eval/.env).
+#
+# Production answers with mistral-large-latest at temperature 0.3 (the API forces it
+# for api.mistral.ai) and no max_tokens: that is the baseline entry below. Set
+# `params` on every entry: without it a provider sends {temperature = 0}.
+#
+# Check ids with `uv run judge-eval models --all --models config/generators.toml`.
+# Answers are long and the prompts large (up to 10 full fiches): keep timeouts high.
+
+[providers.albert]
+base_url = "https://albert.api.etalab.gouv.fr/v1"
+api_key_env = "ALBERT_API_KEY"
+concurrency = 4
+timeout_s = 300
+
+[providers.mistral]
+base_url = "https://api.mistral.ai/v1"
+api_key_env = "MISTRAL_LLM_API_KEY"
+concurrency = 2
+timeout_s = 300
+
+[providers.scaleway]
+base_url = "https://litellm.pliage-prod.socle-ia.data-ia.prod.atlas.fabrique.social.gouv.fr/v1"
+api_key_env = "LITELLM_API_KEY"
+concurrency = 4
+timeout_s = 300
+
+[[models]]
+provider = "mistral"
+model = "mistral-large-latest"
+name = "prod/mistral-large-latest"
+params = { temperature = 0.3 }
+
+# Candidates (to choose), e.g.:
+# [[models]]
+# provider = "albert"
+# model = "gpt-oss-120b"
+# params = { temperature = 0.3 }
+#
+# [[models]]
+# provider = "scaleway"
+# model = "scaleway/qwen3.5-397b-a17b"
+# params = { temperature = 0.3 }

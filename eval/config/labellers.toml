@@ -1,0 +1,73 @@
+# Candidate models for the retrieval relevance labeller (`retrieval-eval label`,
+# `probe-labellers`, `compare`). Same format as models.toml, kept apart because
+# `judge-eval run` uses every model of models.toml by default.
+#
+# Picked from the ids the endpoints serve (`uv run judge-eval models --all`): text
+# instruct models whose context holds the longest documents (about 15k tokens), one
+# entry per set of weights even when several providers serve it, dated ids rather than
+# moving aliases. Left out on purpose: embeddings, rerankers, OCR, audio, code and
+# moderation models, deepseek-v4-flash (11-13 s per call), `*-latest` and `openweight-*`.
+#
+# Context lengths as reported by the endpoints: albert/mistral-medium-3-5 262k,
+# gemma-4-31b-it 262k, gpt-oss-120b 131k, mistral-small-3-2 128k, mistral-large-2512
+# 262k. Scaleway reports none: check before trusting a long document to those models.
+#
+# Reasoning models (gpt-oss, glm, qwen3.5) may reject `temperature`: run
+# `retrieval-eval probe-labellers` first and, if needed, set `params = {}` on the entry.
+
+[providers.albert]
+base_url = "https://albert.api.etalab.gouv.fr/v1"  # must include /v1
+api_key_env = "ALBERT_API_KEY"
+concurrency = 4          # parallel calls for ALL models of this provider together
+
+[providers.mistral]
+base_url = "https://api.mistral.ai/v1"
+api_key_env = "MISTRAL_LLM_API_KEY"
+concurrency = 2
+
+# Scaleway models are reached through the shared LiteLLM gateway: ids carry a
+# `scaleway/` prefix and the key is a gateway key (LITELLM_API_KEY).
+[providers.scaleway]
+base_url = "https://litellm.pliage-prod.socle-ia.data-ia.prod.atlas.fabrique.social.gouv.fr/v1"
+api_key_env = "LITELLM_API_KEY"
+concurrency = 4
+
+# Albert
+[[models]]
+provider = "albert"
+# The id `mistral-medium-3-5-128b` is listed but answers 404 (probe-labellers); this one,
+# which the listing gives `mistral-medium-latest` as an alias of, works.
+model = "mistral-medium-3-5"
+
+[[models]]
+provider = "albert"
+model = "gemma-4-31b-it"
+
+[[models]]
+provider = "albert"
+model = "gpt-oss-120b"
+
+[[models]]
+provider = "albert"
+model = "mistral-small-3-2-24b-instruct-2506"  # the small-model check
+
+# Mistral
+[[models]]
+provider = "mistral"
+model = "mistral-large-2512"  # pinned id behind mistral-large-latest
+
+# Scaleway (explicit names: the default would read scaleway/scaleway/...)
+[[models]]
+provider = "scaleway"
+model = "scaleway/qwen3.5-397b-a17b"
+name = "scaleway/qwen3.5-397b-a17b"
+
+[[models]]
+provider = "scaleway"
+model = "scaleway/llama-3.3-70b-instruct"
+name = "scaleway/llama-3.3-70b-instruct"
+
+[[models]]
+provider = "scaleway"
+model = "scaleway/glm-5.2"
+name = "scaleway/glm-5.2"
