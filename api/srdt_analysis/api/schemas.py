@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 from srdt_analysis.core.constants import SOURCES
 from srdt_analysis.core.models import (
     CHUNK_ID,
-    CollectionName,
+    SourceName,
     UserLLMMessage,
 )
 
@@ -88,7 +88,7 @@ class ChunkMetadata(BaseModel):
     title: str
     url: str
     id: str
-    source: CollectionName
+    source: SourceName
     idcc: Optional[str] = None
     articles: Optional[list[Dict[str, str]]] = None
     number: Optional[str] = None

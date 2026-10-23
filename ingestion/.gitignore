@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+# local snapshot store (SNAPSHOT_STORE=local) and dumps
+/snapshots/
+/dumps/
