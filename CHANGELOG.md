@@ -1,3 +1,10 @@
+## [1.57.2](https://github.com/SocialGouv/srdt/compare/v1.57.1...v1.57.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **api:** drop jurisprudence links not provided to the LLM ([#448](https://github.com/SocialGouv/srdt/issues/448)) ([c47d3f7](https://github.com/SocialGouv/srdt/commit/c47d3f7a7b18c82684f07d41cadc85c06683357e))
+
 ## [1.57.1](https://github.com/SocialGouv/srdt/compare/v1.57.0...v1.57.1) (2026-10-21)
 
 
