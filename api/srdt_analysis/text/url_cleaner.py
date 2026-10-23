@@ -1,6 +1,6 @@
 import regex
 
-from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
+from srdt_analysis.clients.search_handler import SearchIndexHandler
 from srdt_analysis.core.constants import CHUNK_INDEX
 from srdt_analysis.text.reference_extractor import CODE_TRAVAIL, extract_references
 
@@ -44,7 +44,7 @@ courdecassation_domain = "courdecassation.fr"
 # via la whitelist. On conserve tout ce qui est sous ce préfixe.
 legifrance_conv_coll_path = "legifrance.gouv.fr/conv_coll"
 
-es = ElasticIndicesHandler()
+search_index = SearchIndexHandler()
 
 
 def to_comparable_path(url: str):
@@ -90,7 +90,7 @@ def clean_urls(response: str):
         # print(f"{description}: {url}")
         path = to_comparable_path(url)
         if path.startswith("code.travail.gouv.fr"):
-            check = es.check_urls(CHUNK_INDEX, [url])
+            check = search_index.check_urls(CHUNK_INDEX, [url])
             if (
                 # allow route site
                 url != cdtn_url
@@ -139,7 +139,7 @@ def clean_urls(response: str):
         f_text = text.replace(".", "").replace(" ", "")
 
         # look for the reference in our index (stored as nodes)
-        nodes = es.get_article_node(CHUNK_INDEX, f_text)
+        nodes = search_index.get_article_node(CHUNK_INDEX, f_text)
 
         if len(nodes) > 0:
             # look for the actual reference in the node

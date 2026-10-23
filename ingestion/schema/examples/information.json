@@ -1,0 +1,34 @@
+{
+  "id": "i0001",
+  "content": "# Effectifs \nCalcul.",
+  "metadata": {
+    "id": "i0001",
+    "source": "information",
+    "title": "Effectifs",
+    "url": "https://code.travail.gouv.fr/information/effectifs",
+    "idcc": null,
+    "idx": 0,
+    "initial_id": "initial-i0001",
+    "articles": null,
+    "legi_links": [
+      {
+        "legi_id": "LEGISCTA000000000002",
+        "url": "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000000000002",
+        "label": "Chapitre",
+        "origin": "contents.references",
+        "kind": "section",
+        "cid": "LEGISCTA000000000002",
+        "num": null,
+        "chunk_id": "LEGISCTA000000000002",
+        "canonical_url": "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000000000002"
+      }
+    ]
+  },
+  "doc_hash": "ee2929fd572914ea7f335e51e710a97e11631c6d12584b7c96cdf1f38c6a8345",
+  "embed_hash": "36bc0632dec27d53cf8140730310f4a9a1a560f07c4c73cd04e9b41fd2ff66bb",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

@@ -10,6 +10,7 @@ repos:
         description: Checks TOML files for syntax errors
       - id: name-tests-test
         description: Checks that test files are named correctly
+        args: [--pytest-test-first]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.4
     hooks:
@@ -22,15 +23,20 @@ repos:
     rev: "v1.1.393"
     hooks:
       - id: pyright
+        # runs in the api environment; ingestion/ is type-checked in its own job
+        files: ^api/
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.2
     hooks:
       - id: bandit
         description: Checks Python code for security issues
+        # pytest asserts (B101)
+        exclude: (^|/)tests/
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ["--baseline", "./api/.secrets.baseline"]
         # Note: `exclude` is a regex matched against the file path (not a glob).
-        exclude: "(^|/)(\\.kontinuous/|\\.github/)|\\.env\\.example$|request\\.http$|pnpm-lock\\.yaml$"
+        # ingestion examples and fixtures: content hashes and decision ids (hex)
+        exclude: "(^|/)(\\.kontinuous/|\\.github/)|\\.env\\.example$|request\\.http$|pnpm-lock\\.yaml$|^ingestion/(schema/examples|tests/fixtures)/"
