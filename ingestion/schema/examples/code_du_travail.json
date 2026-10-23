@@ -1,0 +1,30 @@
+{
+  "id": "LEGISCTA000000000002",
+  "content": "Article L1111-1 \n Les dispositions du présent livre sont applicables aux employeurs de droit privé. \n \nArticle L1111-2 \n Pour la mise en oeuvre des dispositions du présent code, les effectifs sont calculés ainsi.",
+  "metadata": {
+    "id": "LEGISCTA000000000002",
+    "source": "code_du_travail",
+    "title": "Code du travail Partie législative Chapitre Ier : Champ d'application",
+    "url": "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006072050/LEGISCTA000000000002",
+    "idcc": null,
+    "idx": 0,
+    "initial_id": "LEGISCTA000000000002",
+    "articles": [
+      {
+        "num": "L1111-1",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000011"
+      },
+      {
+        "num": "L1111-2",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000021"
+      }
+    ]
+  },
+  "doc_hash": "31e707cca7e697ecb2526bb25a94bb9c782d42f0304e3088f96fde74b6aa11cf",
+  "embed_hash": "f5026c9a054e76bba0d57c9ccc746deca6aa26acdf45f64f578197882de0a867",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

@@ -1,0 +1,27 @@
+# Sources to build. Sources left out are copied from the current index as they are.
+include = [
+    "contributions",
+    "contributions_idcc",
+    "information",
+    "page_fiche_ministere_travail",
+    "fiches_service_public",
+    "code_du_travail",
+    "conventions",
+    "judilibre",
+]
+
+# "latest" or a snapshot id (npm version for legi/kali, YYYYMMDD for judilibre)
+[snapshots]
+legi = "latest"
+kali = "latest"
+judilibre = "latest"
+
+[embedding]
+# canonical model id, written to the index _meta (ALBERT_VECTORISATION_MODEL is the
+# Albert name of the model, which differs between environments)
+model_id = "bge-m3"
+dim = 1024
+batch_size = 64
+
+[index]
+alias = "chunks"
