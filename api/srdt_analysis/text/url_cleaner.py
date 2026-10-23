@@ -34,10 +34,13 @@ whitelist = [
 
 cdtn_url = "https://code.travail.gouv.fr/"
 
-# Décisions de la Cour de cassation (base jurisprudence) : l'URL est construite par
-# get_decision_url() à partir de l'identifiant Judilibre, donc toujours bien formée.
-# On la conserve quelle que soit la profondeur du chemin (/decision/<id>).
+# Décisions de la Cour de cassation (base jurisprudence) : le LLM invente parfois des
+# décisions (identifiant, numéro de pourvoi, citation). On ne conserve un lien
+# /decision/<id> que si cette décision figure dans le contexte fourni au LLM (le web
+# l'écrit dans le prompt sous la forme "Source: judilibre (<url>)"). Les autres liens
+# vers ce domaine (racine, anciennes URLs, décisions absentes du contexte) sont retirés.
 courdecassation_domain = "courdecassation.fr"
+decision_url_pattern = regex.compile(r"courdecassation\.fr/decision/([0-9a-f]{24})")
 
 # Conventions collectives sur Légifrance : chemin variable selon la convention
 # (ex. /conv_coll/id/KALICONT...), donc pas de correspondance exacte possible
@@ -55,14 +58,20 @@ def to_comparable_path(url: str):
     return replaced
 
 
-def clean_urls(response: str):
+def clean_urls(response: str, context: str = ""):
     """Remove broken urls contained in llm response, it
     might be hallucinations, wrong domains or bad format.
+
+    `context` is the text given to the llm (system prompt and chat history): a
+    Cour de cassation decision link is kept only if the decision appears in it.
     """
     pattern = regex.compile(r"\[([^][]+)\](\(((?:[^()]+|(?2))+)\))")
 
+    allowed_decisions = set(decision_url_pattern.findall(context))
+
     cdtn = []
     cdtn_error = []
+    courdecassation_error = []
     legifrance = []
     unknown = []
     out_ok = []
@@ -107,7 +116,12 @@ def clean_urls(response: str):
         elif path == courdecassation_domain or path.startswith(
             courdecassation_domain + "/"
         ):
-            out_ok.append(url)
+            decision = decision_url_pattern.search(url)
+            if decision and decision.group(1) in allowed_decisions:
+                out_ok.append(url)
+            else:
+                courdecassation_error.append(url)
+                response = remove_from_response(response, url, description)
 
         elif path == legifrance_conv_coll_path or path.startswith(
             legifrance_conv_coll_path + "/"

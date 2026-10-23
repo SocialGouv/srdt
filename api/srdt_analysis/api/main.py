@@ -297,11 +297,11 @@ async def generate(request: GenerateRequest, _api_key: str = Depends(get_api_key
         request.system_prompt,
     )
 
-    response = clean_urls(response)
-
     chat_history_str = " ".join(
         [msg.get("content", "") for msg in request.chat_history]
     )
+
+    response = clean_urls(response, f"{request.system_prompt or ''} {chat_history_str}")
 
     return GenerateResponse(
         time=time.time() - start_time,
@@ -351,7 +351,10 @@ async def generate_stream(
                 }
                 yield f"data: {json.dumps(chunk_data)}\n\n"
 
-            cleaned_accumulated = clean_urls(accumulated_response)
+            cleaned_accumulated = clean_urls(
+                accumulated_response,
+                f"{request.system_prompt or ''} {chat_history_str}",
+            )
             # Send final metadata
             final_data = {
                 "type": "end",
