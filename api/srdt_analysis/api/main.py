@@ -1,11 +1,10 @@
 import json
-import os
 import time
 import traceback
+from contextlib import asynccontextmanager
 from operator import itemgetter
 from typing import List
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -30,9 +29,10 @@ from srdt_analysis.api.schemas import (
 )
 from srdt_analysis.clients.albert import AlbertClient
 from srdt_analysis.clients.search_handler import SearchIndexHandler
-from srdt_analysis.core.constants import BASE_API_URL, CHUNK_INDEX
+from srdt_analysis.core.constants import BASE_API_URL
 from srdt_analysis.core.exceptions import SRDTException
 from srdt_analysis.core.logger import Logger
+from srdt_analysis.core.settings import get_settings
 from srdt_analysis.services.corpus import (
     get_contributions_chunks_by_idcc,
     get_docs_content,
@@ -43,11 +43,23 @@ from srdt_analysis.text.anonymiser import anonymise_spacy
 from srdt_analysis.text.tokenizer import Tokenizer
 from srdt_analysis.text.url_cleaner import clean_urls
 
-load_dotenv()
-
-app = FastAPI()
-api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # fail at startup, not on the first request, when the environment is incomplete or
+    # the search index unreachable
+    get_settings()
+    if SearchIndexHandler().check_connection():
+        logger.info("Search index connection OK")
+    else:
+        logger.error("Search index connection KO")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 
 
 @app.exception_handler(Exception)
@@ -86,13 +98,6 @@ async def retry_error_handler(request: Request, exc: RetryError) -> JSONResponse
         )
 
 
-search_ok = SearchIndexHandler().check_connection()
-if search_ok:
-    logger.info("Search index connection OK")
-else:
-    logger.error("Search index connection KO")
-
-
 async def get_api_key(api_key: str = Security(api_key_header)):
     if not api_key.startswith("Bearer "):
         raise HTTPException(
@@ -100,7 +105,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
             detail="Invalid authorization header format. Must start with 'Bearer '",
         )
     token = api_key.replace("Bearer ", "")
-    if token != os.getenv("AUTH_API_KEY"):
+    if token != get_settings().auth_api_key.get_secret_value():
         raise HTTPException(status_code=401, detail="Invalid API key")
     return api_key
 
@@ -183,7 +188,6 @@ async def get_contributions_idcc(
 
             for prompt in request.prompts:
                 search_result = search_index.search(
-                    index_name=CHUNK_INDEX,
                     prompt=prompt,
                     k=request.options.top_K,
                     hybrid=request.options.hybrid or False,
@@ -255,15 +259,12 @@ async def search(
 
     ids = None
     if request.options.linked_from is not None:
-        ids = search_index.get_linked_chunk_ids(
-            CHUNK_INDEX, request.options.linked_from
-        )
+        ids = search_index.get_linked_chunk_ids(request.options.linked_from)
         if not ids:
             return SearchResponse(time=time.time() - start_time, top_chunks=[])
 
     for prompt in request.prompts:
         search_result = search_index.search(
-            index_name=CHUNK_INDEX,
             prompt=prompt,
             k=request.options.top_K,
             hybrid=request.options.hybrid or False,

@@ -10,3 +10,4 @@ data:
   ALBERT_ENDPOINT: https://albert.api.etalab.gouv.fr
   SEARCH_HOSTNAME: https://srdt-es-es-internal-http.startup-srdt--elasticsearch-prod.svc.cluster.local:9200
   SEARCH_ENGINE: elasticsearch
+  SEARCH_INDEX: chunks

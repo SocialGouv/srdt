@@ -13,7 +13,6 @@ def test_local_config_includes_every_source():
     config = load_config(CONFIG_DIR / "local.toml")
     assert set(config.include) == set(SOURCES)
     assert config.snapshot_ref("kali") == "latest"
-    assert config.index.alias == "chunks"
 
 
 def _config(**fields) -> dict:

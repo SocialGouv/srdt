@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # the base64 token of it. ELASTIC_API_KEY is the former name, still the key of the
     # deployed sealed secrets.
     search_engine: SearchEngine = "opensearch"
+    # index (alias) the chunks are published to, the one the api reads
+    search_index: str = "chunks"
     search_hostname: str | None = None
     search_credentials: SecretStr | None = Field(
         default=None,

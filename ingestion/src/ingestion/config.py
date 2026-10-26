@@ -1,4 +1,4 @@
-"""What to ingest: the include list, snapshot pins, embedding and index settings
+"""What to ingest: the include list, snapshot pins and embedding settings
 (one TOML file per environment in config/)."""
 
 import tomllib
@@ -36,12 +36,6 @@ class EmbeddingConfig(BaseModel):
     batch_size: int = 64
 
 
-class IndexConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    alias: str = "chunks"
-
-
 class Config(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -51,7 +45,6 @@ class Config(BaseModel):
         default_factory=lambda: dict.fromkeys(DATASETS, "latest")
     )
     embedding: EmbeddingConfig
-    index: IndexConfig = Field(default_factory=IndexConfig)
 
     @field_validator("include")
     @classmethod

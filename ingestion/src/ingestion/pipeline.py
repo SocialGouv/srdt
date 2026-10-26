@@ -216,7 +216,7 @@ def run(
     if writer_factory is None or embedder_factory is None:
         raise IngestionError("A writer and an embedder are needed to index")
 
-    alias = config.index.alias
+    alias = inputs.settings.search_index
     writer = writer_factory()
     current = writer.current_meta(alias)
     if writer.alias_exists(alias):
