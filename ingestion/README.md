@@ -25,7 +25,7 @@ uv sync
 | OpenSearch | `opensearch` | `http://localhost:9201` (`docker compose up -d opensearch`) |
 | Elasticsearch 8 | `elasticsearch` | `http://localhost:9202` (`docker compose --profile elasticsearch up -d elasticsearch`) |
 
-`SEARCH_CREDENTIALS` is `user:password`, or the base64 token of it. `ELASTIC_API_KEY` still works as the former name of `SEARCH_CREDENTIALS`. The index is built with the engine's own vector mapping, so switching engine means running `ingest index` again.
+`SEARCH_CREDENTIALS` is `user:password`, or the base64 token of it. `ELASTIC_API_KEY` still works as the former name of `SEARCH_CREDENTIALS`. `SEARCH_INDEX` (default `chunks`) is the alias to publish: it is an environment variable, shared with the api, which reads the same one. The index is built with the engine's own vector mapping, so switching engine means running `ingest index` again.
 
 ## 1. Snapshot the raw sources: `ingest fetch`
 
@@ -81,9 +81,8 @@ What gets ingested is set by the config file (`--config`, default `config/local.
 - `include`: the sources to build.
 - `snapshots`: `latest` or a pinned snapshot id per dataset.
 - `embedding`: the canonical model id and its dimension.
-- `index.alias`: the alias to publish.
 
-Each run builds a new `{alias}-{timestamp}` index and copies in the chunks of the sources it does not rebuild. It then moves the alias and deletes the older `{alias}-*` indices. Use another alias for tests, without a hyphen after `chunks` (e.g. `chunks_test`): `chunks-*` would match it.
+Each run builds a new `{alias}-{timestamp}` index and copies in the chunks of the sources it does not rebuild. It then moves the alias and deletes the older `{alias}-*` indices. Use another `SEARCH_INDEX` for tests, without a hyphen after `chunks` (e.g. `chunks_test`): `chunks-*` would match it.
 
 The index `_meta` records:
 - the schema version, embedding model id and dimension, and chunker version

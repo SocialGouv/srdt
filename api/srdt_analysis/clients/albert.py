@@ -1,5 +1,4 @@
 import json
-import os
 
 import httpx
 
@@ -7,33 +6,19 @@ from srdt_analysis.core.constants import (
     ALBERT_EMBEDDINGS_TIMEOUT,
     ALBERT_RERANK_MODEL,
 )
-from srdt_analysis.core.exceptions import (
-    ConfigurationError,
-    ExternalServiceError,
-)
+from srdt_analysis.core.exceptions import ExternalServiceError
 from srdt_analysis.core.models import (
     RerankedChunk,
 )
+from srdt_analysis.core.settings import get_settings
 
 
 class AlbertClient:
     def __init__(self):
-        self.api_key = os.getenv("ALBERT_API_KEY")
-        if not self.api_key:
-            raise ConfigurationError(
-                "ALBERT_API_KEY environment variable is not set", service="Albert"
-            )
-        self.base_url = os.getenv("ALBERT_ENDPOINT")
-        if not self.base_url:
-            raise ConfigurationError(
-                "ALBERT_ENDPOINT environment variable is not set", service="Albert"
-            )
-        self.model = os.getenv("ALBERT_VECTORISATION_MODEL")
-        if not self.model:
-            raise ConfigurationError(
-                "ALBERT_VECTORISATION_MODEL environment variable is not set",
-                service="Albert",
-            )
+        settings = get_settings()
+        self.api_key = settings.albert_api_key.get_secret_value()
+        self.base_url = settings.albert_endpoint
+        self.model = settings.albert_vectorisation_model
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
         }

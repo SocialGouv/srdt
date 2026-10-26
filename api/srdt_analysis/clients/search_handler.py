@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cache
 from timeit import default_timer as timer
 from typing import List, Optional, cast
 
@@ -6,11 +7,8 @@ from srdt_analysis.api.schemas import ChunkMetadata, ChunkResult
 from srdt_analysis.clients.albert import AlbertClient
 from srdt_analysis.clients.search_engine import (
     ENGINE_LABELS,
-    SearchEngine,
     build_client,
     exact_score_script,
-    get_connection_settings,
-    get_search_engine,
     knn_query,
 )
 from srdt_analysis.core.constants import EXACT_KNN_MAX_CHUNKS
@@ -19,14 +17,19 @@ from srdt_analysis.core.exceptions import (
     ServiceUnavailableError,
 )
 from srdt_analysis.core.logger import Logger
+from srdt_analysis.core.settings import SearchEngine, get_settings
 
 
 class SearchIndexHandler:
     def __init__(self):
         self.logger = Logger("Search")
-        self.engine: SearchEngine = get_search_engine()
+        settings = get_settings()
+        self.engine: SearchEngine = settings.search_engine
+        self.index = settings.search_index
         self.label = ENGINE_LABELS[self.engine]
-        self.client = build_client(*get_connection_settings(self.engine))
+        self.client = build_client(
+            settings.search_hostname, settings.search_credentials.get_secret_value()
+        )
         self.albert = AlbertClient()
 
     def check_connection(self):
@@ -58,7 +61,6 @@ class SearchIndexHandler:
 
     def find_most_similar_text(
         self,
-        index_name,
         query,
         k,
         sources: list[str],
@@ -73,7 +75,7 @@ class SearchIndexHandler:
 
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "size": k,
                     "query": {
@@ -93,7 +95,6 @@ class SearchIndexHandler:
 
     def find_most_similar_knn(
         self,
-        index_name,
         query,
         k,
         sources: list[str],
@@ -127,7 +128,7 @@ class SearchIndexHandler:
 
         try:
             filtered = self.client.count(
-                index=index_name, body={"query": {"bool": {"filter": filters}}}
+                index=self.index, body={"query": {"bool": {"filter": filters}}}
             )["count"]
             if filtered <= EXACT_KNN_MAX_CHUNKS:
                 body = {
@@ -151,7 +152,7 @@ class SearchIndexHandler:
             else:
                 body = knn_query(self.engine, embeddings, k, filters)
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     **body,
                     "size": k,
@@ -165,13 +166,13 @@ class SearchIndexHandler:
                 service=self.label,
             ) from e
 
-    def get_linked_chunk_ids(self, index_name: str, doc_ids: List[str]) -> list[str]:
+    def get_linked_chunk_ids(self, doc_ids: List[str]) -> list[str]:
         """Code du travail chunks cited (resolved legi_links) by the `doc_ids`
         documents. Links are copied on every chunk, so only the first one is read.
         """
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "query": {
                         "bool": {
@@ -198,10 +199,10 @@ class SearchIndexHandler:
                     chunk_ids.append(chunk_id)
         return chunk_ids
 
-    def get_idcc_contributions(self, index_name: str, idcc: str, size: int):
+    def get_idcc_contributions(self, idcc: str, size: int):
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "query": {
                         "bool": {
@@ -232,10 +233,10 @@ class SearchIndexHandler:
                 f"{self.label} query error: {str(e)}", service=self.label
             ) from e
 
-    def get_chunks(self, index_name: str, doc_ids: List[str]):
+    def get_chunks(self, doc_ids: List[str]):
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "query": {"terms": {"metadata.id.keyword": doc_ids}},
                     "size": 1000,
@@ -248,10 +249,10 @@ class SearchIndexHandler:
                 f"{self.label} query error: {str(e)}", service=self.label
             ) from e
 
-    def get_article_node(self, index_name: str, num: str):
+    def get_article_node(self, num: str):
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "query": {"term": {"metadata.articles.num.keyword": num}},
                     "size": 1,
@@ -266,7 +267,6 @@ class SearchIndexHandler:
 
     def search(
         self,
-        index_name: str,
         prompt: str,
         k: int,
         hybrid: bool,
@@ -280,7 +280,6 @@ class SearchIndexHandler:
 
         knn_res = self.find_most_similar_knn(
             query=prompt,
-            index_name=index_name,
             k=k_min,
             sources=sources,
             idcc=idcc,
@@ -297,7 +296,6 @@ class SearchIndexHandler:
 
         text_res = self.find_most_similar_text(
             query=prompt,
-            index_name=index_name,
             k=k_min,
             sources=sources,
             idcc=idcc,
@@ -333,10 +331,10 @@ class SearchIndexHandler:
 
         return [update_score(res_dict[id], score) for [id, score] in sorted_results[:k]]
 
-    def check_urls(self, index_name: str, urls: list[str]) -> list[tuple[str, bool]]:
+    def check_urls(self, urls: list[str]) -> list[tuple[str, bool]]:
         try:
             response = self.client.search(
-                index=index_name,
+                index=self.index,
                 body={
                     "query": {"terms": {"metadata.url.keyword": urls}},
                     "aggs": {"urls": {"terms": {"field": "metadata.url.keyword"}}},
@@ -349,3 +347,10 @@ class SearchIndexHandler:
             raise ExternalServiceError(
                 f"{self.label} query error: {str(e)}", service=self.label
             ) from e
+
+
+@cache
+def get_search_handler() -> SearchIndexHandler:
+    """The handler shared by the modules that cannot take one as a parameter, built on
+    first use so that importing them does not need the environment."""
+    return SearchIndexHandler()

@@ -1,18 +1,15 @@
-import os
-
 import uvicorn
-from dotenv import load_dotenv
 
 from srdt_analysis.core.constants import API_TIMEOUT
-
-load_dotenv()
+from srdt_analysis.core.settings import get_settings
 
 
 def start():
+    settings = get_settings()
     uvicorn.run(
         "srdt_analysis.api.main:app",
-        host=os.getenv("API_HOST", "localhost"),
-        port=int(os.getenv("API_PORT", 8000)),
+        host=settings.api_host,
+        port=settings.api_port,
         reload=True,
         timeout_keep_alive=API_TIMEOUT,
     )

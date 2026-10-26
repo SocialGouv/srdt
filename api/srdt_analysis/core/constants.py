@@ -2,7 +2,6 @@ BASE_API_URL = "/api/v1"
 API_TIMEOUT = 180
 ALBERT_EMBEDDINGS_TIMEOUT = 180
 ALBERT_RERANK_MODEL = "openweight-rerank"
-CHUNK_INDEX = "chunks"
 # Vector search: when the filters keep at most this many chunks, every one of them is
 # scored (exact search) instead of walking the HNSW graph, whose recall depends on how
 # the index was built (it can miss most of the true neighbours of a filtered query).

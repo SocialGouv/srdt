@@ -1,66 +1,19 @@
-"""Search engine selection: OpenSearch or Elasticsearch, chosen by `SEARCH_ENGINE`.
+"""Search engine specifics: OpenSearch or Elasticsearch, chosen by `SEARCH_ENGINE`.
 
 Both are reached with the same client (`opensearch-py`): the REST endpoints are the
 same, only the vector query bodies differ.
 """
 
-import os
-from typing import Any, Literal, Optional
+from typing import Any
 
 from opensearchpy import OpenSearch
 
-from srdt_analysis.core.exceptions import ConfigurationError
-
-SearchEngine = Literal["opensearch", "elasticsearch"]
-
-DEFAULT_SEARCH_ENGINE: SearchEngine = "opensearch"
+from srdt_analysis.core.settings import SearchEngine
 
 ENGINE_LABELS: dict[SearchEngine, str] = {
     "opensearch": "OpenSearch",
     "elasticsearch": "Elasticsearch",
 }
-
-HOSTNAME_VARIABLES = ("SEARCH_HOSTNAME",)
-# ELASTIC_API_KEY is the former name, still the key of the deployed sealed secrets:
-# drop it once they are sealed again as SEARCH_CREDENTIALS
-CREDENTIALS_VARIABLES = ("SEARCH_CREDENTIALS", "ELASTIC_API_KEY")
-
-
-def get_search_engine() -> SearchEngine:
-    value = os.getenv("SEARCH_ENGINE") or DEFAULT_SEARCH_ENGINE
-    for engine in ENGINE_LABELS:
-        if engine == value:
-            return engine
-    raise ConfigurationError(
-        f"SEARCH_ENGINE must be one of {', '.join(ENGINE_LABELS)} (got '{value}')",
-        service="Search",
-    )
-
-
-def _first_env(names: tuple[str, ...]) -> Optional[str]:
-    for name in names:
-        value = os.getenv(name)
-        if value:
-            return value
-    return None
-
-
-def get_connection_settings(engine: SearchEngine) -> tuple[str, str]:
-    """Hostname and credentials of the search engine, from the environment."""
-    label = ENGINE_LABELS[engine]
-    hostname = _first_env(HOSTNAME_VARIABLES)
-    if not hostname:
-        raise ConfigurationError(
-            f"{' or '.join(HOSTNAME_VARIABLES)} environment variable is not set",
-            service=label,
-        )
-    credentials = _first_env(CREDENTIALS_VARIABLES)
-    if not credentials:
-        raise ConfigurationError(
-            f"{' or '.join(CREDENTIALS_VARIABLES)} environment variable is not set",
-            service=label,
-        )
-    return hostname, credentials
 
 
 def build_client(hostname: str, credentials: str) -> OpenSearch:

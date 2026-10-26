@@ -8,6 +8,7 @@ import jsonschema
 import pytest
 
 from srdt_analysis.clients.search_handler import SearchIndexHandler
+from srdt_analysis.core.settings import get_settings
 
 SCHEMA_DIR = Path(__file__).parents[2] / "ingestion" / "schema"
 SCHEMA = json.loads((SCHEMA_DIR / "chunk.v1.schema.json").read_text())
@@ -15,17 +16,16 @@ EXAMPLES = sorted((SCHEMA_DIR / "examples").glob("*.json"))
 
 
 @pytest.fixture
-def handler(monkeypatch) -> SearchIndexHandler:
+def handler() -> SearchIndexHandler:
     # the clients are only built, never called
-    for name, value in {
-        "SEARCH_CREDENTIALS": "user:password",  # pragma: allowlist secret
-        "SEARCH_HOSTNAME": "http://localhost:9200",
-        "ALBERT_API_KEY": "key",  # pragma: allowlist secret
-        "ALBERT_ENDPOINT": "http://localhost:8000",
-        "ALBERT_VECTORISATION_MODEL": "model",
-    }.items():
-        monkeypatch.setenv(name, value)
     return SearchIndexHandler()
+
+
+def test_handler_uses_the_configured_index(monkeypatch, handler):
+    assert handler.index == "chunks"
+    monkeypatch.setenv("SEARCH_INDEX", "chunks-v2")
+    get_settings.cache_clear()
+    assert SearchIndexHandler().index == "chunks-v2"
 
 
 def test_every_source_has_an_example():
