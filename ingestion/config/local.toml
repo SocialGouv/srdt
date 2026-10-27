@@ -22,3 +22,8 @@ judilibre = "latest"
 model_id = "bge-m3"
 dim = 1024
 batch_size = 64
+
+[sync]
+# `ingest sync` refuses to delete more than this share of a source (per_source overrides)
+max_delete_ratio = 0.10
+min_deleted = 25

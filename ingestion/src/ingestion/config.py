@@ -1,4 +1,4 @@
-"""What to ingest: the include list, snapshot pins and embedding settings
+"""What to ingest: the include list, snapshot pins, embedding and sync settings
 (one TOML file per environment in config/)."""
 
 import tomllib
@@ -36,6 +36,22 @@ class EmbeddingConfig(BaseModel):
     batch_size: int = 64
 
 
+class SyncConfig(BaseModel):
+    """Guards of `ingest sync`: a run that deletes more than this is refused unless
+    `--allow-prune` is given."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    max_delete_ratio: float = Field(default=0.10, ge=0, le=1)
+    # a few deletions in a small source are not a sign of a broken loader
+    min_deleted: int = Field(default=25, ge=0)
+    # ratio per source, when the default does not suit it
+    per_source: dict[SourceName, float] = Field(default_factory=dict)
+
+    def max_ratio(self, source: SourceName) -> float:
+        return self.per_source.get(source, self.max_delete_ratio)
+
+
 class Config(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -45,6 +61,7 @@ class Config(BaseModel):
         default_factory=lambda: dict.fromkeys(DATASETS, "latest")
     )
     embedding: EmbeddingConfig
+    sync: SyncConfig = Field(default_factory=SyncConfig)
 
     @field_validator("include")
     @classmethod
