@@ -5,17 +5,29 @@ sources it does not rebuild, then moves the alias and deletes the older indices.
 """
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from opensearchpy import OpenSearch
+from opensearchpy.helpers import scan
 
 from ingestion.contract import ChunkDocument
 from ingestion.mapping import index_settings, mappings
 from ingestion.settings import SearchEngine, Settings, secret
 
 BULK_BATCH_SIZE = 200
+# hashes per vector lookup
+VECTOR_LOOKUP_SIZE = 500
+
+# Replaces what changed without touching `content` and `embedding`. A partial `doc`
+# update would merge the metadata and keep keys that are gone (legi_links, number).
+UPDATE_SCRIPT = (
+    "ctx._source.id = params.id; "
+    "ctx._source.metadata = params.metadata; "
+    "ctx._source.doc_hash = params.doc_hash"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +39,36 @@ class IndexWriter(Protocol):
     def copy_other_sources(self, alias: str, index: str, sources: list[str]) -> int: ...
     def bulk_index(self, index: str, documents: Iterable[ChunkDocument]) -> int: ...
     def publish(self, alias: str, index: str) -> None: ...
+
+
+@dataclass(frozen=True)
+class MetadataUpdate:
+    """New id, metadata and doc_hash of a chunk whose text (and vector) is unchanged."""
+
+    chunk_id: str
+    id: str
+    metadata: dict[str, Any]
+    doc_hash: str
+
+
+class SyncWriter(Protocol):
+    """What `ingest sync` needs to change the live index in place."""
+
+    def current_meta(self, alias: str) -> dict[str, Any] | None: ...
+    def alias_exists(self, alias: str) -> bool: ...
+    def scan_hashes(self, alias: str, source: str) -> dict[str, tuple[str, str]]: ...
+    def fetch_vectors(
+        self, alias: str, embed_hashes: Sequence[str]
+    ) -> dict[str, list[float]]: ...
+    def apply(
+        self,
+        alias: str,
+        documents: Iterable[ChunkDocument],
+        updates: Iterable[MetadataUpdate],
+        deletes: Iterable[str],
+    ) -> None: ...
+    def delete_source(self, alias: str, source: str) -> int: ...
+    def update_meta(self, alias: str, meta: dict[str, Any]) -> None: ...
 
 
 def build_client(hostname: str, credentials: str) -> OpenSearch:
@@ -105,28 +147,138 @@ class SearchIndexWriter:
         return response["total"]
 
     def bulk_index(self, index: str, documents: Iterable[ChunkDocument]) -> int:
+        return self._bulk(
+            (
+                {"index": {"_index": index, "_id": document.chunk_id}},
+                document.model_dump(mode="json", exclude_unset=True),
+            )
+            for document in documents
+        )
+
+    def _bulk(
+        self, actions: Iterable[tuple[dict[str, Any], dict[str, Any] | None]]
+    ) -> int:
+        """Send (action, source) pairs by batches; a delete has no source."""
         count = 0
         operations: list[dict[str, Any]] = []
-        for document in documents:
-            operations.append({"index": {"_index": index, "_id": document.chunk_id}})
-            operations.append(document.model_dump(mode="json", exclude_unset=True))
-            if len(operations) >= 2 * BULK_BATCH_SIZE:
-                count += self._bulk(operations)
-                operations = []
+        batch = 0
+        for action, source in actions:
+            operations.append(action)
+            if source is not None:
+                operations.append(source)
+            batch += 1
+            if batch >= BULK_BATCH_SIZE:
+                self._send(operations)
+                count += batch
+                operations, batch = [], 0
         if operations:
-            count += self._bulk(operations)
+            self._send(operations)
+            count += batch
         return count
 
-    def _bulk(self, operations: list[dict[str, Any]]) -> int:
+    def _send(self, operations: list[dict[str, Any]]) -> None:
         response = self.client.bulk(body=operations)
         if response["errors"]:
             errors = [
-                item["index"]["error"]
+                result["error"]
                 for item in response["items"]
-                if "error" in item["index"]
+                for result in item.values()
+                if "error" in result
             ]
             raise RuntimeError(f"{len(errors)} bulk errors, first: {errors[0]}")
-        return len(operations) // 2
+
+    def scan_hashes(self, alias: str, source: str) -> dict[str, tuple[str, str]]:
+        """`_id` -> (doc_hash, embed_hash) of the chunks of `source`."""
+        hits = scan(
+            self.client,
+            index=alias,
+            query={
+                "query": {"term": {"metadata.source": source}},
+                "_source": ["doc_hash", "embed_hash"],
+            },
+            size=1000,
+        )
+        return {
+            hit["_id"]: (
+                hit["_source"].get("doc_hash", ""),
+                hit["_source"].get("embed_hash", ""),
+            )
+            for hit in hits
+        }
+
+    def fetch_vectors(
+        self, alias: str, embed_hashes: Sequence[str]
+    ) -> dict[str, list[float]]:
+        """Vector of one chunk per embed_hash (identical text, same model)."""
+        vectors: dict[str, list[float]] = {}
+        for start in range(0, len(embed_hashes), VECTOR_LOOKUP_SIZE):
+            batch = list(embed_hashes[start : start + VECTOR_LOOKUP_SIZE])
+            response = self.client.search(
+                index=alias,
+                body={
+                    "size": len(batch),
+                    "query": {"terms": {"embed_hash": batch}},
+                    "collapse": {"field": "embed_hash"},
+                    "_source": ["embed_hash", "embedding"],
+                },
+            )
+            for hit in response["hits"]["hits"]:
+                source = hit["_source"]
+                if "embedding" in source:
+                    vectors[source["embed_hash"]] = source["embedding"]
+        return vectors
+
+    def apply(
+        self,
+        alias: str,
+        documents: Iterable[ChunkDocument],
+        updates: Iterable[MetadataUpdate],
+        deletes: Iterable[str],
+    ) -> None:
+        """Write to the live index: new and re-embedded chunks, then metadata
+        updates, then deletions. One refresh at the end."""
+        indexed = self._bulk(
+            (
+                {"index": {"_index": alias, "_id": document.chunk_id}},
+                document.model_dump(mode="json", exclude_unset=True),
+            )
+            for document in documents
+        )
+        updated = self._bulk(
+            (
+                {"update": {"_index": alias, "_id": update.chunk_id}},
+                {
+                    "script": {
+                        "lang": "painless",
+                        "source": UPDATE_SCRIPT,
+                        "params": {
+                            "id": update.id,
+                            "metadata": update.metadata,
+                            "doc_hash": update.doc_hash,
+                        },
+                    }
+                },
+            )
+            for update in updates
+        )
+        deleted = self._bulk(
+            ({"delete": {"_index": alias, "_id": chunk_id}}, None)
+            for chunk_id in deletes
+        )
+        self.client.indices.refresh(index=alias)
+        logger.info(f"Indexed {indexed}, updated {updated}, deleted {deleted} chunks")
+
+    def delete_source(self, alias: str, source: str) -> int:
+        response = self.client.delete_by_query(
+            index=alias,
+            body={"query": {"term": {"metadata.source": source}}},
+            params={"refresh": "true", "request_timeout": 600},
+        )
+        return response["deleted"]
+
+    def update_meta(self, alias: str, meta: dict[str, Any]) -> None:
+        # replaces the whole _meta: `meta` is the merged one
+        self.client.indices.put_mapping(index=alias, body={"_meta": meta})
 
     def publish(self, alias: str, index: str) -> None:
         """Make `index` searchable, move `alias` to it, delete the older indices."""

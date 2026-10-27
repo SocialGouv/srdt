@@ -69,6 +69,59 @@ def index(
 
 
 @app.command()
+def sync(
+    config: Annotated[Path, typer.Option(help="Config file")] = Path(
+        "config/local.toml"
+    ),
+    only: Annotated[
+        str | None,
+        typer.Option(help="Comma-separated subset of the include list"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(help="Read the index and print what would change: no write"),
+    ] = False,
+    allow_prune: Annotated[
+        bool,
+        typer.Option(help="Skip the guards on deletions and on empty inputs"),
+    ] = False,
+    prune_excluded: Annotated[
+        bool,
+        typer.Option(help="Delete the sources that are not in the include list"),
+    ] = False,
+    store: StoreOption = None,
+):
+    """Update the live index in place: embed and write only what changed."""
+    from ingestion.embed import AlbertEmbedder
+    from ingestion.index_writer import SearchIndexWriter
+    from ingestion.pipeline import IngestionError, Inputs
+    from ingestion.snapshots.store import make_store
+    from ingestion.sync import SyncAborted
+    from ingestion.sync import sync as run_sync
+
+    settings = Settings()
+    cfg = load_config(config)
+    try:
+        result = run_sync(
+            cfg,
+            Inputs(store=make_store(settings, store), config=cfg, settings=settings),
+            SearchIndexWriter(settings),
+            None if dry_run else AlbertEmbedder(settings, cfg.embedding.dim),
+            only=only.split(",") if only else None,
+            dry_run=dry_run,
+            allow_prune=allow_prune,
+            prune_excluded=prune_excluded,
+        )
+    except SyncAborted as error:
+        typer.echo(f"Aborted: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    except IngestionError as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+    typer.echo(json.dumps(result.summary(cfg.embedding.batch_size), indent=2))
+
+
+@app.command()
 def fetch(
     datasets: Annotated[
         list[str], typer.Argument(help=f"Datasets to fetch: {', '.join(DATASETS)}")

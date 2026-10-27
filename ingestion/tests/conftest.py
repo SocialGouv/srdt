@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from ingestion.config import Config, EmbeddingConfig
+from ingestion.config import Config, EmbeddingConfig, SyncConfig
 from ingestion.contract import SOURCES, ChunkDocument, SourceName
 from ingestion.pipeline import Inputs
 from ingestion.settings import Settings
@@ -163,10 +163,15 @@ def make_store(root: Path) -> LocalStore:
     return store
 
 
-def make_config(include: Sequence[SourceName] = SOURCES, **embedding: Any) -> Config:
+def make_config(
+    include: Sequence[SourceName] = SOURCES,
+    sync: SyncConfig | None = None,
+    **embedding: Any,
+) -> Config:
     return Config(
         include=list(include),
         embedding=EmbeddingConfig(**{"model_id": "test-model", "dim": 3, **embedding}),
+        sync=sync or SyncConfig(),
     )
 
 
@@ -180,13 +185,19 @@ def config() -> Config:
     return make_config()
 
 
-def make_inputs(store: LocalStore, config: Config) -> Inputs:
+def make_inputs(
+    store: LocalStore,
+    config: Config,
+    documents: dict[SourceName, list[Document]] | None = None,
+) -> Inputs:
+    """`documents` replaces the Postgres rows (default: `cdtn_documents()`)."""
+    rows = documents or cdtn_documents()
     return Inputs(
         store=store,
         config=config,
         settings=Settings(_env_file=None),  # type: ignore[call-arg]
         postgres_loader=lambda _settings, sources: {
-            s: d for s, d in cdtn_documents().items() if s in sources
+            s: d for s, d in rows.items() if s in sources
         },
     )
 
@@ -235,3 +246,69 @@ class FakeWriter:
 
     def publish(self, alias: str, index: str) -> None:
         self.published = (alias, index)
+
+
+class FakeIndex:
+    """The live index, in memory, for `ingest sync`."""
+
+    def __init__(self, documents: Iterable[ChunkDocument], meta: dict[str, Any]):
+        self.docs = {d.chunk_id: d for d in documents}
+        self.meta: dict[str, Any] = meta
+        self.writes: list[tuple[int, int, int]] = []  # (indexed, updated, deleted)
+        self.events: list[str] = []
+
+    @classmethod
+    def built_from(cls, writer: FakeWriter) -> "FakeIndex":
+        return cls(writer.documents, writer.meta or {})
+
+    def alias_exists(self, alias: str) -> bool:
+        return True
+
+    def current_meta(self, alias: str) -> dict[str, Any] | None:
+        return self.meta
+
+    def scan_hashes(self, alias: str, source: str) -> dict[str, tuple[str, str]]:
+        return {
+            chunk_id: (d.doc_hash, d.embed_hash)
+            for chunk_id, d in self.docs.items()
+            if d.metadata.source == source
+        }
+
+    def fetch_vectors(
+        self, alias: str, embed_hashes: Sequence[str]
+    ) -> dict[str, list[float]]:
+        wanted = set(embed_hashes)
+        return {
+            d.embed_hash: d.embedding
+            for d in self.docs.values()
+            if d.embed_hash in wanted
+        }
+
+    def apply(self, alias: str, documents, updates, deletes) -> None:
+        documents, updates, deletes = list(documents), list(updates), list(deletes)
+        for document in documents:
+            self.docs[document.chunk_id] = document
+        for update in updates:
+            old = self.docs[update.chunk_id]
+            self.docs[update.chunk_id] = ChunkDocument.model_validate(
+                {
+                    **old.model_dump(mode="json", exclude_unset=True),
+                    "id": update.id,
+                    "metadata": update.metadata,
+                    "doc_hash": update.doc_hash,
+                }
+            )
+        for chunk_id in deletes:
+            del self.docs[chunk_id]
+        self.writes.append((len(documents), len(updates), len(deletes)))
+        self.events.append("apply")
+
+    def delete_source(self, alias: str, source: str) -> int:
+        doomed = [i for i, d in self.docs.items() if d.metadata.source == source]
+        for chunk_id in doomed:
+            del self.docs[chunk_id]
+        return len(doomed)
+
+    def update_meta(self, alias: str, meta: dict[str, Any]) -> None:
+        self.meta = meta
+        self.events.append("meta")
