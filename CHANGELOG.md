@@ -1,3 +1,10 @@
+## [1.57.3](https://github.com/SocialGouv/srdt/compare/v1.57.2...v1.57.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* **security:** bump Node.js to 22.23.4 (October 2026 security releases) ([#449](https://github.com/SocialGouv/srdt/issues/449)) ([6d3276c](https://github.com/SocialGouv/srdt/commit/6d3276ce47c6a9f204e29ea3fb603ca1e7e5d479))
+
 ## [1.57.2](https://github.com/SocialGouv/srdt/compare/v1.57.1...v1.57.2) (2026-10-23)
 
 
