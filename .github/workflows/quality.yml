@@ -186,6 +186,63 @@ jobs:
         run: poetry run pyright
         working-directory: ./api
 
+  python-test:
+    name: Python - Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+        working-directory: ./api
+
+      - name: Tests
+        run: poetry run pytest
+        working-directory: ./api
+
+  ingestion:
+    name: Ingestion - Lint, types, tests, schema
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ingestion
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check
+
+      - name: Format check
+        run: uv run ruff format --check
+
+      - name: Type-check
+        run: uv run pyright
+
+      - name: Tests
+        run: uv run pytest
+
+      - name: Published schema is up to date
+        run: uv run ingest schema --check
+
   python-hook:
     name: Python - Pre-commit hook
     runs-on: ubuntu-latest

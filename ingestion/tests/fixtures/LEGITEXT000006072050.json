@@ -1,0 +1,58 @@
+{
+ "data": {
+  "cid": "LEGITEXT000006072050",
+  "id": "LEGITEXT000006072050",
+  "title": "Code du travail"
+ },
+ "type": "code",
+ "children": [
+  {
+   "data": {
+    "cid": "LEGISCTA000000000001",
+    "id": "LEGISCTA000000000001",
+    "title": "Partie législative"
+   },
+   "type": "section",
+   "children": [
+    {
+     "data": {
+      "cid": "LEGISCTA000000000002",
+      "id": "LEGISCTA000000000002",
+      "title": "Chapitre Ier : Champ d'application"
+     },
+     "type": "section",
+     "children": [
+      {
+       "data": {
+        "cid": "LEGIARTI000000000010",
+        "id": "LEGIARTI000000000011",
+        "num": "L1111-1",
+        "texte": "Les dispositions du présent livre sont applicables aux employeurs de droit privé.",
+        "etat": "VIGUEUR",
+        "articleVersions": [
+         {
+          "id": "LEGIARTI000000000012"
+         }
+        ]
+       },
+       "type": "article",
+       "children": []
+      },
+      {
+       "data": {
+        "cid": "LEGIARTI000000000020",
+        "id": "LEGIARTI000000000021",
+        "num": "L1111-2",
+        "texte": "Pour la mise en oeuvre des dispositions du présent code, les effectifs sont calculés ainsi.",
+        "etat": "VIGUEUR",
+        "articleVersions": []
+       },
+       "type": "article",
+       "children": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

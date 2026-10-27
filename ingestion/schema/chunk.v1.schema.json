@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Article": {
+      "additionalProperties": false,
+      "properties": {
+        "num": {
+          "description": "Article number, e.g. L1242-3",
+          "title": "Num",
+          "type": "string"
+        },
+        "url": {
+          "description": "Legifrance url of the article",
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "num",
+        "url"
+      ],
+      "title": "Article",
+      "type": "object"
+    },
+    "ChunkMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Document id, shared by all the chunks of a document (cdtn_id, LEGI section cid, KALI article id, Judilibre decision-summary id)",
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "contributions",
+            "contributions_idcc",
+            "information",
+            "page_fiche_ministere_travail",
+            "fiches_service_public",
+            "code_du_travail",
+            "conventions",
+            "judilibre"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "idcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Collective agreement number, unpadded",
+          "title": "Idcc"
+        },
+        "idx": {
+          "description": "Position of the chunk in its document",
+          "minimum": 0,
+          "title": "Idx",
+          "type": "integer"
+        },
+        "initial_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Initial Id"
+        },
+        "articles": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Article"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Code du travail articles of the chunk (code_du_travail only)",
+          "title": "Articles"
+        },
+        "number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Number"
+        },
+        "decision_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Date"
+        },
+        "legi_links": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/LegiLink"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legi Links"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "title",
+        "url",
+        "idcc",
+        "idx",
+        "initial_id",
+        "articles"
+      ],
+      "title": "ChunkMetadata",
+      "type": "object"
+    },
+    "LegiLink": {
+      "additionalProperties": false,
+      "description": "Legifrance link to a code found in a CDTN document, resolved against the\ncode du travail.",
+      "properties": {
+        "legi_id": {
+          "description": "LEGIARTI/LEGISCTA id parsed from the url",
+          "title": "Legi Id",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "origin": {
+          "description": "Where the link was found in the document",
+          "title": "Origin",
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "article",
+                "section"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "None when the id is not in the code du travail",
+          "title": "Kind"
+        },
+        "cid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cid"
+        },
+        "num": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Num"
+        },
+        "chunk_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "metadata.id of the code du travail chunks holding the target",
+          "title": "Chunk Id"
+        },
+        "canonical_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Canonical Url"
+        }
+      },
+      "required": [
+        "legi_id",
+        "url",
+        "label",
+        "origin",
+        "kind",
+        "cid",
+        "num",
+        "chunk_id",
+        "canonical_url"
+      ],
+      "title": "LegiLink",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A chunk as stored in the index. Its `_id` in the index is\n`{metadata.source}:{metadata.idcc or \"-\"}:{metadata.id}:{metadata.idx}`.",
+  "properties": {
+    "id": {
+      "description": "Same as metadata.id (kept for compatibility)",
+      "title": "Id",
+      "type": "string"
+    },
+    "content": {
+      "description": "Chunk text, as embedded and returned",
+      "title": "Content",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ChunkMetadata"
+    },
+    "doc_hash": {
+      "description": "sha256 of the canonical JSON of id, content and metadata",
+      "title": "Doc Hash",
+      "type": "string"
+    },
+    "embed_hash": {
+      "description": "sha256 of the embedding model id and the embedded text",
+      "title": "Embed Hash",
+      "type": "string"
+    },
+    "embedding": {
+      "description": "Dense vector; model and dimension are in the index _meta",
+      "items": {
+        "type": "number"
+      },
+      "title": "Embedding",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "content",
+    "metadata",
+    "doc_hash",
+    "embed_hash",
+    "embedding"
+  ],
+  "title": "Search chunk",
+  "type": "object",
+  "x-schema-version": "1.0.0"
+}

@@ -1,11 +1,10 @@
 import json
-import os
 import time
 import traceback
+from contextlib import asynccontextmanager
 from operator import itemgetter
 from typing import List
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -28,11 +27,12 @@ from srdt_analysis.api.schemas import (
     SearchRequest,
     SearchResponse,
 )
-from srdt_analysis.clients.collections import AlbertCollectionHandler
-from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
-from srdt_analysis.core.constants import BASE_API_URL, CHUNK_INDEX
+from srdt_analysis.clients.albert import AlbertClient
+from srdt_analysis.clients.search_handler import SearchIndexHandler
+from srdt_analysis.core.constants import BASE_API_URL
 from srdt_analysis.core.exceptions import SRDTException
 from srdt_analysis.core.logger import Logger
+from srdt_analysis.core.settings import get_settings
 from srdt_analysis.services.corpus import (
     get_contributions_chunks_by_idcc,
     get_docs_content,
@@ -43,11 +43,23 @@ from srdt_analysis.text.anonymiser import anonymise_spacy
 from srdt_analysis.text.tokenizer import Tokenizer
 from srdt_analysis.text.url_cleaner import clean_urls
 
-load_dotenv()
-
-app = FastAPI()
-api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 logger = Logger("API")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # fail at startup, not on the first request, when the environment is incomplete or
+    # the search index unreachable
+    get_settings()
+    if SearchIndexHandler().check_connection():
+        logger.info("Search index connection OK")
+    else:
+        logger.error("Search index connection KO")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 
 
 @app.exception_handler(Exception)
@@ -86,13 +98,6 @@ async def retry_error_handler(request: Request, exc: RetryError) -> JSONResponse
         )
 
 
-es_ok = ElasticIndicesHandler().check_connection()
-if es_ok:
-    logger.info("Elastic connection OK")
-else:
-    logger.error("Elastic connection KO")
-
-
 async def get_api_key(api_key: str = Security(api_key_header)):
     if not api_key.startswith("Bearer "):
         raise HTTPException(
@@ -100,7 +105,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
             detail="Invalid authorization header format. Must start with 'Bearer '",
         )
     token = api_key.replace("Bearer ", "")
-    if token != os.getenv("AUTH_API_KEY"):
+    if token != get_settings().auth_api_key.get_secret_value():
         raise HTTPException(status_code=401, detail="Invalid API key")
     return api_key
 
@@ -177,13 +182,12 @@ async def get_contributions_idcc(
             )
         else:
             start_time = time.time()
-            es = ElasticIndicesHandler()
+            search_index = SearchIndexHandler()
 
             transformed_results: List[ChunkResult] = []
 
             for prompt in request.prompts:
-                search_result = es.search(
-                    index_name=CHUNK_INDEX,
+                search_result = search_index.search(
                     prompt=prompt,
                     k=request.options.top_K,
                     hybrid=request.options.hybrid or False,
@@ -219,13 +223,11 @@ async def get_docs(request: RetrieveRequest, _api_key: str = Depends(get_api_key
 @app.post(f"{BASE_API_URL}/rerank", response_model=RerankResponse)
 async def rerank(request: RerankRequest, _api_key: str = Depends(get_api_key)):
     start_time = time.time()
-    collections = AlbertCollectionHandler()
+    albert = AlbertClient()
 
-    # Albert seemd to be using bge-reranker-v2-m3 that is limited to 512, Albert silently fails if we don't respect this limit / not documented
-    # inputs = [tokenizer.take_n(input.content, 512) for input in request.inputs]
     # TODO dunno why but hard limit seemd to perform better than token selection, we should build chunks based on this limitation if it actually exists
     inputs = [input.content[:8192] for input in request.inputs]
-    res = collections.rerank(request.prompt, inputs)
+    res = albert.rerank(request.prompt, inputs)
 
     # reorder results based on rerank indices to map chunks and results
     sorted_res = sorted(res, key=lambda res: res["index"])
@@ -251,19 +253,18 @@ async def search(
     request: SearchRequest, _api_key: str = Depends(get_api_key)
 ) -> SearchResponse:
     start_time = time.time()
-    es = ElasticIndicesHandler()
+    search_index = SearchIndexHandler()
 
     transformed_results: List[ChunkResult] = []
 
     ids = None
     if request.options.linked_from is not None:
-        ids = es.get_linked_chunk_ids(CHUNK_INDEX, request.options.linked_from)
+        ids = search_index.get_linked_chunk_ids(request.options.linked_from)
         if not ids:
             return SearchResponse(time=time.time() - start_time, top_chunks=[])
 
     for prompt in request.prompts:
-        search_result = es.search(
-            index_name=CHUNK_INDEX,
+        search_result = search_index.search(
             prompt=prompt,
             k=request.options.top_K,
             hybrid=request.options.hybrid or False,

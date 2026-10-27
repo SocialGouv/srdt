@@ -1,7 +1,8 @@
 import { fr } from "@codegouvfr/react-dsfr";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Config, PROMPT_INSTRUCTIONS } from "@/constants";
+import { Config } from "@/constants";
+import { PROMPT_INSTRUCTIONS } from "@/prompts";
 
 export const metadata = {
   title: "Prompt instructions (interne)",
