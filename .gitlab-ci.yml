@@ -123,6 +123,24 @@ web-type-check:
   script:
     - pnpm type-check
 
+ingestion-check:
+  stage: check
+  image: python:3.12-slim
+  interruptible: true
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends libatomic1 > /dev/null
+    - pip install --no-cache-dir uv==0.9.5
+    - cd ingestion
+    - uv sync --frozen
+  script:
+    - uv run ruff check
+    - uv run ruff format --check
+    - uv run pyright
+    - uv run pytest
+
 lint-dockerfile:
   stage: check
   image: hadolint/hadolint:v2.12.0-debian
@@ -131,7 +149,7 @@ lint-dockerfile:
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
-    - hadolint api/Dockerfile web/Dockerfile
+    - hadolint api/Dockerfile web/Dockerfile ingestion/Dockerfile
 
 # ---------------------------------------------------------------------------
 # BUILD : 2 images via le backend DinD mutualisé (ci-common) -> registre PIC.
@@ -151,6 +169,10 @@ build:
       - COMPONENT: web
         BUILD_IMAGE: "$CI_REGISTRY_IMAGE/web"
         BUILD_CONTEXT: "web"
+        BUILD_DOCKERFILE: "Dockerfile"
+      - COMPONENT: ingestion
+        BUILD_IMAGE: "$CI_REGISTRY_IMAGE/ingestion"
+        BUILD_CONTEXT: "ingestion"
         BUILD_DOCKERFILE: "Dockerfile"
   variables:
     BUILD_TAGS: "sha-$CI_COMMIT_SHA,$CI_COMMIT_REF_SLUG"
