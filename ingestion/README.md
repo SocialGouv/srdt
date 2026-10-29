@@ -90,6 +90,37 @@ The index `_meta` records:
 
 A partial run (`--only`, or a shorter `include`) is refused when the current index was built differently: legacy ingestion, another schema major version, or another model.
 
+## 3. Update the index in place: `ingest sync`
+
+```sh
+uv run ingest sync --dry-run          # what would change, per source: no write, no Albert call
+uv run ingest sync                    # embed and write only what changed
+uv run ingest sync --only judilibre
+```
+
+`index` rebuilds everything; `sync` diffs each source against the live alias and writes the difference. Per chunk (`_id` = `chunk_id`):
+
+| in the index | action |
+|---|---|
+| same `doc_hash` | nothing |
+| same `embed_hash`, other `doc_hash` | metadata update, the vector stays (e.g. a code du travail article renumbered: the CDTN pages that link to it) |
+| other `embed_hash`, or not there yet | embed, then index |
+| not there yet, but its text is already in the source (the `idx` shifted) | index with the existing vector |
+| no longer produced | delete |
+
+Guards, set in the `[sync]` table of the config (exit code 2, nothing written; `--allow-prune` skips them):
+- a source that produces no chunk while the index has some;
+- more than `max_delete_ratio` (10%, `per_source` overrides) of a source deleted, once over `min_deleted` chunks.
+
+A source that is in the index but no longer in the include list is reported, and deleted only with `--prune-excluded`.
+
+Everything is read, diffed and embedded before the first write, and the index `_meta` is updated last (snapshots of the synced sources, `synced_at`): after a failure the next `sync` repairs the index by diffing again. `sync` is refused (exit code 1, run `ingest index`) when there is no index, or its `_meta` has another schema major version, model, dimension or chunker version.
+
+Limits:
+- No lock: do not run two `sync`, or a `sync` during an `index`.
+- A large change (a new model, a rewritten source) is cheaper to rebuild with `index`; `sync` holds the new vectors in memory until it writes.
+- Updating a vector in the HNSW graph is a delete plus an insert: after big runs, `POST {index}/_forcemerge` off-peak.
+
 ## Data contract
 
 `src/ingestion/contract.py` holds the pydantic models. The JSON schema and the index mapping (`mapping.py`, one vector field per engine) follow from them:
