@@ -16,11 +16,23 @@ cp .env.example .env # and set your own env variable
 make install # for installing hooks and the dependencies
 ```
 
+### Search engine
+
+The api and the ingestion read the same variables and must use the same engine:
+
+| Variable | Value |
+|---|---|
+| `SEARCH_ENGINE` | `opensearch` (default) or `elasticsearch` |
+| `SEARCH_HOSTNAME` | `http://localhost:9201` for the OpenSearch of `docker compose up -d opensearch`, `http://localhost:9202` for `docker compose --profile elasticsearch up -d elasticsearch` |
+| `SEARCH_CREDENTIALS` | `user:password`, or the base64 token of it |
+
+`ELASTIC_API_KEY` still works as the former name of `SEARCH_CREDENTIALS`: the deployed sealed secrets hold it. The deployed environments set `SEARCH_ENGINE: elasticsearch`. An index is built for one engine: after switching, run `uv run ingest index` again.
+
 ### Commands
 
 ```sh
-poetry run ingest # for launching the ingestion of data
 poetry run api # for launching the API
+poetry run pytest # for running the tests
 ```
 
 ### Lint, format and type checking
@@ -30,6 +42,18 @@ poetry run ruff check --fix # for checking and fixing
 poetry run ruff format # for formatting
 poetry run pyright # for type checking
 poetry run pre-commit run --all-files # for running all the checks
+```
+
+## Ingestion
+
+The search index is built by the separate [`ingestion/`](ingestion/README.md) project (uv), which publishes the format of the indexed chunks as a JSON schema.
+
+```sh
+cd ingestion
+cp .env.example .env # and set your own env variable
+uv sync
+uv run ingest fetch legi # snapshot a raw source to S3
+uv run ingest index # build the index
 ```
 
 ## Web

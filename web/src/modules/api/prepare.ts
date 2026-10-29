@@ -2,7 +2,6 @@ import {
   Config,
   getModelByFamily,
   MISTRAL_LLM,
-  PROMPT_INSTRUCTIONS,
   SEARCH_OPTIONS_CONTENT,
   MAX_RERANK,
   K_RERANK,
@@ -48,6 +47,8 @@ import {
   rerank,
   retrieveDocs,
 } from "./client";
+import { PROMPT_INSTRUCTIONS } from "@/prompts";
+import { filterJurisprudence } from "./jurisprudence-filter";
 import { ConversationHistoryEntry } from "./prompt-builders";
 
 export interface PreparedQuestionData {
@@ -307,7 +308,8 @@ const searchArticles = async (anonymized: string, linkedFrom: string[]) => {
 
 // Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
 // Search large sur la collection judilibre, puis rerank (reranker Albert) pour ne garder
-// que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire).
+// que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire),
+// puis filtre LLM (filterJurisprudence) pour ne garder que les arrêts utiles à la question.
 // Leur utilisation effective dans la réponse est pilotée par les instructions
 // (section "⚖️ Jurisprudence").
 const searchJurisprudence = async (
@@ -342,18 +344,20 @@ const searchJurisprudence = async (
     inputs: jurisprudenceChunks.slice(0, MAX_RERANK),
   });
 
-  if (!reranked.data?.results?.length) {
+  let candidates = reranked.data?.results?.map(rerankedToChunk) ?? [];
+  if (candidates.length === 0) {
     Sentry.captureMessage("No rerank results for jurisprudence", {
       level: "warning",
       extra: { query: anonymized },
     });
     // fallback : à défaut de rerank, on garde les meilleurs chunks de la recherche
-    return jurisprudenceChunks.slice(0, K_RERANK_JURISPRUDENCE);
+    candidates = jurisprudenceChunks;
   }
 
-  return reranked.data.results
-    .slice(0, K_RERANK_JURISPRUDENCE)
-    .map(rerankedToChunk);
+  return filterJurisprudence(
+    anonymized,
+    candidates.slice(0, K_RERANK_JURISPRUDENCE)
+  );
 };
 
 // Common preprocessing logic for both streaming and non-streaming

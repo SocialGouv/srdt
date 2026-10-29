@@ -1,0 +1,22 @@
+{
+  "id": "c1486",
+  "content": "La durée est de deux mois .",
+  "metadata": {
+    "id": "c1486",
+    "source": "contributions_idcc",
+    "title": "La periode d'essai 1486",
+    "url": "https://code.travail.gouv.fr/contribution/la-periode-d'essai-1486",
+    "idcc": "1486",
+    "idx": 0,
+    "initial_id": "initial-c1486",
+    "articles": null,
+    "legi_links": []
+  },
+  "doc_hash": "042b54fb25b99b37d2eaaa6609ea2047907fe9f59d8a92872dcbd2f398fc9f9a",
+  "embed_hash": "53d0a32bb23e140e7f6986f59e9f08a310bcd5cd26909f36d145ecccb60bdce0",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

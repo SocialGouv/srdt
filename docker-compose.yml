@@ -1,6 +1,32 @@
 version: "3.8"
 
 services:
+  opensearch:
+    image: opensearchproject/opensearch:2
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    ports:
+      # 9201: 9200 is commonly taken by a local Elasticsearch
+      - "9201:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+  elasticsearch:
+    # SEARCH_ENGINE=elasticsearch: docker compose --profile elasticsearch up -d elasticsearch
+    profiles: ["elasticsearch"]
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9202:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
   web:
     build: ./web
     ports:
@@ -28,3 +54,7 @@ services:
       - ALBERT_VECTORISATION_MODEL=${ALBERT_VECTORISATION_MODEL}
     env_file:
       - ./api/.env
+
+volumes:
+  opensearch-data:
+  elasticsearch-data:

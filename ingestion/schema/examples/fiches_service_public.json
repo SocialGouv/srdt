@@ -1,0 +1,34 @@
+{
+  "id": "F1234",
+  "content": "Le salarié du privé bénéficie de congés payés.",
+  "metadata": {
+    "id": "F1234",
+    "source": "fiches_service_public",
+    "title": "Salarie du prive",
+    "url": "https://code.travail.gouv.fr/fiche-service-public/salarie-du-prive",
+    "idcc": null,
+    "idx": 0,
+    "initial_id": "initial-F1234",
+    "articles": null,
+    "legi_links": [
+      {
+        "legi_id": "LEGIARTI000000000010",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000010",
+        "label": "L1111-1",
+        "origin": "raw:Reference",
+        "kind": "article",
+        "cid": "LEGIARTI000000000010",
+        "num": "L1111-1",
+        "chunk_id": "LEGISCTA000000000002",
+        "canonical_url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000011"
+      }
+    ]
+  },
+  "doc_hash": "e20ab336fd7d11694b847e92958705235ee18e798248a238391b64a5d399ac9f",
+  "embed_hash": "6ae9ca0565b503335d2f5c5c5f1cb56354f3992d47b72e5ee340fa046dda992d",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

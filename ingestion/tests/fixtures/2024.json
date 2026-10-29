@@ -1,0 +1,46 @@
+[
+ {
+  "id": "65a7c1f2d4e5f60718293a4b",
+  "number": "22-12.345",
+  "decision_date": "2024-01-17",
+  "chamber": "soc",
+  "formation": "FS",
+  "type": "arret",
+  "solution": "cassation",
+  "publication": [
+   "b"
+  ],
+  "titlesAndSummaries": [
+   {
+    "titles": [
+     "CONTRAT DE TRAVAIL, EXECUTION",
+     "Salaire"
+    ],
+    "summary": "Il résulte de l'article L. 3121-1 du code du travail que le temps de trajet n'est pas du temps de travail effectif."
+   },
+   {
+    "titles": [
+     "PRUD'HOMMES"
+    ],
+    "summary": null
+   }
+  ]
+ },
+ {
+  "id": "65e8a0b1c2d3e4f506172839",
+  "number": "23-10.001",
+  "decision_date": "2024-03-06",
+  "chamber": "soc",
+  "formation": "FR",
+  "type": "arret",
+  "solution": "rejet",
+  "publication": [
+   "b"
+  ],
+  "titlesAndSummaries": [
+   {
+    "summary": "Résumé sans titre."
+   }
+  ]
+ }
+]
