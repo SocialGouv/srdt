@@ -134,6 +134,18 @@ def select_sources(config: Config, only: Sequence[str] | None) -> list[SourceNam
     return [s for s in config.include if s in only]
 
 
+def chunk_sources(
+    sources: Sequence[SourceName], inputs: Inputs
+) -> dict[SourceName, list[Chunk]]:
+    chunks_by_source: dict[SourceName, list[Chunk]] = {}
+    for source in sources:
+        chunks = chunk_source(source, inputs)
+        check_unique_ids(source, chunks)
+        chunks_by_source[source] = chunks
+        logger.info(f"{source}: {len(chunks)} chunks")
+    return chunks_by_source
+
+
 def check_unique_ids(source: SourceName, chunks: list[Chunk]) -> None:
     duplicates = [i for i, n in Counter(c.chunk_id for c in chunks).items() if n > 1]
     if duplicates:
@@ -153,6 +165,23 @@ def write_dump(directory: Path, chunks_by_source: dict[SourceName, list[Chunk]])
         (directory / f"{source}.jsonl").write_text("\n".join(lines) + "\n")
 
 
+def meta_problem(current: dict[str, Any] | None, config: Config) -> str | None:
+    """Why the current index cannot be extended with this run's chunks, if so."""
+    if current is None:
+        return "The current index has no _meta (legacy ingestion)"
+    if str(current.get("schema_version", "")).split(".")[0] != SCHEMA_MAJOR:
+        return f"The current index uses schema {current.get('schema_version')}"
+    if (current.get("embedding_model_id"), current.get("dim")) != (
+        config.embedding.model_id,
+        config.embedding.dim,
+    ):
+        return (
+            f"The current index was embedded with {current.get('embedding_model_id')} "
+            f"({current.get('dim')})"
+        )
+    return None
+
+
 def check_partial_run(
     sources: list[SourceName], current: dict[str, Any] | None, config: Config
 ) -> None:
@@ -160,24 +189,9 @@ def check_partial_run(
     they would not match what this run writes."""
     if set(sources) >= set(SOURCES):
         return
-    if current is None:
-        raise IngestionError(
-            "The current index has no _meta (legacy ingestion): "
-            "run once with every source"
-        )
-    if str(current.get("schema_version", "")).split(".")[0] != SCHEMA_MAJOR:
-        raise IngestionError(
-            f"The current index uses schema {current.get('schema_version')}: "
-            "run once with every source"
-        )
-    if (current.get("embedding_model_id"), current.get("dim")) != (
-        config.embedding.model_id,
-        config.embedding.dim,
-    ):
-        raise IngestionError(
-            f"The current index was embedded with {current.get('embedding_model_id')} "
-            f"({current.get('dim')}): run once with every source"
-        )
+    problem = meta_problem(current, config)
+    if problem:
+        raise IngestionError(f"{problem}: run once with every source")
 
 
 @dataclass
@@ -200,12 +214,7 @@ def run(
     sources = select_sources(config, only)
     logger.info(f"Sources: {', '.join(sources)}")
 
-    chunks_by_source: dict[SourceName, list[Chunk]] = {}
-    for source in sources:
-        chunks = chunk_source(source, inputs)
-        check_unique_ids(source, chunks)
-        chunks_by_source[source] = chunks
-        logger.info(f"{source}: {len(chunks)} chunks")
+    chunks_by_source = chunk_sources(sources, inputs)
     result = RunResult(counts={s: len(c) for s, c in chunks_by_source.items()})
 
     if dump:
