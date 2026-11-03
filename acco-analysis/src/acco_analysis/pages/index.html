@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Accès protégé</title>
+<style>
+:root { --bg: #f6f4ef; --panel: #fffdf8; --fg: #1f2421; --line: #ddd8cc; --accent: #b4491f; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #171a18; --panel: #1f2321; --fg: #e8e6df; --line: #333a36; --accent: #c4603a; color-scheme: dark; }
+}
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+#fail { padding: 16px; }
+</style>
+</head>
+<body>
+<p id="fail" hidden></p>
+<script src="gate.js"></script>
+<script>
+// the real page is encrypted: this shell only asks for the password, then replaces itself
+Gate.text("data/app.dat").then(html => {
+  document.open(); document.write(html); document.close();
+}).catch(e => {
+  const fail = document.getElementById("fail");
+  fail.textContent = "Impossible de charger la page : " + e.message;
+  fail.hidden = false;
+});
+</script>
+</body>
+</html>

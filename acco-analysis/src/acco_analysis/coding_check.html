@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification du codage des clauses chaleur</title>
+<style>
+:root {
+  --bg: #f6f4ef; --panel: #fffdf8; --fg: #1f2421; --muted: #6a706b; --line: #ddd8cc;
+  --accent: #b4491f; --accent-soft: #f4dfd3; --ok: #2f6b4f; --mark: #f9e2a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171a18; --panel: #1f2321; --fg: #e8e6df; --muted: #9aa09a; --line: #333a36;
+    --accent: #e08b62; --accent-soft: #3a2a21; --ok: #6fc29a; --mark: #5a4a1c; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
+.bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.bar h1 { font-size: 15px; margin: 0; font-weight: 650; flex: 1 1 auto; }
+progress { width: 160px; height: 8px; accent-color: var(--accent); }
+main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 80px max(16px, env(safe-area-inset-left, 0px)); }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.passage { position: sticky; top: 64px; align-self: start; max-height: calc(100vh - 84px); overflow: auto; }
+@media (max-width: 860px) { .passage { position: static; max-height: none; } }
+.passage h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); font-weight: 600; text-wrap: balance; }
+.text { white-space: pre-wrap; font-family: Georgia, "Times New Roman", serif; font-size: 15.5px; line-height: 1.55; }
+mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1px; }
+a { color: var(--accent); }
+fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+legend { font-weight: 650; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 0; margin-bottom: 6px; }
+legend small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 4px 11px; cursor: pointer; background: var(--bg); user-select: none; }
+.chips label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.chips input { accent-color: var(--accent); margin: 0; }
+.heat { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 6px; }
+textarea { width: 100%; min-height: 54px; border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: var(--bg); color: inherit; font: inherit; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: inherit; border-radius: 6px; padding: 7px 14px; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.done { color: var(--ok); font-weight: 600; }
+.help { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+#toast { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <h1>Vérification du codage — <span id="pos"></span></h1>
+  <progress id="progress" value="0" max="1"></progress>
+  <span id="count"></span>
+  <button id="export" type="button">Exporter les réponses</button>
+  <span id="toast" role="status"></span>
+</div></header>
+<main>
+  <section class="card passage" aria-label="Extrait">
+    <h2 id="heading"></h2>
+    <div class="text" id="text"></div>
+    <p class="help"><a id="link" href="#" target="_blank" rel="noopener">Voir l'accord sur Légifrance</a></p>
+  </section>
+  <section class="card" aria-label="Grille">
+    <p class="help">Coche ce que <strong>le texte</strong> prévoit à propos de la chaleur, rien de plus. Survole une
+      case pour lire sa définition. Les réponses du modèle ne sont pas affichées.</p>
+    <div id="form"></div>
+    <div class="actions">
+      <button id="prev" type="button">← Précédent</button>
+      <button id="next" type="button" class="primary">Valider et suivant →</button>
+      <span id="state"></span>
+    </div>
+  </section>
+</main>
+<script>
+const DATA = __DATA__;
+const KEY = "acco-coding-check-v1";
+const TERMS = /(canicule|chaleur|chaud|temp[ée]rature)/gi;
+let answers = {}, idx = 0;
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); answers = s.answers || {}; idx = s.idx || 0; } catch (e) {}
+  const first = DATA.items.findIndex(it => !(answers[it.id] && answers[it.id].done));
+  if (!idx && first > 0) idx = first;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify({ answers, idx })); } catch (e) {} }
+function blank() {
+  const a = { about_heat: true, note: "", done: false };
+  for (const d of DATA.dimensions) a[d.name] = d.multi ? [] : null;
+  return a;
+}
+function current() { const it = DATA.items[idx]; if (!answers[it.id]) answers[it.id] = blank(); return answers[it.id]; }
+
+function highlight(el, text) {
+  el.textContent = "";
+  let last = 0;
+  for (const m of text.matchAll(TERMS)) {
+    el.append(text.slice(last, m.index));
+    const mark = document.createElement("mark"); mark.textContent = m[0]; el.append(mark);
+    last = m.index + m[0].length;
+  }
+  el.append(text.slice(last));
+}
+
+function chip(d, v, a) {
+  const label = document.createElement("label");
+  label.title = v.definition;
+  const input = document.createElement("input");
+  input.type = d.multi ? "checkbox" : "radio";
+  input.name = d.name; input.value = v.code;
+  input.checked = d.multi ? a[d.name].includes(v.code) : a[d.name] === v.code;
+  input.addEventListener("change", () => {
+    if (d.multi) a[d.name] = input.checked ? [...a[d.name], v.code] : a[d.name].filter(c => c !== v.code);
+    else a[d.name] = v.code;
+    a.done = false; save(); status();
+  });
+  label.append(input, document.createTextNode(v.label));
+  return label;
+}
+
+function render() {
+  const it = DATA.items[idx], a = current();
+  document.getElementById("pos").textContent = `${idx + 1} / ${DATA.items.length}`;
+  document.getElementById("heading").textContent = it.heading || "(sans titre)";
+  highlight(document.getElementById("text"), it.text);
+  const link = document.getElementById("link"); link.href = it.url;
+  const form = document.getElementById("form"); form.textContent = "";
+
+  const heat = document.createElement("label"); heat.className = "heat";
+  const hc = document.createElement("input"); hc.type = "checkbox"; hc.checked = !a.about_heat;
+  hc.addEventListener("change", () => { a.about_heat = !hc.checked; a.done = false; save(); status(); });
+  heat.append(hc, document.createTextNode("Cet extrait ne prévoit rien à propos de la chaleur (simple mention)"));
+  form.append(heat);
+
+  for (const d of DATA.dimensions) {
+    const fs = document.createElement("fieldset");
+    const lg = document.createElement("legend");
+    lg.append(d.label + " ");
+    const small = document.createElement("small"); small.textContent = d.multi ? "(plusieurs possibles)" : "(une seule)";
+    lg.append(small); fs.append(lg);
+    const chips = document.createElement("div"); chips.className = "chips";
+    for (const v of d.values) chips.append(chip(d, v, a));
+    fs.append(chips); form.append(fs);
+  }
+  const note = document.createElement("textarea"); note.placeholder = "Note (facultatif) : ce que la grille ne permet pas de dire";
+  note.value = a.note || ""; note.addEventListener("input", () => { a.note = note.value; save(); });
+  form.append(note);
+  status(); window.scrollTo({ top: 0 });
+}
+
+function status() {
+  const done = DATA.items.filter(it => answers[it.id] && answers[it.id].done).length;
+  document.getElementById("progress").max = DATA.items.length;
+  document.getElementById("progress").value = done;
+  document.getElementById("count").textContent = `${done} validés`;
+  const a = current();
+  const s = document.getElementById("state");
+  s.textContent = a.done ? "validé" : ""; s.className = a.done ? "done" : "";
+}
+function go(n) { idx = Math.max(0, Math.min(DATA.items.length - 1, n)); save(); render(); }
+
+document.getElementById("prev").addEventListener("click", () => go(idx - 1));
+document.getElementById("next").addEventListener("click", () => { current().done = true; save(); go(idx + 1); });
+document.addEventListener("keydown", e => {
+  if (e.target && e.target.tagName === "TEXTAREA") return;
+  if (e.key === "ArrowLeft") go(idx - 1);
+  if (e.key === "ArrowRight") go(idx + 1);
+});
+document.getElementById("export").addEventListener("click", () => {
+  const out = { labels: {}, done: [] };
+  for (const it of DATA.items) {
+    const a = answers[it.id]; if (!a) continue;
+    const { done, ...labels } = a; out.labels[it.id] = labels; if (done) out.done.push(it.id);
+  }
+  const text = JSON.stringify(out, null, 1);
+  const toast = document.getElementById("toast");
+  try {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const link = document.createElement("a"); link.href = url; link.download = "coding_labels.json";
+    document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    toast.textContent = `${out.done.length} réponses exportées dans coding_labels.json`;
+  } catch (e) {
+    navigator.clipboard.writeText(text).then(() => { toast.textContent = "JSON copié dans le presse-papiers"; },
+      () => { toast.textContent = "Export impossible"; });
+  }
+});
+load(); render();
+</script>
+</body>
+</html>

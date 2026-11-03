@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuances des clauses chaleur</title>
+<style>
+:root {
+  --bg: #f6f4ef; --panel: #fffdf8; --fg: #1f2421; --muted: #6a706b; --line: #ddd8cc;
+  --accent: #b4491f; --accent-soft: #f4dfd3; --bar: #b4491f; --bar-light: #e7bfae; --bar-off: #cfcabd;
+  --mark: #f9e2a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171a18; --panel: #1f2321; --fg: #e8e6df; --muted: #9aa09a; --line: #333a36;
+    --accent: #e08b62; --accent-soft: #3a2a21; --bar: #e08b62; --bar-light: #7a4a35; --bar-off: #3f4642;
+    --mark: #5a4a1c; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.25; margin: 0; }
+a { color: var(--accent); }
+header { border-bottom: 1px solid var(--line); background: var(--bg);
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); }
+.wrap { max-width: 1100px; margin: 0 auto; }
+.title { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; margin-bottom: 10px; }
+.title h1 { font-size: 20px; }
+.title span { color: var(--muted); font-size: 13px; }
+.title a { font-size: 14px; }
+nav { display: flex; gap: 4px; overflow-x: auto; margin: 0 0 -1px; }
+nav button { font: inherit; background: none; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0;
+  padding: 8px 14px; cursor: pointer; color: var(--muted); white-space: nowrap; }
+nav button[aria-selected="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); font-weight: 650; }
+.filters { background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
+.filters .wrap { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
+.filters label { display: inline-flex; gap: 6px; align-items: center; }
+select, button.plain { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: inherit; max-width: 100%; }
+#summary { color: var(--muted); margin-left: auto; }
+main { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px;
+  padding: 18px max(16px, env(safe-area-inset-right, 0px)) 60px max(16px, env(safe-area-inset-left, 0px)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.card.off { opacity: .55; }
+.note { color: var(--muted); font-size: 13px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stat b { display: block; font-size: 24px; line-height: 1.2; }
+.stat span { color: var(--muted); font-size: 13px; }
+.rows { display: grid; gap: 8px; margin-top: 10px; }
+.row { display: grid; grid-template-columns: minmax(120px, 34%) 1fr auto; gap: 10px; align-items: center; font-size: 14px; }
+.row.click { cursor: pointer; }
+.row.click:hover .name { text-decoration: underline; }
+.name { min-width: 0; overflow-wrap: anywhere; }
+.track { height: 12px; background: var(--line); border-radius: 6px; overflow: hidden; display: flex; }
+.track i { display: block; height: 100%; background: var(--bar); }
+.track i.light { background: var(--bar-light); }
+.val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; text-align: right; white-space: nowrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-top: 10px; }
+.mini h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+svg { display: block; width: 100%; height: auto; }
+svg text { fill: var(--muted); font-size: 9px; font-family: inherit; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chip { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 10px; font-size: 13px; }
+.big { display: flex; flex-wrap: wrap; gap: 4px 22px; align-items: baseline; margin: 6px 0; }
+.big b { font-size: 26px; }
+.big span { color: var(--muted); font-size: 13px; }
+.card h2 { font-size: 18px; }
+.card h3 { font-size: 16px; }
+details { margin-top: 10px; }
+summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+ul { margin: 6px 0 0; padding-left: 20px; }
+blockquote { margin: 10px 0 0; padding: 6px 12px; border-left: 3px solid var(--accent); background: var(--bg); font-family: Georgia, serif; }
+blockquote footer { font: 13px system-ui, sans-serif; color: var(--muted); margin-top: 4px; }
+.members { columns: 2 280px; font-size: 13px; padding-left: 18px; }
+.members li { break-inside: avoid; }
+.dim { margin-top: 8px; }
+.dim h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 24px; }
+@media (max-width: 600px) { .row { grid-template-columns: 1fr auto; } .row .track { grid-column: 1 / -1; order: 3; } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="title"><h1>Nuances des clauses chaleur</h1><span id="meta"></span><a id="report-link" href="report.html" target="_blank" rel="opener" hidden>Note d'analyse</a></div>
+  <nav id="tabs" role="tablist" aria-label="Familles"></nav>
+</div></header>
+<div class="filters"><div class="wrap">
+  <label>Signé de <select id="from"></select></label>
+  <label>à <select id="to"></select></label>
+  <label>Secteur <select id="sector" title="Entre parenthèses : accords collectés du secteur"></select>
+    <button class="plain" id="clear-sector" type="button" title="Retirer le filtre secteur" aria-label="Retirer le filtre secteur" hidden>✕</button></label>
+  <label title="Une clause commune à plusieurs entreprises compte pour une seule"><input type="checkbox" id="collapse"> un gabarit compte une fois</label>
+  <button class="plain" id="reset" type="button">Réinitialiser</button>
+  <span id="summary" role="status"></span>
+</div></div>
+<main id="main"></main>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById("data").textContent);
+const KEY = "acco-flavours-v1";
+const YEARS = [...new Set(D.all.map(a => a[0]).filter(y => y > 0))].sort();
+const HEAT = 1 << D.families.length; // bit "has a heat clause"; bit k: family k (same order as D.families)
+const DIM_TITLES = { measures: "Mesures", triggers: "Déclencheurs", pay: "Rémunération", scope: "Public",
+  initiative: "Initiative", procedure: "Procédure", strength: "Portée" };
+const fmt = n => Number(n).toLocaleString("fr-FR");
+const pct = x => x == null ? "–" : Math.round(x * 100) + " %";
+let focus = ""; // card to scroll to once rendered (a nuance id in the hash)
+let state = { tab: "overview", from: YEARS[0], to: YEARS[YEARS.length - 1], sector: -1, collapse: false };
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in props || {}) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? "" : String(v));
+  }
+  for (const c of kids.flat()) { if (c == null || c === false) continue; e.append(typeof c === "object" ? c : String(c)); }
+  return e;
+}
+const NS = "http://www.w3.org/2000/svg";
+function s(tag, attrs, ...kids) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs || {}) e.setAttribute(k, String(attrs[k]));
+  for (const c of kids.flat()) { if (c != null) e.append(typeof c === "object" ? c : String(c)); }
+  return e;
+}
+
+function load() {
+  try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+  let hash = "";
+  try { hash = location.hash.slice(1); } catch (e) {}
+  if (hash && (hash === "overview" || D.families.some(f => f.name === hash))) state.tab = hash;
+  const owner = hash && D.families.find(f => f.flavours.some(x => x.id === hash));
+  if (owner) { state.tab = owner.name; focus = hash; }
+  if (state.tab !== "overview" && !D.families.some(f => f.name === state.tab)) state.tab = "overview";
+  if (!YEARS.includes(state.from)) state.from = YEARS[0];
+  if (!YEARS.includes(state.to)) state.to = YEARS[YEARS.length - 1];
+  if (!(state.sector >= -1 && state.sector < D.sectors.length)) state.sector = -1;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  try { history.replaceState(null, "", "#" + state.tab); } catch (e) {}
+}
+
+// a member passes when its year and sector are inside the filters
+function inYears(i) { const y = D.agreements[i][0]; return y >= state.from && y <= state.to; }
+function inSector(i) { return state.sector < 0 || D.agreements[i][1] === state.sector; }
+const passes = i => inYears(i) && inSector(i);
+// number of agreements (or of distinct templates) among `members` that satisfy `test`
+function count(members, test) {
+  if (!state.collapse) { let n = 0; for (const i of members) if (test(i)) n++; return n; }
+  const seen = new Set(); for (const i of members) if (test(i)) seen.add(D.agreements[i][2]); return seen.size;
+}
+
+function bars(rows) {
+  // rows: [{label, value (0..1), text}]
+  return h("div", { class: "rows" }, rows.map(r => h("div", { class: "row" + (r.onclick ? " click" : ""), onclick: r.onclick },
+    h("span", { class: "name", text: r.label }),
+    h("div", { class: "track" }, h("i", { style: "width:" + Math.max(0, Math.min(1, r.value)) * 100 + "%" }),
+      r.extra ? h("i", { class: "light", style: "width:" + Math.max(0, Math.min(1, r.extra)) * 100 + "%" }) : null),
+    h("span", { class: "val", text: r.text }))));
+}
+
+function yearChart(values, inRange, labelled) {
+  // values: [{year, n}] ; bars outside the filtered years are grey
+  const W = 240, H = 64, top = 6, base = 50, max = Math.max(1, ...values.map(v => v.n));
+  const bw = W / values.length;
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Répartition par année de signature" });
+  values.forEach((v, k) => {
+    const height = (base - top) * v.n / max;
+    svg.append(s("rect", { x: k * bw + 2, y: base - height, width: bw - 4, height, rx: 1.5,
+      fill: inRange(v.year) ? "var(--bar)" : "var(--bar-off)" }, s("title", {}, `${v.year} : ${v.n}`)));
+    if (labelled || k === 0 || k === values.length - 1) svg.append(s("text", { x: k * bw + bw / 2, y: base + 11, "text-anchor": "middle" }, String(v.year)));
+  });
+  svg.append(s("text", { x: 0, y: 5 }, "max " + max));
+  return svg;
+}
+
+// an agreement collected (D.all: [year, sector, strict mask, loose mask]) inside the filters
+const passesAll = (r, years) => (!years || (r[0] >= state.from && r[0] <= state.to)) && (state.sector < 0 || r[1] === state.sector);
+
+function overview() {
+  const sel = D.all.filter(r => passesAll(r, true));
+  const strictN = sel.filter(r => r[2] & HEAT).length, looseN = sel.filter(r => r[3] & HEAT).length;
+  const d = D.dataset;
+  const stats = h("div", { class: "card" }, h("h2", { text: "Le corpus" }),
+    h("div", { class: "stats", style: "margin-top:10px" },
+      [[sel.length, "accords collectés"], [looseN, "avec une clause chaleur (large)"],
+       [strictN, "avec une clause chaleur (les deux modèles)"], [sel.length - looseN, "sans clause chaleur"]]
+      .map(([n, label]) => h("div", { class: "stat" }, h("b", { text: fmt(n) }), h("span", { text: label })))),
+    h("p", { class: "note", text: "Accords collectés sur des termes liés à la chaleur : ces chiffres décrivent les entreprises qui encadrent la chaleur, pas les entreprises françaises en général. Les filtres d'années et de secteur s'appliquent à cette vue ; « un gabarit compte une fois » ne s'applique qu'aux onglets de familles. " +
+      `Non filtrés : ${fmt(d.passages_coded)} extraits codés, ${fmt(d.agreements_in_a_template)} accords dont l'extrait est un gabarit commun.` }));
+
+  const families = h("div", { class: "card" }, h("h2", { text: "Les familles" }),
+    h("p", { class: "note", text: "Part des accords avec une clause chaleur (" + fmt(looseN) + "). Barre pleine : les deux modèles ; barre claire : au moins un des deux. Un accord peut être dans plusieurs familles. Cliquer pour voir les nuances." }),
+    bars(D.families.map((f, k) => {
+      const strict = sel.filter(r => r[2] >> k & 1).length, loose = sel.filter(r => r[3] >> k & 1).length;
+      const ss = looseN ? strict / looseN : 0, ls = looseN ? loose / looseN : 0;
+      return { label: f.label, value: ss, extra: ls - ss, text: `${fmt(strict)}–${fmt(loose)} (${pct(ss)}–${pct(ls)})`, onclick: () => go(f.name) };
+    })));
+
+  // per year: the sector filter applies, the years outside the filter are greyed
+  const bySector = D.all.filter(r => passesAll(r, false));
+  const collected = Object.fromEntries(YEARS.map(y => [y, bySector.filter(r => r[0] === y).length]));
+  const minis = D.families.map((f, k) => {
+    const vals = YEARS.map(y => {
+      const n = bySector.filter(r => r[0] === y && (r[3] >> k & 1)).length;
+      return { year: y, n: collected[y] >= 10 ? Math.round(1000 * n / collected[y]) / 10 : 0 };
+    });
+    return h("div", { class: "mini" }, h("h3", { text: f.label }), yearChart(vals, y => y >= state.from && y <= state.to, false));
+  });
+  const trend = h("div", { class: "card" }, h("h2", { text: "Part des accords de chaque année qui ont une clause de la famille" }),
+    h("p", { class: "note", text: "Lecture large, en % des accords collectés cette année-là (le secteur choisi s'applique ; une année de moins de 10 accords n'a pas de barre). Les barres grises sont hors de la période choisie. L'échelle (max) est propre à chaque famille. 2026 est une année partielle." }),
+    h("div", { class: "grid" }, minis));
+  return [stats, families, trend];
+}
+
+function familyView(f) {
+  const all = [...f.flavours.flatMap(x => x.members), ...f.other.members];
+  const total = count(all, passes), totalAll = count(all, () => true);
+  const intro = h("div", { class: "card" }, h("h2", { text: f.label }),
+    h("p", { text: `${fmt(total)} accords avec ces filtres, sur ${fmt(totalAll)} (lecture stricte : les deux modèles ; ${fmt(f.loose)} en lecture large). ` +
+      `${f.flavours.length} nuances, seuil de ${f.min_support} accords.` }),
+    f.constant.length ? h("p", { class: "note", text: "Présent dans presque tous les accords de la famille : " + f.constant.join(", ") + "." }) : null,
+    bars(f.flavours.map(x => {
+      const n = count(x.members, passes);
+      return { label: x.rank + ". " + (x.name || x.codes.join(" + ")), value: total ? n / total : 0, text: `${fmt(n)} (${pct(total ? n / total : 0)})`,
+        onclick: () => { const el = document.getElementById(x.id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" }); } };
+    }).concat([{ label: "Autres combinaisons", value: total ? count(f.other.members, passes) / total : 0,
+      text: `${fmt(count(f.other.members, passes))}` }])));
+  const cards = f.flavours.map(x => flavourCard(f, x, total));
+  const other = h("div", { class: "card" }, h("h3", { text: "Autres combinaisons" }),
+    h("p", { text: `${fmt(count(f.other.members, passes))} accords (sur ${fmt(count(f.other.members, () => true))}) n'ont pas de combinaison assez fréquente pour former une nuance.` }),
+    distributions(f.other.distributions));
+  return [intro, ...cards, other];
+}
+
+function distributions(dist) {
+  const dims = Object.keys(dist || {});
+  if (!dims.length) return null;
+  return h("div", { class: "two" }, dims.map(d => h("div", { class: "dim" }, h("h4", { text: DIM_TITLES[d] || d }),
+    bars(dist[d].map(r => ({ label: r.label, value: r.share, text: pct(r.share) }))))));
+}
+
+// a new tab keeps the session password only if it keeps its opener (same site, our own page)
+const OPENER = "opener";
+// agreement pages exist only on the published site (the page keys are then in D.agreements)
+const pageLink = (i, section) => i >= 0 && D.agreements[i][4]
+  ? "accord.html?k=" + D.agreements[i][4] + (section >= 0 ? "#s" + section : "") : null;
+
+function membersList(x) {
+  const box = h("div");
+  const fill = () => {
+    box.textContent = "";
+    const rows = x.members.filter(passes).sort((a, b) => D.agreements[a][3].localeCompare(D.agreements[b][3]));
+    box.append(h("ul", { class: "members" }, rows.map(i => h("li", {},
+      h("a", { href: pageLink(i, -1), target: "_blank", rel: OPENER, text: D.agreements[i][3] || "(sans nom)" }), ` (${D.agreements[i][0] || "?"})`))));
+  };
+  // built when opened, with the filters of that moment
+  return h("details", { ontoggle: e => { if (e.target.open) fill(); } },
+    h("summary", { text: `Accords (${fmt(count(x.members, passes))})` }), box);
+}
+
+function flavourCard(f, x, familyTotal) {
+  const n = count(x.members, passes), all = count(x.members, () => true);
+  const distinct = new Set(x.members.filter(passes).map(i => D.agreements[i][2])).size;
+  const byYear = YEARS.map(y => ({ year: y, n: count(x.members, i => inSector(i) && D.agreements[i][0] === y) }));
+  const quotes = x.quotes.filter(q => q.agreement < 0 || passes(q.agreement));
+  return h("div", { class: "card" + (n ? "" : " off"), id: x.id },
+    h("h3", { text: x.rank + ". " + (x.name || x.codes.join(" + ")) }),
+    h("div", { class: "chips" }, x.codes.map(c => h("span", { class: "chip", text: c }))),
+    h("div", { class: "big" }, h("b", { text: fmt(n) }), h("span", { text: `accords avec ces filtres (${fmt(all)} au total)` }),
+      h("span", { text: `${pct(familyTotal ? n / familyTotal : 0)} de la famille` }),
+      h("span", { text: `${fmt(distinct)} gabarits distincts` }),
+      h("span", { title: "Accords dont le codage large contient ces caractéristiques, sans retirer ceux placés dans une autre nuance", text: `large : ${fmt(x.loose)}` })),
+    x.description ? h("p", { text: x.description }) : null,
+    x.variations && x.variations.length ? h("details", {}, h("summary", { text: "Variantes observées" }), h("ul", {}, x.variations.map(v => h("li", { text: v })))) : null,
+    h("details", { open: true }, h("summary", { text: "Répartition des autres caractéristiques" }),
+      h("p", { class: "note", text: "Parmi tous les accords de cette nuance (non filtrée), au moins 10 %." }), distributions(x.distributions)),
+    h("details", {}, h("summary", { text: "Signatures par année" }),
+      h("p", { class: "note", text: "Les barres claires sont hors de la période choisie ; le secteur choisi s'applique." }),
+      yearChart(byYear, y => y >= state.from && y <= state.to, true),
+      x.top_sectors.length ? h("p", { class: "note", text: "Secteurs les plus fréquents (tous accords) : " + x.top_sectors.map(t => `${t[0]} (${t[1]})`).join(", ") + "." }) : null),
+    quotes.length ? h("details", { open: true }, h("summary", { text: `Citations (${quotes.length})` }),
+      quotes.map(q => h("blockquote", {}, q.quote, h("footer", {}, `${q.company}, ${q.signed} · `,
+        pageLink(q.agreement, q.section) ? [h("a", { href: pageLink(q.agreement, q.section), target: "_blank", rel: OPENER, text: "Lire l'accord" }), " · "] : null,
+        h("a", { href: q.url, target: "_blank", rel: "noopener", text: "Légifrance" }))))) : null,
+    x.members.some(i => pageLink(i, -1)) ? membersList(x) : null);
+}
+
+function render() {
+  const tabs = document.getElementById("tabs"); tabs.textContent = "";
+  const names = [["overview", "Vue d'ensemble"], ...D.families.map(f => [f.name, f.label])];
+  for (const [name, label] of names) {
+    tabs.append(h("button", { role: "tab", type: "button", "aria-selected": String(state.tab === name), text: label, onclick: () => go(name) }));
+  }
+  const main = document.getElementById("main"); main.textContent = "";
+  const fam = D.families.find(f => f.name === state.tab);
+  for (const el of (fam ? familyView(fam) : overview())) main.append(el);
+  const everyone = new Set(D.families.flatMap(f => [...f.flavours.flatMap(x => x.members), ...f.other.members]));
+  let kept = 0; for (const i of everyone) if (passes(i)) kept++;
+  document.getElementById("summary").textContent = fam
+    ? `${fmt(kept)} accords sur ${fmt(everyone.size)} placés dans une nuance passent les filtres`
+    : `${fmt(D.all.filter(r => passesAll(r, true)).length)} accords collectés sur ${fmt(D.all.length)} passent les filtres`;
+  document.getElementById("meta").textContent = `snapshot ${D.snapshot}`;
+  document.getElementById("report-link").hidden = !D.report;
+  const card = focus && document.getElementById(focus);
+  focus = "";
+  if (card && card.scrollIntoView) card.scrollIntoView({ block: "start" });
+}
+function go(name) { state.tab = name; save(); render(); if (window.scrollTo) window.scrollTo({ top: 0 }); }
+
+function init() {
+  load();
+  const from = document.getElementById("from"), to = document.getElementById("to"), sector = document.getElementById("sector");
+  for (const y of YEARS) { from.append(h("option", { value: y, text: y })); to.append(h("option", { value: y, text: y })); }
+  sector.append(h("option", { value: -1, text: "Tous les secteurs" }));
+  const sizes = D.sectors.map((_, k) => D.all.filter(a => a[1] === k).length);
+  D.sectors.map((name, k) => [name, k]).sort((a, b) => sizes[b[1]] - sizes[a[1]]).forEach(([name, k]) =>
+    sector.append(h("option", { value: k, text: `${name} (${sizes[k]})` })));
+  const sync = () => { from.value = state.from; to.value = state.to; sector.value = state.sector; document.getElementById("clear-sector").hidden = state.sector < 0; document.getElementById("collapse").checked = state.collapse; };
+  sync();
+  const changed = () => {
+    state.from = Number(from.value); state.to = Number(to.value); state.sector = Number(sector.value);
+    state.collapse = document.getElementById("collapse").checked;
+    if (state.from > state.to) { [state.from, state.to] = [state.to, state.from]; sync(); }
+    sync(); save(); render();
+  };
+  document.getElementById("clear-sector").addEventListener("click", () => { sector.value = -1; changed(); });
+  for (const id of ["from", "to", "sector", "collapse"]) document.getElementById(id).addEventListener("change", changed);
+  document.getElementById("reset").addEventListener("click", () => {
+    state.from = YEARS[0]; state.to = YEARS[YEARS.length - 1]; state.sector = -1; state.collapse = false; sync(); save(); render();
+  });
+  try { window.addEventListener("hashchange", () => { load(); render(); }); } catch (e) {}
+  render();
+}
+init();
+</script>
+</body>
+</html>

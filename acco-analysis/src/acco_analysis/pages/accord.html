@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Accord</title>
+<style>
+:root {
+  --bg: #f6f4ef; --panel: #fffdf8; --fg: #1f2421; --muted: #6a706b; --line: #ddd8cc;
+  --accent: #b4491f; --accent-soft: #f4dfd3; --heat: #fbeee4; --mark: #f9e2a6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171a18; --panel: #1f2321; --fg: #e8e6df; --muted: #9aa09a; --line: #333a36;
+    --accent: #e08b62; --accent-soft: #3a2a21; --heat: #2b2420; --mark: #5a4a1c; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+a { color: var(--accent); }
+header, main { max-width: 900px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { padding-top: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+h1 { margin: 6px 0; font-size: 20px; line-height: 1.25; text-wrap: balance; overflow-wrap: anywhere; }
+.meta, .note { color: var(--muted); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.chip { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 10px; font-size: 13px; text-decoration: none; color: inherit; }
+.chip.loose { background: none; border-style: dashed; color: var(--muted); border-color: var(--line); }
+main { padding-top: 14px; padding-bottom: 60px; }
+details.toc { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; margin-bottom: 14px; }
+details.toc summary { cursor: pointer; font-weight: 600; }
+details.toc ol { margin: 8px 0 0; padding-left: 0; list-style: none; columns: 2 280px; font-size: 13px; }
+details.toc li { break-inside: avoid; padding: 1px 0; }
+details.toc li.heat a { font-weight: 650; }
+details.toc li.heat::before { content: "● "; color: var(--accent); }
+section { padding: 6px 0 10px; border-top: 1px solid var(--line); scroll-margin-top: 8px; }
+section:target { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+h2 { margin: 6px 0; font-size: 15px; color: var(--muted); overflow-wrap: anywhere; }
+section.heat h2 { color: var(--fg); }
+p.l { margin: 6px 0; overflow-wrap: anywhere; }
+p.l.heat { background: var(--heat); border-left: 3px solid var(--accent); padding: 2px 8px; border-radius: 0 4px 4px 0; }
+mark { background: var(--mark); color: inherit; border-radius: 2px; }
+#fail { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <a id="back" href="index.html">← Nuances des clauses chaleur</a>
+  <h1 id="title">Chargement…</h1>
+  <div class="meta" id="meta"></div>
+  <div class="chips" id="badges"></div>
+</header>
+<main id="main"><p id="fail" hidden></p></main>
+<script src="gate.js"></script>
+<script>
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in props || {}) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else e.setAttribute(k, String(v));
+  }
+  for (const c of kids.flat()) { if (c != null && c !== false) e.append(typeof c === "object" ? c : String(c)); }
+  return e;
+}
+
+// the line, with the shown quote(s) wrapped in <mark>; `marks` are [line, from, to]
+function lineNode(text, marks) {
+  const p = h("p", { class: "l" });
+  let at = 0;
+  for (const [, from, to] of marks) {
+    if (from > at) p.append(text.slice(at, from));
+    p.append(h("mark", { text: text.slice(from, to) }));
+    at = to;
+  }
+  p.append(text.slice(at));
+  return p;
+}
+
+function render(A) {
+  document.title = (A.company || A.title || A.id) + " : accord";
+  document.getElementById("title").textContent = A.title || A.company || A.id;
+  const meta = [A.company, A.signed && "signé le " + A.signed, A.idcc && "IDCC " + A.idcc, A.sector, A.nature].filter(Boolean).join(" · ");
+  const metaBox = document.getElementById("meta");
+  metaBox.append(meta + " · ", h("a", { href: A.url, target: "_blank", rel: "noopener", text: "Légifrance" }));
+  if (A.themes.length || A.unions.length) {
+    metaBox.append(h("div", { text: [A.themes.length && "Thèmes : " + A.themes.join(", "), A.unions.length && "Syndicats : " + A.unions.join(", ")].filter(Boolean).join(" · ") }));
+  }
+  const badges = document.getElementById("badges");
+  for (const b of A.badges) {
+    if (b.nuance) badges.append(h("a", { class: "chip", href: "index.html#" + b.nuance.id, text: `${b.label} : ${b.nuance.rank}. ${b.nuance.name || "nuance"}` }));
+    else badges.append(h("a", { class: "chip" + (b.loose_only ? " loose" : ""), href: "index.html#" + b.family,
+      text: b.loose_only ? `${b.label} (lecture large)` : `${b.label} : autres combinaisons` }));
+  }
+
+  const main = document.getElementById("main"); main.textContent = "";
+  const heatCount = A.sections.filter(s => s.heat.length).length;
+  main.append(h("p", { class: "note", text: "Texte tel que lu par les modèles (nettoyé de la table des matières et des espaces). Fond rosé : extrait codé ; surligné : citation reprise dans la page des nuances." }));
+  main.append(h("details", { class: "toc" }, h("summary", { text: `Sommaire (${A.sections.length} sections, ${heatCount} avec une clause chaleur)` }),
+    h("ol", {}, A.sections.map(s => h("li", { class: s.heat.length ? "heat" : "" },
+      h("a", { href: "#s" + s.n, text: s.h || (s.n === 0 ? "Préambule" : "Section " + s.n) }))))));
+
+  for (const s of A.sections) {
+    const inHeat = i => s.heat.some(([a, b]) => i >= a && i < b);
+    const marksByLine = {};
+    for (const m of s.marks) (marksByLine[m[0]] = marksByLine[m[0]] || []).push(m);
+    const sec = h("section", { id: "s" + s.n, class: s.heat.length ? "heat" : "" },
+      s.h ? h("h2", { text: s.h }) : null,
+      s.lines.map((line, i) => {
+        const p = lineNode(line, marksByLine[i] || []);
+        if (inHeat(i)) p.classList.add("heat");
+        return p;
+      }));
+    main.append(sec);
+  }
+  // the section of the link (the quote in it if shown), else the first heat section
+  const section = (location.hash && document.getElementById(location.hash.slice(1))) || main.querySelector("section.heat");
+  const mark = section && section.querySelector("mark");
+  const goTo = () => { if (mark) mark.scrollIntoView({ block: "center" }); else if (section) section.scrollIntoView(); };
+  goTo();
+  // the layout can still shift (fonts, the table of contents): once more when it has settled
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(goTo);
+  window.addEventListener("load", goTo, { once: true });
+}
+
+const key = new URLSearchParams(location.search).get("k") || "";
+if (!/^[0-9a-f]{16}$/.test(key)) {
+  const fail = document.getElementById("fail"); fail.textContent = "Accord inconnu."; fail.hidden = false;
+} else {
+  Gate.text("data/" + key + ".dat").then(text => render(JSON.parse(text))).catch(e => {
+    const fail = document.getElementById("fail");
+    fail.textContent = "Impossible de charger l'accord : " + e.message; fail.hidden = false;
+  });
+}
+</script>
+</body>
+</html>

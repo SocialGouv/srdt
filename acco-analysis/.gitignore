@@ -1,0 +1,8 @@
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+# agreements and everything derived from them stay local
+out/
