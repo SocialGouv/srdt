@@ -7,19 +7,25 @@
 - Code du travail: as the web's `searchArticles`, restricted to the articles cited
   by these fiches (`linked_from`), reranked, top K_RERANK_CODE.
 - Convention collective: as the web's `searchIDCC`, reranked, top K_RERANK_IDCC.
-- No jurisprudence.
+- Jurisprudence: as the web's `searchJurisprudence` + LLM filter (jurisprudence.py).
 
-The live searches run here only, so that every model of a run reads the same
-prompt. Unlike the web, a failing search raises instead of being skipped.
+The live searches and the filter run here only, so that every model of a run reads
+the same prompt. Unlike the web, a failing search raises instead of being skipped.
+
+`add_jurisprudence` builds a run from another run's contexts: everything but the
+jurisprudence is copied as is, so the answers of both runs differ by the
+jurisprudence only (the index may have changed in between).
 """
 
 import asyncio
+import json
 import math
 from typing import Any
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from answer_eval.jurisprudence import Candidate, JurisprudenceFilter, jurisprudence_for
 from answer_eval.prompt import Chunk, ChunkMetadata
 from retrieval_eval.data import DocRecord, Qrel, Query
 from retrieval_eval.pipeline import IDCC_COLLECTIONS, K_RERANK, MAX_RERANK
@@ -42,6 +48,22 @@ class Context(BaseModel):
     fiches: list[Chunk]
     code: list[Chunk]
     idcc_chunks: list[Chunk]
+    # Decisions kept by the filter (in the prompt), and every candidate with the
+    # filter's verdict. Empty in runs made before jurisprudence was added.
+    jurisprudence: list[Chunk] = Field(default_factory=list)
+    jurisprudence_candidates: list[Candidate] = Field(default_factory=list)
+
+
+# Fields `add_jurisprudence` copies from the source run, unchanged.
+COPIED_FIELDS = (
+    "query_id",
+    "text",
+    "idcc",
+    "idcc_name",
+    "fiches",
+    "code",
+    "idcc_chunks",
+)
 
 
 def select_fiches(
@@ -148,6 +170,7 @@ async def build_contexts(
     ranks: dict[tuple[str, str], int],
     api: SearchAPI,
     lookup: httpx.AsyncClient,
+    decisions: JurisprudenceFilter,
     *,
     min_grade: int = 1,
     max_fiches: int = K_RERANK,
@@ -173,6 +196,7 @@ async def build_contexts(
             if query.idcc:
                 idcc_chunks = await search_idcc(api, query.text, query.idcc)
                 idcc_name = await idcc_title(lookup, query.idcc)
+        candidates = await jurisprudence_for(api, decisions, query.text)
         return Context(
             query_id=query.query_id,
             text=query.text,
@@ -181,6 +205,43 @@ async def build_contexts(
             fiches=fiches,
             code=code,
             idcc_chunks=idcc_chunks,
+            jurisprudence=[c.chunk for c in candidates if c.kept],
+            jurisprudence_candidates=candidates,
         )
 
     return list(await asyncio.gather(*(build(q) for q in queries)))
+
+
+def _copied(record: dict[str, Any]) -> str:
+    return json.dumps({f: record[f] for f in COPIED_FIELDS}, sort_keys=True)
+
+
+async def add_jurisprudence(
+    source_lines: list[str],
+    api: SearchAPI,
+    decisions: JurisprudenceFilter,
+    *,
+    concurrency: int = 4,
+) -> list[Context]:
+    """The contexts of another run (its contexts.jsonl lines) with the jurisprudence
+    of today. Raises if a copied field would not be written back identical."""
+    semaphore = asyncio.Semaphore(concurrency)
+
+    async def build(line: str) -> Context:
+        source = Context.model_validate_json(line)
+        async with semaphore:
+            candidates = await jurisprudence_for(api, decisions, source.text)
+        context = source.model_copy(
+            update={
+                "jurisprudence": [c.chunk for c in candidates if c.kept],
+                "jurisprudence_candidates": candidates,
+            }
+        )
+        if _copied(context.model_dump(mode="json")) != _copied(json.loads(line)):
+            raise ValueError(
+                f"{source.query_id}: the copied blocks differ from the source run"
+            )
+        return context
+
+    lines = [line for line in source_lines if line.strip()]
+    return list(await asyncio.gather(*(build(line) for line in lines)))

@@ -33,8 +33,11 @@ class FakeAPI:
         rerank_scores: dict[str, float] | None = None,
         idcc_chunks: list[dict] | None = None,
         docs: dict[str, str] | None = None,
+        collection_results: dict[str, list[dict]] | None = None,
     ):
         self.search_results = search_results or {}
+        # Takes precedence over `search_results` for a search on that collection.
+        self.collection_results = collection_results or {}
         self.rerank_scores = rerank_scores or {}
         self.idcc_chunks = idcc_chunks or []
         self.docs = docs or {}
@@ -49,15 +52,19 @@ class FakeAPI:
         if statuses:
             return httpx.Response(statuses.pop(0), text="boom")
         if route == "/search":
-            return httpx.Response(
-                200,
-                json={
-                    "time": 0,
-                    "top_chunks": self.search_results.get(
-                        body["options"]["hybrid"], []
-                    ),
-                },
+            options = body["options"]
+            collections = options.get("collections") or []
+            by_collection = [
+                self.collection_results[c]
+                for c in collections
+                if c in self.collection_results
+            ]
+            chunks = (
+                [chunk for found in by_collection for chunk in found]
+                if by_collection
+                else self.search_results.get(options["hybrid"], [])
             )
+            return httpx.Response(200, json={"time": 0, "top_chunks": chunks})
         if route == "/anonymize":
             text = body["user_question"].replace("Monsieur", "PERSONNE")
             return httpx.Response(200, json={"time": 0, "anonymized_question": text})

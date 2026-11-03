@@ -36,6 +36,13 @@ def chunk(doc_id: str, content: str = "Texte.", source="fiches_service_public"):
     )
 
 
+def decision(chunk_id: str, **metadata) -> Chunk:
+    c = chunk(chunk_id, "CONTRAT DE TRAVAIL > Rupture\nSommaire.", "judilibre")
+    return c.model_copy(
+        update={"metadata": ChunkMetadata(**c.metadata.model_dump(), **metadata)}
+    )
+
+
 CASES = [
     {  # no IDCC: general template, no convention block
         "text": "Question ?",
@@ -61,6 +68,20 @@ CASES = [
         "code": [],
         "idcc_chunks": [],
     },
+    {  # jurisprudence block, and the three ways a decision is titled
+        "text": "Question ?",
+        "idcc": "1147",
+        "idcc_name": "Cabinets médicaux",
+        "fiches": [chunk("a")],
+        "code": [],
+        "idcc_chunks": [],
+        "jurisprudence": [
+            decision("d1-0", number="17-28.767", decision_date="2019-05-09"),
+            decision("d2-3", decision_date="2020-01-01"),  # no number: id
+            decision("d3-1", number="1", decision_date="", initial_id="abc"),
+            decision("d4-0", number="2", decision_date="09/05/2019"),  # raw date
+        ],
+    },
 ]
 
 
@@ -72,6 +93,7 @@ def python_render(case: dict) -> str:
         fiches=case["fiches"],
         code=case["code"],
         idcc_chunks=case["idcc_chunks"],
+        jurisprudence=case.get("jurisprudence", []),
     )
 
 
@@ -88,7 +110,8 @@ def test_system_prompt_is_identical_to_the_web(tmp_path):
                     **case,
                     **{
                         k: [c.model_dump() for c in case[k]]
-                        for k in ("fiches", "code", "idcc_chunks")
+                        for k in ("fiches", "code", "idcc_chunks", "jurisprudence")
+                        if k in case
                     },
                 }
                 for case in CASES
@@ -115,6 +138,12 @@ def test_idcc_placeholders_are_all_replaced():
     assert "## Conventions collectives (1 à 5" in system
     assert "## Conventions collectives (1 à 5" not in python_render(CASES[2])
     assert "## Jurisprudence (0 à 5 extraits)" not in system
+    with_decisions = python_render(CASES[3])
+    assert "## Jurisprudence (0 à 5 extraits)" in with_decisions
+    assert "Titre: Arrêt numéro 17-28.767 du 09/05/2019\n" in with_decisions
+    assert "Titre: Arrêt de la Cour de cassation (réf. d2)\n" in with_decisions
+    assert "Titre: Arrêt de la Cour de cassation (réf. abc)\n" in with_decisions
+    assert "Titre: Arrêt numéro 2 du 09/05/2019\n" in with_decisions
 
 
 def test_format_chunks_and_messages():

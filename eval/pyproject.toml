@@ -10,6 +10,8 @@ dependencies = [
     "numpy>=1.26",
     "httpx>=0.27",  # retrieval-eval talks to the SRDT API (already pulled by openai)
     "python-dotenv>=1.0",
+    "markdown-it-py>=3",  # answer-eval renders the answers on the labelling page
+    "cryptography>=43",
 ]
 
 [project.scripts]

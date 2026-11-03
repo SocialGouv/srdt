@@ -1,0 +1,30 @@
+# Variants of the models of generators.toml, generated with another setting
+# (`answer-eval generate --models config/generators-variants.toml`, with `--query-id`
+# for single answers). A variant is named `<model>+<setting>`: its answer replaces the
+# model's own answer to that question in judge, report and labelling, and the report
+# lists every replacement. The model's own answers stay in answers.jsonl.
+
+[providers.scaleway]
+base_url = "https://litellm.pliage-prod.socle-ia.data-ia.prod.atlas.fabrique.social.gouv.fr/v1"
+api_key_env = "LITELLM_API_KEY"
+concurrency = 1
+timeout_s = 900
+
+# 2026-10-28, run answers-idcc22-j, q_16c8ef09: glm-5.2 spent the 16,384 output
+# tokens on its hidden reasoning (one answer cut mid-sentence, one empty, three calls
+# dropped at ~5 min). A higher cap is refused: Scaleway limits glm-5.2 to 16,384
+# output tokens (HTTP 400). Decision: the cut answer is kept (re-appended as the
+# latest record) and the labeller judges it as is.
+# [[models]]
+# provider = "scaleway"
+# model = "scaleway/glm-5.2"
+# name = "glm-5.2@scaleway+32k"
+# params = { temperature = 0.3, max_tokens = 32768 }
+
+# 2026-10-29: mistral-medium-3.5 has a reasoning mode (`reasoning_effort = "high"`),
+# but neither Albert nor Scaleway turns it on: `reasoning_effort`, `reasoning`,
+# `thinking` and `chat_template_kwargs` are accepted and ignored (same short answers,
+# no reasoning tokens). Only the Mistral API serves it, which this comparison does not
+# use, so medium-3.5 is compared without reasoning.
+
+# TOML needs at least the table above to parse; no variant is active.

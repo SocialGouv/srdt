@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
+import httpx
 import openai
 from openai import AsyncOpenAI
 from pydantic import BaseModel
@@ -37,6 +38,8 @@ ANSWERS_FILE = "answers.jsonl"
 # limit). It is a result, not retried.
 Status = Literal["ok", "empty", "api_error"]
 
+VARIANT_SEP = "+"
+
 
 class Answer(BaseModel):
     generator: str
@@ -50,6 +53,9 @@ class Answer(BaseModel):
     latency_s: float | None = None
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
+    # Received as a stream (`generate --stream`): same answer, but the connection
+    # stays active, which some gateways need for long generations.
+    streamed: bool = False
 
     @property
     def key(self) -> tuple[str, str]:
@@ -58,6 +64,12 @@ class Answer(BaseModel):
     @property
     def item_id(self) -> str:
         return f"{self.generator}::{self.query_id}"
+
+    @property
+    def base(self) -> str:
+        """The model this answer counts for: `glm+32k` (a variant generated with
+        another setting to replace one answer) counts for `glm`."""
+        return self.generator.split(VARIANT_SEP, 1)[0]
 
 
 class RunConfigError(RuntimeError):
@@ -86,6 +98,21 @@ def load_answers(path: Path) -> list[Answer]:
     return list(latest.values())
 
 
+def effective_answers(answers: list[Answer]) -> list[Answer]:
+    """One answer per (model, question): a successful variant answer
+    (`<model>+<setting>`) replaces the model's own answer; a failed variant replaces
+    nothing. Independent of the order of `answers`."""
+    groups: dict[tuple[str, str], list[Answer]] = {}
+    for answer in answers:
+        groups.setdefault((answer.base, answer.query_id), []).append(answer)
+    chosen = []
+    for group in groups.values():
+        variants = [a for a in group if a.generator != a.base and a.status == "ok"]
+        own = [a for a in group if a.generator == a.base]
+        chosen.append((variants or own or group)[-1])
+    return chosen
+
+
 def render(prompts: WebPrompts, context: Context) -> list[dict[str, Any]]:
     system = system_prompt(
         prompts,
@@ -94,6 +121,7 @@ def render(prompts: WebPrompts, context: Context) -> list[dict[str, Any]]:
         fiches=context.fiches,
         code=context.code,
         idcc_chunks=context.idcc_chunks,
+        jurisprudence=context.jurisprudence,
     )
     return messages(system, context.text)
 
@@ -140,46 +168,100 @@ def check_run_config(
     path.write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def _text(content: Any) -> str | None:
+    """The answer in a message `content`: a string, or, from the Mistral API with
+    `reasoning_effort`, a list of parts where `thinking` holds the hidden reasoning
+    and `text` the answer. Only the `text` parts are kept."""
+    if content is None or isinstance(content, str):
+        return content
+    parts = []
+    for part in content:
+        part = part if isinstance(part, dict) else part.model_dump()
+        if part.get("type") == "text":
+            parts.append(part.get("text") or "")
+    return "".join(parts)
+
+
+async def _complete(
+    client: AsyncOpenAI, config: ModelConfig, chat: list[dict[str, Any]]
+) -> dict[str, Any]:
+    completion = await client.chat.completions.create(
+        model=config.model, messages=chat, **config.params
+    )
+    usage = completion.usage
+    out: dict[str, Any] = {
+        "served_model": completion.model,
+        "prompt_tokens": usage.prompt_tokens if usage else None,
+        "completion_tokens": usage.completion_tokens if usage else None,
+    }
+    if completion.choices:
+        choice = completion.choices[0]
+        out |= {
+            "text": _text(choice.message.content),
+            "finish_reason": choice.finish_reason,
+        }
+    return out
+
+
+async def _stream(
+    client: AsyncOpenAI, config: ModelConfig, chat: list[dict[str, Any]]
+) -> dict[str, Any]:
+    stream = await client.chat.completions.create(
+        model=config.model,
+        messages=chat,
+        stream=True,
+        stream_options={"include_usage": True},
+        **config.params,
+    )
+    parts: list[str] = []
+    out: dict[str, Any] = {}
+    got_choice = False
+    async for chunk in stream:
+        out["served_model"] = chunk.model or out.get("served_model")
+        if chunk.usage:
+            out["prompt_tokens"] = chunk.usage.prompt_tokens
+            out["completion_tokens"] = chunk.usage.completion_tokens
+        for choice in chunk.choices:
+            got_choice = True
+            if choice.delta and choice.delta.content:
+                parts.append(_text(choice.delta.content))
+            if choice.finish_reason:
+                out["finish_reason"] = choice.finish_reason
+    if got_choice:
+        out["text"] = "".join(parts)
+    return out
+
+
 async def generate_one(
     client: AsyncOpenAI,
     config: ModelConfig,
     query_id: str,
     chat: list[dict[str, Any]],
+    stream: bool = False,
 ) -> Answer:
     common: dict[str, Any] = {
         "generator": config.name,
         "query_id": query_id,
         "prompt_sha256": sha256_text(json.dumps(chat, ensure_ascii=False)),
+        "streamed": stream,
     }
     started = time.perf_counter()
     try:
-        completion = await client.chat.completions.create(
-            model=config.model, messages=chat, **config.params
-        )
-    except openai.OpenAIError as e:
+        result = await (_stream if stream else _complete)(client, config, chat)
+    except (openai.OpenAIError, httpx.HTTPError) as e:
+        # httpx errors can surface while a stream is being read.
         return Answer(
             status="api_error",
             error=describe_error(e),
             latency_s=time.perf_counter() - started,
             **common,
         )
-    usage = completion.usage
-    common |= {
-        "served_model": completion.model,
-        "latency_s": time.perf_counter() - started,
-        "prompt_tokens": usage.prompt_tokens if usage else None,
-        "completion_tokens": usage.completion_tokens if usage else None,
-    }
-    if not completion.choices:
+    text = result.pop("text", None)
+    common |= result | {"latency_s": time.perf_counter() - started}
+    if text is None:
         return Answer(status="api_error", error="response has no choices", **common)
-    choice = completion.choices[0]
-    text = (choice.message.content or "").strip()
-    return Answer(
-        status="ok" if text else "empty",
-        answer=text or None,
-        finish_reason=choice.finish_reason,
-        **common,
-    )
+    text = text.strip()
+    return Answer(status="ok" if text else "empty", answer=text or None, **common)
 
 
 async def run_generation(
@@ -188,10 +270,22 @@ async def run_generation(
     prompts: WebPrompts,
     run_dir: Path,
     client_factory=make_client,
+    stream: bool = False,
+    redo: Sequence[str] = (),
 ) -> RunSummary:
+    """`redo`: item ids (`<generator>::<query_id>`) generated again even if stored,
+    e.g. an answer cut by a provider's output limit. The new record supersedes the
+    old one, which stays in the file."""
     answers_path = run_dir / ANSWERS_FILE
     repair_trailing_partial_line(answers_path)
-    final = {a.key for a in load_answers(answers_path) if a.status != "api_error"}
+    known = {f"{g.name}::{c.query_id}" for g in generators for c in contexts}
+    if unknown := set(redo) - known:
+        raise ValueError(f"--redo: unknown answer(s) {sorted(unknown)}")
+    final = {
+        a.key
+        for a in load_answers(answers_path)
+        if a.status != "api_error" and a.item_id not in redo
+    }
 
     summary = RunSummary()
     pending: list[tuple[ModelConfig, Context]] = []
@@ -216,6 +310,7 @@ async def run_generation(
                 generator,
                 context.query_id,
                 render(prompts, context),
+                stream,
             )
         async with write_lock:
             out.write(answer.model_dump_json() + "\n")

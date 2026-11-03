@@ -185,3 +185,177 @@ def test_report_counts_verdicts_and_refusals(tmp_path):
         ("a", "q2", True),
         ("b", "q1", False),
     }
+
+
+def sse(*events) -> bytes:
+    return (
+        b"".join(b"data: " + json.dumps(e).encode() + b"\n\n" for e in events)
+        + b"data: [DONE]\n\n"
+    )
+
+
+def delta(content=None, finish=None):
+    return {
+        "id": "c1",
+        "object": "chat.completion.chunk",
+        "created": 0,
+        "model": "served-m",
+        "choices": [
+            {"index": 0, "delta": {"content": content}, "finish_reason": finish}
+        ],
+    }
+
+
+def test_streamed_generation_assembles_the_answer(tmp_path):
+    contexts = [context("q1")]
+    setup_run(tmp_path, contexts)
+    seen = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        seen.append(body)
+        usage = {
+            "id": "c1",
+            "object": "chat.completion.chunk",
+            "created": 0,
+            "model": "served-m",
+            "choices": [],
+            "usage": {"prompt_tokens": 7, "completion_tokens": 3, "total_tokens": 10},
+        }
+        return httpx.Response(
+            200,
+            content=sse(delta("Bon"), delta("jour."), delta(finish="stop"), usage),
+            headers={"content-type": "text/event-stream"},
+        )
+
+    summary = asyncio.run(
+        run_generation(
+            [model("a")], contexts, PROMPTS, tmp_path, factory(handler), stream=True
+        )
+    )
+    assert summary.ok == 1
+    assert seen[0]["stream"] is True
+    assert seen[0]["stream_options"] == {"include_usage": True}
+    assert seen[0]["temperature"] == 0.3
+    (answer,) = load_answers(tmp_path / ANSWERS_FILE)
+    assert answer.answer == "Bonjour."
+    assert answer.streamed and answer.finish_reason == "stop"
+    assert (answer.served_model, answer.prompt_tokens, answer.completion_tokens) == (
+        "served-m",
+        7,
+        3,
+    )
+
+
+def test_redo_regenerates_a_stored_answer(tmp_path):
+    contexts = [context("q1"), context("q2")]
+    setup_run(tmp_path, contexts)
+    replies = iter(["cut", "first q2", "complete"])
+
+    def handler(request):
+        return httpx.Response(200, json=completion(next(replies)))
+
+    generators = [model("a")]
+    # one call at a time, in order: q1 then q2
+    generators[0] = generators[0].model_copy(update={"concurrency": 1})
+    asyncio.run(
+        run_generation(generators, contexts, PROMPTS, tmp_path, factory(handler))
+    )
+    summary = asyncio.run(
+        run_generation(
+            generators, contexts, PROMPTS, tmp_path, factory(handler), redo=["a::q1"]
+        )
+    )
+    assert (summary.attempted, summary.skipped) == (1, 1)
+    answers = {a.query_id: a.answer for a in load_answers(tmp_path / ANSWERS_FILE)}
+    assert answers == {"q1": "complete", "q2": "first q2"}
+    with pytest.raises(ValueError, match="unknown answer"):
+        asyncio.run(
+            run_generation(
+                generators,
+                contexts,
+                PROMPTS,
+                tmp_path,
+                factory(handler),
+                redo=["b::q1"],
+            )
+        )
+
+
+def test_a_variant_answer_replaces_the_model_answer():
+    from answer_eval.generate import Answer, effective_answers
+
+    def answer(generator, query_id, status="ok"):
+        return Answer(
+            generator=generator,
+            query_id=query_id,
+            status=status,
+            answer="x" if status == "ok" else None,
+            prompt_sha256="s",
+        )
+
+    answers = [
+        answer("glm", "q1", "empty"),
+        answer("glm+32k", "q1"),
+        answer("glm", "q2"),
+        answer("glm+32k", "q2", "api_error"),  # a failed variant replaces nothing
+        answer("other", "q1"),
+    ]
+    chosen = {(a.base, a.query_id): a.generator for a in effective_answers(answers)}
+    # whatever the order (the file keeps the latest record of each generator)
+    reordered = effective_answers(list(reversed(answers)))
+    assert {(a.base, a.query_id): a.generator for a in reordered} == chosen
+    assert chosen == {
+        ("glm", "q1"): "glm+32k",
+        ("glm", "q2"): "glm",
+        ("other", "q1"): "other",
+    }
+
+    contexts = [context("q1"), context("q2")]
+    summary, side_by_side, rows = build_report(
+        "r", contexts, effective_answers(answers), []
+    )
+    assert "| glm | 2/2 |" in summary
+    assert "`glm+32k` on q1" in summary
+    assert {
+        (r["generator"], r["generated_as"]) for r in rows if r["query_id"] == "q1"
+    } == {
+        ("glm", "glm+32k"),
+        ("other", "other"),
+    }
+
+
+THINKING = {"type": "thinking", "thinking": [{"type": "text", "text": "Je réfléchis."}]}
+
+
+def test_mistral_reasoning_parts_keep_only_the_answer(tmp_path):
+    # Mistral API with reasoning_effort: content is a list, thinking first
+    contexts = [context("q1"), context("q2")]
+    setup_run(tmp_path, contexts)
+
+    def handler(request):
+        if json.loads(request.content).get("stream"):
+            events = [
+                delta([THINKING]),
+                delta([{"type": "text", "text": "Bon"}]),
+                delta("jour."),
+                delta(finish="stop"),
+            ]
+            return httpx.Response(
+                200,
+                content=sse(*events),
+                headers={"content-type": "text/event-stream"},
+            )
+        content = [THINKING, {"type": "text", "text": "Réponse."}]
+        return httpx.Response(200, json=completion(content))
+
+    asyncio.run(
+        run_generation([model("a")], contexts[:1], PROMPTS, tmp_path, factory(handler))
+    )
+    asyncio.run(
+        run_generation(
+            [model("b")], contexts[1:], PROMPTS, tmp_path, factory(handler), stream=True
+        )
+    )
+    answers = {a.generator: a.answer for a in load_answers(tmp_path / ANSWERS_FILE)}
+    assert answers == {"a": "Réponse.", "b": "Bonjour."}

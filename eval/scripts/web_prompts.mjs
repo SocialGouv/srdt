@@ -3,12 +3,13 @@
 // its imports stubbed (they are either other prompt files or type-only imports).
 //
 //   node scripts/web_prompts.mjs export <out.json>
-//       Writes the instruction templates and the sha256 of their source files.
+//       Writes the instruction templates (generate, jurisprudence filter) and the
+//       sha256 of their source files.
 //   node scripts/web_prompts.mjs render <cases.json>
 //       Prints the system prompt the web would build for each case (used by the
 //       parity test of answer_eval/prompt.py). A case is
-//       {text, idcc, idcc_name, fiches, code, idcc_chunks}, chunks being
-//       {content, metadata: {id, source, url, title}}.
+//       {text, idcc, idcc_name, fiches, code, idcc_chunks, jurisprudence}, chunks
+//       being {content, metadata: {id, source, url, title, ...}}.
 
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -29,6 +30,7 @@ const CONFIG = "v2.0"; // web: Config.V2_0, the only prompt config
 const SOURCES = {
   shared: "prompts/shared.ts",
   generate: "prompts/generate.ts",
+  filter: "prompts/jurisprudence-filter.ts",
   builders: "modules/api/prompt-builders.ts",
 };
 
@@ -66,8 +68,9 @@ function sha256(path) {
 
 function exportTemplates(outPath) {
   const { GENERATE_INSTRUCTIONS } = load(SOURCES.generate);
+  const { JURISPRUDENCE_FILTER_INSTRUCTION } = load(SOURCES.filter);
   const sources = {};
-  for (const rel of [SOURCES.shared, SOURCES.generate, SOURCES.builders]) {
+  for (const rel of Object.values(SOURCES)) {
     const path = join(WEB_SRC, rel);
     sources[relative(REPO_DIR, path)] = sha256(path);
   }
@@ -75,6 +78,7 @@ function exportTemplates(outPath) {
     config: CONFIG,
     generate_instruction: GENERATE_INSTRUCTIONS.generate_instruction,
     generate_instruction_idcc: GENERATE_INSTRUCTIONS.generate_instruction_idcc,
+    jurisprudence_filter_instruction: JURISPRUDENCE_FILTER_INSTRUCTION,
     sources,
   };
   writeFileSync(outPath, JSON.stringify(out, null, 2) + "\n", "utf-8");
@@ -89,7 +93,7 @@ function render(cases) {
       c.fiches,
       c.code,
       c.idcc ? c.idcc_chunks : undefined,
-      [],
+      c.jurisprudence ?? [],
     );
     const idcc = c.idcc;
     const template = idcc

@@ -3,6 +3,7 @@ import asyncio
 import httpx
 import pytest
 from fake_api import chunk, make_api
+from test_answer_jurisprudence import make_filter
 
 from answer_eval.contexts import build_contexts, idcc_title, select_fiches
 from retrieval_eval.data import DocRecord, Qrel, Query, text_sha256
@@ -87,7 +88,7 @@ def test_build_contexts_runs_the_web_searches():
     for c in code_chunks:
         c["metadata"]["source"] = "code_du_travail"
     fake, api = make_api(
-        search_results={True: code_chunks},
+        collection_results={"code_du_travail": code_chunks, "judilibre": []},
         rerank_scores={f"art{i}": i for i in range(7)} | {"cc1": 1, "cc2": 2},
         idcc_chunks=[chunk("cc1", 0.9), chunk("cc2", 0.8)],
     )
@@ -100,13 +101,22 @@ def test_build_contexts_runs_the_web_searches():
 
     async def go():
         async with lookup_client({"1147": "Cabinets médicaux"}) as lookup:
-            return await build_contexts(queries, qrels, DOCS, {}, api, lookup)
+            return await build_contexts(
+                queries, qrels, DOCS, {}, api, lookup, make_filter(lambda _: "OUI")
+            )
 
     contexts = asyncio.run(go())
     q1, q2, q3 = contexts
 
-    searches = fake.routes("/search")
+    searches = [
+        s
+        for s in fake.routes("/search")
+        if s["options"]["collections"] == ["code_du_travail"]
+    ]
     assert len(searches) == 2  # q3 has no fiche: no article search
+    # every question gets a jurisprudence search (none found here)
+    assert len(fake.routes("/search")) == 5
+    assert all(c.jurisprudence == [] for c in contexts)
     first = next(s for s in searches if s["prompts"] == ["Q1 ?"])
     assert first["options"] == {
         "top_K": 64,

@@ -23,8 +23,10 @@ timeout_s = 300
 [providers.scaleway]
 base_url = "https://litellm.pliage-prod.socle-ia.data-ia.prod.atlas.fabrique.social.gouv.fr/v1"
 api_key_env = "LITELLM_API_KEY"
-concurrency = 4
-timeout_s = 300
+# One call at a time: on 2026-10-28, 4 parallel glm-5.2 calls queued for minutes
+# and the gateway dropped the connection at ~315 s (8 of 22 answers lost).
+concurrency = 1
+timeout_s = 600
 
 [[models]]
 provider = "mistral"
@@ -32,13 +34,48 @@ model = "mistral-large-latest"
 name = "prod/mistral-large-latest"
 params = { temperature = 0.3 }
 
-# Candidates (to choose), e.g.:
+# The 3 models compared with production (2026-10-28), all at the production
+# temperature. All took the largest prompt (~106k tokens, run probe-largest). Hosts
+# kept: Albert for gpt-oss (Scaleway: 20x slower), Scaleway for GLM (chosen as the
+# sovereign gateway; ~3 min per large answer). The alternatives stay commented.
+
+[[models]]
+provider = "albert"
+model = "mistral-medium-3-5"  # 262k context
+name = "mistral-medium-3.5"
+params = { temperature = 0.3 }
+
+[[models]]
+provider = "scaleway"
+model = "scaleway/glm-5.2"
+name = "glm-5.2@scaleway"
+params = { temperature = 0.3 }
+
+# [[models]]
+# provider = "mistral"
+# model = "glm-5-2"  # 1M context
+# name = "glm-5.2@mistral"
+# params = { temperature = 0.3 }
+
+# 2026-10-29: replaced by qwen3.5-397b. On the largest-prompt probe gpt-oss ignored
+# the answer structure and the citation format (0 linked quotes); its answers stay in
+# answers-idcc22-j for the judge comparison, but are no longer labelled.
 # [[models]]
 # provider = "albert"
-# model = "gpt-oss-120b"
+# model = "gpt-oss-120b"  # 131k context: tight for the largest prompts
+# name = "gpt-oss-120b@albert"
 # params = { temperature = 0.3 }
-#
+
+# Largest open-weight model on Scaleway; 26 s / 42 s on the smallest / largest prompt
+# (2026-10-29, runs/probe-qwen), production structure and citation format followed.
+[[models]]
+provider = "scaleway"
+model = "scaleway/qwen3.5-397b-a17b"
+name = "qwen3.5-397b@scaleway"
+params = { temperature = 0.3 }
+
 # [[models]]
 # provider = "scaleway"
-# model = "scaleway/qwen3.5-397b-a17b"
+# model = "scaleway/gpt-oss-120b"
+# name = "gpt-oss-120b@scaleway"
 # params = { temperature = 0.3 }

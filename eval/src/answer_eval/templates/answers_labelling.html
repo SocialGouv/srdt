@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Évaluation des réponses</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #d9dde5;
+    --accent: #2457d6; --accent-soft: #e5ecfc;
+    --no: #b42318; --no-soft: #fdecea; --part: #b54708; --part-soft: #fdf0dc;
+    --yes: #067647; --yes-soft: #def5e8; --flag: #7a3ea1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171e; --panel: #1c212b; --text: #e6e9ef; --muted: #9aa3b5; --line: #323a49;
+      --accent: #7aa2ff; --accent-soft: #232f4f;
+      --no: #ff8b7e; --no-soft: #3a1f1c; --part: #ffb85c; --part-soft: #3a2b14;
+      --yes: #5ed39a; --yes-soft: #14352a; --flag: #c79bf0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+  a { color: var(--accent); }
+  .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+  .app[hidden], #login[hidden], .btn[hidden], .sync[hidden] { display: none; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+           padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  .progress { flex: 1 1 220px; min-width: 180px; }
+  .progress .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .progress .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  .progress small { color: var(--muted); }
+  .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 6px 12px; }
+  .btn:hover { border-color: var(--accent); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .layout { display: grid; grid-template-columns: 250px 1fr; min-height: 0; }
+  aside { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; min-height: 0; }
+  aside .filter { padding: 8px; position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--line); }
+  aside select { width: 100%; padding: 4px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+  .item { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0;
+          border-bottom: 1px solid var(--line); background: none; padding: 7px 10px; font-size: 13px; }
+  .item:hover { background: var(--accent-soft); }
+  .item.current { background: var(--accent-soft); font-weight: 600; }
+  .item .count { flex: none; min-width: 32px; text-align: center; border-radius: 9px; font-size: 11px;
+                 font-weight: 700; padding: 1px 6px; border: 1px solid var(--line); color: var(--muted); }
+  .item .count.part { background: var(--part-soft); color: var(--part); border-color: var(--part); }
+  .item .count.full { background: var(--yes-soft); color: var(--yes); border-color: var(--yes); }
+  .item .snippet { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .item .flagmark { color: var(--flag); margin-left: auto; }
+  main { overflow-y: auto; padding: 16px; min-height: 0; display: grid; gap: 14px; align-content: start;
+         grid-template-columns: minmax(0, 1fr); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .question { font-size: 17px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px;
+           background: var(--accent-soft); color: var(--accent); margin-left: 8px; vertical-align: middle;
+           text-transform: none; letter-spacing: 0; }
+  .badge[hidden] { display: none; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tab { border: 2px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 14px;
+         font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+  .tab.current { border-color: var(--accent); background: var(--accent-soft); }
+  .tab .state { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .tab .state.full { color: var(--yes); }
+  .tab .state.part { color: var(--part); }
+  .workspace { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  .answer { overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 6px; padding: 4px 16px;
+            background: var(--bg); line-height: 1.6; min-height: 240px; margin-top: 10px; }
+  .answer h1, .answer h2, .answer h3, .answer h4 { font-size: 16px; margin: 16px 0 6px; text-transform: none;
+                                                    letter-spacing: 0; color: var(--text); }
+  .answer blockquote { margin: 8px 0; padding: 4px 12px; border-left: 3px solid var(--accent);
+                       background: var(--panel); color: var(--text); }
+  .answer table { border-collapse: collapse; margin: 8px 0; }
+  .answer th, .answer td { border: 1px solid var(--line); padding: 4px 8px; vertical-align: top; }
+  .answer code { font-size: 13px; }
+  .grading { position: sticky; top: 0; z-index: 2; }
+  .criteria { display: grid; gap: 10px; }
+  .criterion { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+  .criterion .name { font-weight: 600; }
+  .criterion .name button { border: 0; background: none; color: var(--muted); padding: 0 4px; }
+  .choice { border: 2px solid var(--line); border-radius: 8px; padding: 4px 16px; background: var(--panel); font-weight: 600; }
+  .choice.yes:hover, .choice.yes.on { border-color: var(--yes); background: var(--yes-soft); color: var(--yes); }
+  .choice.no:hover, .choice.no.on { border-color: var(--no); background: var(--no-soft); color: var(--no); }
+  .choices { display: inline-flex; gap: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+  textarea { width: 100%; min-height: 40px; resize: vertical; padding: 8px; border-radius: 6px;
+             border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 12.5px; }
+  kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; background: var(--panel); }
+  .flagbtn.on { border-color: var(--flag); color: var(--flag); }
+  details.sources > summary { cursor: pointer; font-weight: 600; }
+  .group { margin-top: 12px; }
+  .group h3 { font-size: 13px; margin: 0 0 4px; color: var(--muted); }
+  .group .empty { color: var(--muted); font-size: 13px; font-style: italic; }
+  details.source { border-top: 1px solid var(--line); padding: 4px 0; }
+  details.source > summary { cursor: pointer; }
+  details.source .text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow-y: auto;
+                         border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: var(--bg);
+                         font-size: 14px; margin: 6px 0; }
+  #guideline { position: fixed; top: 0; right: 0; bottom: 0; width: min(600px, 92vw); background: var(--panel);
+               border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,.18);
+               padding: 16px 18px; overflow-y: auto; transform: translateX(105%); transition: transform .18s; z-index: 5; }
+  #guideline.open { transform: none; }
+  #guideline h2 { margin-top: 0; }
+  #guideline h3 { margin: 16px 0 4px; font-size: 15px; }
+  #guideline p { margin: 0 0 8px; white-space: pre-wrap; }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text);
+           color: var(--bg); padding: 8px 14px; border-radius: 6px; opacity: 0; pointer-events: none;
+           transition: opacity .2s; z-index: 9; max-width: 90vw; }
+  #toast.show { opacity: .95; }
+  .sources-label { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+  .sources-label .name { font-weight: 600; }
+  .sources-label .name button { border: 0; background: none; color: var(--muted); padding: 0 4px; }
+  .sync { font-size: 12.5px; color: var(--muted); }
+  .sync.ok { color: var(--yes); }
+  .sync.pending { color: var(--part); }
+  .sync.error { color: var(--no); font-weight: 600; }
+  #login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+  #login form { width: min(440px, 100%); display: grid; gap: 14px; }
+  #login h1 { font-size: 18px; margin: 0; }
+  #login label { display: grid; gap: 4px; font-weight: 600; font-size: 14px; }
+  #login input { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+                 background: var(--bg); color: var(--text); }
+  #login .error { color: var(--no); margin: 0; font-weight: 600; }
+  #login .error:empty, #login .status:empty { display: none; }
+  #login .status { color: var(--muted); margin: 0; }
+  #warn { display: none; background: var(--part-soft); color: var(--part); padding: 8px 16px; font-size: 13px; border-bottom: 1px solid var(--part); }
+  @media (max-width: 1100px) {
+    .workspace { grid-template-columns: minmax(0, 1fr); }
+    .grading { position: static; } /* below the answer: read it, then rate it */
+  }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <form class="card" id="login-form" autocomplete="on">
+    <h1 id="login-title">Évaluation des réponses</h1>
+    <p class="hint" style="margin:0">Les questions et les réponses à évaluer sont conservées dans un dépôt privé. Le mot de passe que l'on vous a communiqué permet d'y accéder.</p>
+    <label>Mot de passe
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn primary" id="login-submit" type="submit">Ouvrir</button>
+    <p class="status" id="login-status" role="status"></p>
+    <p class="error" id="login-error" role="alert"></p>
+  </form>
+</div>
+<div class="app" hidden>
+  <div>
+    <div id="warn" role="alert"></div>
+    <header>
+      <h1 id="page-title">Évaluation des réponses</h1>
+      <div class="progress">
+        <div class="bar" aria-hidden="true"><div id="bar"></div></div>
+        <small id="progress-text"></small>
+      </div>
+      <span class="sync" id="sync" role="status" hidden></span>
+      <button class="btn" id="btn-save" title="Enregistrer maintenant dans le dépôt" hidden>Enregistrer</button>
+      <button class="btn" id="btn-guideline" title="Afficher les consignes (g)">Consignes <kbd>g</kbd></button>
+      <button class="btn" id="btn-load" title="Recharger des évaluations depuis un CSV exporté">Charger un CSV</button>
+      <button class="btn primary" id="btn-export" title="Télécharger les évaluations en CSV">Exporter le CSV</button>
+      <input type="file" id="file" accept=".csv,text/csv" hidden>
+    </header>
+  </div>
+  <div class="layout">
+    <aside>
+      <div class="filter">
+        <select id="filter" aria-label="Filtrer la liste">
+          <option value="all">Toutes les questions</option>
+          <option value="todo">À terminer</option>
+          <option value="flag">Signalées</option>
+          <option value="done">Terminées</option>
+        </select>
+      </div>
+      <div id="list"></div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <section class="card">
+        <h2>Question <span id="qnum"></span> <span id="idcc" class="badge" hidden></span></h2>
+        <div class="question" id="question"></div>
+      </section>
+      <section class="card" id="sources-card">
+        <h2>Sources de la question</h2>
+        <div class="sources-label">
+          <span class="name">Sources suffisantes pour répondre ?
+            <button id="sources-info" aria-label="Définition : sources suffisantes">ⓘ</button></span>
+          <span class="choices" id="sources-choices"></span>
+        </div>
+        <div class="row"><textarea id="sources-comment" aria-label="Commentaire sur les sources (facultatif)" placeholder="Commentaire sur les sources (facultatif) : ce qui manque, ce qui est hors sujet"></textarea></div>
+        <p class="hint" style="margin:6px 0 10px">Une seule évaluation par question, pour toutes ses réponses : elle porte sur les sources, pas sur les réponses.</p>
+        <details class="sources" id="sources">
+          <summary>Sources fournies aux systèmes pour cette question</summary>
+          <p class="hint">Les mêmes sources ont été données à toutes les réponses de cette question. Elles servent à vérifier les citations ; l'exactitude juridique s'apprécie au regard du droit en vigueur.</p>
+          <div id="source-groups"></div>
+        </details>
+      </section>
+      <div class="workspace">
+      <section class="card">
+        <h2>Réponse <span id="letter"></span></h2>
+        <div class="tabs" id="tabs" role="tablist"></div>
+        <p class="hint" style="margin:8px 0 0">L'ordre des réponses est tiré au hasard pour chaque question : aucune lettre ne correspond toujours au même système.</p>
+        <div class="answer" id="answer" tabindex="0" aria-label="Texte de la réponse"></div>
+      </section>
+      <section class="card grading">
+        <h2>Votre évaluation de la réponse <span id="letter2"></span></h2>
+        <div class="criteria" id="criteria"></div>
+        <div class="row"><textarea id="comment" aria-label="Commentaire (facultatif)" placeholder="Commentaire (facultatif) : c pour écrire, Échap pour sortir"></textarea></div>
+        <div class="row">
+          <button class="btn flagbtn" id="flag" title="Marquer pour y revenir (f)">⚑ À revoir <kbd>f</kbd></button>
+          <span class="spacer"></span>
+          <button class="btn" id="prev">← Précédente</button>
+          <button class="btn" id="next">Suivante →</button>
+          <button class="btn" id="next-todo" title="Prochaine évaluation à terminer (n)">Prochaine à terminer <kbd>n</kbd></button>
+        </div>
+        <p class="hint" style="margin:6px 0 0">Touches : <kbd>←</kbd> <kbd>→</kbd> réponse précédente / suivante · <kbd>a</kbd>–<kbd>d</kbd> choisir une réponse · <kbd>s</kbd> sources de la question · <kbd>n</kbd> prochaine à terminer · <kbd>f</kbd> à revoir · <kbd>g</kbd> consignes. <span id="storage-hint">Vos évaluations sont enregistrées dans ce navigateur au fil de l'eau : exportez régulièrement le CSV.</span></p>
+      </section>
+      </div>
+    </main>
+  </div>
+</div>
+<aside id="guideline" aria-label="Consignes" tabindex="-1"></aside>
+<div id="toast" role="status"></div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script type="application/json" id="vault">__VAULT__</script>
+
+<script id="core">
+// --- core:start (pure functions, tested with Node: no DOM in here)
+// The per-question label ("are the sources enough to answer?"): its CSV column, and
+// its label_id, the question number followed by "-Q" (`07-Q`).
+const SOURCES = "sources_suffisantes";
+
+function isQuestionId(id) {
+  return /-Q$/.test(id);
+}
+
+// The fields a label must fill to be complete.
+function fieldsFor(id, criteria) {
+  return isQuestionId(id) ? [SOURCES] : criteria;
+}
+
+function csvEscape(value) {
+  const s = value === null || value === undefined ? "" : String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// `answer-eval label-import` reads label_id, the criteria, sources_suffisantes,
+// comment, flag and seconds. Answer rows leave sources_suffisantes empty; question
+// rows (`07-Q`) leave the criteria empty.
+function csvColumns(criteria) {
+  return ["label_id", ...criteria, SOURCES, "comment", "flag", "seconds"];
+}
+
+function buildCsv(ids, labels, criteria) {
+  const lines = [csvColumns(criteria).join(",")];
+  for (const id of ids) {
+    const l = labels[id] || {};
+    const v = l.values || {};
+    const question = isQuestionId(id);
+    lines.push([
+      id,
+      ...criteria.map((c) => (question ? "" : v[c] || "")),
+      question ? v[SOURCES] || "" : "",
+      l.comment || "",
+      l.flag ? "1" : "",
+      l.seconds ? Math.round(l.seconds) : "",
+    ].map(csvEscape).join(","));
+  }
+  return lines.join("\r\n") + "\r\n";
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (quoted) {
+      if (c === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; } else { quoted = false; }
+      } else { field += c; }
+    } else if (c === '"') { quoted = true; }
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && src[i + 1] === "\n") i++;
+      row.push(field); field = "";
+      if (row.length > 1 || row[0] !== "") rows.push(row);
+      row = [];
+    } else { field += c; }
+  }
+  if (field !== "" || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// Labels from a CSV exported by this page. Unknown ids and invalid values are
+// reported, not applied. A CSV without the sources column (older page) still loads.
+function labelsFromCsv(text, knownIds, criteria, allowed) {
+  const rows = parseCsv(text);
+  if (!rows.length) return { labels: {}, applied: 0, skipped: ["fichier vide"] };
+  const header = rows[0].map((h) => h.trim());
+  const col = (name) => header.indexOf(name);
+  if (col("label_id") < 0 || criteria.some((c) => col(c) < 0)) {
+    return { labels: {}, applied: 0, skipped: ["colonnes label_id / critères absentes"] };
+  }
+  const labels = {}, skipped = [];
+  let applied = 0;
+  for (const r of rows.slice(1)) {
+    const id = (r[col("label_id")] || "").trim();
+    if (!knownIds.has(id)) { skipped.push("identifiant inconnu " + id); continue; }
+    const values = {};
+    let bad = null;
+    for (const c of fieldsFor(id, criteria)) {
+      const raw = col(c) >= 0 ? (r[col(c)] || "").trim() : "";
+      if (raw === "") continue;
+      if (!allowed.includes(raw)) { bad = c + " = " + raw; break; }
+      values[c] = raw;
+    }
+    if (bad) { skipped.push(id + " : " + bad); continue; }
+    const get = (name) => (col(name) >= 0 ? (r[col(name)] || "") : "");
+    const comment = get("comment"), flag = get("flag").trim() !== "", seconds = Number(get("seconds")) || 0;
+    if (!Object.keys(values).length && !comment && !flag && !seconds) continue;
+    labels[id] = { values, comment, flag, seconds };
+    applied++;
+  }
+  return { labels, applied, skipped };
+}
+
+function answeredCount(label, fields) {
+  const v = (label && label.values) || {};
+  return fields.filter((c) => v[c]).length;
+}
+
+function isComplete(label, fields) {
+  return answeredCount(label, fields) === fields.length;
+}
+
+// Ids of one question: its answers, then its sources label. "full" when every one
+// is complete, "part" when something is started, "" otherwise.
+function questionState(ids, labels, criteria) {
+  const complete = ids.filter((id) => isComplete(labels[id], fieldsFor(id, criteria))).length;
+  if (complete === ids.length) return { complete, state: "full" };
+  const started = ids.some((id) => answeredCount(labels[id], fieldsFor(id, criteria)) > 0);
+  return { complete, state: started || complete ? "part" : "" };
+}
+
+function summarise(ids, labels, criteria) {
+  let done = 0, flagged = 0, seconds = 0, timed = 0;
+  let answers = 0, answersDone = 0, questions = 0, questionsDone = 0;
+  for (const id of ids) {
+    const question = isQuestionId(id);
+    if (question) questions++; else answers++;
+    const l = labels[id];
+    if (!l) continue;
+    if (isComplete(l, fieldsFor(id, criteria))) {
+      done++;
+      if (question) questionsDone++; else answersDone++;
+      if (!question && l.seconds) { seconds += l.seconds; timed++; }
+    }
+    if (l.flag) flagged++;
+  }
+  // The time estimate counts answers only: a sources label is quick once the
+  // answers of the question are read.
+  const perItem = timed >= 3 ? seconds / timed : null;
+  return { done, flagged, total: ids.length, perItem,
+           answers, answersDone, questions, questionsDone,
+           remaining: perItem === null ? null : perItem * (answers - answersDone) };
+}
+
+// Next unit to finish after `from`, cycling: `units` lists each question's answers
+// then its sources label ({pos, id, sources}). null when everything is complete.
+function nextTodo(units, labels, criteria, from) {
+  for (let step = 1; step <= units.length; step++) {
+    const i = (from + step) % units.length;
+    if (!isComplete(labels[units[i].id], fieldsFor(units[i].id, criteria))) return i;
+  }
+  return null;
+}
+
+function formatDuration(seconds) {
+  if (seconds === null || seconds === undefined) return "";
+  const m = Math.round(seconds / 60);
+  return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+}
+
+// ---- hosted mode: the page without data (see answer_eval/publish.py)
+
+// The labels file in the data repo (one labeller), read back by `answer-eval
+// label-import`: {format, dataset_id, labels: {label_id: {criteria or
+// sources_suffisantes, comment, flag, seconds}}}, started labels only. No timestamp:
+// the same labels give the same text (git keeps the history).
+const LABELS_PATH = "labels.json";
+const LABELS_FORMAT = "answers-labelling/1";
+
+function buildLabelsJson(ids, labels, criteria, meta) {
+  const out = {};
+  for (const id of ids) {
+    const l = labels[id];
+    if (!l) continue;
+    const v = l.values || {};
+    const entry = {};
+    for (const f of fieldsFor(id, criteria)) if (v[f]) entry[f] = v[f];
+    if (l.comment) entry.comment = l.comment;
+    if (l.flag) entry.flag = true;
+    if (l.seconds) entry.seconds = Math.round(l.seconds);
+    if (Object.keys(entry).length) out[id] = entry;
+  }
+  const doc = { format: LABELS_FORMAT, dataset_id: meta.dataset_id, labels: out };
+  return JSON.stringify(doc, null, 1) + "\n";
+}
+
+// Labels of such a file. A file made for another build of the page (other
+// dataset_id) gives none: the same label_id may name another answer there.
+function labelsFromJson(text, knownIds, criteria, allowed, datasetId) {
+  let doc;
+  try { doc = JSON.parse(text); } catch (e) { return { labels: {}, applied: 0, skipped: ["fichier illisible"] }; }
+  if (!doc || doc.dataset_id !== datasetId) {
+    return { labels: {}, applied: 0, skipped: ["évaluations d'une autre version de la page"] };
+  }
+  const labels = {}, skipped = [];
+  let applied = 0;
+  for (const [id, entry] of Object.entries(doc.labels || {})) {
+    if (!knownIds.has(id)) { skipped.push("identifiant inconnu " + id); continue; }
+    const values = {};
+    let bad = null;
+    for (const f of fieldsFor(id, criteria)) {
+      const raw = entry[f];
+      if (raw === undefined || raw === null || raw === "") continue;
+      if (!allowed.includes(raw)) { bad = f + " = " + raw; break; }
+      values[f] = raw;
+    }
+    if (bad) { skipped.push(id + " : " + bad); continue; }
+    labels[id] = { values, comment: entry.comment || "", flag: !!entry.flag, seconds: Number(entry.seconds) || 0 };
+    applied++;
+  }
+  return { labels, applied, skipped };
+}
+
+function bytesToB64(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(s);
+}
+
+function b64ToBytes(b64) {
+  const s = atob(String(b64).replace(/\s+/g, ""));
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+
+function utf8ToB64(text) {
+  return bytesToB64(new TextEncoder().encode(text));
+}
+
+function b64ToUtf8(b64) {
+  return new TextDecoder().decode(b64ToBytes(b64));
+}
+
+// The GitHub token of the vault: AES-256-GCM, key = PBKDF2-HMAC-SHA256(password,
+// salt, iterations), the password NFC-normalised as in publish.py. A wrong password
+// fails the GCM tag check: the error has `wrongPassword`.
+async function decryptVault(vault, password) {
+  const subtle = globalThis.crypto && globalThis.crypto.subtle;
+  if (!subtle) throw new Error("Chiffrement indisponible dans ce navigateur : ouvrez la page en https.");
+  const enc = new TextEncoder();
+  const base = await subtle.importKey("raw", enc.encode(String(password).normalize("NFC")),
+                                      "PBKDF2", false, ["deriveKey"]);
+  const key = await subtle.deriveKey(
+    { name: "PBKDF2", salt: b64ToBytes(vault.salt), iterations: vault.iterations, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  let plain;
+  try {
+    plain = await subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(vault.iv) }, key,
+                                 b64ToBytes(vault.ciphertext));
+  } catch (e) {
+    const err = new Error("Mot de passe incorrect.");
+    err.wrongPassword = true;
+    throw err;
+  }
+  return new TextDecoder().decode(plain);
+}
+
+function apiError(status, path) {
+  const messages = {
+    401: "GitHub refuse le jeton d'accès (expiré ou révoqué ?). Prévenez la personne qui vous a envoyé la page.",
+    403: "GitHub refuse l'accès (droits du jeton, ou trop de requêtes : réessayez dans quelques minutes).",
+    404: "Fichier introuvable dans le dépôt : " + path + ".",
+  };
+  const err = new Error(messages[status] || "Erreur GitHub " + status + " sur " + path + ".");
+  err.status = status;
+  return err;
+}
+
+// The contents API of one repository, through `fetchFn` (window.fetch; a stub in the
+// tests). `no-store`: the browser would otherwise serve a cached sha for a minute.
+function githubApi(fetchFn, repo, token) {
+  const url = (path) => "https://api.github.com/repos/" + repo + "/contents/"
+    + path.split("/").map(encodeURIComponent).join("/");
+  const headers = (accept) => ({ Accept: accept, Authorization: "Bearer " + token });
+  return {
+    async getRaw(path) {
+      const res = await fetchFn(url(path), { headers: headers("application/vnd.github.raw+json"), cache: "no-store" });
+      if (!res.ok) throw apiError(res.status, path);
+      return res.text();
+    },
+    // {text, sha}, or null when the file does not exist yet.
+    async getFile(path) {
+      const res = await fetchFn(url(path), { headers: headers("application/vnd.github+json"), cache: "no-store" });
+      if (res.status === 404) return null;
+      if (!res.ok) throw apiError(res.status, path);
+      const body = await res.json();
+      return { text: b64ToUtf8(body.content || ""), sha: body.sha };
+    },
+    async putFile(path, text, sha, message) {
+      const body = { message, content: utf8ToB64(text) };
+      if (sha) body.sha = sha;
+      const res = await fetchFn(url(path), {
+        method: "PUT",
+        headers: { ...headers("application/vnd.github+json"), "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return { ok: false, status: res.status, sha: null };
+      const out = await res.json();
+      return { ok: true, status: res.status, sha: out.content.sha };
+    },
+  };
+}
+
+// Labels once the remote file is read. `remote` is null when the file does not
+// exist: everything local is kept. Otherwise a label changed in this browser since
+// its last successful save (in `dirty`) keeps its local value, and every other label
+// takes the remote one, the last saved state (maybe from another browser): it is
+// dropped if the remote file no longer has it.
+function mergeLabels(local, remote, dirty) {
+  if (!remote) return { ...local };
+  const out = {};
+  for (const id of new Set([...Object.keys(local), ...Object.keys(remote)])) {
+    const l = dirty.has(id) ? local[id] : remote[id];
+    if (l) out[id] = l;
+  }
+  return out;
+}
+
+// Write the labels file. `content(remote)` gives the text to write: `remote` is null
+// on the first try, and on a sha conflict (409, or 422 when the file appeared or
+// changed meanwhile) the file read again ({text, sha}, or null), so the caller can
+// merge it; then one more try. Returns the new sha.
+async function saveLabelsFile(api, path, sha, content, message) {
+  let res = await api.putFile(path, content(null), sha, message);
+  if (res.status === 409 || res.status === 422) {
+    const remote = await api.getFile(path);
+    res = await api.putFile(path, content(remote), remote ? remote.sha : null, message);
+  }
+  if (!res.ok) throw apiError(res.status, path);
+  return res.sha;
+}
+// --- core:end
+</script>
+
+<script id="ui">
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const SAVE_DELAY_MS = 15000;
+  const SOURCES_DEFINITION = "Les sources fournies aux systèmes pour cette question (fiches officielles, Code du travail, convention collective, jurisprudence) permettent-elles, à elles seules, d'y répondre correctement ? Répondez « Oui » si une personne compétente ne disposant que de ces extraits pourrait donner la bonne réponse, y compris sur le point propre à la convention collective quand la question en dépend. Répondez « Non » s'il manque un élément nécessaire (règle, durée, montant, condition, disposition conventionnelle) ou si les extraits sont hors sujet.\n\nCe critère juge la recherche des sources, pas les réponses : évaluez-le de la même façon que les réponses soient bonnes ou mauvaises. Indiquez en commentaire ce qui manque.";
+
+
+  // ---- hosted mode: password screen, then the data from the private repo
+  function showLogin(vault) {
+    $("login").hidden = false;
+    if (vault.title) { $("login-title").textContent = vault.title; document.title = vault.title; }
+    const password = $("login-password");
+    password.focus();
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const status = $("login-status"), error = $("login-error"), submit = $("login-submit");
+      error.textContent = "";
+      submit.disabled = true;
+      try {
+        status.textContent = "Vérification du mot de passe…";
+        const token = await decryptVault(vault, password.value);
+        const api = githubApi(window.fetch.bind(window), vault.repo, token);
+        status.textContent = "Chargement des questions…";
+        const data = JSON.parse(await api.getRaw(vault.data_path));
+        status.textContent = "Chargement de vos évaluations…";
+        const path = vault.labels_path || LABELS_PATH;
+        const file = await api.getFile(path);
+        $("login").hidden = true;
+        password.value = "";
+        startApp(data, { api, path, file });
+      } catch (err) {
+        status.textContent = "";
+        error.textContent = err instanceof TypeError
+          ? "Connexion à GitHub impossible (réseau ?). Réessayez."
+          : err.message;
+        if (err.wrongPassword) { password.select(); password.focus(); }
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  }
+
+  // `remote`: null for the self-contained page; in hosted mode {api, path, file},
+  // `file` being the labels file in the repo ({text, sha}) or null.
+  function startApp(DATA, remote) {
+    document.querySelector(".app").hidden = false;
+    const questions = DATA.questions;
+    const criteria = DATA.criteria.map((c) => c.key);
+    const qid = (q) => q.label_id || String(q.number).padStart(2, "0") + "-Q";
+    // Flat list of answers, in question then letter order: the navigation order.
+    const flat = [];
+    questions.forEach((q, qi) => q.answers.forEach((a, ai) => flat.push({ qi, ai, id: a.label_id })));
+    // Every label, answers then the sources label of each question: the CSV order.
+    const ids = [];
+    // What "next to finish" walks through: each answer, then the question's sources.
+    const units = [];
+    questions.forEach((q, qi) => {
+      q.answers.forEach((a) => { ids.push(a.label_id); units.push({ pos: flat.findIndex((f) => f.id === a.label_id), id: a.label_id }); });
+      ids.push(qid(q));
+      units.push({ pos: units[units.length - 1].pos, id: qid(q), sources: true });
+    });
+    const known = new Set(ids);
+    const storageKey = "answers-labelling:" + DATA.dataset_id + (remote ? ":hosted" : "");
+
+    let labels = {};
+    let pos = 0; // index in `flat`
+    let shownAt = Date.now();
+    let storageOk = true;
+    let lastExportedCount = null;
+    // Hosted mode: ids changed since the last successful save to the repo.
+    let dirty = new Set();
+    const sync = { sha: remote && remote.file ? remote.file.sha : null, savedText: null,
+                   timer: null, saving: false, again: false, error: null, savedAt: null };
+
+    document.title = DATA.title;
+    $("page-title").textContent = DATA.title;
+
+    function labelFor(id) {
+      return labels[id] || (labels[id] = { values: {}, comment: "", flag: false, seconds: 0 });
+    }
+
+    // ---- storage (this browser)
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+        if (saved) {
+          labels = saved.labels || {};
+          pos = Math.min(saved.pos || 0, flat.length - 1);
+          dirty = new Set(saved.dirty || []);
+        }
+      } catch (e) { storageOk = false; }
+    }
+    function save() {
+      try { localStorage.setItem(storageKey, JSON.stringify({ labels, pos, dirty: [...dirty] })); }
+      catch (e) { storageOk = false; showWarn(); }
+    }
+    function showWarn() {
+      if (storageOk) return;
+      const warn = $("warn");
+      warn.textContent = remote
+        ? "L'enregistrement dans ce navigateur est indisponible : vos évaluations ne sont conservées que dans le dépôt. Cliquez sur « Enregistrer » avant de fermer la page."
+        : "L'enregistrement automatique est indisponible dans ce navigateur : vos évaluations ne sont conservées que tant que la page reste ouverte. Exportez souvent le CSV.";
+      warn.style.display = "block";
+    }
+
+    // ---- storage (the data repo, hosted mode)
+    function remoteLabels(file) {
+      return file ? labelsFromJson(file.text, known, criteria, DATA.values, DATA.dataset_id).labels : null;
+    }
+    function remoteText() {
+      return buildLabelsJson(ids, labels, criteria, { dataset_id: DATA.dataset_id });
+    }
+    function changed(id) {
+      if (!remote) return;
+      dirty.add(id);
+      clearTimeout(sync.timer);
+      sync.timer = setTimeout(saveRemote, SAVE_DELAY_MS);
+      renderSync();
+    }
+    async function saveRemote() {
+      if (!remote) return;
+      clearTimeout(sync.timer);
+      if (sync.saving) { sync.again = true; return; }
+      addTime();
+      const pending = new Set(dirty);
+      dirty.clear();
+      save();
+      sync.saving = true; sync.error = null; renderSync();
+      const content = (file) => {
+        if (file) {
+          // Someone saved meanwhile (another tab or browser): keep what changed here.
+          const mine = new Set([...pending, ...dirty]);
+          labels = mergeLabels(labels, remoteLabels(file), mine);
+          render();
+        }
+        return remoteText();
+      };
+      try {
+        const text = remoteText();
+        if (text !== sync.savedText || !sync.sha) {
+          const s = summarise(ids, labels, criteria);
+          sync.sha = await saveLabelsFile(remote.api, remote.path, sync.sha, content,
+            "Évaluations (" + s.done + "/" + s.total + ")");
+          sync.savedText = remoteText();
+        }
+        sync.savedAt = new Date();
+      } catch (err) {
+        pending.forEach((id) => dirty.add(id));
+        sync.error = err instanceof TypeError ? "réseau indisponible" : err.message;
+      } finally {
+        sync.saving = false;
+        save();
+        renderSync();
+        if (sync.again) { sync.again = false; if (dirty.size) saveRemote(); }
+      }
+    }
+    function renderSync() {
+      if (!remote) return;
+      const el = $("sync");
+      let text, cls;
+      if (sync.saving) { text = "Enregistrement…"; cls = "pending"; }
+      else if (sync.error) { text = "Erreur d'enregistrement"; cls = "error"; }
+      else if (dirty.size) { text = "Modifications non enregistrées"; cls = "pending"; }
+      else { text = "Enregistré" + (sync.savedAt ? " à " + sync.savedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : ""); cls = "ok"; }
+      el.textContent = text;
+      el.className = "sync " + cls;
+      el.title = sync.error ? sync.error + " Nouvel essai à la prochaine modification, ou cliquez sur « Enregistrer »." : "Fichier " + remote.path + " du dépôt";
+    }
+
+    // ---- time spent on the current answer
+    function addTime() {
+      const now = Date.now();
+      const seconds = Math.min((now - shownAt) / 1000, 600); // idle time past 10 min is not counted
+      shownAt = now;
+      const id = flat[pos].id;
+      const l = labelFor(id);
+      l.seconds = (l.seconds || 0) + seconds;
+      if (remote) dirty.add(id); // saved with the next save, which it does not trigger
+    }
+
+    // ---- rendering
+    function questionIds(qi) { return [...questions[qi].answers.map((a) => a.label_id), qid(questions[qi])]; }
+
+    function renderList() {
+      const filter = $("filter").value;
+      const list = $("list");
+      list.textContent = "";
+      const current = flat[pos].qi;
+      questions.forEach((q, qi) => {
+        const qids = questionIds(qi);
+        const st = questionState(qids, labels, criteria);
+        const flagged = qids.some((id) => labels[id] && labels[id].flag);
+        const keep = filter === "all" || (filter === "todo" && st.state !== "full")
+          || (filter === "done" && st.state === "full") || (filter === "flag" && flagged);
+        if (!keep && qi !== current) return;
+        const b = document.createElement("button");
+        b.className = "item" + (qi === current ? " current" : "");
+        const count = document.createElement("span");
+        count.className = "count" + (st.state ? " " + st.state : "");
+        count.textContent = st.complete + "/" + qids.length;
+        count.title = "Réponses et sources évaluées";
+        const snippet = document.createElement("span");
+        snippet.className = "snippet";
+        snippet.textContent = String(q.number).padStart(2, "0") + ". " + q.text.replace(/\s+/g, " ").slice(0, 70);
+        b.append(count, snippet);
+        if (flagged) { const f = document.createElement("span"); f.className = "flagmark"; f.textContent = "⚑"; b.append(f); }
+        b.addEventListener("click", () => go(flat.findIndex((f) => f.qi === qi)));
+        list.append(b);
+      });
+      const cur = list.querySelector(".current");
+      if (cur) cur.scrollIntoView({ block: "nearest" });
+    }
+
+    function renderProgress() {
+      const s = summarise(ids, labels, criteria);
+      $("bar").style.width = (100 * s.done / s.total) + "%";
+      let text = s.answersDone + " / " + s.answers + " réponses · " + s.questionsDone + " / " + s.questions + " sources évaluées";
+      if (s.flagged) text += " · " + s.flagged + " à revoir";
+      if (s.remaining !== null && s.answersDone < s.answers) text += " · environ " + formatDuration(s.remaining) + " restantes";
+      $("progress-text").textContent = text;
+    }
+
+    function renderTabs(qi) {
+      const tabs = $("tabs");
+      tabs.textContent = "";
+      questions[qi].answers.forEach((a, ai) => {
+        const b = document.createElement("button");
+        b.className = "tab" + (flat[pos].ai === ai ? " current" : "");
+        b.setAttribute("role", "tab");
+        b.setAttribute("aria-selected", flat[pos].ai === ai ? "true" : "false");
+        const n = answeredCount(labels[a.label_id], criteria);
+        const st = document.createElement("span");
+        st.className = "state" + (n === criteria.length ? " full" : n ? " part" : "");
+        st.textContent = n === criteria.length ? "✓" : n + "/" + criteria.length;
+        b.append(a.letter, st);
+        b.addEventListener("click", () => go(flat.findIndex((f) => f.qi === qi && f.ai === ai)));
+        tabs.append(b);
+      });
+    }
+
+    function renderSources(qi) {
+      const wrap = $("source-groups");
+      wrap.textContent = "";
+      questions[qi].sources.forEach((group) => {
+        const g = document.createElement("div");
+        g.className = "group";
+        const h = document.createElement("h3");
+        h.textContent = group.name + " (" + group.items.length + ")";
+        g.append(h);
+        if (!group.items.length) {
+          const p = document.createElement("p"); p.className = "empty"; p.textContent = "Aucun extrait."; g.append(p);
+        }
+        group.items.forEach((s) => {
+          const d = document.createElement("details");
+          d.className = "source";
+          const sum = document.createElement("summary");
+          sum.textContent = s.title || "(sans titre)";
+          if (/^https?:\/\//.test(s.url || "")) {
+            const a = document.createElement("a");
+            a.href = s.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = " ↗";
+            a.title = "Ouvrir la page source";
+            sum.append(a);
+          }
+          const t = document.createElement("div");
+          t.className = "text"; t.textContent = s.text;
+          d.append(sum, t);
+          g.append(d);
+        });
+        wrap.append(g);
+      });
+    }
+
+    function choiceButtons(current, onPick) {
+      return DATA.values.map((v) => {
+        const b = document.createElement("button");
+        b.className = "choice " + (v === "Oui" ? "yes" : "no") + (current === v ? " on" : "");
+        b.textContent = v;
+        b.addEventListener("click", () => onPick(v));
+        return b;
+      });
+    }
+
+    function renderCriteria(id) {
+      const wrap = $("criteria");
+      wrap.textContent = "";
+      const l = labels[id] || { values: {} };
+      DATA.criteria.forEach((c) => {
+        const row = document.createElement("div");
+        row.className = "criterion";
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = c.label;
+        const info = document.createElement("button");
+        info.textContent = "ⓘ"; info.title = c.definition; info.setAttribute("aria-label", "Définition : " + c.label);
+        info.addEventListener("click", toggleGuideline);
+        name.append(info);
+        const choices = document.createElement("span");
+        choices.className = "choices";
+        choices.append(...choiceButtons((l.values || {})[c.key], (v) => setValue(id, c.key, v)));
+        row.append(name, choices, document.createElement("span"));
+        wrap.append(row);
+      });
+    }
+
+    function renderSourcesLabel(qi) {
+      const id = qid(questions[qi]);
+      const l = labels[id] || {};
+      const choices = $("sources-choices");
+      choices.textContent = "";
+      choices.append(...choiceButtons((l.values || {})[SOURCES], (v) => setValue(id, SOURCES, v)));
+      const comment = $("sources-comment");
+      if (document.activeElement !== comment) comment.value = l.comment || "";
+    }
+
+    function render() {
+      const f = flat[pos];
+      const q = questions[f.qi];
+      const a = q.answers[f.ai];
+      $("qnum").textContent = q.number + " / " + questions[questions.length - 1].number;
+      $("question").textContent = q.text;
+      const idcc = $("idcc");
+      idcc.hidden = !q.idcc;
+      idcc.textContent = q.idcc ? "IDCC " + q.idcc + (q.idcc_name ? " · " + q.idcc_name : "") : "";
+      $("letter").textContent = a.letter;
+      $("letter2").textContent = a.letter;
+      const answer = $("answer");
+      // The only HTML inserted: rendered on export with raw HTML disabled.
+      answer.innerHTML = a.html;
+      answer.querySelectorAll("a").forEach((link) => { link.target = "_blank"; link.rel = "noopener noreferrer"; });
+      if (render.lastAnswer !== a.label_id) $("main").scrollTop = $("answer").closest(".card").offsetTop - 16;
+      render.lastAnswer = a.label_id;
+      const l = labels[a.label_id] || {};
+      $("comment").value = l.comment || "";
+      $("flag").classList.toggle("on", !!l.flag);
+      $("prev").disabled = pos === 0;
+      $("next").disabled = pos === flat.length - 1;
+      renderTabs(f.qi);
+      renderCriteria(a.label_id);
+      renderSourcesLabel(f.qi);
+      if (render.lastQuestion !== f.qi) { renderSources(f.qi); $("sources").open = false; $("main").scrollTop = 0; }
+      render.lastQuestion = f.qi;
+      renderList();
+      renderProgress();
+      renderSync();
+      shownAt = Date.now();
+    }
+
+    function go(i) {
+      if (i < 0 || i >= flat.length) return;
+      addTime();
+      const question = flat[pos].qi;
+      pos = i;
+      save();
+      render();
+      if (remote && flat[pos].qi !== question && dirty.size) saveRemote();
+    }
+
+    function showSourcesLabel() {
+      $("sources-card").scrollIntoView({ block: "start", behavior: "smooth" });
+      const first = $("sources-choices").querySelector("button");
+      if (first) first.focus({ preventScroll: true });
+    }
+
+    function goNextTodo() {
+      const from = units.findIndex((u) => !u.sources && u.pos === pos);
+      const n = nextTodo(units, labels, criteria, from);
+      if (n === null) { toast("Tout est évalué"); return; }
+      go(units[n].pos);
+      if (units[n].sources) showSourcesLabel();
+    }
+
+    function setValue(id, field, value) {
+      addTime();
+      const l = labelFor(id);
+      l.values = l.values || {};
+      if (l.values[field] === value) delete l.values[field]; // clicking again clears it
+      else l.values[field] = value;
+      save();
+      changed(id);
+      render();
+      if (isComplete(l, fieldsFor(id, criteria)) && summarise(ids, labels, criteria).done === ids.length) {
+        toast(remote ? "Tout est évalué. Merci ! Vos évaluations sont enregistrées dans le dépôt."
+                     : "Tout est évalué. Exportez le CSV.");
+        if (remote) saveRemote();
+      }
+    }
+
+    function toast(message) {
+      const t = $("toast");
+      t.textContent = message;
+      t.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => t.classList.remove("show"), 2800);
+    }
+
+    // ---- guideline panel
+    function renderGuideline() {
+      const panel = $("guideline");
+      panel.textContent = "";
+      const h = document.createElement("h2");
+      h.textContent = "Consignes";
+      panel.append(h);
+      const intro = document.createElement("p");
+      intro.textContent = "Pour chaque réponse, indiquez Oui ou Non sur chacun des trois critères, indépendamment les uns des autres. Chaque critère ne juge qu'une qualité : une réponse peut être correcte en droit mais insuffisante, ou complète mais difficile à comprendre. Les réponses d'une même question sont présentées dans un ordre tiré au hasard. Pour chaque question, indiquez aussi si les sources fournies suffisaient pour y répondre.";
+      panel.append(intro);
+      DATA.criteria.forEach((c) => {
+        const t = document.createElement("h3"); t.textContent = c.label;
+        const p = document.createElement("p"); p.textContent = c.definition.replace(/Réponds/g, "Répondez");
+        panel.append(t, p);
+      });
+      const t = document.createElement("h3"); t.textContent = "Sources suffisantes (une fois par question)";
+      const p = document.createElement("p"); p.textContent = SOURCES_DEFINITION;
+      panel.append(t, p);
+      const close = document.createElement("button");
+      close.className = "btn"; close.textContent = "Fermer (g)";
+      close.addEventListener("click", toggleGuideline);
+      panel.append(close);
+    }
+    function toggleGuideline() { $("guideline").classList.toggle("open"); }
+
+    // ---- export / load
+    function exportCsv() {
+      addTime(); save();
+      const blob = new Blob([buildCsv(ids, labels, criteria)], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+      a.href = URL.createObjectURL(blob);
+      a.download = "evaluations-" + DATA.dataset_id + "-" + stamp + ".csv";
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      lastExportedCount = summarise(ids, labels, criteria).done;
+      toast(lastExportedCount + " évaluations exportées");
+    }
+
+    function loadCsv(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = labelsFromCsv(String(reader.result), known, criteria, DATA.values);
+        if (result.applied === 0) { toast("Rien n'a été chargé : " + (result.skipped[0] || "aucune évaluation dans le fichier")); return; }
+        Object.assign(labels, result.labels);
+        save();
+        Object.keys(result.labels).forEach(changed);
+        render();
+        toast(result.applied + " lignes chargées" + (result.skipped.length ? " (" + result.skipped.length + " ignorées)" : ""));
+      };
+      reader.readAsText(file);
+    }
+
+    // ---- events
+    $("filter").addEventListener("change", renderList);
+    $("prev").addEventListener("click", () => go(pos - 1));
+    $("next").addEventListener("click", () => go(pos + 1));
+    $("next-todo").addEventListener("click", goNextTodo);
+    $("flag").addEventListener("click", () => { addTime(); const id = flat[pos].id; const l = labelFor(id); l.flag = !l.flag; save(); changed(id); render(); });
+    $("comment").addEventListener("input", () => { const id = flat[pos].id; labelFor(id).comment = $("comment").value; save(); changed(id); });
+    $("sources-comment").addEventListener("input", () => {
+      const id = qid(questions[flat[pos].qi]);
+      labelFor(id).comment = $("sources-comment").value; save(); changed(id);
+    });
+    $("sources-info").addEventListener("click", toggleGuideline);
+    $("sources-info").title = SOURCES_DEFINITION;
+    $("btn-guideline").addEventListener("click", toggleGuideline);
+    $("btn-export").addEventListener("click", exportCsv);
+    $("btn-load").addEventListener("click", () => $("file").click());
+    $("file").addEventListener("change", (e) => { if (e.target.files[0]) loadCsv(e.target.files[0]); e.target.value = ""; });
+    $("btn-save").addEventListener("click", () => { addTime(); saveRemote(); });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const typing = e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.tagName === "SELECT";
+      if (typing) { if (e.key === "Escape") e.target.blur(); return; }
+      const f = flat[pos];
+      if (e.key === "ArrowRight") { go(pos + 1); e.preventDefault(); }
+      else if (e.key === "ArrowLeft") { go(pos - 1); e.preventDefault(); }
+      else if (/^[a-d]$/.test(e.key)) {
+        const ai = e.key.charCodeAt(0) - 97;
+        const i = flat.findIndex((x) => x.qi === f.qi && x.ai === ai);
+        if (i >= 0) go(i);
+      }
+      else if (e.key === "n") { goNextTodo(); }
+      else if (e.key === "s") { showSourcesLabel(); e.preventDefault(); }
+      else if (e.key === "f") { $("flag").click(); }
+      else if (e.key === "g") { toggleGuideline(); }
+      else if (e.key === "c") { $("comment").focus(); e.preventDefault(); }
+      else if (e.key === "Escape") { $("guideline").classList.remove("open"); }
+    });
+
+    window.addEventListener("beforeunload", (e) => {
+      if (remote) {
+        if (dirty.size || sync.saving) { addTime(); save(); saveRemote(); e.preventDefault(); e.returnValue = ""; }
+        return;
+      }
+      const done = summarise(ids, labels, criteria).done;
+      if (done > 0 && done !== lastExportedCount) { addTime(); save(); e.preventDefault(); e.returnValue = ""; }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) { addTime(); save(); if (remote && dirty.size) saveRemote(); }
+      else { shownAt = Date.now(); }
+    });
+
+    load();
+    if (remote) {
+      labels = mergeLabels(labels, remoteLabels(remote.file), dirty);
+      sync.savedText = remote.file ? remote.file.text : null;
+      save();
+      $("sync").hidden = false;
+      $("btn-save").hidden = false;
+      // Labels live in the repo: no CSV to export or load.
+      $("btn-export").hidden = true;
+      $("btn-load").hidden = true;
+      $("storage-hint").textContent = "Vos évaluations sont enregistrées dans ce navigateur, et dans le dépôt 15 s après chaque modification, à chaque changement de question ou avec « Enregistrer ».";
+    }
+    renderGuideline();
+    showWarn();
+    render();
+    if (remote && dirty.size) saveRemote(); // labels made here but not saved yet
+  }
+
+  const embedded = JSON.parse($("data").textContent);
+  const vault = JSON.parse($("vault").textContent);
+  if (embedded) startApp(embedded, null);
+  else if (vault) showLogin(vault);
+  else document.body.textContent = "Page vide : ni données ni accès au dépôt.";
+})();
+</script>
+</body>
+</html>
