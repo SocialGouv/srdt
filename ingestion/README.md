@@ -3,7 +3,7 @@
 Builds the search index that the api searches (alias `chunks`), on OpenSearch or Elasticsearch.
 
 Inputs:
-- raw source **snapshots** on S3: the code du travail (LEGI), collective agreements (KALI), Cour de cassation decisions (Judilibre)
+- raw source **snapshots** on S3: the code du travail (LEGI), collective agreements (KALI), Cour de cassation decisions (Judilibre), company agreements (ACCO)
 - the CDTN database (contributions, fiches, information pages), read directly
 
 Output: one document per chunk, in the format published in [`schema/chunk.v1.schema.json`](schema/chunk.v1.schema.json).
@@ -33,20 +33,22 @@ uv sync
 uv run ingest fetch legi                    # latest @socialgouv/legi-data (npm)
 uv run ingest fetch judilibre               # PISTE API, see below
 uv run ingest fetch kali --from-dir ../../kali-data/data
+uv run ingest fetch acco --from-dir path/to/results/accords   # company agreements, see below
 ```
 
 Each run writes an immutable snapshot, then points `LATEST` to it:
 
 ```
-{S3_PREFIX}{legi|kali|judilibre}/{snapshot_id}/manifest.json   # files with sha256, upstream version
-{S3_PREFIX}{legi|kali|judilibre}/{snapshot_id}/<files>
-{S3_PREFIX}{legi|kali|judilibre}/LATEST.json
+{S3_PREFIX}{legi|kali|judilibre|acco}/{snapshot_id}/manifest.json   # files with sha256, upstream version
+{S3_PREFIX}{legi|kali|judilibre|acco}/{snapshot_id}/<files>
+{S3_PREFIX}{legi|kali|judilibre|acco}/LATEST.json
 ```
 
 Snapshot ids:
 - npm packages: the package version, e.g. `2.575.0`.
 - Imported directories: the package version plus a content hash, e.g. `3.473.0-local.0429ef96`.
 - Judilibre: the UTC date.
+- ACCO: the UTC date of the import plus a content hash, e.g. `20261028-local.5d6dc65b`.
 
 A fetch with nothing new does nothing.
 
@@ -67,6 +69,19 @@ uv run ingest fetch judilibre --from-dir path/to/years # import local <year>.jso
 
 **KALI comes from a local directory.** The published `@socialgouv/kali-data` (npm and GitHub) has most agreements empty: 343 of 393 in 3.514.0. Regenerate a kali-data checkout with its own fetch script, then import its `data/` directory. The manifest records how many agreements are still empty.
 
+### Company agreements (ACCO)
+
+`accords_entreprise` is a set of *accords d'entreprise* from the Légifrance ACCO fund, collected by keyword (for now, the heat agreements: "canicule", "fortes chaleurs"...) with `legifrance_acco.py`, which writes `results/accords/<id>.json` (the `/consult/acco` response) and the original `.docx`/`.odt` next to it, and `results/ids.json` (the search). There is no download in `ingest`: import the `accords/` directory.
+
+```sh
+uv run ingest fetch acco --from-dir path/to/results/accords
+```
+
+- The snapshot keeps one JSON per agreement, without its base64 copy of the original file (84 MB instead of 716 MB for 2,399 agreements).
+- The API cuts the extracted text at 100,000 characters. From 99,000, the text is read again from the original file (standard library only, `text/office.py`), and `attachment.content_source` records where it came from (`api`, `docx`, `odt`, or `api-truncated` when the original could not be read). The manifest counts them in `upstream.text_sources`.
+- The manifest also records the search criteria (`upstream.search`, from `ids.json`).
+- Re-importing the same content is a no-op.
+
 `SNAPSHOT_STORE=local` (or `--store local`) uses `SNAPSHOT_LOCAL_DIR` instead of S3, for offline work.
 
 ## 2. Build the index: `ingest index`
@@ -83,6 +98,15 @@ What gets ingested is set by the config file (`--config`, default `config/local.
 - `embedding`: the canonical model id and its dimension.
 
 Each run builds a new `{alias}-{timestamp}` index and copies in the chunks of the sources it does not rebuild. It then moves the alias and deletes the older `{alias}-*` indices. Use another `SEARCH_INDEX` for tests, without a hyphen after `chunks` (e.g. `chunks_test`): `chunks-*` would match it.
+
+The company agreements are not in `config/local.toml` yet: they have their own config and their own index, so the shared `chunks` alias and the api are untouched.
+
+```sh
+SEARCH_INDEX=chunks_acco uv run ingest index --config config/acco.toml --dry-run --dump dumps/
+SEARCH_INDEX=chunks_acco uv run ingest index --config config/acco.toml
+```
+
+Chunks of an agreement: split on its "Article N" headings (else its numbered headings, else one section), table of contents removed, long sections cut at 4,096 characters. The text starts with `{agreement title} > {part} > {article}`, not the company, so the embedding stays about the clause; the company, SIRET, sector, nature, signature date, themes and unions are metadata (schema 1.1.0). The ids are `{ACCOTEXT id}-{section}`, with `initial_id` the agreement. To merge them into the shared index, add `accords_entreprise` to `local.toml` and empty `OPTIONAL_SOURCES` in `contract.py` (the api must list the source first).
 
 The index `_meta` records:
 - the schema version, embedding model id and dimension, and chunker version

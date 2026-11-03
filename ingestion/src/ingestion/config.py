@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ingestion.contract import SourceName
 
-Dataset = Literal["legi", "kali", "judilibre"]
+Dataset = Literal["legi", "kali", "judilibre", "acco"]
 DATASETS: tuple[Dataset, ...] = get_args(Dataset)
 
 # Snapshots each source reads. The CDTN sources need LEGI to resolve their links
@@ -23,6 +23,7 @@ SOURCE_DATASETS: dict[SourceName, tuple[Dataset, ...]] = {
     "code_du_travail": ("legi",),
     "conventions": ("kali",),
     "judilibre": ("judilibre",),
+    "accords_entreprise": ("acco",),
 }
 
 

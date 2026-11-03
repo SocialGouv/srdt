@@ -131,8 +131,8 @@ def fetch(
         Path | None,
         typer.Option(
             help="Import this directory instead of downloading: the data/ directory "
-            "of a legi-data or kali-data checkout, or Judilibre year files "
-            "(one dataset only)"
+            "of a legi-data or kali-data checkout, Judilibre year files, or the "
+            "accords/ directory of legifrance_acco.py for acco (one dataset only)"
         ),
     ] = None,
     since_year: Annotated[
@@ -176,6 +176,8 @@ def fetch(
         )
     if full and since_year is not None:
         raise typer.BadParameter("--full and --since-year are exclusive")
+    if "acco" in datasets and not from_dir:
+        raise typer.BadParameter("acco has no download: use --from-dir")
     settings = Settings()
     snapshot_store = make_store(settings, store)
     for dataset in datasets:

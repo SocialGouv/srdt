@@ -12,7 +12,7 @@ from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 SCHEMA_MAJOR = SCHEMA_VERSION.split(".")[0]
 
 # Bumped whenever the chunk text produced for unchanged inputs changes.
@@ -27,8 +27,14 @@ SourceName = Literal[
     "code_du_travail",
     "conventions",
     "judilibre",
+    "accords_entreprise",
 ]
 SOURCES: tuple[SourceName, ...] = get_args(SourceName)
+
+# Sources a run can leave out of its include list and still count as a full run:
+# they are built into their own index for now, and are not in the shared one. Empty
+# this when they are merged, so that a model change cannot copy their old vectors.
+OPTIONAL_SOURCES: tuple[SourceName, ...] = ("accords_entreprise",)
 
 
 class Article(BaseModel):
@@ -64,7 +70,8 @@ class ChunkMetadata(BaseModel):
 
     id: str = Field(
         description="Document id, shared by all the chunks of a document "
-        "(cdtn_id, LEGI section cid, KALI article id, Judilibre decision-summary id)"
+        "(cdtn_id, LEGI section cid, KALI article id, Judilibre decision-summary id, "
+        "ACCO agreement id and section index)"
     )
     source: SourceName
     title: str
@@ -80,6 +87,16 @@ class ChunkMetadata(BaseModel):
     decision_date: str | None = None
     # CDTN sources only
     legi_links: list[LegiLink] | None = None
+    # accords_entreprise only (1.1.0)
+    company: str | None = Field(default=None, description="Raison sociale")
+    siret: str | None = None
+    sector: str | None = None
+    nature: str | None = Field(default=None, description="ACCORD, AVENANT...")
+    signature_date: str | None = Field(default=None, description="YYYY-MM-DD")
+    themes: list[str] | None = Field(
+        default=None, description="Themes declared at the deposit"
+    )
+    unions: list[str] | None = Field(default=None, description="Signing unions")
 
 
 class Chunk(BaseModel):

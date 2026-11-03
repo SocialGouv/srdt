@@ -1,0 +1,25 @@
+{
+ "executionTime": 4,
+ "dereferenced": false,
+ "acco": {
+  "id": "ACCOTEXT000000000003",
+  "origine": "ACCO",
+  "nature": "ACCORD",
+  "titreTexte": "compte rendu NAO",
+  "numero": "A00000000000",
+  "siret": "33333333300033",
+  "dateTexte": 1552348800000,
+  "dateEffet": 32472144000000,
+  "dateFin": 32472144000000,
+  "codeIdcc": "0016",
+  "raisonSociale": "EXEMPLE SERVICES",
+  "secteur": "Nettoyage",
+  "themes": [],
+  "syndicats": [],
+  "attachment": {
+   "content": "Compte rendu de la réunion de négociation du 12 mars 2019.\nLes parties se sont réunies pour discuter des mesures de l'année.\nNom du salarié : ..........................................................................\nEn cas de vagues de chaleurs, l'entreprise adapte les horaires de travail sur les chantiers.\nLes parties conviennent de se revoir l'année prochaine.\n",
+   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "content_source": "api"
+  }
+ }
+}

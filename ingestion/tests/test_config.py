@@ -4,15 +4,23 @@ import pytest
 from pydantic import ValidationError
 
 from ingestion.config import Config, SyncConfig, load_config
-from ingestion.contract import SOURCES
+from ingestion.contract import OPTIONAL_SOURCES, SOURCES
 
 CONFIG_DIR = Path(__file__).parents[1] / "config"
 
 
 def test_local_config_includes_every_source():
     config = load_config(CONFIG_DIR / "local.toml")
-    assert set(config.include) == set(SOURCES)
+    assert set(config.include) == set(SOURCES) - set(OPTIONAL_SOURCES)
     assert config.snapshot_ref("kali") == "latest"
+
+
+def test_acco_config_builds_the_agreements_alone():
+    config = load_config(CONFIG_DIR / "acco.toml")
+    assert config.include == ["accords_entreprise"]
+    assert config.snapshot_ref("acco") == "latest"
+    # same model as local.toml: the api embeds its queries with it
+    assert config.embedding == load_config(CONFIG_DIR / "local.toml").embedding
 
 
 def test_local_config_sync_guards():

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ingestion.contract import SCHEMA_VERSION, Chunk
+from ingestion.contract import OPTIONAL_SOURCES, SCHEMA_VERSION, SOURCES, Chunk
 from ingestion.pipeline import (
     IngestionError,
     Inputs,
@@ -107,6 +107,26 @@ def test_partial_run_copies_the_other_sources(store: LocalStore):
         "conventions": {"snapshots": {"kali": "3.400.0"}},
         "judilibre": {"snapshots": {"judilibre": "20261023"}},
     }
+
+
+def test_run_without_the_optional_sources_is_a_full_run(store: LocalStore):
+    # a legacy index has no agreements to copy: the run is not partial because of them
+    config = make_config([s for s in SOURCES if s not in OPTIONAL_SOURCES])
+    writer = FakeWriter(current=None, exists=True)
+    _run(make_inputs(store, config), writer)
+    assert "accords_entreprise" not in {d.metadata.source for d in writer.documents}
+    assert writer.copied_excluding == list(config.include)
+
+
+def test_agreements_are_built_alone_into_their_own_index(store: LocalStore):
+    config = make_config(["accords_entreprise"])
+    writer = FakeWriter()
+    result, _ = _run(make_inputs(store, config), writer)
+    assert {d.metadata.source for d in writer.documents} == {"accords_entreprise"}
+    assert (writer.meta or {})["sources"] == {
+        "accords_entreprise": {"snapshots": {"acco": "20261028-local.test"}}
+    }
+    assert result.counts["accords_entreprise"] == len(writer.documents)
 
 
 def test_duplicate_chunk_ids_are_refused(inputs: Inputs):

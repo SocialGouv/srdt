@@ -1,0 +1,17 @@
+# Company agreements (accords d'entreprise, Légifrance ACCO fund) on their own, to be built
+# into their own index: SEARCH_INDEX=chunks_acco ingest index --config config/acco.toml
+include = ["accords_entreprise"]
+
+# "latest" or a snapshot id (YYYYMMDD-local.<hash> for an imported directory)
+[snapshots]
+acco = "latest"
+
+[embedding]
+# same model as local.toml: the api embeds its queries with it
+model_id = "bge-m3"
+dim = 1024
+batch_size = 64
+
+[sync]
+max_delete_ratio = 0.10
+min_deleted = 25

@@ -160,6 +160,12 @@ def make_store(root: Path) -> LocalStore:
     store.put_snapshot(
         "judilibre", "20261023", {"2024.json": FIXTURES / "2024.json"}, {}
     )
+    store.put_snapshot(
+        "acco",
+        "20261028-local.test",
+        {p.name: p for p in FIXTURES.glob("ACCOTEXT*.json")},
+        {"fond": "ACCO"},
+    )
     return store
 
 

@@ -99,6 +99,13 @@ def mappings(dim: int, engine: SearchEngine) -> dict[str, Any]:
                     "number": TEXT_KEYWORD,
                     "decision_date": {"type": "date"},
                     "legi_links": {"type": "object", "enabled": False},
+                    "company": TEXT_KEYWORD,
+                    "siret": KEYWORD,
+                    "sector": TEXT_KEYWORD,
+                    "nature": KEYWORD,
+                    "signature_date": {"type": "date"},
+                    "themes": KEYWORD,
+                    "unions": KEYWORD,
                 }
             },
         },

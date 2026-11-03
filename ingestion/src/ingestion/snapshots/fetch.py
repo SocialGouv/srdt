@@ -8,6 +8,10 @@
   snapshot id is the UTC date. A refresh only downloads the last years and carries
   the earlier ones over from the latest snapshot. Or a local directory of year
   files (`--from-dir`).
+- acco: the company agreements of the Légifrance ACCO fund, from a local directory
+  (`--from-dir`) written by legifrance_acco.py: <id>.json and the original file.
+  The snapshot keeps the JSON without its base64 copy of the original file, with the
+  full text where the API cut it.
 """
 
 import base64
@@ -31,7 +35,7 @@ from ingestion.snapshots.store import (
     SnapshotStore,
     file_sha256,
 )
-from ingestion.sources import judilibre
+from ingestion.sources import accords, judilibre
 from ingestion.sources.kali import is_agreement_file
 from ingestion.sources.legi import CODE_DU_TRAVAIL_FILE
 
@@ -131,6 +135,8 @@ def fetch_npm(
 def _keep_for(dataset: str) -> Callable[[str], bool]:
     if dataset == "judilibre":
         return lambda name: YEAR_FILE.match(name) is not None
+    if dataset == "acco":
+        return accords.is_agreement_file
     return NPM_DATASETS[dataset].keep
 
 
@@ -141,8 +147,8 @@ def import_dir(
     now: datetime | None = None,
 ) -> Manifest | None:
     """Snapshot a local directory: the data/ directory of a legi-data or kali-data
-    checkout, or the year files of Judilibre. None if the same content is already
-    stored."""
+    checkout, the year files of Judilibre, or the accords/ directory of
+    legifrance_acco.py. None if the same content is already stored."""
     keep = _keep_for(dataset)
     files = {
         p.name: p for p in sorted(directory.iterdir()) if p.is_file() and keep(p.name)
@@ -153,6 +159,8 @@ def import_dir(
     with tempfile.TemporaryDirectory() as tmp:
         if dataset == "judilibre":
             files = _normalised_copies(files, Path(tmp))
+        elif dataset == "acco":
+            files = _agreement_copies(files, directory, Path(tmp))
 
         content = hashlib.sha256()
         for name, path in files.items():
@@ -161,7 +169,9 @@ def import_dir(
             "source_dir": str(directory.resolve()),
             "content_sha256": content.hexdigest(),
         }
-        if dataset == "judilibre":
+        if dataset == "acco":
+            upstream |= _acco_upstream(directory, files)
+        if dataset in ("judilibre", "acco"):
             label = (now or datetime.now(UTC)).strftime("%Y%m%d")
         else:
             label = _package_version(directory)
@@ -181,6 +191,44 @@ def _normalised_copies(files: dict[str, Path], directory: Path) -> dict[str, Pat
         copies[name] = directory / name
         copies[name].write_text(json.dumps(decisions))
     return copies
+
+
+def _agreement_copies(
+    files: dict[str, Path], originals: Path, directory: Path
+) -> dict[str, Path]:
+    copies = {}
+    for name, path in files.items():
+        agreement = accords.normalise_agreement(json.loads(path.read_text()), originals)
+        copies[name] = directory / name
+        # sorted keys: the same agreement always gives the same bytes
+        copies[name].write_text(
+            json.dumps(agreement, ensure_ascii=False, sort_keys=True)
+        )
+    return copies
+
+
+def _acco_upstream(directory: Path, files: dict[str, Path]) -> dict:
+    """Where the agreements come from: the search that collected them (ids.json, next
+    to the accords/ directory) and where each text was read."""
+    upstream: dict = {"fond": "ACCO"}
+    ids = directory.resolve().parent / "ids.json"
+    if ids.exists():
+        search = json.loads(ids.read_text())
+        upstream["search"] = {
+            "query": search.get("query"),
+            "searched_at": search.get("searched_at"),
+        }
+    sources = [
+        json.loads(p.read_text())["acco"]["attachment"]["content_source"]
+        for p in files.values()
+    ]
+    upstream["text_sources"] = {s: sources.count(s) for s in sorted(set(sources))}
+    if upstream["text_sources"].get("api-truncated"):
+        logger.warning(
+            f"acco: {upstream['text_sources']['api-truncated']} texts cut by the API "
+            "and no original file to read them from"
+        )
+    return upstream
 
 
 def _package_version(directory: Path) -> str:

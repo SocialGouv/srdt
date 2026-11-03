@@ -1,0 +1,40 @@
+{
+ "executionTime": 4,
+ "dereferenced": false,
+ "acco": {
+  "id": "ACCOTEXT000000000002",
+  "origine": "ACCO",
+  "nature": "AVENANT",
+  "titreTexte": "NAO 2023",
+  "numero": "A00000000000",
+  "siret": "22222222200022",
+  "dateTexte": 1677715200000,
+  "dateEffet": 32472144000000,
+  "dateFin": 32472144000000,
+  "codeIdcc": null,
+  "raisonSociale": "EXEMPLE BTP",
+  "secteur": "Construction de routes",
+  "themes": [
+   {
+    "code": "000",
+    "libelle": "Evolution des salaires",
+    "groupe": "02"
+   }
+  ],
+  "syndicats": [
+   {
+    "code": "CGT",
+    "libelle": "CGT"
+   },
+   {
+    "code": "CGT-FO",
+    "libelle": "CGT-FO"
+   }
+  ],
+  "attachment": {
+   "content": "Procès-verbal de désaccord et accord de négociation annuelle\n1. Salaires\n1.1 Augmentation générale\nUne augmentation générale de 2 % est appliquée à tous les salariés au 1er janvier.\n1.2 Primes\nLa prime de panier est portée à 8,50 euros par jour travaillé.\n2. Durée du travail\nEn cas de canicule, les équipes travaillant sur chantier pourront aménager leurs horaires.\n3. Dispositions finales\nLe présent accord est conclu pour une durée d'un an.\n",
+   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "content_source": "api"
+  }
+ }
+}

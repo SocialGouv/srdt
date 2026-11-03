@@ -1,0 +1,41 @@
+{
+ "executionTime": 4,
+ "dereferenced": false,
+ "acco": {
+  "id": "ACCOTEXT000000000001",
+  "origine": "ACCO",
+  "nature": "ACCORD",
+  "titreTexte": "accord relatif aux conditions de travail",
+  "numero": "A00000000000",
+  "siret": "11111111100011",
+  "dateTexte": 1717459200000,
+  "dateEffet": 32472144000000,
+  "dateFin": 32472144000000,
+  "codeIdcc": "1486",
+  "raisonSociale": "EXEMPLE INDUSTRIE",
+  "secteur": "Fabrication de machines",
+  "themes": [
+   {
+    "code": "000",
+    "libelle": "Santé et sécurité",
+    "groupe": "02"
+   },
+   {
+    "code": "001",
+    "libelle": "Durée du travail",
+    "groupe": "02"
+   }
+  ],
+  "syndicats": [
+   {
+    "code": "CFDT",
+    "libelle": "CFDT"
+   }
+  ],
+  "attachment": {
+   "content": "ACCORD RELATIF AUX CONDITIONS DE TRAVAIL\nENTRE LES SOUSSIGNÉS\nLa société Exemple Industrie, SAS au capital de 10 000 euros, représentée par sa directrice,\nd'une part, et l'organisation syndicale CFDT, d'autre part.\nSOMMAIRE\nTITRE 1 – DISPOSITIONS GÉNÉRALES\t2\nArticle 1 – Objet\t2\nArticle 2 – Champ d'application\t2\nTITRE 2 – SANTÉ AU TRAVAIL\t3\nArticle 3 – Fortes chaleurs\t3\nArticle 4 – Durée de l'accord\t4\nPRÉAMBULE\nLes parties ont souhaité adapter les conditions de travail des salariés de l'entreprise.\nTITRE 1 – DISPOSITIONS GÉNÉRALES\nArticle 1 – Objet\nLe présent accord a pour objet de fixer les règles applicables aux conditions de travail.\nArticle 2 – Champ d'application\nLe présent accord s'applique à l'ensemble des salariés de l'entreprise.\nTITRE 2 – SANTÉ AU TRAVAIL\nArticle 3 – Fortes chaleurs\nLorsque le plan national canicule atteint le niveau 3 dans le département, les horaires de travail peuvent être décalés pour éviter les heures les plus chaudes.\nDes pauses supplémentaires de 10 minutes par heure sont accordées et de l'eau fraîche est mise à disposition.\nArticle 3 du présent accord s'applique également aux intérimaires présents sur site.\nArticle 4 – Durée de l'accord. Le présent accord est conclu pour une durée indéterminée et entre en vigueur le lendemain de son dépôt auprès de la DREETS compétente.\nFait à Lyon, le 4 juin 2024.\n",
+   "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "content_source": "api"
+  }
+ }
+}

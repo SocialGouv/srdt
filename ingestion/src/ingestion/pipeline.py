@@ -12,6 +12,7 @@ from typing import Any
 from ingestion.config import SOURCE_DATASETS, Config, Dataset
 from ingestion.contract import (
     CHUNKER_VERSION,
+    OPTIONAL_SOURCES,
     SCHEMA_MAJOR,
     SCHEMA_VERSION,
     SOURCES,
@@ -22,6 +23,7 @@ from ingestion.embed import Embedder, batched
 from ingestion.index_writer import IndexWriter
 from ingestion.settings import Settings
 from ingestion.snapshots.store import Manifest, SnapshotStore
+from ingestion.sources.accords import chunk_accord
 from ingestion.sources.cdtn import CDTN_SOURCES, chunk_cdtn
 from ingestion.sources.judilibre import chunk_decision
 from ingestion.sources.kali import chunk_cc, is_agreement_file
@@ -122,6 +124,10 @@ def chunk_source(source: SourceName, inputs: Inputs) -> list[Chunk]:
             for decision in inputs.read_json("judilibre", path):
                 chunks += chunk_decision(decision, chunker)
         return chunks
+    if source == "accords_entreprise":
+        for path in inputs.manifest("acco").paths():
+            chunks += chunk_accord(inputs.read_json("acco", path), chunker)
+        return chunks
     raise IngestionError(f"No loader for source {source}")
 
 
@@ -187,7 +193,7 @@ def check_partial_run(
 ) -> None:
     """Chunks of the other sources are copied from the current index: refuse when
     they would not match what this run writes."""
-    if set(sources) >= set(SOURCES):
+    if set(sources) >= set(SOURCES) - set(OPTIONAL_SOURCES):
         return
     problem = meta_problem(current, config)
     if problem:

@@ -26,7 +26,7 @@
       "additionalProperties": false,
       "properties": {
         "id": {
-          "description": "Document id, shared by all the chunks of a document (cdtn_id, LEGI section cid, KALI article id, Judilibre decision-summary id)",
+          "description": "Document id, shared by all the chunks of a document (cdtn_id, LEGI section cid, KALI article id, Judilibre decision-summary id, ACCO agreement id and section index)",
           "title": "Id",
           "type": "string"
         },
@@ -39,7 +39,8 @@
             "fiches_service_public",
             "code_du_travail",
             "conventions",
-            "judilibre"
+            "judilibre",
+            "accords_entreprise"
           ],
           "title": "Source",
           "type": "string"
@@ -134,6 +135,101 @@
           ],
           "default": null,
           "title": "Legi Links"
+        },
+        "company": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Raison sociale",
+          "title": "Company"
+        },
+        "siret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Siret"
+        },
+        "sector": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sector"
+        },
+        "nature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ACCORD, AVENANT...",
+          "title": "Nature"
+        },
+        "signature_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "YYYY-MM-DD",
+          "title": "Signature Date"
+        },
+        "themes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Themes declared at the deposit",
+          "title": "Themes"
+        },
+        "unions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signing unions",
+          "title": "Unions"
         }
       },
       "required": [
@@ -300,5 +396,5 @@
   ],
   "title": "Search chunk",
   "type": "object",
-  "x-schema-version": "1.0.0"
+  "x-schema-version": "1.1.0"
 }
