@@ -1,3 +1,10 @@
+## [1.57.4](https://github.com/SocialGouv/srdt/compare/v1.57.3...v1.57.4) (2026-11-05)
+
+
+### Bug Fixes
+
+* specific prompt when no jurisprudence found ([#459](https://github.com/SocialGouv/srdt/issues/459)) ([f9902aa](https://github.com/SocialGouv/srdt/commit/f9902aa374e384580bfa50562b37361c496d3628))
+
 ## [1.57.3](https://github.com/SocialGouv/srdt/compare/v1.57.2...v1.57.3) (2026-10-27)
 
 
