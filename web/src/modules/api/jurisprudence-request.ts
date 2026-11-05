@@ -1,11 +1,15 @@
 import { JURISPRUDENCE_REQUEST_GUARD_TEXT } from "@/prompts/shared";
 
-// Mots-clés signalant une demande explicite de jurisprudence.
+// Mots-clés signalant une demande explicite de jurisprudence (insensible à la casse, pluriels,
+// accents omis) : jurisprudence(s), jurisprudentiel(le)(s), arrêt(s), Cour de cassation,
+// « Cass. », décision(s).
 const JURISPRUDENCE_REQUEST_PATTERN =
-  /\b(jurisprudences?|arr[êe]ts?|cour de cassation|d[ée]cisions?)\b/i;
+  /\b(jurisprudence|jurisprudentiel|arr[êe]ts?\b|cour\s+de\s+cassation|cass\.|d[ée]cisions?\b)/i;
 
+// Normalisation NFC : un accent saisi sous forme décomposée (« e » + accent combinant) ne doit
+// pas empêcher la détection de « arrêt » ou « décision ».
 export const asksForJurisprudence = (question: string): boolean =>
-  JURISPRUDENCE_REQUEST_PATTERN.test(question);
+  JURISPRUDENCE_REQUEST_PATTERN.test(question.normalize("NFC"));
 
 /**
  * Ajoute à la question envoyée au modèle une consigne interdisant d'inventer des décisions,
