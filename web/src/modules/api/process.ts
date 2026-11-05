@@ -28,10 +28,10 @@ import { buildGenerateInstructionsNoJurisprudence } from "@/prompts/generate";
 // on bascule sur des prompts sans consignes de citation d'arrêts, pour éviter que le modèle
 // n'invente des décisions. Évalué à chaque tour, y compris pour les relances.
 const selectInstructions = (
-  instructions: InstructionPrompts,
+  instructions: Partial<InstructionPrompts>,
   jurisprudenceChunks: ChunkResult[],
   withJurisprudence: boolean
-): InstructionPrompts =>
+): Partial<InstructionPrompts> =>
   jurisprudenceChunks.length > 0
     ? instructions
     : buildGenerateInstructionsNoJurisprudence(withJurisprudence);
