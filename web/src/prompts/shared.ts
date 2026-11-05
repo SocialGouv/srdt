@@ -132,3 +132,7 @@ export const getJurisprudenceTextNoneFollowup = (withJurisprudence: boolean) =>
 ${jurisprudenceNoneOpening(withJurisprudence)} ${JURISPRUDENCE_NONE_RULE} ${JURISPRUDENCE_NONE_FOLLOWUP_RULE}
 
 ${jurisprudenceNoneExplicitRequest(withJurisprudence)}`;
+
+// Phrase ajoutée à la fin de la question envoyée au modèle quand l'usager demande explicitement
+// de la jurisprudence, pour que la demande ne prenne pas le pas sur l'interdiction d'inventer.
+export const JURISPRUDENCE_REQUEST_GUARD_TEXT = `Cite uniquement les décisions présentes dans la base de connaissance. S'il n'y en a pas, indique qu'aucune jurisprudence pertinente n'a été trouvée, sans en inventer.`;

@@ -23,6 +23,7 @@ import {
   anonymizeFollowupInputs,
 } from "./prepare";
 import { buildGenerateInstructionsNoJurisprudence } from "@/prompts/generate";
+import { withJurisprudenceRequestGuard } from "./jurisprudence-request";
 
 // Sans arrêt dans le contexte (option désactivée, ou aucun arrêt retenu après filtrage),
 // on bascule sur des prompts sans consignes de citation d'arrêts, pour éviter que le modèle
@@ -113,7 +114,9 @@ async function getGenerateData(
   // Determine chat history and system prompt based on whether IDCC is provided
   const { chatHistory, systemPrompt } = idcc
     ? {
-        chatHistory: createIdccChatHistory(preparedData.query),
+        chatHistory: createIdccChatHistory(
+          withJurisprudenceRequestGuard(preparedData.query)
+        ),
         systemPrompt:
           (instructions.generate_instruction_idcc
             ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
@@ -123,7 +126,9 @@ async function getGenerateData(
           knowledgeBaseContent,
       }
     : {
-        chatHistory: createChatHistory(preparedData.query),
+        chatHistory: createChatHistory(
+          withJurisprudenceRequestGuard(preparedData.query)
+        ),
         systemPrompt:
           (instructions.generate_instruction || "") +
           "\n\n" +
@@ -204,7 +209,7 @@ async function getFollowupGenerateData(
     ? {
         chatHistory: createFollowupIdccChatHistory(
           anonymized.conversationHistory,
-          anonymized.newQuestion
+          withJurisprudenceRequestGuard(anonymized.newQuestion)
         ),
         systemPrompt:
           (instructions.generate_followup_instruction_idcc
@@ -217,7 +222,7 @@ async function getFollowupGenerateData(
     : {
         chatHistory: createFollowupChatHistory(
           anonymized.conversationHistory,
-          anonymized.newQuestion
+          withJurisprudenceRequestGuard(anonymized.newQuestion)
         ),
         systemPrompt:
           (instructions.generate_followup_instruction || "") +
