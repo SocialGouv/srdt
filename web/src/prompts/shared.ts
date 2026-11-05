@@ -102,3 +102,33 @@ export const JURISPRUDENCE_SECTION_DIRECT = `Section **illustrative** : regroupe
 
 // Rappel placé dans les sections qui ne doivent pas contenir de jurisprudence.
 export const NO_JURISPRUDENCE_HERE_TEXT = `**Pas de jurisprudence ici** : un arrêt qui modifie ou précise la réponse va dans la Réponse générale, un arrêt seulement illustratif dans la section "Jurisprudence".`;
+
+// Variantes de la règle "⚖️ Jurisprudence" utilisées quand aucun arrêt n'est présent dans le
+// contexte : option jurisprudence désactivée, ou aucun arrêt retenu après filtrage.
+const jurisprudenceNoneOpening = (withJurisprudence: boolean) =>
+  withJurisprudence
+    ? `Aucun arrêt n'a été retenu pour cette question.`
+    : `La recherche de jurisprudence n'est pas activée pour cette question.`;
+
+const JURISPRUDENCE_NONE_RULE = `Ne citez aucune décision de justice, ni de mémoire ni par analogie avec un autre secteur ou une autre convention collective, à l'exception de celles explicitement citées dans le texte d'un extrait de la base (fiche officielle, contribution ou article). Ces dernières sont restituées telles qu'elles y figurent, rattachées au bloc de citation de l'extrait : n'ajoutez jamais une date, un numéro de pourvoi ou une juridiction qui n'apparaît pas dans l'extrait.`;
+
+const JURISPRUDENCE_NONE_FOLLOWUP_RULE = `Vous pouvez aussi reprendre les décisions déjà citées dans les réponses précédentes de la conversation, à l'identique (même date, même numéro).`;
+
+const jurisprudenceNoneExplicitRequest = (withJurisprudence: boolean) =>
+  withJurisprudence
+    ? `Si la question demande explicitement de la jurisprudence, indiquez qu'aucun arrêt pertinent n'a été trouvé dans la base pour cette question, puis répondez à partir des autres extraits de la base s'ils traitent le sujet.`
+    : `Si la question demande explicitement de la jurisprudence, indiquez que la recherche de jurisprudence n'est pas activée et que l'usager peut l'activer pour obtenir des arrêts, puis répondez à partir des autres extraits de la base s'ils traitent le sujet.`;
+
+export const getJurisprudenceTextNone = (withJurisprudence: boolean) =>
+  `# ⚖️ Jurisprudence
+
+${jurisprudenceNoneOpening(withJurisprudence)} ${JURISPRUDENCE_NONE_RULE}
+
+${jurisprudenceNoneExplicitRequest(withJurisprudence)}`;
+
+export const getJurisprudenceTextNoneFollowup = (withJurisprudence: boolean) =>
+  `# ⚖️ Jurisprudence
+
+${jurisprudenceNoneOpening(withJurisprudence)} ${JURISPRUDENCE_NONE_RULE} ${JURISPRUDENCE_NONE_FOLLOWUP_RULE}
+
+${jurisprudenceNoneExplicitRequest(withJurisprudence)}`;

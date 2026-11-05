@@ -5,7 +5,7 @@ import {
   ChunkResult,
   LLMModel,
 } from "../../types";
-import { ApiResponse, AnswerResponse } from "@/types";
+import { ApiResponse, AnswerResponse, InstructionPrompts } from "@/types";
 import { generate, generateStream } from "./client";
 import {
   createChatHistory,
@@ -22,6 +22,19 @@ import {
   prepareFollowupQuestionData,
   anonymizeFollowupInputs,
 } from "./prepare";
+import { buildGenerateInstructionsNoJurisprudence } from "@/prompts/generate";
+
+// Sans arrêt dans le contexte (option désactivée, ou aucun arrêt retenu après filtrage),
+// on bascule sur des prompts sans consignes de citation d'arrêts, pour éviter que le modèle
+// n'invente des décisions. Évalué à chaque tour, y compris pour les relances.
+const selectInstructions = (
+  instructions: InstructionPrompts,
+  jurisprudenceChunks: ChunkResult[],
+  withJurisprudence: boolean
+): InstructionPrompts =>
+  jurisprudenceChunks.length > 0
+    ? instructions
+    : buildGenerateInstructionsNoJurisprudence(withJurisprudence);
 
 // Build answer response
 const buildAnswer = (
@@ -91,12 +104,18 @@ async function getGenerateData(
     preparedData.jurisprudenceChunks
   );
 
+  const instructions = selectInstructions(
+    preparedData.instructions,
+    preparedData.jurisprudenceChunks,
+    withJurisprudence
+  );
+
   // Determine chat history and system prompt based on whether IDCC is provided
   const { chatHistory, systemPrompt } = idcc
     ? {
         chatHistory: createIdccChatHistory(preparedData.query),
         systemPrompt:
-          (preparedData.instructions.generate_instruction_idcc
+          (instructions.generate_instruction_idcc
             ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
             .replace(/\$\{IDCC_NAME\}/g, idccName || "")
             .replace(/\$\{IDCC_NUMBER\}/g, idcc || "") || "") +
@@ -106,7 +125,7 @@ async function getGenerateData(
     : {
         chatHistory: createChatHistory(preparedData.query),
         systemPrompt:
-          (preparedData.instructions.generate_instruction || "") +
+          (instructions.generate_instruction || "") +
           "\n\n" +
           knowledgeBaseContent,
       };
@@ -173,6 +192,12 @@ async function getFollowupGenerateData(
     allJurisprudenceChunks
   );
 
+  const instructions = selectInstructions(
+    preparedData.instructions,
+    allJurisprudenceChunks,
+    withJurisprudence
+  );
+
   // Determine system prompt based on whether IDCC is provided
   // LLM receives the full conversation history for coherent responses
   const { chatHistory, systemPrompt } = idcc
@@ -182,7 +207,7 @@ async function getFollowupGenerateData(
           anonymized.newQuestion
         ),
         systemPrompt:
-          (preparedData.instructions.generate_followup_instruction_idcc
+          (instructions.generate_followup_instruction_idcc
             ?.replace("[URL_convention_collective]", `https://code.travail.gouv.fr/convention-collective/${idcc}`)
             .replace(/\$\{IDCC_NAME\}/g, idccName || "")
             .replace(/\$\{IDCC_NUMBER\}/g, idcc || "") || "") +
@@ -195,7 +220,7 @@ async function getFollowupGenerateData(
           anonymized.newQuestion
         ),
         systemPrompt:
-          (preparedData.instructions.generate_followup_instruction || "") +
+          (instructions.generate_followup_instruction || "") +
           "\n\n" +
           knowledgeBaseContent,
       };
