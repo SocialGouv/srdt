@@ -7,6 +7,8 @@ import {
   JURISPRUDENCE_TEXT,
   JURISPRUDENCE_TEXT_SHORT,
   LIMITATIONS_TEXT,
+  getJurisprudenceTextNone,
+  getJurisprudenceTextNoneFollowup,
   LIMITATIONS_TEXT_SHORT,
   NO_JURISPRUDENCE_HERE_TEXT,
   NUMBERING_RULE_TEXT,
@@ -255,4 +257,97 @@ Si aucune source pertinente → appliquez la règle d'absence de source.
 - Sans jargon inutile, sans répétition
 - Strictement factuel et sourcé
 `,
+};
+
+// Phrases des sections "Réponse générale" / "Réponse directe" qui renvoient aux arrêts de la
+// section "## Jurisprudence".
+const INLINE_RULE_GENERAL = ` Un arrêt de la section "## Jurisprudence" n'est mentionné ici que s'il **modifie ou précise** la réponse (règle "⚖️ Jurisprudence", cas 2) ; il est alors exposé et cité **une seule fois**, jamais aussi dans une section "Jurisprudence".`;
+const INLINE_RULE_DIRECT = ` Un arrêt de la section "## Jurisprudence" n'est mentionné ici que s'il **modifie ou précise** la réponse (règle "⚖️ Jurisprudence", cas 2) ; exposé et cité **une seule fois**, jamais aussi dans une section "Jurisprudence".`;
+
+// Applique des remplacements exacts ; échoue si un passage attendu est absent (ou ambigu),
+// pour qu'une modification des prompts ci-dessus ne casse pas silencieusement la variante.
+const applyReplacements = (
+  name: string,
+  prompt: string,
+  replacements: [string, string][]
+): string =>
+  replacements.reduce((acc, [from, to]) => {
+    const count = acc.split(from).length - 1;
+    if (count !== 1) {
+      throw new Error(
+        `Prompt "${name}" : passage attendu ${count} fois au lieu d'une : ${from.slice(0, 80)}`
+      );
+    }
+    return acc.replace(from, () => to);
+  }, prompt);
+
+/**
+ * Prompts utilisés quand aucun arrêt n'est présent dans le contexte (option jurisprudence
+ * désactivée, ou aucun arrêt retenu après filtrage) : copie de GENERATE_INSTRUCTIONS sans les
+ * consignes de citation d'arrêts ni la section "Jurisprudence", avec une règle interdisant
+ * de citer des décisions absentes des extraits.
+ */
+export const buildGenerateInstructionsNoJurisprudence = (
+  withJurisprudence: boolean
+): InstructionPrompts => {
+  const text = getJurisprudenceTextNone(withJurisprudence);
+  const followupText = getJurisprudenceTextNoneFollowup(withJurisprudence);
+  const p = GENERATE_INSTRUCTIONS;
+
+  return {
+    generate_instruction: applyReplacements(
+      "generate_instruction",
+      p.generate_instruction,
+      [
+        [JURISPRUDENCE_TEXT, text],
+        [INLINE_RULE_GENERAL, ""],
+        [` ${NO_JURISPRUDENCE_HERE_TEXT}`, ""],
+        [
+          `### 4. Jurisprudence *(optionnelle)*\n${JURISPRUDENCE_SECTION_GENERAL}\n\n`,
+          "",
+        ],
+        ["### 5. Conclusion", "### 4. Conclusion"],
+      ]
+    ),
+    generate_instruction_idcc: applyReplacements(
+      "generate_instruction_idcc",
+      p.generate_instruction_idcc,
+      [
+        [JURISPRUDENCE_TEXT, text],
+        [INLINE_RULE_GENERAL, ""],
+        [` ${NO_JURISPRUDENCE_HERE_TEXT}`, ""],
+        [
+          `### 4. Jurisprudence *(optionnelle)*\n${JURISPRUDENCE_SECTION_GENERAL}\n\n`,
+          "",
+        ],
+        ["### 5. Conclusion", "### 4. Conclusion"],
+      ]
+    ),
+    generate_followup_instruction: applyReplacements(
+      "generate_followup_instruction",
+      p.generate_followup_instruction,
+      [
+        [JURISPRUDENCE_TEXT_SHORT, followupText],
+        [INLINE_RULE_DIRECT, ""],
+        [
+          `### 3. Jurisprudence *(optionnelle)*\n${JURISPRUDENCE_SECTION_DIRECT}\n\n`,
+          "",
+        ],
+        ["### 4. Conclusion", "### 3. Conclusion"],
+      ]
+    ),
+    generate_followup_instruction_idcc: applyReplacements(
+      "generate_followup_instruction_idcc",
+      p.generate_followup_instruction_idcc,
+      [
+        [JURISPRUDENCE_TEXT_SHORT, followupText],
+        [INLINE_RULE_DIRECT, ""],
+        [
+          `### 4. Jurisprudence *(optionnelle)*\n${JURISPRUDENCE_SECTION_DIRECT}\n\n`,
+          "",
+        ],
+        ["### 5. Conclusion", "### 4. Conclusion"],
+      ]
+    ),
+  };
 };
