@@ -1,0 +1,110 @@
+{
+ "data": {
+  "num": 1501,
+  "id": "KALICONT000005635234",
+  "title": "Convention collective 1501"
+ },
+ "type": "convention",
+ "children": [
+  {
+   "data": {
+    "title": "Texte de base"
+   },
+   "type": "section",
+   "children": [
+    {
+     "data": {
+      "title": "Convention collective nationale du 18 mars 1988"
+     },
+     "type": "texte",
+     "children": [
+      {
+       "data": {
+        "title": "Titre Ier : Dispositions générales"
+       },
+       "type": "section",
+       "children": [
+        {
+         "data": {
+          "id": "KALIARTI0000000015011",
+          "cid": "KALIARTI0000000015011",
+          "num": "1",
+          "content": "<p>La présente convention règle les rapports entre employeurs et salariés.</p>",
+          "etat": "VIGUEUR_ETEN"
+         },
+         "type": "article",
+         "children": []
+        },
+        {
+         "data": {
+          "id": "KALIARTI0000000015012",
+          "cid": "KALIARTI0000000015012",
+          "num": "2",
+          "content": "<p> </p>",
+          "etat": "VIGUEUR_ETEN"
+         },
+         "type": "article",
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "data": {
+    "title": "Textes Attachés"
+   },
+   "type": "section",
+   "children": [
+    {
+     "data": {
+      "title": "Avenant n° 1 du 3 mars 2020"
+     },
+     "type": "texte",
+     "children": [
+      {
+       "data": {
+        "id": "KALIARTI000000000003",
+        "cid": "KALIARTI000000000003",
+        "num": "1",
+        "content": "<p>Avenant <b>commun</b> aux deux conventions.</p>",
+        "etat": "VIGUEUR_ETEN"
+       },
+       "type": "article",
+       "children": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "data": {
+    "title": "Textes Salaires"
+   },
+   "type": "section",
+   "children": [
+    {
+     "data": {
+      "title": "Salaires 2024"
+     },
+     "type": "texte",
+     "children": [
+      {
+       "data": {
+        "id": "KALIARTI0000000015019",
+        "cid": "KALIARTI0000000015019",
+        "num": "1",
+        "content": "<p>Grille des salaires.</p>",
+        "etat": "VIGUEUR_ETEN"
+       },
+       "type": "article",
+       "children": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
