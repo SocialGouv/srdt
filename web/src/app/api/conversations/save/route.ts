@@ -4,8 +4,15 @@ import {
   saveConversation,
   updateConversationFollowup,
   updateConversationFeedback,
+  updateConversationTimeSaved,
+  saveNpsResponse,
   isDatabaseAvailable,
 } from "@/lib/db/conversations";
+import {
+  isNpsScore,
+  isNpsTrigger,
+  isTimeSavedAnswer,
+} from "@/modules/feedback/indicators";
 import { hashEmailForUserId } from "@/lib/db/hash-user";
 import { ALLOWED_EMAIL_DOMAINS, DOMAIN_TO_DEPARTMENT } from "@/constants";
 import * as Sentry from "@sentry/nextjs";
@@ -54,7 +61,25 @@ interface SaveFeedbackRequest {
   feedbackReasons?: string;
 }
 
-type RequestBody = SaveInitialRequest | SaveFollowupRequest | SaveFeedbackRequest;
+interface SaveTimeSavedRequest {
+  action: "save_time_saved";
+  conversationId: string;
+  timeSaved: unknown;
+}
+
+/** NPS score: per user, not tied to a conversation. */
+interface SaveNpsRequest {
+  action: "save_nps";
+  score: unknown;
+  trigger?: unknown;
+}
+
+type RequestBody =
+  | SaveInitialRequest
+  | SaveFollowupRequest
+  | SaveFeedbackRequest
+  | SaveTimeSavedRequest
+  | SaveNpsRequest;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Return early if database is not available (non-blocking)
@@ -181,6 +206,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         return NextResponse.json({ success: true });
 
+      }
+
+      case "save_time_saved": {
+        const { conversationId, timeSaved } = body;
+
+        if (!conversationId || !isTimeSavedAnswer(timeSaved)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "conversationId and timeSaved ('yes', 'no' or 'dont_know') are required",
+            },
+            { status: 422 }
+          );
+        }
+
+        await updateConversationTimeSaved(conversationId, timeSaved);
+
+        return NextResponse.json({ success: true });
+      }
+
+      case "save_nps": {
+        const { score, trigger } = body;
+
+        if (!isNpsScore(score)) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "score must be an integer between 0 and 10",
+            },
+            { status: 422 }
+          );
+        }
+
+        await saveNpsResponse({
+          user_id: userId,
+          department,
+          score,
+          display_trigger: isNpsTrigger(trigger) ? trigger : null,
+        });
+
+        return NextResponse.json({ success: true });
       }
 
       default:
