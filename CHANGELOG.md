@@ -1,3 +1,10 @@
+# [1.59.0](https://github.com/SocialGouv/srdt/compare/v1.58.0...v1.59.0) (2026-11-09)
+
+
+### Features
+
+* **web:** récolter le NPS et le temps gagné [#444](https://github.com/SocialGouv/srdt/issues/444) ([#462](https://github.com/SocialGouv/srdt/issues/462)) ([446124c](https://github.com/SocialGouv/srdt/commit/446124cd8a711e4bc7e9222b61ba54e2b4e48a46))
+
 # [1.58.0](https://github.com/SocialGouv/srdt/compare/v1.57.4...v1.58.0) (2026-11-09)
 
 
