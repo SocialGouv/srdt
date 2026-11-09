@@ -3,6 +3,7 @@
 import { fr } from "@codegouvfr/react-dsfr";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
+import { push } from "@socialgouv/matomo-next";
 import Image from "next/image";
 import { AutoresizeTextarea } from "@/modules/common/AutoresizeTextarea";
 import { AgreementSearchInput } from "../convention-collective/AgreementSearchInput";
@@ -95,7 +96,12 @@ export const NewConversationView = ({
                 "Arrêts de la chambre sociale de la Cour de cassation publiés au bulletin.",
               nativeInputProps: {
                 checked: withJurisprudence,
-                onChange: (e) => setWithJurisprudence(e.target.checked),
+                onChange: (e) => {
+                  if (!e.target.checked) {
+                    push(["trackEvent", "chat", "uncheck jurisprudence"]);
+                  }
+                  setWithJurisprudence(e.target.checked);
+                },
                 disabled: isDisabled,
               },
             },
