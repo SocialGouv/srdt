@@ -1,3 +1,10 @@
+# [1.58.0](https://github.com/SocialGouv/srdt/compare/v1.57.4...v1.58.0) (2026-11-09)
+
+
+### Features
+
+* **web:** ajout des événements Matomo pour les indicateurs d'impact ([#435](https://github.com/SocialGouv/srdt/issues/435)) ([#461](https://github.com/SocialGouv/srdt/issues/461)) ([7bf19f5](https://github.com/SocialGouv/srdt/commit/7bf19f5be20b08fdd0666e69e6caad5d00e69187))
+
 ## [1.57.4](https://github.com/SocialGouv/srdt/compare/v1.57.3...v1.57.4) (2026-11-05)
 
 
