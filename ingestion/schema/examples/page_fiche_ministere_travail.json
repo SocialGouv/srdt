@@ -1,0 +1,34 @@
+{
+  "id": "f0001",
+  "content": "Le contrat est écrit.",
+  "metadata": {
+    "id": "f0001",
+    "source": "page_fiche_ministere_travail",
+    "title": "Le contrat de travail",
+    "url": "https://code.travail.gouv.fr/fiche-ministere-travail/le-contrat-de-travail",
+    "idcc": null,
+    "idx": 0,
+    "initial_id": "initial-f0001",
+    "articles": null,
+    "legi_links": [
+      {
+        "legi_id": "LEGIARTI000099999999",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000099999999",
+        "label": "Hors du code",
+        "origin": "sections.references",
+        "kind": null,
+        "cid": null,
+        "num": null,
+        "chunk_id": null,
+        "canonical_url": null
+      }
+    ]
+  },
+  "doc_hash": "c8d1bbcbe4011fb0ef1489411dbdaea99322c63233790c566f5681c097b57034",
+  "embed_hash": "e8bc792ca696484d83bdd50ec15b974a8749b2ed5b14b0ecdb0c903d1ea5db21",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

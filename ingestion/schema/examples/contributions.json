@@ -1,0 +1,34 @@
+{
+  "id": "c0001",
+  "content": "Voir l'article L1111-1.",
+  "metadata": {
+    "id": "c0001",
+    "source": "contributions",
+    "title": "La periode d'essai",
+    "url": "https://code.travail.gouv.fr/contribution/la-periode-d'essai",
+    "idcc": "0000",
+    "idx": 0,
+    "initial_id": "initial-c0001",
+    "articles": null,
+    "legi_links": [
+      {
+        "legi_id": "LEGIARTI000000000011",
+        "url": "https://www.legifrance.gouv.fr/codes/id/LEGIARTI000000000011",
+        "label": "L1111-1",
+        "origin": "references",
+        "kind": "article",
+        "cid": "LEGIARTI000000000010",
+        "num": "L1111-1",
+        "chunk_id": "LEGISCTA000000000002",
+        "canonical_url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000011"
+      }
+    ]
+  },
+  "doc_hash": "c4c1e98f41d610c5f805099f8d7bf15c3e99643bcd39af634887d2d36046eecd",
+  "embed_hash": "e7f653a96700a43a11c1629f77435c90e14cc8cb9c21cd954803206acbe1be5b",
+  "embedding": [
+    0.1,
+    0.2,
+    0.3
+  ]
+}

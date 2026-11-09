@@ -1,237 +1,30 @@
-import json
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, Literal, Optional, Sequence, TypedDict, Union
+from typing import Literal, Sequence, TypedDict, Union
 
 try:
     from typing import NotRequired
 except ImportError:
     from typing_extensions import NotRequired
 
-import asyncpg
-
-CollectionName = Literal[
+SourceName = Literal[
     "code_du_travail",
     "fiches_service_public",
     "page_fiche_ministere_travail",
     "information",
     "contributions",
-    "internet",
     "contributions_idcc",
     "conventions",
     "judilibre",
 ]
 
-ChunkerContentType = Literal["markdown", "html", "character_recursive", "html_contribs"]
-
 
 CHUNK_ID = str
-ID = str
-HTML = str
-PlainText = str
-JSONDict = Dict[str, Any]
-Timestamp = datetime
-URL = str
-FormattedTextContent = str
-COLLECTION_ID = int
-COLLECTIONS_ID = list[int]
-
-
-@dataclass
-class SplitDocument:
-    page_content: str
-    metadata: Dict[str, Any]
-
-
-@dataclass
-class DocumentData(TypedDict):
-    cdtn_id: ID
-    initial_id: ID
-    title: PlainText
-    content: PlainText
-    url: URL
-    source: CollectionName
-    content_chunked: list[SplitDocument]
-    idcc: Optional[str]
-    articles: Optional[list[JSONDict]]
-
-
-ListOfDocumentData = list[DocumentData]
-
-
-@dataclass
-class ResultProcessDocumentType(TypedDict):
-    documents: list[DocumentData]
-    id: COLLECTION_ID
-
-
-@dataclass
-class Reference:
-    id: ID
-    cid: ID
-    url: URL
-    slug: str
-    type: str
-    title: PlainText
-
-
-@dataclass
-class Section:
-    html: HTML
-    text: PlainText
-    title: PlainText
-    anchor: str
-    references: list[Reference]
-    description: PlainText
-    htmlWithGlossary: HTML
-
-
-@dataclass
-class Content:
-    text: str
-    html: str
-    sections: Optional[list[Section]]
-    referencedTexts: Optional[list[Dict]]
-    intro: str
-    date: str
-    url: str
-    raw: str
-
-
-@dataclass
-class Document:
-    cdtn_id: ID
-    initial_id: ID
-    title: PlainText
-    meta_description: PlainText
-    source: CollectionName
-    slug: str
-    text: PlainText
-    document: JSONDict
-    is_published: bool
-    is_searchable: bool
-    created_at: Timestamp
-    updated_at: Timestamp
-    is_available: bool
-    content: Optional[Content] = None
-    idcc: Optional[str] = None
-
-    @classmethod
-    def from_record(cls, record: asyncpg.Record) -> "Document":
-        doc_data = json.loads(record["document"]) if record["document"] else {}
-        content = None
-        if doc_data:
-            content = Content(
-                text=doc_data.get("text", ""),
-                html=doc_data.get("html", ""),
-                intro=doc_data.get("intro", ""),
-                date=doc_data.get("date", ""),
-                sections=doc_data.get("sections", []),
-                url=doc_data.get("url", ""),
-                raw=doc_data.get("raw", ""),
-                referencedTexts=doc_data.get("referencedTexts", []),
-            )
-
-        return cls(
-            cdtn_id=record["cdtn_id"],
-            initial_id=record["initial_id"],
-            title=record["title"],
-            meta_description=record["meta_description"],
-            source=record["source"],
-            slug=record["slug"],
-            text=record["text"],
-            document=doc_data,
-            is_published=record["is_published"],
-            is_searchable=record["is_searchable"],
-            created_at=record["created_at"],
-            updated_at=record["updated_at"],
-            is_available=record["is_available"],
-            content=content,
-            idcc=doc_data.get("idcc", None) if doc_data else None,
-        )
-
-
-DocumentsList = list[Document]
-
-
-# Legifrance links to a code (https://www.legifrance.gouv.fr/codes/...)
-LegiKind = Literal["article", "section"]
-
-
-class RawLegiLink(TypedDict):
-    legi_id: str
-    url: URL
-    label: Optional[str]
-    origin: str
-
-
-class LegiLink(RawLegiLink):
-    # resolved against the code du travail (LEGI), None if outside of it
-    kind: Optional[LegiKind]
-    cid: Optional[str]
-    num: Optional[str]
-    chunk_id: Optional[str]
-    canonical_url: Optional[URL]
-
-
-# Chunk
-@dataclass
-class ChunkMetadata(TypedDict):
-    id: str
-    source: CollectionName
-    title: str
-    url: str
-    idcc: Optional[str]
-    idx: int
-    initial_id: Optional[str]
-    articles: Optional[list[JSONDict]]
-    number: NotRequired[Optional[str]]
-    decision_date: NotRequired[Optional[str]]
-    legi_links: NotRequired[list[LegiLink]]
-
-
-@dataclass
-class Chunk(TypedDict):
-    id: str
-    metadata: ChunkMetadata
-    content: str
-    embedding: Optional[list[float]]
-
-
-@dataclass
-class RankedChunk(TypedDict):
-    score: float
-    chunk: Chunk
 
 
 @dataclass
 class RerankedChunk(TypedDict):
     relevance_score: float
     index: int
-
-
-@dataclass
-class EnrichedRankedChunk(TypedDict):
-    score: float
-    chunk: Chunk
-    document: Document
-    content: str
-
-
-# Albert Collection
-@dataclass
-class AlbertCollectionData(TypedDict):
-    id: str
-    name: str
-    type: str
-    model: Optional[str]
-    user: Optional[str]
-    description: Optional[str]
-    created_at: Optional[int]
-    documents: Optional[Any]
-
-
-AlbertCollectionsList = list[AlbertCollectionData]
 
 
 # LLM
