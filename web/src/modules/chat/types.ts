@@ -1,5 +1,6 @@
 import { UserLLMMessage, AnswerResponse } from "@/types";
 import { Agreement } from "../convention-collective/search";
+import { TimeSavedSurvey } from "../feedback/time-saved";
 
 /**
  * Lightweight description of a document used to generate an answer. It is
@@ -50,4 +51,6 @@ export interface Conversation {
   agreement?: Agreement;
   /** Whether case law is searched; undefined (older conversations) means yes */
   withJurisprudence?: boolean;
+  /** "Did the answer save you time?" question, if drawn for this conversation */
+  timeSavedSurvey?: TimeSavedSurvey;
 }

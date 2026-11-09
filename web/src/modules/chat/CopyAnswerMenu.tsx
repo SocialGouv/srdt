@@ -18,6 +18,8 @@ interface CopyAnswerMenuProps {
   contentRef: RefObject<HTMLDivElement | null>;
   /** Raw answer, copied as a last resort. */
   fallbackText: string;
+  /** Called after a successful copy (full answer or one section). */
+  onCopy?: () => void;
 }
 
 const COPIED_FEEDBACK_MS = 2000;
@@ -58,6 +60,7 @@ const sectionToText = (section: AnswerSection) =>
 export const CopyAnswerMenu = ({
   contentRef,
   fallbackText,
+  onCopy,
 }: CopyAnswerMenuProps) => {
   const menuId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -160,6 +163,7 @@ export const CopyAnswerMenu = ({
   }, [isOpen, positionMenu]);
 
   const showCopied = () => {
+    onCopy?.();
     setCopySuccess(true);
     if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
     copiedTimeoutRef.current = setTimeout(

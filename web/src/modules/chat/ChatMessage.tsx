@@ -2,6 +2,9 @@ import { fr } from "@codegouvfr/react-dsfr";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FeedbackSelector } from "@/modules/feedback/FeedbackSelector";
+import { TimeSavedQuestion } from "@/modules/feedback/TimeSavedQuestion";
+import { TimeSavedSurvey } from "@/modules/feedback/time-saved";
+import { requestNps } from "@/modules/feedback/nps";
 import styles from "./Chat.module.css";
 import { ChatMessage as ChatMessageType } from "./types";
 import { Agreement } from "../convention-collective/search";
@@ -94,6 +97,9 @@ interface ChatMessageProps {
   onShowSources?: () => void;
   /** Whether the sources panel currently shows this message's sources. */
   isSourcesOpen?: boolean;
+  /** "Time saved" question of the conversation, shown under the answer it is about. */
+  timeSavedSurvey?: TimeSavedSurvey;
+  onTimeSavedSurveyChange?: (survey: TimeSavedSurvey) => void;
 }
 
 export const ChatMessage = ({
@@ -108,6 +114,8 @@ export const ChatMessage = ({
   dbConversationId,
   onShowSources,
   isSourcesOpen = false,
+  timeSavedSurvey,
+  onTimeSavedSurveyChange,
 }: ChatMessageProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -265,6 +273,7 @@ export const ChatMessage = ({
                 <CopyAnswerMenu
                   contentRef={contentRef}
                   fallbackText={message.content}
+                  onCopy={() => requestNps("copy")}
                 />
               </div>
             )}
@@ -292,6 +301,18 @@ export const ChatMessage = ({
             isFollowupResponse={message.isFollowup}
             dbConversationId={dbConversationId}
           />
+          {timeSavedSurvey?.messageIndex === index &&
+            onTimeSavedSurveyChange && (
+              <TimeSavedQuestion
+                // One instance per question: answering in a conversation must
+                // not leave the thanks in another one at the same index.
+                key={timeSavedSurvey.answerDisplayedAt}
+                survey={timeSavedSurvey}
+                onSurveyChange={onTimeSavedSurveyChange}
+                dbConversationId={dbConversationId}
+                isFollowupResponse={message.isFollowup}
+              />
+            )}
         </div>
       )}
     </div>
