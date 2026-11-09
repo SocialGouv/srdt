@@ -9,6 +9,7 @@ import { AnswerResponse } from "@/types";
 import React, { useRef } from "react";
 import { Button } from "@codegouvfr/react-dsfr/Button";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
+import { push } from "@socialgouv/matomo-next";
 import Image from "next/image";
 import { SOURCES_PANEL_ID } from "./SourcesPanel";
 import marianne from "./marianne.png";
@@ -178,6 +179,9 @@ export const ChatMessage = ({
                 <Button
                   priority="secondary"
                   nativeButtonProps={agreementModalButtonProps}
+                  onClick={() =>
+                    push(["trackEvent", "chat", "open agreement modal"])
+                  }
                   disabled={isLoading}
                   className={styles.addAgreementButton}
                 >
