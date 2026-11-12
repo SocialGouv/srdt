@@ -13,10 +13,10 @@ Dataset = Literal["legi", "kali", "judilibre"]
 DATASETS: tuple[Dataset, ...] = get_args(Dataset)
 
 # Snapshots each source reads. The CDTN sources need LEGI to resolve their links
-# to the code du travail.
+# to the code du travail, the contributions KALI for their links to agreements.
 SOURCE_DATASETS: dict[SourceName, tuple[Dataset, ...]] = {
-    "contributions": ("legi",),
-    "contributions_idcc": ("legi",),
+    "contributions": ("legi", "kali"),
+    "contributions_idcc": ("legi", "kali"),
     "information": ("legi",),
     "page_fiche_ministere_travail": ("legi",),
     "fiches_service_public": ("legi",),

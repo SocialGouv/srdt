@@ -20,14 +20,16 @@
      "children": [
       {
        "data": {
+        "id": "KALISCTA000000000001",
+        "cid": "KALISCTA000000000001",
         "title": "Titre Ier : Dispositions générales"
        },
        "type": "section",
        "children": [
         {
          "data": {
-          "id": "KALIARTI0000000014861",
-          "cid": "KALIARTI0000000014861",
+          "id": "KALIARTI000000014861",
+          "cid": "KALIARTI000000014860",
           "num": "1",
           "content": "<p>La présente convention règle les rapports entre employeurs et salariés.</p>",
           "etat": "VIGUEUR_ETEN"
@@ -37,8 +39,8 @@
         },
         {
          "data": {
-          "id": "KALIARTI0000000014862",
-          "cid": "KALIARTI0000000014862",
+          "id": "KALIARTI000000014862",
+          "cid": "KALIARTI000000014862",
           "num": "2",
           "content": "<p> </p>",
           "etat": "VIGUEUR_ETEN"
@@ -93,8 +95,8 @@
      "children": [
       {
        "data": {
-        "id": "KALIARTI0000000014869",
-        "cid": "KALIARTI0000000014869",
+        "id": "KALIARTI000000014869",
+        "cid": "KALIARTI000000014869",
         "num": "1",
         "content": "<p>Grille des salaires.</p>",
         "etat": "VIGUEUR_ETEN"

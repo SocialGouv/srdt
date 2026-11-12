@@ -59,7 +59,10 @@ def test_full_run(inputs: Inputs):
     assert meta["schema_version"] == SCHEMA_VERSION
     assert (meta["embedding_model_id"], meta["dim"]) == ("test-model", 3)
     assert meta["sources"]["conventions"]["snapshots"] == {"kali": "3.514.0"}
-    assert meta["sources"]["contributions"]["snapshots"] == {"legi": "2.575.0"}
+    assert meta["sources"]["contributions"]["snapshots"] == {
+        "legi": "2.575.0",
+        "kali": "3.514.0",
+    }
     assert meta["sources"]["contributions"]["postgres_read_at"]
 
 

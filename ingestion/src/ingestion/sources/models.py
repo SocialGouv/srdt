@@ -18,3 +18,27 @@ class ResolvedLegiLink(RawLegiLink):
     num: str | None
     chunk_id: str | None
     canonical_url: str | None
+
+
+# Legifrance links to a collective agreement text
+# (https://www.legifrance.gouv.fr/conv_coll/...)
+KaliKind = Literal["article", "section"]
+
+
+class RawKaliLink(TypedDict):
+    kali_id: str
+    url: str
+    label: str | None
+    origin: str
+    # KALICONT id found in the url, if any
+    container: str | None
+
+
+class ResolvedKaliLink(RawKaliLink):
+    # resolved against the KALI agreements, None if the id is not in them
+    kind: KaliKind | None
+    cid: str | None
+    num: str | None
+    idcc: str | None
+    chunk_id: str | None
+    canonical_url: str | None

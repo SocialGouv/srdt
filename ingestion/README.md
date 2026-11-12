@@ -119,6 +119,7 @@ Everything is read, diffed and embedded before the first write, and the index `_
 Limits:
 - No lock: do not run two `sync`, or a `sync` during an `index`.
 - A large change (a new model, a rewritten source) is cheaper to rebuild with `index`; `sync` holds the new vectors in memory until it writes.
+- The index mapping is strict: a new metadata field (`kali_links` in schema 1.1.0) needs a rebuild with `index` first, `sync` cannot write it to an older index.
 - Updating a vector in the HNSW graph is a delete plus an insert: after big runs, `POST {index}/_forcemerge` off-peak.
 
 ## Data contract
@@ -127,6 +128,10 @@ Limits:
 - `uv run ingest schema` regenerates the schema.
 - CI checks that the committed schema is up to date (`--check`).
 - `schema/examples/` has one example per source. The api tests read them through the api's own code.
+
+Links to the legal texts are resolved at ingestion and stored in the chunks of the CDTN sources:
+- `metadata.legi_links`: Legifrance `/codes/` links, resolved against the code du travail (LEGI snapshot). `chunk_id` is the `code_du_travail` chunk holding the target.
+- `metadata.kali_links` (contributions only, from `document.references`): Legifrance `/conv_coll/` links (and legacy `affichIDCC.do` ones), resolved against the collective agreements (KALI snapshot, so the contributions read it too). `kind` is `article` or `section` (a text or a section), `cid` the stable id (an old article version resolves through it), `idcc` the agreement of the target, which can differ from the one of the contribution, and `chunk_id` the `conventions` chunk of an article. `kind` is null for an id outside the snapshot. `chunk_id` is also null for the articles left out of `conventions` ("Textes Salaires", empty articles).
 
 Document ids are deterministic: `{source}:{idcc or "-"}:{metadata.id}:{metadata.idx}`. `doc_hash` covers the stored fields; `embed_hash` covers the model id and the embedded text.
 

@@ -15,6 +15,7 @@ from ingestion.sources.postgres import Document
 
 FIXTURES = Path(__file__).parent / "fixtures"
 LEGI_URL = "https://www.legifrance.gouv.fr/codes"
+KALI_URL = "https://www.legifrance.gouv.fr/conv_coll"
 
 
 def _document(source: SourceName, cdtn_id: str, title: str, **fields: Any) -> Document:
@@ -76,6 +77,41 @@ def cdtn_documents() -> dict[SourceName, list[Document]]:
                 document={
                     "idcc": "1486",
                     "content": "<p>La durée est de <strong>deux mois</strong>.</p>",
+                    # article by its current id, by an old version (same cid),
+                    # an attached text of another agreement, a section, an id
+                    # outside of the agreements and a Legifrance code link
+                    "references": [
+                        {
+                            "url": f"{KALI_URL}/id/KALIARTI000000014861/"
+                            "?idConteneur=KALICONT000005635173",
+                            "title": "Article 1 de la convention collective",
+                        },
+                        {
+                            "url": f"{KALI_URL}/article/KALIARTI000000014860"
+                            "#KALIARTI000000014860",
+                            "title": "Article 1 (ancienne version)",
+                        },
+                        {
+                            "url": f"{KALI_URL}/id/KALIARTI000000000003/"
+                            "?idConteneur=KALICONT000005635234",
+                            "title": "Avenant n° 1 du 3 mars 2020",
+                        },
+                        {
+                            "url": "https://www.legifrance.gouv.fr/affichIDCC.do"
+                            ";jsessionid=ABC.tplgfr30s_3?idSectionTA="
+                            "KALISCTA000000000001&cidTexte=KALITEXT000000000001"
+                            "&idConvention=KALICONT000005635173",
+                            "title": "Titre Ier",
+                        },
+                        {
+                            "url": f"{KALI_URL}/id/KALIARTI000099999999",
+                            "title": "Article inconnu",
+                        },
+                        {
+                            "url": f"{LEGI_URL}/id/LEGIARTI000000000011",
+                            "title": "L1111-1",
+                        },
+                    ],
                 },
             )
         ],

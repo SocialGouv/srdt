@@ -22,9 +22,9 @@ from ingestion.embed import Embedder, batched
 from ingestion.index_writer import IndexWriter
 from ingestion.settings import Settings
 from ingestion.snapshots.store import Manifest, SnapshotStore
-from ingestion.sources.cdtn import CDTN_SOURCES, chunk_cdtn
+from ingestion.sources.cdtn import CDTN_SOURCES, chunk_cdtn, stores_kali_links
 from ingestion.sources.judilibre import chunk_decision
-from ingestion.sources.kali import chunk_cc, is_agreement_file
+from ingestion.sources.kali import KaliIndex, chunk_cc, is_agreement_file
 from ingestion.sources.legi import (
     CODE_DU_TRAVAIL_FILE,
     LegiIndex,
@@ -57,6 +57,7 @@ class Inputs:
     _documents_read_at: str | None = None
     _legi_code: dict | None = None
     _legi_index: LegiIndex | None = None
+    _kali_index: KaliIndex | None = None
 
     def manifest(self, dataset: Dataset) -> Manifest:
         if dataset not in self._manifests:
@@ -79,6 +80,17 @@ class Inputs:
         index = self._legi_index
         if index is None:
             index = self._legi_index = LegiIndex(self.legi_code())
+        return index
+
+    def kali_index(self) -> KaliIndex:
+        index = self._kali_index
+        if index is None:
+            # one agreement at a time: the whole KALI is large
+            index = self._kali_index = KaliIndex(
+                self.read_json("kali", path)
+                for path in self.manifest("kali").paths()
+                if is_agreement_file(path)
+            )
         return index
 
     def documents(self, source: SourceName) -> list[Document]:
@@ -106,7 +118,12 @@ class Inputs:
 
 def chunk_source(source: SourceName, inputs: Inputs) -> list[Chunk]:
     if source in CDTN_SOURCES:
-        return chunk_cdtn(source, inputs.documents(source), inputs.legi_index())
+        return chunk_cdtn(
+            source,
+            inputs.documents(source),
+            inputs.legi_index(),
+            inputs.kali_index() if stores_kali_links(source) else None,
+        )
     if source == "code_du_travail":
         return chunk_code_du_travail(inputs.legi_code())
 

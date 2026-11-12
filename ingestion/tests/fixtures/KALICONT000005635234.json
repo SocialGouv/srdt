@@ -26,8 +26,8 @@
        "children": [
         {
          "data": {
-          "id": "KALIARTI0000000015011",
-          "cid": "KALIARTI0000000015011",
+          "id": "KALIARTI000000015011",
+          "cid": "KALIARTI000000015011",
           "num": "1",
           "content": "<p>La présente convention règle les rapports entre employeurs et salariés.</p>",
           "etat": "VIGUEUR_ETEN"
@@ -37,8 +37,8 @@
         },
         {
          "data": {
-          "id": "KALIARTI0000000015012",
-          "cid": "KALIARTI0000000015012",
+          "id": "KALIARTI000000015012",
+          "cid": "KALIARTI000000015012",
           "num": "2",
           "content": "<p> </p>",
           "etat": "VIGUEUR_ETEN"
@@ -93,8 +93,8 @@
      "children": [
       {
        "data": {
-        "id": "KALIARTI0000000015019",
-        "cid": "KALIARTI0000000015019",
+        "id": "KALIARTI000000015019",
+        "cid": "KALIARTI000000015019",
         "num": "1",
         "content": "<p>Grille des salaires.</p>",
         "etat": "VIGUEUR_ETEN"

@@ -22,7 +22,8 @@ BULK_BATCH_SIZE = 200
 VECTOR_LOOKUP_SIZE = 500
 
 # Replaces what changed without touching `content` and `embedding`. A partial `doc`
-# update would merge the metadata and keep keys that are gone (legi_links, number).
+# update would merge the metadata and keep keys that are gone (legi_links, kali_links,
+# number).
 UPDATE_SCRIPT = (
     "ctx._source.id = params.id; "
     "ctx._source.metadata = params.metadata; "

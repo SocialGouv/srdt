@@ -134,6 +134,21 @@
           ],
           "default": null,
           "title": "Legi Links"
+        },
+        "kali_links": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/KaliLink"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kali Links"
         }
       },
       "required": [
@@ -147,6 +162,137 @@
         "articles"
       ],
       "title": "ChunkMetadata",
+      "type": "object"
+    },
+    "KaliLink": {
+      "additionalProperties": false,
+      "description": "Legifrance link to a collective agreement text found in a CDTN document,\nresolved against the KALI agreements.",
+      "properties": {
+        "kali_id": {
+          "description": "KALIARTI/KALITEXT/KALISCTA id parsed from the url",
+          "title": "Kali Id",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "origin": {
+          "description": "Where the link was found in the document",
+          "title": "Origin",
+          "type": "string"
+        },
+        "container": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "KALICONT id of the agreement, from the url else the target",
+          "title": "Container"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "article",
+                "section"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "None when the id is not in the KALI agreements; texts and sections are both `section`",
+          "title": "Kind"
+        },
+        "cid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cid"
+        },
+        "num": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Num"
+        },
+        "idcc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Collective agreement number of the target, unpadded; it can differ from the one of the document",
+          "title": "Idcc"
+        },
+        "chunk_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "metadata.id of the conventions chunks of the article, None for a section or an article without chunks",
+          "title": "Chunk Id"
+        },
+        "canonical_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Canonical Url"
+        }
+      },
+      "required": [
+        "kali_id",
+        "url",
+        "label",
+        "origin",
+        "container",
+        "kind",
+        "cid",
+        "num",
+        "idcc",
+        "chunk_id",
+        "canonical_url"
+      ],
+      "title": "KaliLink",
       "type": "object"
     },
     "LegiLink": {
@@ -300,5 +446,5 @@
   ],
   "title": "Search chunk",
   "type": "object",
-  "x-schema-version": "1.0.0"
+  "x-schema-version": "1.1.0"
 }

@@ -12,7 +12,7 @@ from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 SCHEMA_MAJOR = SCHEMA_VERSION.split(".")[0]
 
 # Bumped whenever the chunk text produced for unchanged inputs changes.
@@ -59,6 +59,38 @@ class LegiLink(BaseModel):
     canonical_url: str | None
 
 
+class KaliLink(BaseModel):
+    """Legifrance link to a collective agreement text found in a CDTN document,
+    resolved against the KALI agreements."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kali_id: str = Field(
+        description="KALIARTI/KALITEXT/KALISCTA id parsed from the url"
+    )
+    url: str
+    label: str | None
+    origin: str = Field(description="Where the link was found in the document")
+    container: str | None = Field(
+        description="KALICONT id of the agreement, from the url else the target"
+    )
+    kind: Literal["article", "section"] | None = Field(
+        description="None when the id is not in the KALI agreements; texts and "
+        "sections are both `section`"
+    )
+    cid: str | None
+    num: str | None
+    idcc: str | None = Field(
+        description="Collective agreement number of the target, unpadded; it can "
+        "differ from the one of the document"
+    )
+    chunk_id: str | None = Field(
+        description="metadata.id of the conventions chunks of the article, None "
+        "for a section or an article without chunks"
+    )
+    canonical_url: str | None
+
+
 class ChunkMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -80,6 +112,8 @@ class ChunkMetadata(BaseModel):
     decision_date: str | None = None
     # CDTN sources only
     legi_links: list[LegiLink] | None = None
+    # contributions only
+    kali_links: list[KaliLink] | None = None
 
 
 class Chunk(BaseModel):
@@ -96,7 +130,7 @@ class Chunk(BaseModel):
         return chunk_id(self.metadata)
 
     def stored_fields(self) -> dict[str, Any]:
-        # unset optional metadata (number, legi_links...) stays absent, as before
+        # unset optional metadata (number, links...) stays absent, as before
         return self.model_dump(mode="json", exclude_unset=True)
 
     def compute_doc_hash(self) -> str:

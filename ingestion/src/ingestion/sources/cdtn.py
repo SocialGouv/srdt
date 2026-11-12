@@ -6,9 +6,16 @@ import logging
 from collections.abc import Iterator
 
 from ingestion.contract import Chunk, SourceName
+from ingestion.sources.kali import KaliIndex
 from ingestion.sources.legi import LegiIndex
-from ingestion.sources.models import RawLegiLink, ResolvedLegiLink
+from ingestion.sources.models import (
+    RawKaliLink,
+    RawLegiLink,
+    ResolvedKaliLink,
+    ResolvedLegiLink,
+)
 from ingestion.sources.postgres import Document
+from ingestion.text import kali_links
 from ingestion.text.chunker import Chunker, ChunkerContentType
 from ingestion.text.legi_links import link_from_url, links_from_html
 
@@ -18,10 +25,19 @@ logger = logging.getLogger(__name__)
 
 
 class BaseDataExploiter:
-    def __init__(self, legi_index: LegiIndex | None = None):
+    # whether the chunks store `kali_links` (the sources that cite agreements)
+    stores_kali_links = False
+
+    def __init__(
+        self,
+        legi_index: LegiIndex | None = None,
+        kali_index: KaliIndex | None = None,
+    ):
         self.chunker = Chunker()
         self.legi_index = legi_index
+        self.kali_index = kali_index
         self._legi_stats = {"docs": 0, "links": 0, "resolved": 0}
+        self._kali_stats = {"docs": 0, "links": 0, "resolved": 0}
 
     def get_content(self, _doc: Document) -> str:
         raise NotImplementedError("Subclasses should implement this method")
@@ -36,6 +52,15 @@ class BaseDataExploiter:
             return []
         return self.legi_index.resolve_all(self.get_legi_links(doc))
 
+    def get_kali_links(self, _doc: Document) -> list[RawKaliLink]:
+        """Legifrance /conv_coll/ links of the document."""
+        return []
+
+    def extract_kali_links(self, doc: Document) -> list[ResolvedKaliLink]:
+        if self.kali_index is None:
+            return []
+        return self.kali_index.resolve_all(self.get_kali_links(doc))
+
     def process_documents(
         self,
         data: list[Document],
@@ -48,6 +73,11 @@ class BaseDataExploiter:
             splits = self.chunker.split(content, chunker_content_type)
             legi_links = self.extract_legi_links(doc)
             self._log_legi_links(legi_links)
+            extra_metadata = {}
+            if self.stores_kali_links:
+                kali_links = self.extract_kali_links(doc)
+                self._log_kali_links(kali_links)
+                extra_metadata["kali_links"] = kali_links
             url = (
                 BASE_URL_CDTN
                 + "/"
@@ -72,12 +102,14 @@ class BaseDataExploiter:
                                 "idcc": doc.idcc,
                                 "articles": None,
                                 "legi_links": legi_links,
+                                **extra_metadata,
                             },
                         }
                     )
                 )
 
         self._report_legi_links(data)
+        self._report_kali_links(data)
         return chunk_list
 
     def _log_legi_links(self, links: list[ResolvedLegiLink]):
@@ -95,6 +127,22 @@ class BaseDataExploiter:
                 f"{stats['resolved']} resolved in the code du travail"
             )
         self._legi_stats = {"docs": 0, "links": 0, "resolved": 0}
+
+    def _log_kali_links(self, links: list[ResolvedKaliLink]):
+        stats = self._kali_stats
+        stats["docs"] += bool(links)
+        stats["links"] += len(links)
+        stats["resolved"] += sum(1 for link in links if link["cid"])
+
+    def _report_kali_links(self, data: list[Document]):
+        stats = self._kali_stats
+        if self.stores_kali_links and self.kali_index is not None and data:
+            logger.info(
+                f"{data[0].source}: {stats['links']} legifrance /conv_coll/ links "
+                f"in {stats['docs']}/{len(data)} documents, "
+                f"{stats['resolved']} resolved in the agreements"
+            )
+        self._kali_stats = {"docs": 0, "links": 0, "resolved": 0}
 
 
 def _get_path_from_collection_name(collection_name: SourceName) -> str:
@@ -190,6 +238,8 @@ class PageInfosExploiter(BaseDataExploiter):
 
 
 class PagesContributionsExploiter(BaseDataExploiter):
+    stores_kali_links = True
+
     def get_content(self, doc: Document) -> str:
         return doc.document["content"]
 
@@ -199,6 +249,14 @@ class PagesContributionsExploiter(BaseDataExploiter):
             for ref in doc.document.get("references") or []
         ]
         links += links_from_html(doc.document.get("content"), "content")
+        return [link for link in links if link]
+
+    def get_kali_links(self, doc: Document) -> list[RawKaliLink]:
+        # the content has no agreement link, they are all in the references
+        links = [
+            kali_links.link_from_url(ref.get("url"), ref.get("title"), "references")
+            for ref in doc.document.get("references") or []
+        ]
         return [link for link in links if link]
 
 
@@ -212,8 +270,17 @@ CDTN_SOURCES: dict[SourceName, tuple[type[BaseDataExploiter], ChunkerContentType
 }
 
 
+def stores_kali_links(source: SourceName) -> bool:
+    return CDTN_SOURCES[source][0].stores_kali_links
+
+
 def chunk_cdtn(
-    source: SourceName, documents: list[Document], legi_index: LegiIndex | None
+    source: SourceName,
+    documents: list[Document],
+    legi_index: LegiIndex | None,
+    kali_index: KaliIndex | None = None,
 ) -> list[Chunk]:
     exploiter_class, content_type = CDTN_SOURCES[source]
-    return exploiter_class(legi_index).process_documents(documents, content_type)
+    return exploiter_class(legi_index, kali_index).process_documents(
+        documents, content_type
+    )

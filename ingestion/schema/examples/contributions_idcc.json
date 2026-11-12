@@ -10,9 +10,75 @@
     "idx": 0,
     "initial_id": "initial-c1486",
     "articles": null,
-    "legi_links": []
+    "legi_links": [
+      {
+        "legi_id": "LEGIARTI000000000011",
+        "url": "https://www.legifrance.gouv.fr/codes/id/LEGIARTI000000000011",
+        "label": "L1111-1",
+        "origin": "references",
+        "kind": "article",
+        "cid": "LEGIARTI000000000010",
+        "num": "L1111-1",
+        "chunk_id": "LEGISCTA000000000002",
+        "canonical_url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000000000011"
+      }
+    ],
+    "kali_links": [
+      {
+        "kali_id": "KALIARTI000000014861",
+        "url": "https://www.legifrance.gouv.fr/conv_coll/id/KALIARTI000000014861/?idConteneur=KALICONT000005635173",
+        "label": "Article 1 de la convention collective",
+        "origin": "references",
+        "container": "KALICONT000005635173",
+        "kind": "article",
+        "cid": "KALIARTI000000014860",
+        "num": "1",
+        "idcc": "1486",
+        "chunk_id": "KALIARTI000000014861",
+        "canonical_url": "https://www.legifrance.gouv.fr/conv_coll/id/KALIARTI000000014861"
+      },
+      {
+        "kali_id": "KALIARTI000000000003",
+        "url": "https://www.legifrance.gouv.fr/conv_coll/id/KALIARTI000000000003/?idConteneur=KALICONT000005635234",
+        "label": "Avenant n° 1 du 3 mars 2020",
+        "origin": "references",
+        "container": "KALICONT000005635234",
+        "kind": "article",
+        "cid": "KALIARTI000000000003",
+        "num": "1",
+        "idcc": "1501",
+        "chunk_id": "KALIARTI000000000003",
+        "canonical_url": "https://www.legifrance.gouv.fr/conv_coll/id/KALIARTI000000000003"
+      },
+      {
+        "kali_id": "KALISCTA000000000001",
+        "url": "https://www.legifrance.gouv.fr/affichIDCC.do;jsessionid=ABC.tplgfr30s_3?idSectionTA=KALISCTA000000000001&cidTexte=KALITEXT000000000001&idConvention=KALICONT000005635173",
+        "label": "Titre Ier",
+        "origin": "references",
+        "container": "KALICONT000005635173",
+        "kind": "section",
+        "cid": "KALISCTA000000000001",
+        "num": null,
+        "idcc": "1486",
+        "chunk_id": null,
+        "canonical_url": "https://www.legifrance.gouv.fr/conv_coll/id/KALISCTA000000000001"
+      },
+      {
+        "kali_id": "KALIARTI000099999999",
+        "url": "https://www.legifrance.gouv.fr/conv_coll/id/KALIARTI000099999999",
+        "label": "Article inconnu",
+        "origin": "references",
+        "container": null,
+        "kind": null,
+        "cid": null,
+        "num": null,
+        "idcc": null,
+        "chunk_id": null,
+        "canonical_url": null
+      }
+    ]
   },
-  "doc_hash": "042b54fb25b99b37d2eaaa6609ea2047907fe9f59d8a92872dcbd2f398fc9f9a",
+  "doc_hash": "92db41df841e7c5f2769fe3d56e9658b9d3d948fa48ebcc32c9e14afc0b2712c",
   "embed_hash": "53d0a32bb23e140e7f6986f59e9f08a310bcd5cd26909f36d145ecccb60bdce0",
   "embedding": [
     0.1,
