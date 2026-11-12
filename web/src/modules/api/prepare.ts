@@ -11,6 +11,7 @@ import {
   K_RERANK_IDCC_FOLLOWUP,
   SEARCH_OPTIONS_CODE,
   K_RERANK_CODE,
+  MAX_CITED_ARTICLES,
   K_RERANK_JURISPRUDENCE,
   Collection,
   SEARCH_OPTIONS_IDCC,
@@ -42,6 +43,7 @@ import * as Sentry from "@sentry/nextjs";
 import {
   UseApiResponse,
   anonymize,
+  getCitedArticles,
   getIdccChunks,
   search,
   rerank,
@@ -306,6 +308,48 @@ const searchArticles = async (anonymized: string, linkedFrom: string[]) => {
   );
 };
 
+// Articles du code du travail cités par numéro dans la question de l'usager
+// ("article L. 1226-14 du code du travail"). La question d'origine est utilisée :
+// seuls les numéros extraits atteignent l'index, et l'anonymisation peut abîmer
+// une citation. Une erreur ne bloque pas la réponse : on n'ajoute simplement rien.
+const searchCitedArticles = async (
+  userQuestion: string
+): Promise<ChunkResult[]> => {
+  const result = await getCitedArticles({
+    question: userQuestion,
+    max_chunks: MAX_CITED_ARTICLES,
+  });
+
+  if (result.error) {
+    Sentry.captureException(
+      new Error(
+        `Erreur lors de la recherche des articles cités: ${result.error}`
+      )
+    );
+    console.error(
+      `Erreur lors de la recherche des articles cités: ${result.error}`
+    );
+    return [];
+  }
+
+  return result.data?.top_chunks ?? [];
+};
+
+// Les articles cités passent en premier : l'usager les a nommés, ils ne sont pas
+// départagés par le rerank. Un même chunk peut venir des deux recherches.
+const mergeCodeChunks = (
+  cited: ChunkResult[],
+  reranked: ChunkResult[]
+): ChunkResult[] => {
+  const seen = new Set<string>();
+  return [...cited, ...reranked].filter((chunk) => {
+    const key = String(chunk.id_chunk);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 // Recherche "jurisprudence" : effectuée en parallèle de la recherche historique.
 // Search large sur la collection judilibre, puis rerank (reranker Albert) pour ne garder
 // que les K_RERANK_JURISPRUDENCE meilleurs chunks (pas de retrieve : on garde le sommaire),
@@ -404,9 +448,13 @@ export const prepareQuestionData = async (
     selectedIdccChunks.length < 1
   );
 
-  const selectedCodeDuTravailChunks = await searchArticles(
-    anonymized,
-    selectedFichesOfficiellesChunks.map((chunk) => chunk.metadata.id)
+  const selectedCodeDuTravailChunks = mergeCodeChunks(
+    // articles within the question
+    await searchCitedArticles(userQuestion),
+    await searchArticles(
+      anonymized,
+      selectedFichesOfficiellesChunks.map((chunk) => chunk.metadata.id)
+    )
   );
 
   // L'utilisateur peut exclure la jurisprudence depuis l'écran de saisie

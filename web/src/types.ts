@@ -90,6 +90,26 @@ export interface SearchResponse {
   top_chunks: ChunkResult[];
 }
 
+// Articles cités par numéro dans la question ("article L. 1226-14 du code du travail")
+export interface CitedArticlesRequest {
+  question: string;
+  max_chunks?: number;
+}
+
+export interface CitedArticle {
+  num: string;
+  raw: string;
+  kind: string;
+  // false si un autre code est nommé ou si l'article n'est pas dans l'index
+  found: boolean;
+}
+
+export interface CitedArticlesResponse {
+  time: number;
+  top_chunks: ChunkResult[];
+  citations: CitedArticle[];
+}
+
 export interface RetrieveResponse {
   time: number;
   contents: ContentResult[];

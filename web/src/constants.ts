@@ -58,6 +58,8 @@ export const DOMAIN_TO_DEPARTMENT: Record<string, string> = Object.fromEntries(
 export const MAX_RERANK = 64;
 export const K_RERANK = 10;
 export const K_RERANK_CODE = 5;
+// Sections du code du travail ajoutées pour les articles cités dans la question
+export const MAX_CITED_ARTICLES = 5;
 export const K_RERANK_IDCC = 5;
 export const K_RERANK_JURISPRUDENCE = 5;
 
