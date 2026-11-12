@@ -1,4 +1,4 @@
-ARG NODE_VERSION=22.12.0-alpine
+ARG NODE_VERSION=22.23.4-alpine
 
 # dist
 FROM node:$NODE_VERSION AS dist

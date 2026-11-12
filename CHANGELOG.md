@@ -1,3 +1,38 @@
+# [1.59.0](https://github.com/SocialGouv/srdt/compare/v1.58.0...v1.59.0) (2026-11-09)
+
+
+### Features
+
+* **web:** récolter le NPS et le temps gagné [#444](https://github.com/SocialGouv/srdt/issues/444) ([#462](https://github.com/SocialGouv/srdt/issues/462)) ([446124c](https://github.com/SocialGouv/srdt/commit/446124cd8a711e4bc7e9222b61ba54e2b4e48a46))
+
+# [1.58.0](https://github.com/SocialGouv/srdt/compare/v1.57.4...v1.58.0) (2026-11-09)
+
+
+### Features
+
+* **web:** ajout des événements Matomo pour les indicateurs d'impact ([#435](https://github.com/SocialGouv/srdt/issues/435)) ([#461](https://github.com/SocialGouv/srdt/issues/461)) ([7bf19f5](https://github.com/SocialGouv/srdt/commit/7bf19f5be20b08fdd0666e69e6caad5d00e69187))
+
+## [1.57.4](https://github.com/SocialGouv/srdt/compare/v1.57.3...v1.57.4) (2026-11-05)
+
+
+### Bug Fixes
+
+* specific prompt when no jurisprudence found ([#459](https://github.com/SocialGouv/srdt/issues/459)) ([f9902aa](https://github.com/SocialGouv/srdt/commit/f9902aa374e384580bfa50562b37361c496d3628))
+
+## [1.57.3](https://github.com/SocialGouv/srdt/compare/v1.57.2...v1.57.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* **security:** bump Node.js to 22.23.4 (October 2026 security releases) ([#449](https://github.com/SocialGouv/srdt/issues/449)) ([6d3276c](https://github.com/SocialGouv/srdt/commit/6d3276ce47c6a9f204e29ea3fb603ca1e7e5d479))
+
+## [1.57.2](https://github.com/SocialGouv/srdt/compare/v1.57.1...v1.57.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **api:** drop jurisprudence links not provided to the LLM ([#448](https://github.com/SocialGouv/srdt/issues/448)) ([c47d3f7](https://github.com/SocialGouv/srdt/commit/c47d3f7a7b18c82684f07d41cadc85c06683357e))
+
 ## [1.57.1](https://github.com/SocialGouv/srdt/compare/v1.57.0...v1.57.1) (2026-10-21)
 
 
