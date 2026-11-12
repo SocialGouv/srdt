@@ -1,5 +1,3 @@
-import pytest
-
 from srdt_analysis.text.article_citations import extract_article_citations
 
 
@@ -97,9 +95,8 @@ def test_letterless_number_needs_the_code_name_nearby():
     assert nums("le montant est de 2023-12 euros") == []
 
 
-@pytest.mark.parametrize(
-    "question",
-    [
+def test_no_citation():
+    for question in [
         "Article 9.5 de la convention collective",
         "Art. 19 modifié par avenant n° 30",
         "le groupe du3 et le niveau LV2",
@@ -107,7 +104,5 @@ def test_letterless_number_needs_the_code_name_nearby():
         "j'ai travaillé d'1 à 3 ans, L 12 jours",
         "pouvez-vous me donner un texte de loi ?",
         "",
-    ],
-)
-def test_no_citation(question):
-    assert extract_article_citations(question) == []
+    ]:
+        assert extract_article_citations(question) == [], question
