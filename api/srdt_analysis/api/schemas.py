@@ -122,6 +122,25 @@ class SearchResponse(BaseModel):
     top_chunks: List[ChunkResult]
 
 
+class CitedArticlesRequest(BaseModel):
+    question: str
+    max_chunks: int = Field(default=5, ge=1, le=10)
+
+
+class CitedArticle(BaseModel):
+    num: str
+    raw: str
+    kind: str
+    # false when another code is named, or when the article is not in the index
+    found: bool
+
+
+class CitedArticlesResponse(BaseModel):
+    time: float
+    top_chunks: List[ChunkResult]
+    citations: List[CitedArticle]
+
+
 class RetrieveRequest(BaseModel):
     ids: List[str]
 

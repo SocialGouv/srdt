@@ -10,6 +10,8 @@ import {
   RerankRequest,
   RerankResponse,
   RetrieveResponse,
+  CitedArticlesRequest,
+  CitedArticlesResponse,
 } from "../../types";
 import * as Sentry from "@sentry/nextjs";
 
@@ -121,6 +123,23 @@ export const search = async (
       method: "POST",
       body: JSON.stringify(request),
     });
+    return { data, error: null, loading: false };
+  } catch (error) {
+    return { data: null, error: (error as Error).message, loading: false };
+  }
+};
+
+export const getCitedArticles = async (
+  request: CitedArticlesRequest
+): Promise<UseApiResponse<CitedArticlesResponse>> => {
+  try {
+    const data = await fetchApi<CitedArticlesResponse>(
+      "/api/v1/articles/cited",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    );
     return { data, error: null, loading: false };
   } catch (error) {
     return { data: null, error: (error as Error).message, loading: false };

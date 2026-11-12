@@ -1,6 +1,7 @@
 import os
 import random
 from collections import defaultdict
+from dataclasses import dataclass
 from timeit import default_timer as timer
 from typing import List, Optional
 
@@ -15,6 +16,17 @@ from srdt_analysis.core.exceptions import (
     ServiceUnavailableError,
 )
 from srdt_analysis.core.logger import Logger
+
+ARTICLE_CHUNKS_MAX_HITS = 100
+
+
+@dataclass
+class ArticleChunk:
+    chunk: ChunkResult
+    idx: int
+    # numbers of every article of the chunk's section
+    nums: list[str]
+
 
 french_analyzer = {
     "filter": {
@@ -390,6 +402,47 @@ class ElasticIndicesHandler:
             raise ExternalServiceError(
                 f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
             ) from e
+
+    def get_chunks_by_articles(
+        self, index_name: str, nums: list[str]
+    ) -> list[ArticleChunk]:
+        """Code du travail chunks whose section holds one of the articles `nums`
+        (normalised, "L1226-14"). A section split in several chunks carries the
+        same `articles` on each of them: the caller picks the chunk holding the
+        article text.
+        """
+        if not nums:
+            return []
+        try:
+            response = self.client.search(
+                index=index_name,
+                query={
+                    "bool": {
+                        "filter": [
+                            {"term": {"metadata.source": "code_du_travail"}},
+                            {"terms": {"metadata.articles.num.keyword": nums}},
+                        ]
+                    }
+                },
+                size=ARTICLE_CHUNKS_MAX_HITS,
+                source_includes=["content", "metadata"],
+            )
+        except Exception as e:
+            raise ExternalServiceError(
+                f"Elasticsearch query error: {str(e)}", service="Elasticsearch"
+            ) from e
+
+        return [
+            ArticleChunk(
+                chunk=self.to_chunk_result(hit),
+                idx=hit["_source"]["metadata"].get("idx", 0),
+                nums=[
+                    article["num"]
+                    for article in hit["_source"]["metadata"].get("articles") or []
+                ],
+            )
+            for hit in response["hits"]["hits"]
+        ]
 
     def search(
         self,

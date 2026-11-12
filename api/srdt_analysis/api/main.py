@@ -16,6 +16,8 @@ from srdt_analysis.api.schemas import (
     AnonymizeRequest,
     AnonymizeResponse,
     ChunkResult,
+    CitedArticlesRequest,
+    CitedArticlesResponse,
     GenerateRequest,
     GenerateResponse,
     RephraseRequest,
@@ -33,6 +35,7 @@ from srdt_analysis.clients.elastic_handler import ElasticIndicesHandler
 from srdt_analysis.core.constants import BASE_API_URL, CHUNK_INDEX
 from srdt_analysis.core.exceptions import SRDTException
 from srdt_analysis.core.logger import Logger
+from srdt_analysis.services.cited_articles import find_cited_articles
 from srdt_analysis.services.corpus import (
     get_contributions_chunks_by_idcc,
     get_docs_content,
@@ -279,6 +282,21 @@ async def search(
     return SearchResponse(
         time=time.time() - start_time,
         top_chunks=transformed_results,
+    )
+
+
+@app.post(f"{BASE_API_URL}/articles/cited", response_model=CitedArticlesResponse)
+async def cited_articles(
+    request: CitedArticlesRequest, _api_key: str = Depends(get_api_key)
+) -> CitedArticlesResponse:
+    """Code du travail chunks of the articles the question cites by number
+    ("article L. 1226-14 du code du travail")."""
+    start_time = time.time()
+    chunks, citations = find_cited_articles(
+        request.question, ElasticIndicesHandler(), request.max_chunks
+    )
+    return CitedArticlesResponse(
+        time=time.time() - start_time, top_chunks=chunks, citations=citations
     )
 
 

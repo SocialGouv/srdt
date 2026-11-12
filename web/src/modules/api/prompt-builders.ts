@@ -61,7 +61,7 @@ Caractéristiques : Ces articles sont rédigés ou validés par des professionne
 
 ${formatChunks(fichesOfficiellesChunks)}
 
-## Code du travail (1 à 5 extraits) :
+## Code du travail (1 à 10 extraits) :
 
 Sources : Sections entières du Code du travail.
 
