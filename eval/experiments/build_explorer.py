@@ -14,7 +14,7 @@ titles, so it stays local (this folder is untracked); run it from ingestion/:
 import asyncio
 import json
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,7 +22,14 @@ import asyncpg
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from generic_to_kali import RUNS, Search, build_labels, norm_idcc, plain_text  # noqa: E402
+from generic_to_kali import (  # noqa: E402
+    RUNS,
+    Search,
+    build_labels,
+    latest_link_versions,
+    norm_idcc,
+    plain_text,
+)
 from ingestion.config import load_config  # noqa: E402
 from ingestion.pipeline import Inputs  # noqa: E402
 from ingestion.settings import Settings, secret  # noqa: E402
@@ -74,6 +81,32 @@ def agreement_names(settings: Settings) -> dict[str, dict[str, str]]:
     return names
 
 
+def fetch_articles(search: Search, wanted: dict[str, set[str]]) -> dict[str, dict[str, str]]:
+    """Article id -> chunk title and a short snippet of its first chunk, for the ids of the
+    saved top 10 lists (one query per agreement and batch)."""
+    out: dict[str, dict[str, str]] = {}
+    first: dict[str, int] = {}
+    for idcc, ids in wanted.items():
+        ids_sorted = sorted(ids)
+        for i in range(0, len(ids_sorted), 25):
+            body = {
+                "size": 500,
+                "_source": ["content", "metadata.id", "metadata.title", "metadata.idx"],
+                "query": {"bool": {"filter": [
+                    *search.filters(idcc),
+                    {"terms": {"metadata.id.keyword": ids_sorted[i : i + 25]}},
+                ]}},
+            }
+            for h in search.client.search(index=search.index, body=body)["hits"]["hits"]:
+                meta = h["_source"]["metadata"]
+                idx = meta.get("idx") or 0
+                if meta["id"] not in out or idx < first[meta["id"]]:
+                    first[meta["id"]] = idx
+                    snippet = " ".join((h["_source"].get("content") or "").split())
+                    out[meta["id"]] = {"t": meta["title"], "s": snippet[:160]}
+    return out
+
+
 def main() -> None:
     settings = Settings()
     inputs = Inputs(
@@ -84,6 +117,10 @@ def main() -> None:
     docs = load_documents(settings, ["contributions", "contributions_idcc"])
     generics = {g.document["questionId"]: g for g in docs["contributions"]}
     run = latest_run()
+    # same labels as the run: links to a replaced version follow to the version in force
+    link_versions_run, link_versions = latest_link_versions()
+    if run["provenance"].get("link_versions") != link_versions_run:
+        print(f"warning: run used link versions {run['provenance'].get('link_versions')}, latest is {link_versions_run}")
     scored = {
         (r["question_id"], r["idcc"]): r for r in run["records"] if r["status"] == "ok"
     }
@@ -91,6 +128,8 @@ def main() -> None:
 
     rows: list[dict] = []
     wanted: dict[str, set[str]] = defaultdict(set)
+    tops: dict[str, dict[str, list[str]]] = {}
+    wanted_top: dict[str, set[str]] = defaultdict(set)
     for a in docs["contributions_idcc"]:
         idcc = norm_idcc(a.idcc)
         qid = a.document.get("questionId")
@@ -108,7 +147,11 @@ def main() -> None:
             "generic": generic is not None,
             "scoring": scoring,
         }
-        kept, dropped = build_labels(inputs, a)
+        if record and f"{base['question']}||{idcc}" not in tops:
+            tops[f"{base['question']}||{idcc}"] = record["top"]
+            for ids in record["top"].values():
+                wanted_top[idcc].update(ids)
+        kept, dropped = build_labels(inputs, a, link_versions)
         if not kept and not dropped:
             rows.append({**base, "status": "none"})
             continue
@@ -122,6 +165,7 @@ def main() -> None:
                 "num": link["num"],
                 "kali_id": link["kali_id"],
                 "chunk_id": link["chunk_id"],
+                "followed": bool(link.get("followed")),
                 "url": link["canonical_url"],
                 "ranks": {c: ranks.get(c, {}).get(link["chunk_id"]) for c in RANK_CONFIGS}
                 if record else None,
@@ -147,6 +191,18 @@ def main() -> None:
         if row["status"] == "label":
             row["title"] = titles.get((row["idcc"], row["chunk_id"]), "")
 
+    articles = fetch_articles(search, wanted_top)
+    ids_top = set().union(*wanted_top.values())
+    print(f"top-10 articles: {len(articles)}/{len(ids_top)} distinct ids with a title")
+
+    versions = link_versions
+    for row in rows:
+        v = versions.get(row.get("kali_id") or "")
+        if v and v["status"] in ("replaced", "abrogated"):
+            row["ver"] = {k: v.get(k) for k in ("status", "current_id", "current_from")}
+    n_old = Counter(r["ver"]["status"] for r in rows if "ver" in r)
+    print(f"outdated links: {dict(n_old)}")
+
     rows.sort(key=lambda r: (r["question"], int(r["idcc"] or 0), r.get("num") or ""))
     names = agreement_names(settings)
     used = {r["idcc"] for r in rows}
@@ -158,6 +214,8 @@ def main() -> None:
         "index": run["provenance"]["index"],
         "kali_snapshot": run["provenance"]["kali_snapshot"],
         "rank_configs": RANK_CONFIGS,
+        "tops": tops,
+        "articles": articles,
         "agreements": {i: n for i, n in names.items() if i in used},
         "questions": {
             g.title.strip(): {"text": plain_text(g.document.get("content") or "")}
@@ -179,10 +237,10 @@ TEMPLATE = """<!doctype html>
 <title>Contributions and KALI links</title>
 <style>
   :root { --bg:#fff; --fg:#1d2433; --muted:#5d6678; --line:#dfe3ea; --head:#f3f5f8; --accent:#1f5fbf;
-          --sel:#e4edfb; --thumb:#c3c9d4; --thumb-hover:#9aa3b2; --ok:#1c7c3b; --warn:#a15c00; --off:#8a8f99; }
+          --sel:#e4edfb; --thumb:#c3c9d4; --thumb-hover:#9aa3b2; --ok:#1c7c3b; --warn:#a15c00; --bad:#b3261e; --off:#8a8f99; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#14171d; --fg:#e6e9ef; --muted:#9aa3b2; --line:#2a303b; --head:#1c212a; --accent:#7ab0ff;
-            --sel:#22324d; --thumb:#3a4250; --thumb-hover:#566075; --ok:#59c47f; --warn:#e0a050; --off:#7b8190; } }
+            --sel:#22324d; --thumb:#3a4250; --thumb-hover:#566075; --ok:#59c47f; --warn:#e0a050; --bad:#ff8a80; --off:#7b8190; } }
   * { box-sizing:border-box; }
   body { margin:0; padding:16px; background:var(--bg); color:var(--fg);
          font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -244,8 +302,17 @@ TEMPLATE = """<!doctype html>
   .nw { white-space:nowrap; }
   .tag { font-size:12px; white-space:nowrap; }
   .label { color:var(--ok); } .dropped { color:var(--warn); } .none { color:var(--off); }
+  .old { color:var(--bad); font-weight:600; }
   .sub { color:var(--muted); font-size:12px; }
   a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  .panel { margin-top:16px; }
+  .panelhead { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .panelhead h2 { margin:0; }
+  select { padding:4px 6px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--fg); font:inherit; }
+  tr.hit td { background:var(--sel); }
+  .rk { text-align:right; font-variant-numeric:tabular-nums; }
+  .topnote { color:var(--muted); font-size:13px; margin:6px 0 0; }
+  .topmsg { color:var(--muted); padding:10px; border:1px dashed var(--line); border-radius:8px; }
   .note { color:var(--muted); font-size:12px; margin-top:10px; }
 </style>
 </head>
@@ -266,22 +333,27 @@ TEMPLATE = """<!doctype html>
         <th>Status</th><th>Rank*</th><th>Légifrance</th></tr></thead>
       <tbody id="body"></tbody>
     </table></div>
+    <div class="panel">
+      <div class="panelhead"><h2 id="topTitle">Search results · top 10</h2><select id="cfg" aria-label="Search configuration"></select></div>
+      <div id="topBody"></div>
+    </div>
     <p class="note">* Position of the article for the full-answer semantic search, among the articles of the agreement
     (first 64 chunks collapsed to articles). Hover for the seven other configurations. “–” = not in the list; blank = pair
     not scored. “Scored link” = a link resolving to an article with chunks in the index, in the same agreement. “top 5: 2/3”
-    = labelled articles found in the first five. In the cards of the middle list, “2/3 top 5” and the bar give the labelled articles found in the first five. In the cards of the left list, “43 IDCC · 100 links · 11 dropped · 2.3 per IDCC” counts everything the editors linked: the IDCC (or questions) with a contribution, all their links, how many of those cannot be scored (dropped), and the average per IDCC. “93% of the 46 IDCC covered” is the share of the dataset’s agreements (or of its questions, in IDCC mode) that have a contribution.</p>
+    = labelled articles found in the first five. In the cards of the middle list, “2/3 top 5” and the bar give the labelled articles found in the first five. In the cards of the left list, “43 IDCC · 100 links · 11 dropped · 2.3 per IDCC” counts everything the editors linked: the IDCC (or questions) with a contribution, all their links, how many of those cannot be scored (dropped), and the average per IDCC. “93% of the 46 IDCC covered” is the share of the dataset’s agreements (or of its questions, in IDCC mode) that have a contribution.<br>The “Search results” panel lists the first 10 articles returned by the chosen configuration for the selected contribution (chunks collapsed to articles, best chunk first); a tinted row is one of the editors’ scored links. Only scored contributions have results.<br>“Outdated” (red) marks a link that cites a version of an article that has since been replaced, with the date and the id of the version in force; “abrogated” marks an article that no longer exists. A scored link whose cited version was replaced is scored against the version in force (the id is shown under “scored link”): the search is credited if it returns that article. Checked against the Légifrance API (<code>check_link_versions.py</code>).</p>
     </div>
   </section>
 </div>
 <script id="data" type="application/json">__DATA__</script>
 <script>
 const data = JSON.parse(document.getElementById("data").textContent);
-const rows = data.rows, meta = data.questions, R = "full knn";
+const rows = data.rows, meta = data.questions, R = "full knn", tops = data.tops || {}, articles = data.articles || {};
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
 const agreement = i => (data.agreements || {})[i] || {short:"", title:""};
 const idccLabel = i => "IDCC " + i + (agreement(i).short ? " · " + agreement(i).short : "");
+const cfgLabel = c => c.replace("knn", "kNN").replace("bm25", "BM25").replace(" ", " · ");
 const num = v => (v === null || v === undefined) ? "–" : v;
 
 const pairs = new Map();
@@ -372,9 +444,23 @@ function rankCell(r) {
   const tip = data.rank_configs.map(c => c + ": " + num(r.ranks[c])).join("\\n");
   return '<span title="' + esc(tip) + '">' + num(r.ranks[R]) + "</span>";
 }
+const day = ms => new Date(Number(ms)).toISOString().slice(0, 10);
+function outdatedCell(r) {
+  if (!r.ver) return "";
+  if (r.ver.status === "abrogated") return '<div><span class="tag old">abrogated</span></div>';
+  return '<div><span class="tag old">outdated</span></div><div class="sub">replaced since ' + day(r.ver.current_from) + " by " +
+    '<a href="https://www.legifrance.gouv.fr/conv_coll/id/' + esc(r.ver.current_id) + '" target="_blank" rel="noopener">' +
+    esc(r.ver.current_id) + "</a>" + (r.status === "label" ? " (scored against it)" : "") + "</div>";
+}
+function scoredAgainst(r) {
+  // the label is scored against another version of the article than the one cited
+  if (r.status !== "label" || !r.chunk_id || r.chunk_id === r.kali_id || r.ver) return "";
+  return '<div class="sub">scored against ' +
+    '<a href="https://www.legifrance.gouv.fr/conv_coll/id/' + esc(r.chunk_id) + '" target="_blank" rel="noopener">' + esc(r.chunk_id) + "</a></div>";
+}
 function statusCell(r) {
-  if (r.status === "label") return '<span class="tag label">scored link</span>';
-  if (r.status === "dropped") return '<span class="tag dropped">dropped</span><div class="sub">' + esc(r.reason) + "</div>";
+  if (r.status === "label") return '<span class="tag label">scored link</span>' + scoredAgainst(r) + outdatedCell(r);
+  if (r.status === "dropped") return '<span class="tag dropped">dropped</span><div class="sub">' + esc(r.reason) + "</div>" + outdatedCell(r);
   return '<span class="tag none">no KALI link</span>';
 }
 function renderC() {
@@ -392,6 +478,8 @@ function renderC() {
   let stats = (sp.length ? "" : "not scored · ") + (selB ? "" : sp.length ? sp.length + " of " + ps.length + " " : ps.length + " ") +
     (selB ? "1 contribution" : unit + (unit === "question" && ps.length !== 1 ? "s" : "") + (sp.length ? " scored" : "")) +
     " · " + plural(keptBase, "link") + " · " + dropped + " dropped · " + none + " without a link";
+  const old = ps.reduce((n, p) => n + p.rows.filter(r => r.ver).length, 0);
+  if (old) stats += " · " + old + " outdated or abrogated";
   if (sp.length) stats += " · found in the first 5 / 10: " + sp.reduce((n, p) => n + found(p, 5), 0) + " / " +
     sp.reduce((n, p) => n + found(p, 10), 0) + " of " + kept;
   const idccFull = mode === "q" ? (selB ? selB.idcc : null) : selA;
@@ -410,7 +498,32 @@ function renderC() {
     '<td class="nw">' + rankCell(r) + "</td>" +
     "<td>" + (r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener">open</a>' : "") + "</td></tr>").join("");
 }
-function render() { renderA(); renderB(); renderC(); }
+function renderD() {
+  const cfg = $("cfg").value;
+  $("topTitle").textContent = "Search results · top 10";
+  if (!selB) { $("topBody").innerHTML = '<div class="topmsg">Select an IDCC to see what the search returned.</div>'; return; }
+  const top = tops[selB.question + "||" + selB.idcc];
+  if (!top) {
+    $("topBody").innerHTML = '<div class="topmsg">No search was run for this contribution (' +
+      esc(selB.scoring === "no generic answer" ? "no generic answer" : "no usable label") + ").</div>";
+    return;
+  }
+  const ids = top[cfg] || [], labelled = new Set(selB.kept.map(r => r.chunk_id));
+  const rowsHtml = ids.map((id, i) => {
+    const a = articles[id] || {t: "", s: ""}, hit = labelled.has(id);
+    return '<tr class="' + (hit ? "hit" : "") + '"><td class="rk">' + (i + 1) + "</td><td>" + esc(a.t || id) +
+      (a.s ? '<div class="sub">' + esc(a.s) + "</div>" : "") + '<div class="sub">' + esc(id) + "</div></td>" +
+      '<td class="nw">' + (hit ? '<span class="tag label">✓ labelled</span>' : "") + "</td>" +
+      '<td><a href="https://www.legifrance.gouv.fr/conv_coll/id/' + esc(id) + '" target="_blank" rel="noopener">open</a></td></tr>';
+  }).join("");
+  const inTop = selB.kept.filter(r => ids.includes(r.chunk_id)), missing = selB.kept.filter(r => !ids.includes(r.chunk_id));
+  let note = "Labelled articles in this top 10: " + inTop.length + " of " + selB.kept.length + ".";
+  if (missing.length) note += " Missing: " + missing.map(r => esc(r.num || r.kali_id) + " (" +
+    (r.ranks && r.ranks[cfg] != null ? "rank " + r.ranks[cfg] : "not in the first 64") + ")").join(", ") + ".";
+  $("topBody").innerHTML = '<div class="wrap"><table><thead><tr><th>#</th><th>Article returned</th><th>Ground truth</th>' +
+    "<th>Légifrance</th></tr></thead><tbody>" + rowsHtml + "</tbody></table></div>" + '<p class="topnote">' + note + "</p>";
+}
+function render() { renderA(); renderB(); renderC(); renderD(); }
 function setMode(m) {
   mode = m; selB = null; $("fa").value = ""; $("fa").placeholder = m === "q" ? "Filter questions…" : "Filter IDCC or name…";
   $("fb").value = ""; $("fb").placeholder = m === "q" ? "Filter IDCC or name…" : "Filter questions…";
@@ -429,6 +542,8 @@ $("listB").addEventListener("click", e => {
   const li = e.target.closest("li[data-i]"); if (!li) return;
   const p = itemsB[Number(li.dataset.i)]; selB = selB === p ? null : p; render();
 });
+$("cfg").innerHTML = data.rank_configs.map(c => '<option value="' + c + '"' + (c === R ? " selected" : "") + ">" + cfgLabel(c) + "</option>").join("");
+$("cfg").addEventListener("change", renderD);
 setMode("q");
 </script>
 </body>

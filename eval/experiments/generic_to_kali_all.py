@@ -35,6 +35,7 @@ from generic_to_kali import (  # noqa: E402
     VARIANTS,
     Search,
     build_labels,
+    latest_link_versions,
     build_queries,
     check_no_label_in_queries,
     collapse,
@@ -149,12 +150,20 @@ def main() -> None:
         settings=settings,
     )
     docs = load_documents(settings, ["contributions", "contributions_idcc"])
+    # links citing a replaced version of an article follow to the version in force
+    # (--strict-versions: do not, as in the first runs)
+    versions_run, versions = (None, {}) if "--strict-versions" in sys.argv else latest_link_versions()
+    print(f"link versions: {versions_run or 'not followed'}")
     pairs, skipped = find_pairs(docs)
     print(f"{len(pairs)} pairs, skipped rows: {skipped}")
 
     search = Search(settings)
     reranker = Reranker(settings)
-    provenance = {**search.index_meta(), "kali_snapshot": inputs.manifest("kali").snapshot_id}
+    provenance = {
+        **search.index_meta(),
+        "kali_snapshot": inputs.manifest("kali").snapshot_id,
+        "link_versions": versions_run,
+    }
     indexed = provenance["sources"]["conventions"]["snapshots"]["kali"]
     if indexed != provenance["kali_snapshot"]:
         sys.exit(f"index built from KALI {indexed}, labels from {provenance['kali_snapshot']}")
@@ -172,7 +181,7 @@ def main() -> None:
     records, failures = [], []
     for i, (generic, agreement) in enumerate(pairs, 1):
         idcc = norm_idcc(agreement.idcc)
-        labels, dropped = build_labels(inputs, agreement)
+        labels, dropped = build_labels(inputs, agreement, versions)
         ids = sorted({label["chunk_id"] for label in labels})
         record = {
             "question": generic.title,
@@ -180,6 +189,7 @@ def main() -> None:
             "idcc": idcc,
             "labels": ids,
             "dropped": len(dropped),
+            "followed": sum(bool(l.get("followed")) for l in labels),
         }
         if not ids:
             record["status"] = "no label"

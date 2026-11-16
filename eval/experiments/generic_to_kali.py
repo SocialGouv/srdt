@@ -83,10 +83,24 @@ def pick_pair(
     return generic, siblings[0]
 
 
-def build_labels(inputs: Inputs, agreement: Document):
+def latest_link_versions() -> tuple[str | None, dict[str, dict]]:
+    """Name and content of the latest check_link_versions.py run (article id -> status,
+    current_id), or (None, {}) if there is none."""
+    runs = sorted(RUNS.glob("link-versions-*"))
+    if not runs:
+        return None, {}
+    return runs[-1].name, json.loads((runs[-1] / "results.json").read_text())["articles"]
+
+
+def build_labels(inputs: Inputs, agreement: Document, versions: dict[str, dict] | None = None):
     """Resolved KALI links of the agreement contribution that a search over this
-    agreement's conventions chunks can find, and the ones left out with the reason."""
-    exploiter = PagesContributionsExploiter(kali_index=inputs.kali_index())
+    agreement's conventions chunks can find, and the ones left out with the reason.
+
+    `versions` (from check_link_versions.py) lets a link that cites a replaced version of
+    an article, which the snapshot cannot resolve, follow to the version in force: it is
+    kept with `chunk_id` of that version and `followed` set, `kali_id` stays the cited id."""
+    index = inputs.kali_index()
+    exploiter = PagesContributionsExploiter(kali_index=index)
     kept, dropped = [], []
     for link in exploiter.extract_kali_links(agreement):
         if link["kind"] is None:
@@ -101,7 +115,27 @@ def build_labels(inputs: Inputs, agreement: Document):
             kept.append(link)
             continue
         dropped.append((reason, link))
-    return kept, dropped
+    if not versions:
+        return kept, dropped
+
+    seen = {link["chunk_id"] for link in kept}
+    still_dropped = []
+    for reason, link in dropped:
+        version = versions.get(link["kali_id"])
+        if reason == "not in the KALI snapshot" and version and version["status"] == "replaced":
+            raw = {k: link[k] for k in ("url", "label", "origin", "container")}
+            current = index.resolve({**raw, "kali_id": version["current_id"]})
+            if (
+                current["kind"] == "article"
+                and current["chunk_id"]
+                and norm_idcc(current["idcc"]) == norm_idcc(agreement.idcc)
+                and current["chunk_id"] not in seen
+            ):
+                seen.add(current["chunk_id"])
+                kept.append({**current, "kali_id": link["kali_id"], "followed": True})
+                continue
+        still_dropped.append((reason, link))
+    return kept, still_dropped
 
 
 def build_queries(generic: Document) -> dict[str, str]:
