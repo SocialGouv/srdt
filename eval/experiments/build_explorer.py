@@ -405,7 +405,8 @@ function renderA() {
     const tile = (v, l) => '<div class="tile"><b>' + v + "</b><span>" + l + "</span></div>";
     const word = unit + (unit === "question" && ps.length !== 1 ? "s" : "");
     return '<li data-i="' + i + '" class="' + (k === selA ? "sel" : "") + '">' +
-      '<div class="card-name"><span>' + esc(mode === "q" ? k : "IDCC " + k) + "</span></div>" +
+      '<div class="card-name"><span>' + esc(mode === "q" ? k : "IDCC " + k) + "</span>" +
+      (mode === "q" && ps.every(p => !p.generic) ? '<span class="pill">no generic answer</span>' : "") + "</div>" +
       (mode === "q" ? "" : '<div class="card-sub">' + esc(agreement(k).short) + "</div>") +
       '<div class="tiles">' + tile(ps.length, word) +
       tile(n, (n === 1 ? "link" : "links") + (dropped ? " · " + dropped + " dropped" : "")) +
@@ -484,10 +485,13 @@ function renderC() {
     sp.reduce((n, p) => n + found(p, 10), 0) + " of " + kept;
   const idccFull = mode === "q" ? (selB ? selB.idcc : null) : selA;
   const full = idccFull !== null ? agreement(idccFull).title : "";
-  $("head").innerHTML = title ? "<b>" + esc(title) + "</b>" + (full ? '<div class="sub">' + esc(full) + "</div>" : "") +
+  // a question known only through agreement contributions: nothing to score, say so next to the title
+  const noGeneric = question !== null && (byQuestion.get(question) || []).every(p => !p.generic);
+  $("head").innerHTML = title ? "<b>" + esc(title) + "</b>" + (noGeneric ? ' <span class="pill">no generic answer</span>' : "") + (full ? '<div class="sub">' + esc(full) + "</div>" : "") +
     '<div class="stats">' + esc(stats) + "</div>" : "";
   const text = question && meta[question] ? meta[question].text : "";
-  $("gen").innerHTML = text ? "<details><summary>Generic answer</summary><pre>" + esc(text) + "</pre></details>" : "";
+  $("gen").innerHTML = text ? "<details><summary>Generic answer</summary><pre>" + esc(text) + "</pre></details>" :
+    noGeneric ? '<div class="sub">This question has no generic answer: only agreement contributions exist, so no search was run.</div>' : "";
   const list = ps.flatMap(p => p.rows);
   $("body").innerHTML = list.map(r =>
     "<tr><td>" + esc(r.question) + "</td>" +
