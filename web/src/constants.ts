@@ -124,7 +124,7 @@ export const SEARCH_OPTIONS_JURISPRUDENCE: SearchOptions = {
 // Filtre LLM des jurisprudences (après le rerank) : pour chaque arrêt retenu, on demande
 // au LLM s'il permet de répondre à la question ; seuls les arrêts jugés "OUI" sont
 // transmis au prompt generate (instructions : prompts/jurisprudence-filter.ts).
-export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-large-latest";
+export const JURISPRUDENCE_FILTER_MODEL_NAME = "mistral-medium-3-5";
 
 export const CHATGPT_LLM: LLMModel = {
   api_key: process.env.CHATGPT_LLM_API_KEY ?? "",
