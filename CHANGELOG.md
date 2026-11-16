@@ -1,3 +1,17 @@
+## [1.59.2](https://github.com/SocialGouv/srdt/compare/v1.59.1...v1.59.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **api:** use mistral-large-2512 rather than mistral-large-latest alias ([3c7f249](https://github.com/SocialGouv/srdt/commit/3c7f2493c020fdabd779b6d47f8ffb57cd0678ef))
+
+## [1.59.1](https://github.com/SocialGouv/srdt/compare/v1.59.0...v1.59.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **api:** parse mistral responses with new format (thinking / text) + use mistral medium for jurisprudence confirmation calls ([b2f5bdd](https://github.com/SocialGouv/srdt/commit/b2f5bddf759b4e1484a0a65605c7b0c4c71d47ff))
+
 # [1.59.0](https://github.com/SocialGouv/srdt/compare/v1.58.0...v1.59.0) (2026-11-09)
 
 
