@@ -41,6 +41,14 @@ include:
       deploy_action: preprod
       rules:
         - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - component: $CI_SERVER_FQDN/socialgouv/commun/studio-tech-commun/components/gitops-cd-component/trigger_app@0.6.0
+    inputs:
+      job_name: deploy-prod
+      gitops_project: socialgouv/produits-dnum/citoyens/srdt/srdt-gitops
+      app_name: srdt
+      deploy_action: prod
+      rules:
+        - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
 
 stages:
   - check
@@ -53,9 +61,11 @@ workflow:
     on_new_commit: interruptible
   rules:
     - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
 
 # build : branches de travail + branche par défaut (image déployable)
 .build-rules: &build-rules
+  - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
   - if: $CI_COMMIT_BRANCH =~ /^(feat|fix|chore|hotfix|migration)\//
   - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
@@ -166,6 +176,12 @@ deploy-dev:
 
 deploy-preprod:
   needs: ["build", "prepare-deploy-preprod"]
+
+deploy-prod:
+  needs: ["build", "prepare-deploy-prod"]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+      when: manual
 
 # ---------------------------------------------------------------------------
 # RELEASE : semantic-release sur la branche par défaut (tags + release GitLab).
