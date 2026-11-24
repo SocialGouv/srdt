@@ -7,7 +7,8 @@ ALBERT_RERANK_MODEL = "openweight-rerank"
 # the index was built (it can miss most of the true neighbours of a filtered query).
 EXACT_KNN_MAX_CHUNKS = 20_000
 
-# LLM generation: on force la température pour les appels Mistral
+# LLM generation: on force la température pour les modèles Mistral (API Mistral ou
+# modèle "mistral-*" servi par un autre fournisseur, ex. Albert)
 MISTRAL_API_HOST = "api.mistral.ai"
 MISTRAL_TEMPERATURE = 0.3
 

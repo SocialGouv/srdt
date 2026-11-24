@@ -24,7 +24,7 @@ Aujourd'hui le service est déployé dans 24 départements (125 utilisateurs). L
 
 ## Quelle IA a été utilisée pour construire ce service ? Avec quelles sources de données ?
 
-Le service s'appuie sur l'IA développée par Mistral (modèle Mistral Large) pour construire ses réponses. Mais l'originalité, et la valeur ajoutée du service, tient dans le fait que chaque réponse est préalablement sourcée dans une base de connaissance propre, constituée :
+Le service s'appuie sur l'IA développée par Mistral (modèle Mistral Medium) pour construire ses réponses. Mais l'originalité, et la valeur ajoutée du service, tient dans le fait que chaque réponse est préalablement sourcée dans une base de connaissance propre, constituée :
 
 * des fiches pratiques Code du Travail Numérique, Service-Public, Ministère du Travail
 * articles de loi Légifrance

@@ -58,11 +58,13 @@ class LLMClient:
             "Authorization": f"Bearer {api_key}",
         }
         self.model = model
-        # Température forcée pour les appels Mistral, laissée au défaut du
+        # Température forcée pour les modèles Mistral (appelés via l'API Mistral ou
+        # servis par un autre fournisseur, ex. Albert), laissée au défaut du
         # fournisseur pour les autres.
-        self.temperature: float | None = (
-            MISTRAL_TEMPERATURE if MISTRAL_API_HOST in (base_url or "") else None
+        is_mistral = MISTRAL_API_HOST in (base_url or "") or (model or "").startswith(
+            "mistral"
         )
+        self.temperature: float | None = MISTRAL_TEMPERATURE if is_mistral else None
 
     def _base_payload(
         self,
