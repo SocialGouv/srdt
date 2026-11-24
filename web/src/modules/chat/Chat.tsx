@@ -12,6 +12,8 @@ import { ChatInput } from "./ChatInput";
 import { NewConversationView } from "./NewConversationView";
 import { SourcesPanel } from "./SourcesPanel";
 import { AgreementModal } from "../convention-collective/AgreementModal";
+import { NpsModal } from "../feedback/NpsModal";
+import { drawTimeSavedSurvey } from "../feedback/time-saved";
 import { buildMessageSources } from "./sources";
 import {
   STORAGE_KEY,
@@ -104,6 +106,8 @@ export const Chat = ({
     number | null
   >(null);
   const closeSourcesPanel = useCallback(() => setSourcesMessageIndex(null), []);
+  // An answer was received on this page: the NPS may then open on exit intent.
+  const [hasReceivedAnswer, setHasReceivedAnswer] = useState(false);
 
   // Initialize conversations from localStorage and always start with new conversation
   useEffect(() => {
@@ -534,7 +538,12 @@ export const Chat = ({
               isAwaitingFollowup: hasMoreFollowups,
               followupCount: newFollowupCount,
               selectedModel: result.data?.modelName,
+              timeSavedSurvey: drawTimeSavedSurvey(
+                conversation.timeSavedSurvey,
+                currentMessages.length
+              ),
             });
+            setHasReceivedAnswer(true);
           }
           const newFollowupCountForDisable =
             (conversation.followupCount ?? 0) + 1;
@@ -624,7 +633,12 @@ export const Chat = ({
               isAwaitingFollowup: true, // Set flag to allow follow-up
               firstAssistantAnswer: responseText,
               selectedModel: result.data?.modelName,
+              timeSavedSurvey: drawTimeSavedSurvey(
+                conversation.timeSavedSurvey,
+                currentMessages.length
+              ),
             });
+            setHasReceivedAnswer(true);
           }
           setIsDisabled(false); // Re-enable for potential follow-up
         },
@@ -821,6 +835,12 @@ export const Chat = ({
                   dbConversationId={currentConversation?.dbConversationId}
                   isSourcesOpen={sourcesMessageIndex === index}
                   onShowSources={() => handleToggleSources(index)}
+                  timeSavedSurvey={currentConversation?.timeSavedSurvey}
+                  onTimeSavedSurveyChange={(timeSavedSurvey) =>
+                    updateConversation(currentConversationId, {
+                      timeSavedSurvey,
+                    })
+                  }
                 />
               ))}
             </div>
@@ -849,6 +869,8 @@ export const Chat = ({
           onClose={closeSourcesPanel}
         />
       )}
+
+      <NpsModal openOnExitIntent={hasReceivedAnswer} />
     </div>
   );
 };

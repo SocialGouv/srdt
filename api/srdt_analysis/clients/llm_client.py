@@ -27,6 +27,26 @@ from srdt_analysis.core.models import (
 )
 
 
+def extract_text(content: object) -> str:
+    """The answer text of a message (or stream delta) `content`.
+
+    It is a string for most models. Reasoning models (Mistral with `reasoning_effort`)
+    return a list of blocks instead, `[{"type": "thinking", ...}, {"type": "text",
+    "text": "..."}]`: only the text blocks are the answer, the thinking ones are
+    dropped. Null gives an empty string.
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            block if isinstance(block, str) else block.get("text") or ""
+            for block in content
+            if isinstance(block, str)
+            or (isinstance(block, dict) and block.get("type") == "text")
+        )
+    return ""
+
+
 class LLMClient:
     def __init__(self, base_url, api_key, model):
         super().__init__()
@@ -111,14 +131,31 @@ class LLMClient:
                 response_json = response.json()
                 # self.logger.debug(response_json)
 
-                return response_json["choices"][0]["message"]["content"]
+                choice = response_json["choices"][0]
+                text = extract_text(choice["message"].get("content"))
+                if not text:
+                    # raised inside the retry: a null or thinking-only answer is
+                    # usually not repeated on the next attempt
+                    self.logger.error(
+                        f"LLM returned no answer text: model={self.model} "
+                        f"finish_reason={choice.get('finish_reason')} "
+                        f"usage={response_json.get('usage')}"
+                    )
+                    raise ExternalServiceError(
+                        "LLM returned an empty answer "
+                        f"(finish_reason: {choice.get('finish_reason')})",
+                        service="LLM",
+                    )
+                return text
 
             except httpx.HTTPStatusError as e:
                 self._raise_for_status(e)
             except httpx.RequestError as e:
-                self.logger.error(f"Request error occurred: {str(e)}")
+                # str(e) is empty for httpx timeouts: always name the exception type
+                detail = f"{type(e).__name__}: {str(e) or '(no message)'}"
+                self.logger.error(f"Request error occurred: {detail}")
                 raise ServiceUnavailableError(
-                    f"LLM service unreachable: {str(e)}", service="LLM"
+                    f"LLM service unreachable: {detail}", service="LLM"
                 ) from e
 
     async def _make_chat_completions_stream_async(
@@ -157,11 +194,11 @@ class LLMClient:
                                         and "delta" in chunk["choices"][0]
                                         and "content" in chunk["choices"][0]["delta"]
                                     ):
-                                        content = chunk["choices"][0]["delta"][
-                                            "content"
-                                        ]
-                                        if content:
-                                            yield content
+                                        text = extract_text(
+                                            chunk["choices"][0]["delta"]["content"]
+                                        )
+                                        if text:
+                                            yield text
                                 except json.JSONDecodeError:
                                     # Skip invalid JSON lines
                                     continue
@@ -169,9 +206,11 @@ class LLMClient:
             except httpx.HTTPStatusError as e:
                 self._raise_for_status(e)
             except httpx.RequestError as e:
-                self.logger.error(f"Request error occurred: {str(e)}")
+                # str(e) is empty for httpx timeouts: always name the exception type
+                detail = f"{type(e).__name__}: {str(e) or '(no message)'}"
+                self.logger.error(f"Request error occurred: {detail}")
                 raise ServiceUnavailableError(
-                    f"LLM service unreachable: {str(e)}", service="LLM"
+                    f"LLM service unreachable: {detail}", service="LLM"
                 ) from e
 
     async def generate_completions_async(

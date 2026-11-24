@@ -1,4 +1,5 @@
 import sql from "./postgres";
+import type { NpsTrigger, TimeSavedAnswer } from "@/modules/feedback/indicators";
 
 export interface FollowupExchange {
   question: string;
@@ -19,6 +20,7 @@ export interface ConversationRecord {
   followup_count?: number;
   feedback_type: "positive" | "negative" | null;
   feedback_reasons: string | null;
+  time_saved?: TimeSavedAnswer | null;
   idcc: string | null;
   model_name: string | null;
   generation_time_ms: number | null;
@@ -137,6 +139,52 @@ export async function updateConversationFeedback(
       feedback_reasons = ${feedbackReasons ?? null},
       updated_at = NOW()
     WHERE id = ${id}
+  `;
+}
+
+/**
+ * Save the answer to "did the answer save you time?"
+ */
+export async function updateConversationTimeSaved(
+  id: string,
+  timeSaved: TimeSavedAnswer
+): Promise<void> {
+  if (!sql) {
+    console.warn("[conversations] Database not available, skipping update");
+    return;
+  }
+
+  await sql`
+    UPDATE conversations
+    SET
+      time_saved = ${timeSaved},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
+/**
+ * Save an NPS score (not tied to a conversation)
+ */
+export async function saveNpsResponse(response: {
+  user_id: string;
+  department: string | null;
+  score: number;
+  display_trigger: NpsTrigger | null;
+}): Promise<void> {
+  if (!sql) {
+    console.warn("[conversations] Database not available, skipping NPS save");
+    return;
+  }
+
+  await sql`
+    INSERT INTO nps_responses (user_id, department, score, display_trigger)
+    VALUES (
+      ${response.user_id},
+      ${response.department},
+      ${response.score},
+      ${response.display_trigger}
+    )
   `;
 }
 
