@@ -169,7 +169,7 @@ lint-dockerfile:
 # Contexte PAR composant (api/, web/) : chaque Dockerfile fait COPY depuis SON dossier.
 # ---------------------------------------------------------------------------
 build:
-  extends: .build-buildkit-operator
+  extends: .build-dind
   interruptible: true
   needs: []
   parallel:
